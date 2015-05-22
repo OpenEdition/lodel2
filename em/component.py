@@ -8,7 +8,7 @@
 class EmComponent(object):
 
     ## instaciate an EmComponent
-    # @param id_or_name <int> || <str>
+    # @param int|str id_or_name 
     # @raise TypeError
     def __init(id_or_name):
         if id_or_name is int:
@@ -25,28 +25,50 @@ class EmComponent(object):
             where = "name = " + db.quote(self.name)
         else:
             where = "id = " + self.id
-        
+
         row = db.query(where)
         if not row:
             # could have two possible Error message for id and for name
             raise EmComponentNotExistError("Bad id_or_name: could not find the component")
-        
+
         self.name = row.name
         self.rank = row.rank
         self.date_update = row.date_update
-        self.date_create <datetime object>
+        self.date_create = row.date_create
         self.string <MlString object> : string representation of the component
         self.help <MlString object> : help string
         self.icon <string> : path to the icon (should be id_global of EmFile object)
 
-    @static_method
-    def id_from_name(name):
+    ## write the representation of the component in the database
+    # @return bool
+    def save(self):
+        pass
 
-    @staticmethod
-    def create(name <string>, parent_component <EmComponent object>) 
-    def save(self)
-    def delete(self)
-    def modify_rank(self)
-    def set_string(self, lang, texte)
-    def set_strings(self)
-    def get_string(self, lang)
+    ## delete this component in the database
+    # @return bool
+    def delete(self):
+        pass
+
+    ## change the rank of the component
+    # @param int new_rank new position
+    def modify_rank(self, new_rank):
+        pass
+
+    ## set a string representation of the component for a given language
+    # @param  str lang iso 639-2 representation of the language http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+    # @param  str text
+    # @return bool
+    def set_string(self, lang, text):
+        pass
+
+    ## set the string representation of the component
+    # @param  MlString ml_string strings for all language
+    # @return bool
+    def set_strings(self, ml_string):
+        pass
+
+    ## get the string representation of the component for the given language
+    # @param  str lang iso 639-2 representation of the language
+    # @return str
+    def get_string(self, lang):
+        pass
