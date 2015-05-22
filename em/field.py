@@ -15,6 +15,7 @@ class EmField(EmComponent):
         super(EmField, self).__init__()
         pass
 
+    @staticmethod
     def create( name, em_fieldgroup, ml_repr = None, ml_help = None,
                 icon = None, optionnal = False, type_relation = None,
                 relationnal_field = None, primary_data = False,
@@ -22,7 +23,6 @@ class EmField(EmComponent):
         """ Create a new EmType and instanciate it
             
             @todo Change the icon param type
-            @todo change staticmethod to classmethod ?
             @todo simplify function aguments ?
             @todo typeof default_value argument ?
             @todo typeof params argument ?
@@ -40,9 +40,9 @@ class EmField(EmComponent):
             @param type_relation EmType|None: If not None make a link between the class of the new EmField and this EmType
             @param relationnal_field EmField|None: If not None indicates that the new field defines the relation created by this EmField argument
             @param primary_data bool: Is the new field a primary data field ?
-            @param The default_value: field's default value
-            @param Params params: of the field
-            @param Value value: of the field
+            @param default_value str: The field's default value
+            @param params str: Params of the field
+            @param value str: Value of the field
             
             @throw TypeError
             @see EmComponent::__init__()

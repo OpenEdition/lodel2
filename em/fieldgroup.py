@@ -20,7 +20,7 @@ class EmFieldGroup(EmComponent):
         super(EmFieldGroup, self).__init__()
         pass
 
-
+    @staticmethod
     def create(name, em_class, ml_repr = None, ml_help = None, icon = None):
         """ Create a new EmType and instanciate it
             
@@ -35,7 +35,6 @@ class EmFieldGroup(EmComponent):
             @param The string|None: filename of the icon
             @return An EmFieldGroup instance
             @see EmComponent::__init__()
-            @staticmethod
         """
         pass
 
