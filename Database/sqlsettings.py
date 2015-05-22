@@ -5,29 +5,29 @@ class SQLSettings(object):
     DEFAULT_HOSTNAME = 'localhost'
         
     dbms_list = {
-        'postgresql':{
+        'postgresql': {
             'driver': 'psycopg2',
             'encoding': 'utf8',
         },
-        'mysql':{
+        'mysql': {
             # TODO à définir
-            'driver':'',
-            'encoding':'',
+            'driver': '',
+            'encoding': '',
         }
     }
 
-    DB_READ_CONNECTION_NAME='' # TODO A configurer
-    DB_WRITE_CONNECTION_NAME='' # TODO A configurer
+    DB_READ_CONNECTION_NAME = 'default'  # TODO A configurer
+    DB_WRITE_CONNECTION_NAME = 'default'  # TODO A configurer
     
     querystrings = {
-        'add_column':{
-            'default':'ALTER TABLE %s ADD COLUMN %s %s'
+        'add_column': {
+            'default': 'ALTER TABLE %s ADD COLUMN %s %s'
         },
-        'alter_column':{
-            'postgresql':'ALTER TABLE %s ALTER COLUMN %s TYPE %s',
-            'mysql':'ALTER TABLE %s ALTER COLUMN %s %s'
+        'alter_column': {
+            'postgresql': 'ALTER TABLE %s ALTER COLUMN %s TYPE %s',
+            'mysql': 'ALTER TABLE %s ALTER COLUMN %s %s'
         },
-        'drop_column':{
+        'drop_column': {
             'default': 'ALTER TABLE %s DROP COLUMN %s'
         }
     }
