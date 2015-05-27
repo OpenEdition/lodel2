@@ -13,13 +13,10 @@ class SqlWrapper(object):
         self.write_engine = self.get_engine(sqlsettings.DB_WRITE_CONNECTION_NAME)
 
     def get_engine(self, connection_name):
-        """Crée un moteur logique sur une base de données
+        """ Crée un moteur logique sur une base de données
 
-        Args:
-            connection_name (str): Nom de la connexion telle que définie dans les settings django
-
-        Returns:
-            Engine.
+            @param connection_name str: Connection name as defined is django settings
+            @return Engine
         """
 
         connection_params = settings.DATABASES[connection_name]
@@ -49,14 +46,11 @@ class SqlWrapper(object):
         return self.write_engine
 
     def execute(self, queries, action_type):
-        """Exécute une série de requêtes en base
+        """ Exécute une série de requêtes en base
 
-        Args:
-            queries (list): une liste de requêtes
-            action_type (str): le type d'action ('read'|'write')
-
-        Returns:
-            List. Tableau de résultats sous forme de tuples (requête, résultat)
+            @param queries list: une liste de requêtes
+            @param action_type str: le type d'action ( 'read'|'write' )
+            @return List. Tableau de résultats sous forme de tuples (requête, résultat)
         """
 
         db = self.get_write_engine() if action_type==sqlsettings.ACTION_TYPE_WRITE else self.get_read_engine()
@@ -81,12 +75,11 @@ class SqlWrapper(object):
         return result
 
     def create_foreign_key_constraint_object(self, localcol, remotecol, constraint_name=None):
-        """Génère une contrainte Clé étrangère
+        """ Génère une contrainte Clé étrangère
 
-        Args:
-            localcol (str) : Colonne locale
-            remotecol (str) : Colonne distante (syntaxe : Table.col)
-            constraint_name (str) : Nom de la contrainte (par défaut : fk_localcol_remotecol)
+            @param localcol str: Colonne locale
+            @param remotecol str: Colonne distante (syntaxe : Table.col)
+            @param constraint_name str: Nom de la contrainte (par défaut : fk_localcol_remotecol)
 
         Returns:
             ForeignKeyConstraint.
@@ -96,22 +89,15 @@ class SqlWrapper(object):
         return foreignkeyobj
 
     def create_column_object(self, column_name, column_type, column_extra=None):
-        """Génère un objet colonne
+        """ Génère un objet colonne
 
-        Args:
-            column_name (str): Nom de la colonne
-            column_name (str): Type de la colonne
-            column_extra (objet) : Objet json contenant les paramètres optionnels comme PRIMARY KEY, NOT NULL, etc ...
+            Exemple de dictionnaire pour column_extra : { "primarykey":True, "nullable":False, "default":"test" ... }
+            @param column_name str: Nom de la colonne
+            @param column_type str: Type de la colonne
+            @param column_extra dict : Objet json contenant les paramètres optionnels comme PRIMARY KEY, NOT NULL, etc ...
 
-        Returns:
-            Column. La méthode renvoie "None" si l'opération échoue
+            @return Column. La méthode renvoie "None" si l'opération échoue
 
-        Ex d'objet json "extra" :
-        {
-            "primarykey":True,
-            "nullable":False,
-            "default":"test" ...
-        }
         """
 
         # Traitement du type (mapping avec les types SQLAlchemy)
@@ -144,29 +130,19 @@ class SqlWrapper(object):
         return column
 
     def create_table(self, tableparams):
-        """Crée une nouvelle table
-        Args:
-            tableparams (object): Objet Json contenant les paramétrages de la table
+        """ Crée une nouvelle table
 
-        Returns:
-            bool. True si le process est allé au bout, False si on a rencontré une erreur.
+            Les paramètres de la tables sont passés via un dictionnaire dont voici la description :
+            { 'name':'<nom_table>', 'columns': [ <col1>, <col2>, <coln> ], 'constraints': dict(...) }
+            Avec <colX> : { 'name': '<name_colX>', 'type': '<type_colX>', 'extra': dict(...) }
+            A noter que les types de col (<type_colX>) sont des chaines representant un type SQL (ex: "VARCHAR(50)")
+            Les deux champs "name" et "columns" seulement sont obligatoires.
+            Le champ "extra" de la définition des colonnes est facultatif.
 
-        Le json de paramètres de table est construit suivant le modèle :
-        {
-            'name':'<nom de la table>',
-            'columns':[
-                {
-                    'name':"<nom de la colonne 1>",
-                    'type':"<type de la colonne 1, ex: VARCHAR(50)>",
-                    'extra': "indications supplémentaires sous forme d'objet JSON"
-                }
-            ],
-            'constraints':{},
-            ...
-        }
+            @args tableparams dict: Dictionnaire avec les paramétrages de la table
 
-        Les deux champs "name" et "columns" seulement sont obligatoires.
-        Le champ "extra" de la définition des colonnes est facultatif.
+            @return bool. True si le process est allé au bout, False si on a rencontré une erreur.
+
         """
 
         metadata = MetaData()
@@ -185,13 +161,11 @@ class SqlWrapper(object):
 
 
     def get_table(self, table_name, action_type=sqlsettings.ACTION_TYPE_WRITE):
-        """Récupère une table dans un objet Table
-
-        Args:
-            table_name (str): Nom de la table
-            action_type (str): Type d'action (read|write) (par défaut : "write")
-        Returns:
-            Table.
+        """ Récupère une table dans un objet Table
+            
+            @param table_name str: Nom de la table
+            @param action_type str: Type d'action (read|write) (par défaut : "write")
+            @return Table.
         """
         db = self.get_write_engine() if action_type == sqlsettings.ACTION_TYPE_WRITE else self.get_read_engine()
         metadata = MetaData()
@@ -200,13 +174,9 @@ class SqlWrapper(object):
 
 
     def drop_table(self, table_name):
-        """Supprime une table
-
-        Args:
-            table_name (str): Nom de la table
-
-        Returns:
-            bool. True si le process est allé au bout. False si on a rencontré une erreur
+        """ Supprime une table
+            @param table_name str: Nom de la table
+            @return bool. True si le process est allé au bout. False si on a rencontré une erreur
         """
 
         try:
@@ -228,14 +198,12 @@ class SqlWrapper(object):
         return querystring
 
     def add_column(self, table_name, column):
-        """Ajoute une colonne à une table existante
+        """ Ajoute une colonne à une table existante
 
-        Args:
-            table_name (str): nom de la table
-            column (object): colonne à rajouter sous forme d'objet python - {"name":"<nom de la colonne>", "type":"<type de la colonne>"}
+            @param table_name str: nom de la table
+            @param column dict: la colonne - {"name":"<nom de la colonne>", "type":"<type de la colonne>"}
 
-        Returns:
-            bool. True si le process est allé au bout, False si on a rencontré une erreur
+            @return bool. True si le process est allé au bout, False si on a rencontré une erreur
         """
 
         sqlquery = self.get_querystring('add_column', self.get_write_engine().dialect) % (table_name, column['name'], column['type'])
@@ -243,14 +211,12 @@ class SqlWrapper(object):
         return True if sqlresult else False
 
     def alter_column(self, table_name, column):
-        """Modifie le type d'une colonne
+        """ Modifie le type d'une colonne
 
-        Args:
-            table_name (str): nom de la table
-            column_name (object): colonne passée sous forme d'objet python - {"name":"<nom de la colonne>","type":"<nouveau type de la colonne>"}
+            @param table_name str: nom de la table
+            @param column_name dict: la colonne - {"name":"<nom de la colonne>","type":"<nouveau type de la colonne>"}
 
-        Returns:
-            bool. True si le process est allé au bout. False si on a rencontré une erreur
+            @return bool. True si le process est allé au bout. False si on a rencontré une erreur
         """
 
         sqlquery = self.get_querystring('alter_column', self.get_write_engine().dialect) % (table_name, column['name'], column['type'])
@@ -258,27 +224,23 @@ class SqlWrapper(object):
         return True if sqlresult else False
 
     def insert(self, table_name, newrecord):
-        """Insère un nouvel enregistrement
+        """ Insère un nouvel enregistrement
 
-        Args:
-            table_name (str): nom de la table
-            newrecord (dict): objet python contenant le nouvel enregistrement à insérer - {"column1":"value1", "column2":"value2", etc ...)
+            @param table_name str: nom de la table
+            @param newrecord dict: dictionnaire contenant les informations sur le nouvel enregistrement à insérer - {"column1":"value1", "column2":"value2", etc ...)
 
-        Returns:
-            int. Nombre de lignes insérées
+            @return int. Nombre de lignes insérées
         """
         sqlresult = self.execute(self.get_table(table_name).insert().values(newrecord), sqlsettings.ACTION_TYPE_WRITE)
         return sqlresult.rowcount
 
     def delete(self, table_name, whereclauses):
-        """Supprime un enregistrement
+        """ Supprime un enregistrement
 
-        Args:
-            table_name (str): nom de la table
-            whereclauses (list): liste des conditions sur les enregistrements (sous forme de textes SQL)
+            @param table_name str: nom de la table
+            @param whereclauses list: liste des conditions sur les enregistrements (sous forme de textes SQL)
 
-        Returns:
-            int. Nombre de lignes supprimées
+            @return int. Nombre de lignes supprimées
         """
 
         deleteobject = self.get_table(table_name).delete()
@@ -290,18 +252,15 @@ class SqlWrapper(object):
         return sqlresult.rowcount
 
     def update(self, table_name, whereclauses, newvalues):
-        """Met à jour des enregistrements
+        """ Met à jour des enregistrements
 
-        Args:
-            table_name (str): nom de la table
-            whereclauses (list): liste des conditions sur les enregistrements (sous forme de textes SQL)
-            newvalues (dict): objet python contenant les nouvelles valeurs à insérer - {"colonne1":"valeur1", "colonne2":"valeur2", etc ...}
+            @param table_name str: nom de la table
+            @param whereclauses list: liste des conditions sur les enregistrements (sous forme de textes SQL)
+            @param newvalues dict: dictionnaire contenant les nouvelles valeurs à insérer - {"colonne1":"valeur1", "colonne2":"valeur2", etc ...}
 
-        Returns:
-            int. Nombre de lignes modifiées
+            @return int. Nombre de lignes modifiées
 
-        Raises:
-            DataError. Incompatibilité entre la valeur insérée et le type de colonne dans la table
+            @throw DataError. Incompatibilité entre la valeur insérée et le type de colonne dans la table
         """
 
         table = self.get_table(table_name)
@@ -325,25 +284,23 @@ class SqlWrapper(object):
         return updated_lines_count
 
     def select(self, select_params):
-        """Récupère un jeu d'enregistrements
+        """ Récupère un jeu d'enregistrements
 
-        Args:
-            select_params (list): liste d'objets permettant de caractériser la requête.
-                                    {
-                                        "what":"<liste des colonnes>",
-                                        "from":"<liste des tables>",
-                                        "where":"<liste des conditions>",
-                                        "distinct":True|False,
-                                        "join":{"left":"table_de_gauche.champ","right":"table_de_droite.champ", "options":{"outer":True|False}}
-                                        ...
-                                    }
+            Champs de select_params :
+            - "what":"<liste des colonnes>",
+            - "from":"<liste des tables>",
+            - "where":"<liste des conditions>",
+            - "distinct":True|False,
+            - "join":{"left":"table_de_gauche.champ","right":"table_de_droite.champ", "options":{"outer":True|False}}
+            - ...
 
-                                    Les listes sont supportées sous deux formats :
-                                        - texte SQL : "colonne1, colonne2, ..."
-                                        - liste Python : ["colonne1", "colonne2", ...]
+            Les listes sont supportées sous deux formats :
+            - texte SQL : "colonne1, colonne2, ..."
+            - liste Python : ["colonne1", "colonne2", ...]
 
-        Returns:
-            list. Liste des dictionnaires représentant les différents enregistrements.
+            @param select_params list: liste de dictionnaire permettant de caractériser la requête.
+
+            @return list. Liste des dictionnaires représentant les différents enregistrements.
         """
 
         if not 'what' in select_params or not 'from' in select_params:
@@ -431,22 +388,18 @@ class SqlWrapper(object):
     def create_join_object(self, join_params):
         """Génère un objet "Jointure" pour le greffer dans une requête
 
-        Args:
-            join_params (dict) : dictionnaire de données sur la jointure.
-                                 On peut avoir les deux formats suivants :
-                                 {
-                                    "left":"table.champ",
-                                    "right":"table.champ",
-                                    "options":{"outer":True|False}
-                                 }
-                                 ou
-                                 {
-                                    "left":{"table":"nom de la table","field":"nom du champ"},
-                                    "right":{"table":"nom de la table","field":"nom du champ"},
-                                    "options":{"outer":True|False}
-                                 }
-        Returns:
-             join.
+            Format des dictionnaires de description des jointures :
+            - Format1 liste de champs
+             - "left":"table.champ",
+             - "right":"table.champ",
+             - "options":{"outer":True|False}
+            - Format2 liste de champs
+             - "left":{"table":"nom de la table","field":"nom du champ"},
+             - "right":{"table":"nom de la table","field":"nom du champ"},
+             - "options":{"outer":True|False}
+    
+            @param join_params (dict) : dictionnaire de données sur la jointure.
+            @return join.
         """
 
         join_object = None
