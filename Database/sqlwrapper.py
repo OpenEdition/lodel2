@@ -122,7 +122,7 @@ class SqlWrapper(object):
             if 'primarykey' in column_extra:
                 column.primary_key = column_extra['primarykey']
             if 'default' in column_extra:
-                column.default = column_extra['default']
+                column.default = ColumnDefault(column_extra['default'])
             if 'foreingkey' in column_extra:
                 column.append_foreign_key(ForeignKey(column_extra['foreignkey']))
 
