@@ -16,9 +16,9 @@ class EmComponent(object):
     def __init__(self, id_or_name):
         if self is EmComponent:
             raise EnvironmentError('Abstract class')
-        if id_or_name is int:
+        if type(id_or_name) is int:
             self.id = id_or_name
-        elif id_or_name is str:
+        elif type(id_or_name) is str:
             self.name = id_or_name
             self.populate()
         else:
