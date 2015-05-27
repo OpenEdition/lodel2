@@ -6,6 +6,9 @@
 """
 
 from Lodel.utils.mlstring import MlString
+import logging
+
+logger = logging.getLogger('Lodel2.EditorialModel')
 
 class EmComponent(object):
 
@@ -14,6 +17,7 @@ class EmComponent(object):
         @exception TypeError
     """
     def __init__(self, id_or_name):
+        logger.debug('Instanciation : '+str(id_or_name))
         if self is EmComponent:
             raise EnvironmentError('Abstract class')
         if type(id_or_name) is int:

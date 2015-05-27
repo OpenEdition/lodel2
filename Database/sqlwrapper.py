@@ -5,6 +5,9 @@ from Database.sqlsettings import SQLSettings as sqlsettings
 from django.conf import settings
 import re
 
+import logging as logger #TODO hack to replace the standarts use of logging in django
+logger.getLogger().setLevel('DEBUG')
+
 class SqlWrapper(object):
 
     def __init__(self):
@@ -155,8 +158,9 @@ class SqlWrapper(object):
         try:
             table.create(self.get_write_engine())
             return True
-        except:
+        except Exception as e:
             # TODO Ajuster le code d'erreur à retourner
+            logger.warning("Error creating table : "+str(e))
             return False
 
 
@@ -187,8 +191,9 @@ class SqlWrapper(object):
             table.drop(db, checkfirst=True)
             db.close()
             return True
-        except:
+        except Exception as e:
             # TODO ajuster le code d'erreur
+            logger.warning("Error droping table : "+str(e))
             return False
 
 
@@ -277,8 +282,9 @@ class SqlWrapper(object):
             sqlresult = self.execute(update_object, sqlsettings.ACTION_TYPE_WRITE)
             updated_lines_count = sqlresult.rowcount
 
-        except DataError:
+        except DataError as e:
             # TODO Voir si on garde "-1" ou si on place un "None" ou un "False"
+            logger.warning("Error updating database : "+str(e))
             updated_lines_count = -1
 
         return updated_lines_count
@@ -369,7 +375,8 @@ class SqlWrapper(object):
             records = sqlresult.fetchall()
             for record in records:
                 selected_lines.append(dict(zip(record.keys(), record)))
-        except:
+        except Exception as e:
+            logger.debug("Error selecting in database : "+str(e))
             selected_lines = None
 
         return selected_lines
