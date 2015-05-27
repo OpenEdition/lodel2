@@ -1,3 +1,4 @@
 Django==1.7.8
 psycopg2==2.6
 SQLAlchemy==1.0.4
+PyMySQL==0.6.6

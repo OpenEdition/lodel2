@@ -11,8 +11,8 @@ class SQLSettings(object):
         },
         'mysql': {
             # TODO à définir
-            'driver': '',
-            'encoding': '',
+            'driver': 'pymysql',
+            'encoding': 'utf8',
         }
     }
 

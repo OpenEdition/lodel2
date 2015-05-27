@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy import * # TODO ajuster les classes à importer
-from sql_settings import SqlSettings as sqlsettings
+from Database.sqlsettings import SQLSettings as sqlsettings
 from django.conf import settings
 import re
 
@@ -33,13 +33,13 @@ class SqlWrapper(object):
         driver = sqlsettings.dbms_list[dialect]['driver']
         username = connection_params['USER']
         password = connection_params['PASSWORD']
-        hostname = connection_params['HOST'] if connection_params['HOST']!='' else sqlsettings.DEFAULT_HOSTNAME
-        port = connection_params['PORT']
+        hostname = connection_params['HOST'] if 'HOST' in connection_params else sqlsettings.DEFAULT_HOSTNAME
+        port = connection_params['PORT'] if 'PORT' in connection_params else ''
         host = hostname if port=='' else '%s:%s' % (hostname, port)
         database = connection_params['NAME']
 
         connection_string = '%s+%s://%s:%s@%s/%s' % (dialect, driver, username, password, host, database)
-        engine = create_engine(connection_string, encoding=sqlsettings.dbms_list[dialect]['encoding'], echo=True, poolclass=NullPool)
+        engine = create_engine(connection_string, encoding=sqlsettings.dbms_list[dialect]['encoding'], echo=True)
         return engine
 
     def get_read_engine(self):
@@ -130,7 +130,7 @@ class SqlWrapper(object):
         elif column_type=='BOOLEAN':
             column = Column(column_name, BOOLEAN)
 
-        if column and column_extra:
+        if column is not None and column_extra:
             if 'nullable' in column_extra:
                 column.nullable = column_extra['nullable']
             if 'primarykey' in column_extra:
