@@ -1,13 +1,13 @@
-from defaults import *
+from Lodel.settings.defaults import *
 
 DEBUG = True
 
 if DEBUG:
-    from dev import *
+    from Lodel.settings.dev import *
 else:
-    from production import *
+    from Lodel.settings.production import *
 
 try:
-    from locale import *
+    from Lodel.settings.locale import *
 except ImportError:
         pass
