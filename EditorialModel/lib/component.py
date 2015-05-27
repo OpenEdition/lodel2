@@ -5,7 +5,7 @@
     @see EmClass, EmType, EmFieldGroup, EmField
 """
 
-from ml_string import MlString
+from Lodel.utils.mlstring import MlString
 
 class EmComponent(object):
 
@@ -18,7 +18,7 @@ class EmComponent(object):
             raise EnvironmentError('Abstract class')
         if id_or_name is int:
             self.id = id_or_name
-        else if id_or_name is str:
+        elif id_or_name is str:
             self.name = id_or_name
             self.populate()
         else:
