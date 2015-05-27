@@ -1,135 +1,120 @@
 # -*- coding: utf-8 -*-
 
-from sql_settings import SqlSettings as sqlsettings
-from sqlmanager import SQLManager
+from Database.sqlwrapper import SqlWrapper
 
 class SQLSetup(object): 
 
     def initDb(self):
-        
-        sqlmanager = SQLManager()
-        
+        db = SqlWrapper()
+        tables = self.get_schema()
+        for table in tables:
+            err = db.create_table(table)
+
+    def get_schema(self):
         tables = []
 
-        # Table em_object
-        tables.append(
-            {
-                "name":"em_object",
+        default_columns = [
+            {"name":"uid",          "type":"VARCHAR(50)", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
+            {"name":"name",         "type":"VARCHAR(50)", "extra":{"nullable":False, "unique":True}},
+            {"name":"string",       "type":"TEXT"},
+            {"name":"help",         "type":"TEXT"},
+            {"name":"rank",         "type":"INTEGER"},
+            {"name":"date_update",  "type":"DATE"},
+            {"name":"date_create",  "type":"DATE"}
+        ]
+
+        # Table listing all objects created by lodel, giving them an unique id
+        uids = {
+                "name":"uids",
                 "columns":[
-                    {"name":"id_global","type":"VARCHAR(50)", "extra":{"nullable":False,"unique":True}},
-                    {"name":"type","type":"VARCHAR(50)"}
+                    {"name":"uid",          "type":"VARCHAR(50)", "extra":{"nullable":False, "primarykey":True}},
+                    {"name":"class",        "type":"VARCHAR(50)"},
+                    {"name":"type",         "type":"VARCHAR(50)"}
                 ]
             }
-        )
+        tables.append(uids)
 
-        # Table em_document
-        tables.append(
-            {
-                "name":"em_document",
-                "columns":[
-                    {"name":"id_global","type":"VARCHAR(50)","extra":{"nullable":False,"unique":True}}, # TODO Foreign Key ?
-                    {"name":"string","type":"VARCHAR(50)"},
-                    {"name":"slug","type":"VARCHAR(50)"},
-                    {"name":"id_class","type":"VARCHAR(50)", "extra":{"foreignkey":"em_class.id_global"}},
-                    {"name":"id_type","type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.id_global"}},
-                    {"name":"status","type":"VARCHAR(50)"},
-                    {"name":"date_update","type":"DATE"},
-                    {"name":"date_create","type":"DATE"},
-                    {"name":"history","type":"TEXT"}
-                ]
-            }
-        )
 
-        # Table em_file
+        # Table listing the classes
+        em_class = {"name":"em_class"}
+        em_class['columns'] = default_columns + [
+            {"name":"classtype",    "type":"INTEGER"},
+            {"name":"sortcolumn",   "type":"VARCHAR(50)", "extra":{"default":"rank"}},
+            {"name":"icon",         "type":"INTEGER"},
+        ]
+        tables.append(em_class)
+
+
+        # Table listing the types
+        em_type = {"name":"em_type"}
+        em_type['columns'] = default_columns + [
+            {"name":"class_id",     "type":"VARCHAR(50)", "extra":{"foreignkey":"em_class.uid", "nullable":False}},
+            {"name":"sortcolumn",   "type":"VARCHAR(50)", "extra":{"default":"rank"}},
+            {"name":"icon",         "type":"INTEGER"},
+        ]
+        tables.append(em_type)
+
+        # relation between types: which type can be a child of another
+        em_type_hierarchy = {"name":"em_type_hierarchy"}
+        em_type_hierarchy['columns'] = [
+            {"name":"superior_id",    "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid", "nullable":False, "primarykey":True}},
+            {"name":"subordinate_id", "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid", "nullable":False, "primarykey":True}},
+            {"name":"nature",         "type":"VARCHAR(50)"},
+        ]
+        tables.append(em_type_hierarchy)
+
+       # Table listing the fieldgroups of a class
+        em_fieldgroup = {"name":"em_fieldgroup"}
+        em_fieldgroup['columns'] = default_columns + [
+            {"name":"class_id",     "type":"VARCHAR(50)", "extra":{"foreignkey":"em_class.uid", "nullable":False}},
+        ]
+        tables.append(em_fieldgroup)
+
+        # Table listing the fields of a fieldgroup
+        em_field = {"name":"em_field"}
+        em_field['columns'] = default_columns + [
+            {"name":"fieldtype_id",   "type":"VARCHAR(50)", "extra":{"nullable":False}},
+            {"name":"fieldgroup_id",  "type":"VARCHAR(50)", "extra":{"foreignkey":"em_fieldgroup.uid", "nullable":False}},
+            {"name":"rel_to_type_id", "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: type this field refer to
+            {"name":"rel_field_id",   "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: field that specify the rel_to_type_id
+            {"name":"optional",       "type":"BOOLEAN"},
+            {"name":"internal",       "type":"BOOLEAN"},
+            {"name":"icon",           "type":"INTEGER"},
+        ]
+        tables.append(em_field)
+
+        # selected field for each type
+        em_field_type = {"name":"em_field_type"}
+        em_field_type['columns'] = [
+            {"name":"type_id",   "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid", "nullable":False, "primarykey":True}},
+            {"name":"field_id",  "type":"VARCHAR(50)", "extra":{"foreignkey":"em_field.uid", "nullable":False, "primarykey":True}},
+        ]
+        tables.append(em_field_type)
+
+        # Table of the objects created by the user (instance of the types)
+        objects = {
+            "name":"objects",
+            "columns":[
+                {"name":"uid",         "type":"VARCHAR(50)", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
+                {"name":"string",      "type":"VARCHAR(50)"},
+                {"name":"class_id",    "type":"VARCHAR(50)", "extra":{"foreignkey":"em_class.uid"}},
+                {"name":"type_id",     "type":"VARCHAR(50)", "extra":{"foreignkey":"em_type.uid"}},
+                {"name":"date_update", "type":"DATE"},
+                {"name":"date_create", "type":"DATE"},
+                {"name":"history",     "type":"TEXT"}
+            ]
+        }
+        tables.append(objects)
+
+        # Table listing all files
         # TODO Préciser les colonnes à ajouter
-        tables.append(
-            {
-                "name":"em_file",
-                "columns":[
-                    {"name":"id_global","type":"VARCHAR(50)","extra":{"nullable":False,"unique":True}}, # TODO Foreign Key ?
-                    {"name":"field1","type":"VARCHAR(50)"}
-                ]
-            }
-        )
+        files = {
+            "name":"files",
+            "columns":[
+                {"name":"uid",     "type":"VARCHAR(50)", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
+                {"name":"field1",  "type":"VARCHAR(50)"}
+            ]
+        }
+        tables.append(files)
 
-        # Table em_class
-        tables.append(      
-            {
-                "name":"em_class",
-                "columns":[
-                    {"name":"id_global","type":"VARCHAR(50)","extra": {"nullable":False, "unique":True}},
-                    {"name":"name","type":"VARCHAR(50)", "extra":{"nullable":False, "unique":True}},
-                    {"name":"classtype","type":"INTEGER"},
-                    {"name":"sortcolumn","type":"VARCHAR(50)", "extra":{"default":"rank"}},
-                    {"name":"string","type":"TEXT", "extra":{"default":"name"}},
-                    {"name":"help", "type":"TEXT"},
-                    {"name":"icon", "type":"VARCHAR(50)"},
-                    {"name":"rank", "type":"INTEGER"},
-                    {"name":"date_update", "type":"DATE"},
-                    {"name":"date_create", "type":"DATE"}
-                ]
-            }
-        )
-
-        # Table em_type
-        tables.append(
-            {
-                "name":"em_type",
-                "columns":[
-                    {"name":"globalid","type":"VARCHAR(50)","extra":{"nullable":False, "unique":True}},
-                    {"name":"id_class","type":"VARCHAR(50)","extra":{"nullable":False, "primarykey":True, "foreignkey":"em_class.id_global"}},
-                    {"name":"name","type":"VARCHAR(50)","extra":{"nullable":False, "primarykey":True}},
-                    {"name":"string", "type": "TEXT","extra":{"default":"name"}},
-                    {"name":"help", "type": "TEXT"},
-                    {"name":"sortcolumn","type":"VARCHAR(50)", "extra":{"default":"rank"}},
-                    {"name":"icon","type":"VARCHAR(50)"},
-                    {"name":"rank","type":"INTEGER"},
-                    {"name":"date_update","type":"DATE"},
-                    {"name":"date_create","type":"DATE"}
-                ]
-            }
-        )
-
-        # Table em_fieldgroup
-        tables.append(
-            {
-                "name":"em_fieldgroup",
-                "columns":[
-                    {"name":"globalid","type":"VARCHAR(50)","extra":{"nullable":False, "unique":True}},
-                    {"name":"id_class","type":"VARCHAR(50)","extra":{"nullable":False, "primarykey":True, "foreignkey":"em_class.id_global"}},
-                    {"name":"name","type":"VARCHAR(50)","extra":{"nullable":False, "primarykey":True}},
-                    {"name":"string","type":"TEXT","extra":{"default":"name"}},
-                    {"name":"help", "type":"TEXT"},
-                    {"name":"rank","type":"INTEGER"},
-                    {"name":"date_update","type":"DATE"},
-                    {"name":"date_create","type":"DATE"}
-                ]
-            }
-        )
-
-        # Table em_field
-        tables.append(
-            {
-                "name":"em_field",
-                "columns":[
-                    {"name":"globalid","type":"VARCHAR(50)","extra":{"nullable":False,"unique":True}},
-                    {"name":"id_fieldgroup","type":"VARCHAR(50)","extra":{"nullable":False,"foreignkey":"em_fieldgroup.globalid"}},
-                    {"name":"id_type","type":"VARCHAR(50)","extra":{"nullable":False,"foreignkey":"em_type.id_globalid"}},
-                    {"name":"name", "type":"VARCHAR(50)", "extra":{"nullable":False,"unique":True}},
-                    {"name":"id_fieldtype","type":"VARCHAR(50)","extra":{"nullable":False, "foreignkey":"em_type.globalid"}},
-                    {"name":"string","type":"TEXT", "extra":{"default":"name"}},
-                    {"name":"help","type":"TEXT"},
-                    {"name":"rank","type":"INTEGER"},
-                    {"name":"date_update","type":"DATE"},
-                    {"name":"date_create","type":"DATE"},
-                    {"name":"date_optional","type":"BOOLEAN"},
-                    {"name":"id_relation_field","type":"INTEGER",{"nullable":False}}, #TODO Foreign key ?
-                    {"name":"internal", "type":"BOOLEAN"},
-                    {"name":"defaultvalue","type":"VARCHAR(50)"},
-                    {"name":"params","type":"VARCHAR(50)"},
-                    {"name":"value","type":"VARCHAR(50)"}
-                ]  
-            }
-        )
-        
-        return sqlmanager.create_table(tables)
+        return tables
