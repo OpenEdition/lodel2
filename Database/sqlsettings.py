@@ -13,7 +13,11 @@ class SQLSettings(object):
             # TODO à définir
             'driver': 'pymysql',
             'encoding': 'utf8',
-        }
+        },
+        'sqlite': {
+            'driver': 'pysqlite',
+            'encoding': 'utf8',
+        },
     }
 
     DB_READ_CONNECTION_NAME = 'default'  # TODO A configurer

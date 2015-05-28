@@ -10,36 +10,57 @@ logger.getLogger().setLevel('DEBUG')
 
 class SqlWrapper(object):
 
-    def __init__(self):
+    def __init__(self, log=False):
+        """ Instanciate a new SqlWrapper
+            @param log bool: If true activate sqlalchemy logger
+        """
         # TODO Passer ces deux éléments dans les settings django (au niveau de l'init de l'appli)
-        self.read_engine = self.get_engine(sqlsettings.DB_READ_CONNECTION_NAME)
-        self.write_engine = self.get_engine(sqlsettings.DB_WRITE_CONNECTION_NAME)
+        self.read_engine = self.get_engine(sqlsettings.DB_READ_CONNECTION_NAME, log)
+        self.write_engine = self.get_engine(sqlsettings.DB_WRITE_CONNECTION_NAME, log)
 
-    def get_engine(self, connection_name):
+    def get_engine(self, connection_name, log=False):
         """ Crée un moteur logique sur une base de données
 
             @param connection_name str: Connection name as defined is django settings
+            @param log bool: If true this engine will have logging enabled
             @return Engine
         """
 
         connection_params = settings.DATABASES[connection_name]
 
-        dialect = None
-        for dbms in sqlsettings.dbms_list:
-            if dbms in connection_params['ENGINE']:
-                dialect=dbms
-                break
+        if 'ENGINE' not in connection_params:
+            raise NameError('Missing ENGINE in configuration file')
 
+        if connection_params['ENGINE'] not in sqlsettings.dbms_list:
+            raise NameError('Wrong ENGINE "'+connection_params['ENGINE']+'" in configuration files')
+        dialect = connection_params['ENGINE']
+
+        if 'driver' not in sqlsettings.dbms_list[dialect]:
+            raise NameError('Wrong ENGINE "'+dialect+'" in configuration files')
         driver = sqlsettings.dbms_list[dialect]['driver']
-        username = connection_params['USER']
-        password = connection_params['PASSWORD']
+
+        if 'NAME' not in connection_params:
+            raise NameError('Missing database name in configuration files')
+        database = connection_params['NAME']
+
+        if 'USER' in connection_params:
+            user = connection_params['USER']
+            if 'PASSWORD' in connection_params:
+                user += ':'+connection_params['PASSWORD']
+        else:
+            user = ''
+
         hostname = connection_params['HOST'] if 'HOST' in connection_params else sqlsettings.DEFAULT_HOSTNAME
         port = connection_params['PORT'] if 'PORT' in connection_params else ''
         host = hostname if port=='' else '%s:%s' % (hostname, port)
-        database = connection_params['NAME']
 
-        connection_string = '%s+%s://%s:%s@%s/%s' % (dialect, driver, username, password, host, database)
-        engine = create_engine(connection_string, encoding=sqlsettings.dbms_list[dialect]['encoding'], echo=True)
+
+        if dialect == 'sqlite':
+            connection_string = '%s+%s:///%s' % (dialect, driver, database)
+        else:
+            connection_string = '%s+%s://%s@%s/%s' % (dialect, driver, user, host, database)
+
+        engine = create_engine(connection_string, encoding=sqlsettings.dbms_list[dialect]['encoding'], echo=log)
         return engine
 
     def get_read_engine(self):
@@ -126,7 +147,7 @@ class SqlWrapper(object):
                 column.primary_key = column_extra['primarykey']
             if 'default' in column_extra:
                 column.default = ColumnDefault(column_extra['default'])
-            if 'foreingkey' in column_extra:
+            if 'foreignkey' in column_extra:
                 column.append_foreign_key(ForeignKey(column_extra['foreignkey']))
 
 
