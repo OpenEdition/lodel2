@@ -219,6 +219,13 @@ class SqlWrapper(object):
 
 
     def get_querystring(self, action, dialect):
+        """ Renvoit un modèle de requete selon un dialect et une action
+            
+            @param action str: Peut être 'add_column' 'alter_column' 'drop_column'
+            @param dialect str: Pour le moment seul 'default', 'mysql' et 'postgresql' sont supportés
+
+            @return str: Un modèle de requète
+        """
         string_dialect = dialect if dialect in sqlsettings.querystrings[action] else 'default'
         querystring = sqlsettings.querystrings[action][string_dialect]
         return querystring
