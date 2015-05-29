@@ -1,16 +1,16 @@
 #-*- coding: utf-8 -*-
 
-from component import EmComponent
+from EditorialModel.components import EmComponent
 
 class EmType(EmComponent):
     """ Represents type of documents
-    
+
         A type is a specialisation of a class, it can select optional field,
         they have hooks, are organized in hierarchy and linked to other
         EmType with special fields called relation_to_type fields
         @see EmComponent
     """
-    
+
     def __init__(id_or_name):
         """  Instanciate an EmType with data fetched from db
             @param id_or_name str|int: Identify the EmType by name or by global_id

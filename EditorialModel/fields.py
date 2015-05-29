@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from component import EmComponent
+from EditorialModel.components import EmComponent
 
 """Represent one data for a lodel2 document"""
 class EmField(EmComponent):

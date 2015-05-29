@@ -5,32 +5,40 @@
     @see EmClass, EmType, EmFieldGroup, EmField
 """
 
-from component import EmComponent
+from EditorialModel.components import EmComponent, EmComponentNotExistError
+import EditorialModel.classtypes
+from Database.sqlwrapper import SqlWrapper
 
-class EmClass(EmComponent)
-    def __init(id_or_name):
+class EmClass(EmComponent):
+    def __init__(self, id_or_name):
         self.table = 'em_class'
-        pass
+        super(EmClass, self).__init__(id_or_name)
 
     """ create a new class
         @param name str: name of the new class
         @param class_type EmClasstype: type of the class
     """
     @staticmethod
-    def create(self, name, class_type):
-       pass
+    def create(name, class_type):
+        #try:
+        exists = EmClass(name)
+        #except EmComponentNotExistError:
+            #print ("bin")
+            #pass
+        print (name, class_type)
+        pass
 
     """ retrieve list of the field_groups of this class
         @return field_groups [EmFieldGroup]:
     """
     def field_groups():
-       pass
+        pass
 
     """ retrieve list of fields
         @return fields [EmField]:
     """
     def fields():
-       pass
+        pass
 
     """ retrieve list of type of this class
         @return types [EmType]:
@@ -42,7 +50,7 @@ class EmClass(EmComponent)
         @param  t EmType: type to link
         @return success bool: done or not
     """
-    def link_type(t <EmType>):
+    def link_type(t):
         pass
 
     """ retrieve list of EmType that are linked to this class

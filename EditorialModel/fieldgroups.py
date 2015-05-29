@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from component import EmComponent
-
+from EditorialModel.components import EmComponent
 
 class EmFieldGroup(EmComponent):
     """ Represents groups of EmField

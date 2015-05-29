@@ -1,6 +1,6 @@
 #from django.test import TestCase
 from unittest import TestCase
-from EditorialModel.lib.component import EmComponent
+from EditorialModel.component import EmComponent
 
 class ComponentTestCase(TestCase):
 

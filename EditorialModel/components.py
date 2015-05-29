@@ -6,7 +6,10 @@
 """
 
 from Lodel.utils.mlstring import MlString
+from Database.sqlwrapper import SqlWrapper
+from Database.sqlobject import SqlObject
 import logging
+import sqlalchemy as sql
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
@@ -17,11 +20,13 @@ class EmComponent(object):
         @exception TypeError
     """
     def __init__(self, id_or_name):
+        SqlWrapper.start()
         if self is EmComponent:
             raise EnvironmentError('Abstract class')
         if type(id_or_name) is int:
             self.id = id_or_name
         elif type(id_or_name) is str:
+            self.id = None
             self.name = id_or_name
             self.populate()
         else:
@@ -30,12 +35,28 @@ class EmComponent(object):
     """ Lookup in the database properties of the object to populate the properties
     """
     def populate(self):
-        if self.id is None:
-            where = "name = " + db.quote(self.name)
-        else:
-            where = "id = " + self.id
+        dbo = SqlObject(self.table)
+        
+        t = dbo.table
 
-        row = db.query('*', self.table, where)
+        req = dbo.sel
+        print(t.c.__dict__)
+        
+        if self.id is None:
+            req.where(t.c.name == self.name)
+        else:
+            req.where(dbo.col.id == self.id)
+
+        sqlresult = dbo.rexec(req)
+        print (sqlresult)
+
+        # Transformation du résultat en une liste de dictionnaires
+        records = sqlresult.fetchall()
+        print (records)
+
+        for record in records:
+            selected_lines.append(dict(zip(record.keys(), record)))
+
         if not row:
             # could have two possible Error message for id and for name
             raise EmComponentNotExistError("Bad id_or_name: could not find the component")
@@ -89,3 +110,6 @@ class EmComponent(object):
     """
     def get_string(self, lang):
         pass
+
+class EmComponentNotExistError(Exception):
+    pass
