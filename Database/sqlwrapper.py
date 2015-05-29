@@ -97,7 +97,7 @@ class SqlWrapper(object):
 started')
             return False
 
-        c.rengine = c._getEngine(read=True, sqlaloggingi=None)
+        c.rengine = c._getEngine(read=True, sqlalogging=None)
         c.wengine = c._getEngine(read=False, sqlalogging=None)
         return True
 
@@ -110,7 +110,7 @@ started')
     
     @classmethod
     def _sqllog(c,sqlalogging = None):
-        return bool(sqlalogging) if sqlalogging != None else c.sqlalogging
+        return bool(sqlalogging) if sqlalogging != None else c.sqla_logging
 
     @classmethod
     def _getEngine(c, read=True, sqlalogging = None):
@@ -175,7 +175,6 @@ localhost')
             - dbread (mandatory if no default db)
             - dbwrite (mandatory if no default db)
         """
-        return True #TODO desactivate because buggy
         err = []
         if 'db' not in c.config:
             err.append('Missing "db" in configuration')
@@ -187,7 +186,8 @@ localhost')
                 if 'dbwrite' not in c.config:
                     err.append('Missing "dbwrite" in configuration and\
  no "default" db declared')
-            for db in c.config['db']:
+            for dbname in c.config['db']:
+                db = c.config['db'][dbname]
                 if 'ENGINE' not in db:
                     err.append('Missing "ENGINE" in database "'+db+'"')
                 else:
@@ -209,9 +209,9 @@ localhost')
 '+ename+'"')
 
         if len(err)>0:
-            err_str = ""
+            err_str = "\n"
             for e in err:
-                err_str += e+"\n"
+                err_str += "\t\t"+e+"\n"
             raise NameError('Configuration errors in LODEL2SQLWRAPPER\
 :'+err_str)
                 
