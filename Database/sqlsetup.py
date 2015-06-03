@@ -4,11 +4,11 @@ from Database.sqlwrapper import SqlWrapper
 
 class SQLSetup(object): 
 
-    def initDb(self):
-        db = SqlWrapper()
+    def initDb(self, dbconfname = 'default'):
+        db = SqlWrapper(read_db = dbconfname, write_db = dbconfname)
         tables = self.get_schema()
-        for table in tables:
-            err = db.create_table(table)
+        db.dropAll()
+        db.createAllFromConf(tables)
 
     def get_schema(self):
         tables = []

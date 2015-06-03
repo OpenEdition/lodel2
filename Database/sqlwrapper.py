@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import logging as logger
 
 import sqlalchemy as sqla
@@ -55,7 +56,7 @@ class SqlWrapper(object):
         self.checkConf() #raise if errors in configuration
 
         if name in self.__class__.wrapinstance:
-            logger.wraning("A SqlWrapper with the name "+name+" allready exist. Replacing the old one by the new one")
+            logger.warning("A SqlWrapper with the name "+name+" allready exist. Replacing the old one by the new one")
         SqlWrapper.wrapinstance[name] = self
 
         #Engine and wrapper initialisation
@@ -63,6 +64,9 @@ class SqlWrapper(object):
         self.w_engine = self._getEngine(False, self.sqlalogging)
         self.r_conn = None
         self.w_conn = None
+
+
+        self.meta = None
         pass
 
     @property
@@ -188,6 +192,7 @@ class SqlWrapper(object):
             conn_str = '%s+%s://'%(cfg['ENGINE'], edata['driver'])
             conn_str += '%s@%s/%s'%(user,host,cfg['NAME'])
 
+
         return sqla.create_engine(conn_str, encoding=edata['encoding'], echo=self.sqlalogging)
 
     @classmethod
@@ -241,4 +246,104 @@ class SqlWrapper(object):
             for e in err:
                 err_str += "\t\t"+e+"\n"
             raise NameError('Configuration errors in LODEL2SQLWRAPPER:'+err_str)
-                
+    
+    def dropAll(self):
+        """ Drop ALL tables from the database """
+        if not settings.DEBUG:
+            logger.critical("Trying to drop all tables but we are not in DEBUG !!!")
+            raise RuntimeError("Trying to drop all tables but we are not in DEBUG !!!")
+        meta = sqla.MetaData(bind=self.w_engine, reflect = True)
+        meta.drop_all()
+        pass
+
+    def createAllFromConf(self, schema):
+        """ Create a bunch of tables from a schema
+            @param schema list: A list of table schema
+            @see SqlWrapper::createTable()
+        """
+        self.meta_crea = sqla.MetaData()
+
+        for i,table in enumerate(schema):
+            self.createTable(**table)
+
+        self.meta_crea.create_all(self.w_engine)
+        self.meta_crea = None
+        pass
+            
+    def createTable(self, name, columns, extra = dict()):
+        """ Create a table
+            @param name str: The table name
+            @param columns list: A list of columns schema
+            @param extra dict: Extra arguments for table creation
+            @see SqlWrapper::createColumn()
+        """
+        if not isinstance(name, str):
+            raise TypeError("<class str> excepted for table name, but got "+type(name))
+
+        res = sqla.Table(name, self.meta_crea, **extra)
+        for i,col in enumerate(columns):
+            res.append_column(self.createColumn(**col))
+
+    def createColumn(self, **kwargs):
+        """ Create a Column
+            
+            Accepte named parameters :
+                - name : The column name
+                - type : see SqlWrapper::_strToSqlAType()
+                - extra : a dict like { "primarykey":True, "nullable":False, "default":"test"...}
+            @param **kwargs 
+        """
+        if not 'name' in kwargs or not 'type' in kwargs:
+            pass#ERROR
+
+        #Converting parameters
+        kwargs['type_'] = self._strToSqlAType(kwargs['type'])
+        del kwargs['type']
+
+        if 'extra' in kwargs:
+            #put the extra keys in kwargs
+            for exname in kwargs['extra']:
+                kwargs[exname] = kwargs['extra'][exname]
+            del kwargs['extra']
+
+        if 'foreignkey' in kwargs:
+            #Instanciate a fk
+            fk = sqla.ForeignKey(kwargs['foreignkey'])
+            del kwargs['foreignkey']
+        else:
+            fk = None
+
+        if 'primarykey' in kwargs:
+            #renaming primary_key in primarykey in kwargs
+            kwargs['primary_key'] = kwargs['primarykey']
+            del kwargs['primarykey']
+
+
+        logger.debug('Column creation arguments : '+str(kwargs))
+        res = sqla.Column(**kwargs)
+
+        if fk != None:
+            res.append_foreign_key(fk)
+
+        return res
+    
+    def _strToSqlAType(self, strtype):
+        """ Convert a string to an sqlAlchemy column type """
+
+        if 'VARCHAR' in strtype:
+            return self._strToVarchar(strtype)
+        else:
+            try:
+                return getattr(sqla, strtype)
+            except AttributeError:
+                raise NameError("Unknown type '"+strtype+"'")
+        pass
+
+    def _strToVarchar(self, vstr):
+        """ Convert a string like 'VARCHAR(XX)' (with XX an integer) to a SqlAlchemy varchar type"""
+        check_length = re.search(re.compile('VARCHAR\(([\d]+)\)', re.IGNORECASE), vstr)
+        column_length = int(check_length.groups()[0]) if check_length else None
+        return sqla.VARCHAR(length=column_length)
+        
+
+
