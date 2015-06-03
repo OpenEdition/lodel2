@@ -35,8 +35,7 @@ class SqlWrapper(object):
             @param alchemy_logs bool: If true activate sqlalchemy logger
         """
         
-        if (alchemy_logs != None and \
-            bool(alchemy_logs) != self.__class__.sqla_logging):
+        if (alchemy_logs != None and bool(alchemy_logs) != self.__class__.sqla_logging):
             #logging config changed for sqlalchemy
             self.__class__.restart()
 
@@ -94,8 +93,7 @@ class SqlWrapper(object):
         """
         c.checkConf()
         if c.started():
-            logger.warning('Starting SqlWrapper but it is allready \
-started')
+            logger.warning('Starting SqlWrapper but it is allready started')
             return False
 
         c.rengine = c._getEngine(read=True, sqlalogging=None)
@@ -127,8 +125,7 @@ started')
         dbconf = connconf if connconf in c.config['db'] else 'default'
 
         if dbconf not in c.config['db']: #This check should not be here
-            raise NameError('Configuration error no db "'+dbconf+'" in \
-configuration files')
+            raise NameError('Configuration error no db "'+dbconf+'" in configuration files')
         
         cfg = c.config['db'][dbconf] #Database config
         
@@ -146,8 +143,7 @@ configuration files')
             user += (':'+cfg['PASSWORD'] if 'PASSWORD' in cfg else '')
             
             if 'HOST' not in cfg:
-                logger.info('Not HOST in configuration, using \
-localhost')
+                logger.info('Not HOST in configuration, using localhost')
                 host = 'localhost'
             else:
                 host = cfg['HOST']
@@ -157,8 +153,7 @@ localhost')
             conn_str = '%s+%s://'%(cfg['ENGINE'], edata['driver'])
             conn_str += '%s@%s/%s'%(user,host,cfg['NAME'])
 
-        return sqla.create_engine(   conn_str, encoding=edata['encoding'],
-                                echo=c._sqllog(sqlalogging))
+        return sqla.create_engine(conn_str, encoding=edata['encoding'], echo=c._sqllog(sqlalogging))
 
     @classmethod
     def checkConf(c):
@@ -182,19 +177,16 @@ localhost')
         else:
             if 'default' not in c.config['db']:
                 if 'dbread' not in c.config:
-                    err.append('Missing "dbread" in configuration and\
- no "default" db declared')
+                    err.append('Missing "dbread" in configuration and  no "default" db declared')
                 if 'dbwrite' not in c.config:
-                    err.append('Missing "dbwrite" in configuration and\
- no "default" db declared')
+                    err.append('Missing "dbwrite" in configuration and no "default" db declared')
             for dbname in c.config['db']:
                 db = c.config['db'][dbname]
                 if 'ENGINE' not in db:
                     err.append('Missing "ENGINE" in database "'+db+'"')
                 else:
                     if db['ENGINE'] != 'sqlite' and 'USER' not in db:
-                        err.append('Missing "USER" in database "\
-'+db+'"')
+                        err.append('Missing "USER" in database "'+db+'"')
                 if 'NAME' not in db:
                     err.append('Missing "NAME" in database "'+db+'"')
         
@@ -203,18 +195,15 @@ localhost')
         for ename in c.config['engines']:
             engine = c.config['engines'][ename]
             if 'driver' not in engine:
-                err.append('Missing "driver" in database engine "\
-'+ename+'"')
+                err.append('Missing "driver" in database engine "'+ename+'"')
             if 'encoding' not in engine:
-                err.append('Missing "encoding" in database engine "\
-'+ename+'"')
+                err.append('Missing "encoding" in database engine "'+ename+'"')
 
         if len(err)>0:
             err_str = "\n"
             for e in err:
                 err_str += "\t\t"+e+"\n"
-            raise NameError('Configuration errors in LODEL2SQLWRAPPER\
-:'+err_str)
+            raise NameError('Configuration errors in LODEL2SQLWRAPPER:'+err_str)
                 
 
     @property
