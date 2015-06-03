@@ -11,108 +11,149 @@ logger.getLogger().setLevel('DEBUG')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 class SqlWrapper(object):
-    """ A wrapper class to sqlalchemy 
+    """ A wrapper class to sqlalchemy
+
         Usefull to provide a standart API
+
+        __Note__ : This class is not thread safe (sqlAlchemy connections are not). Create a new instance of the class to use in different threads or use SqlWrapper::copy
     """
-
-    ##Read Engine
-    rengine = None
-    ##Write Engine
-    wengine = None
-
-    ##Read connection
-    rconn = None
-    ##Write connection
-    wconn = None
-
+    ENGINES = {'mysql': {
+                    'driver': 'pymysql',
+                    'encoding': 'utf8'
+                },
+                'postgresql': {
+                    'driver': 'psycopg2',
+                    'encoding': 'utf8',
+                },
+                'sqlite': {
+                    'driver': 'pysqlite',
+                    'encoding': 'utf8',
+                },
+    }
+    
     ##Configuration dict alias for class access
     config=settings.LODEL2SQLWRAPPER
-    ##SqlAlchemy logging
-    sqla_logging = False
+    
+    ##Wrapper instance list
+    wrapinstance = dict()
 
-    def __init__(self, alchemy_logs=None):
+    def __init__(self, name="default", alchemy_logs=None, read_db = "default", write_db = "default"):
         """ Instanciate a new SqlWrapper
+            @param name str: The wrapper name
             @param alchemy_logs bool: If true activate sqlalchemy logger
+            @param read_db str: The name of the db conf
+            @param write_db str: The name of the db conf
         """
         
-        if (alchemy_logs != None and bool(alchemy_logs) != self.__class__.sqla_logging):
-            #logging config changed for sqlalchemy
-            self.__class__.restart()
+        self.sqlalogging = False if alchemy_logs == None else bool(alchemy_logs)
 
-        if not self.__class__.started():
-            self.__class__.start()
-        
+        self.name = name
+    
+        self.r_dbconf = read_db
+        self.w_dbconf = write_db
+
+        self.checkConf() #raise if errors in configuration
+
+        if name in self.__class__.wrapinstance:
+            logger.wraning("A SqlWrapper with the name "+name+" allready exist. Replacing the old one by the new one")
+        SqlWrapper.wrapinstance[name] = self
+
+        #Engine and wrapper initialisation
+        self.r_engine = self._getEngine(True, self.sqlalogging)
+        self.w_engine = self._getEngine(False, self.sqlalogging)
+        self.r_conn = None
+        self.w_conn = None
         pass
 
+    @property
+    def cfg(self): return self.__class__.config;
+    @property
+    def engines_cfg(self): return self.__class__.ENGINES;
+
+    @property
+    def rconn(self):
+        """ Return the read connection
+            @warning Do not store the connection, call this method each time you need it
+        """
+        return self.getConnection(True)
+    @property
+    def wconn(self):
+        """ Return the write connection
+            @warning Do not store the connection, call this method each time you need it
+        """
+        return self.getConnection(False)
+
+
+    def getConnection(self, read):
+        """ Return an opened connection
+            @param read bool: If true return the reading connection
+            @return A sqlAlchemy db connection
+        """
+        if read:
+            r = self.r_conn
+        else:
+            r = self.w_conn
+
+        if r == None:
+            #Connection not yet opened
+            self.connect(read)
+            r = self.getConnection(read) #TODO : Un truc plus safe/propre qu'un appel reccursif ?
+        return r
+
+
+    def connect(self, read = None):
+        """ Open a connection to a database
+            @param read bool|None: If None connect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        if read or read == None:
+            if self.r_conn != None:
+                logger.debug(' SqlWrapper("'+self.name+'") Unable to connect, already connected')
+            else:
+                self.r_conn = self.r_engine.connect()
+
+        if not read or read == None:
+            if self.w_conn != None:
+                logger.debug(' SqlWrapper("'+self.name+'") Unable to connect, already connected')
+            else:
+                self.w_conn = self.w_engine.connect()
+
+    def disconnect(self, read = None):
+        """ Close a connection to a database
+            @param read bool|None: If None disconnect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        if read or read == None:
+            self.r_conn.close()
+            self.r_conn = None
+
+        if not read or read == None:
+            self.w_conn.close()
+            self.w_conn = None
+
+    def reconnect(self, read = None):
+        """ Close and reopen a connection to a database
+            @param read bool|None: If None disconnect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        self.disconnect(read)
+        self.connect(read)
+
     @classmethod
-    def table(c, tname):
-        """ Return a SqlAlchemy Table object
-            @param o str: Table name
-            @return a SqlAlchemy Table instance
+    def reconnectAll(c, read = None):
+        for wname in c.wrapinstance:
+            c.wrapinstance[wname].reconnect(read)
+            
+    def Table(self, tname):
+        """ Instanciate a new SqlAlchemy Table
+            @param tname str: The table name
+            @return A new instance of SqlAlchemy::Table
         """
         if not isinstance(tname, str):
-            raise TypeError("Excepting a str but got a "+str(type(name)))
-        return sqla.Table(o, sqla.MetaData())
+            return TypeError('Excepting a <class str> but got a '+str(type(tname)))
+        return sqla.Table(tname, sqla.MetaData(), autoload_with=self.r_engine, autoload=True)
 
-    @classmethod
-    def connect(c,read = None):
-        
-        if read == None:
-            return c.connect(True) and c.coonect(False)
-        elif read:
-            c.rconn = c.rengine.connect()
-        else:
-            c.wconn = c.wengine.connect()
-        return True #TODO attention c'est pas checké...
-
-    @classmethod   
-    def conn(c, read=True):
-        if read:
-            res = c.rconn
-        else:
-            res = c.wconn
-
-        if res == None:
-            if not c.connect(read):
-                raise RuntimeError('Unable to connect to Db')
-            return c.conn(read)
-
-        return c.rconn
-
-    @classmethod
-    def rc(c): return c.conn(True)
-    @classmethod
-    def wc(c): return c.conn(False)
-
-    @classmethod
-    def start(c, sqlalogging = None):
-        """ Load engines
-            Open connections to databases
-            @param sqlalogging bool: overwrite class parameter about sqlalchemy logging
-            @return False if already started
-        """
-        c.checkConf()
-        if c.started():
-            logger.warning('Starting SqlWrapper but it is allready started')
-            return False
-
-        c.rengine = c._getEngine(read=True, sqlalogging=None)
-        c.wengine = c._getEngine(read=False, sqlalogging=None)
-        return True
-
-    @classmethod
-    def stop(c): c.rengine = c.wengine = None; pass
-    @classmethod
-    def restart(c): c.stop(); c.start(); pass
-    @classmethod
-    def started(c): return (c.rengine != None and c.rengine != None)
-    
-    @classmethod
-    def _sqllog(c,sqlalogging = None):
-        return bool(sqlalogging) if sqlalogging != None else c.sqla_logging
-
-    @classmethod
-    def _getEngine(c, read=True, sqlalogging = None):
+    def _getEngine(self, read=True, sqlalogging = None):
         """ Return a sqlalchemy engine
             @param read bool: If True return the read engine, else 
             return the write one
@@ -121,16 +162,10 @@ class SqlWrapper(object):
             @todo Put the check on db config in SqlWrapper.checkConf()
         """
         #Loading confs
-        connconf = 'dbread' if read else 'dbwrite'
-        dbconf = connconf if connconf in c.config['db'] else 'default'
+        cfg = self.cfg['db'][self.r_dbconf if read else self.w_dbconf]
 
-        if dbconf not in c.config['db']: #This check should not be here
-            raise NameError('Configuration error no db "'+dbconf+'" in configuration files')
-        
-        cfg = c.config['db'][dbconf] #Database config
-        
-        edata = c.config['engines'][cfg['ENGINE']] #engine infos
-        conn_str = cfg['ENGINE']+'+'+edata['driver']+'://'
+        edata = self.engines_cfg[cfg['ENGINE']] #engine infos
+        conn_str = ""
 
         if cfg['ENGINE'] == 'sqlite':
             #Sqlite connection string
@@ -153,10 +188,21 @@ class SqlWrapper(object):
             conn_str = '%s+%s://'%(cfg['ENGINE'], edata['driver'])
             conn_str += '%s@%s/%s'%(user,host,cfg['NAME'])
 
-        return sqla.create_engine(conn_str, encoding=edata['encoding'], echo=c._sqllog(sqlalogging))
+        return sqla.create_engine(conn_str, encoding=edata['encoding'], echo=self.sqlalogging)
 
     @classmethod
-    def checkConf(c):
+    def getWrapper(c, name):
+        """ Return a wrapper instance from a wrapper name
+            @param name str: The wrapper name
+            @return a SqlWrapper instance
+
+            @throw KeyError
+        """
+        if name not in c.wrapinstance:
+            raise KeyError("No wrapper named '"+name+"' exists")
+        return c.wrapinstance[name]
+
+    def checkConf(self):
         """ Class method that check the configuration
             
             Configuration looks like
@@ -172,44 +218,27 @@ class SqlWrapper(object):
             - dbwrite (mandatory if no default db)
         """
         err = []
-        if 'db' not in c.config:
+        if 'db' not in self.cfg:
             err.append('Missing "db" in configuration')
         else:
-            if 'default' not in c.config['db']:
-                if 'dbread' not in c.config:
-                    err.append('Missing "dbread" in configuration and  no "default" db declared')
-                if 'dbwrite' not in c.config:
-                    err.append('Missing "dbwrite" in configuration and no "default" db declared')
-            for dbname in c.config['db']:
-                db = c.config['db'][dbname]
-                if 'ENGINE' not in db:
-                    err.append('Missing "ENGINE" in database "'+db+'"')
+            for dbname in [self.r_dbconf, self.w_dbconf]:
+                if dbname not in self.cfg['db']:    
+                    err.append('Missing "'+dbname+'" db configuration')
                 else:
-                    if db['ENGINE'] != 'sqlite' and 'USER' not in db:
-                        err.append('Missing "USER" in database "'+db+'"')
-                if 'NAME' not in db:
-                    err.append('Missing "NAME" in database "'+db+'"')
-        
-        if len(c.config['engines']) == 0:
-            err.append('Missing "engines" in configuration')
-        for ename in c.config['engines']:
-            engine = c.config['engines'][ename]
-            if 'driver' not in engine:
-                err.append('Missing "driver" in database engine "'+ename+'"')
-            if 'encoding' not in engine:
-                err.append('Missing "encoding" in database engine "'+ename+'"')
-
+                    db = self.cfg['db'][dbname]
+                    if 'ENGINE' not in db:
+                        err.append('Missing "ENGINE" in database "'+db+'"')
+                    else:
+                        if db['ENGINE'] not in self.engines_cfg:
+                            err.append('Unknown engine "'+db['ENGINE']+'"')
+                        elif db['ENGINE'] != 'sqlite' and 'USER' not in db:
+                            err.append('Missing "User" in configuration of database "'+dbname+'"')
+                    if 'NAME' not in db:
+                        err.append('Missing "NAME" in database "'+dbname+'"')
+                        
         if len(err)>0:
             err_str = "\n"
             for e in err:
                 err_str += "\t\t"+e+"\n"
             raise NameError('Configuration errors in LODEL2SQLWRAPPER:'+err_str)
                 
-
-    @property
-    def cfg(self):
-        """ Get the dict of options for the wrapper
-            Its an alias to the classes property SqlWrapper.config
-            @return a dict containing the Db settings"""
-        return self.__class__.config
-
