@@ -46,13 +46,14 @@ class SqlWrapper(object):
         pass
 
     @classmethod
-    def table(c, o):
+    def table(c, tname):
         """ Return a SqlAlchemy Table object
             @param o str: Table name
+            @return a SqlAlchemy Table instance
         """
-        if isinstance(o, str):
-            return sqla.Table(o, sqla.MetaData())
-        return None
+        if not isinstance(tname, str):
+            raise TypeError("Excepting a str but got a "+str(type(name)))
+        return sqla.Table(o, sqla.MetaData())
 
     @classmethod
     def connect(c,read = None):
@@ -75,7 +76,7 @@ class SqlWrapper(object):
         if res == None:
             if not c.connect(read):
                 raise RuntimeError('Unable to connect to Db')
-            return self.conn(read)
+            return c.conn(read)
 
         return c.rconn
 

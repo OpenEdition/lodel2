@@ -27,11 +27,17 @@ class SqlObject(object):
     """
 
     def __init__(self, tname):
-        self.tname = tname
+        if not type(tname) is str:
+            logger.error("Unable to instanciate, bad argument...")
+            raise TypeError('Excepted a string not a '+str(type(tname)))
 
-    @property
-    def table(self):
-        return sql.Table(self.tname, sql.MetaData())
+        self.tname = tname
+        self.table = self.Table()
+        pass
+
+    def Table(self):
+        self.table = sql.Table(self.tname, sql.MetaData(), autoload_with=SqlWrapper.rengine, autoload=True)
+        return self.table
 
     @property
     def col(self):
@@ -39,7 +45,7 @@ class SqlObject(object):
     
     @property
     def sel(self):
-        return sql.select(self.table)
+        return sql.select([self.table])
 
     @property
     def where(self):
@@ -51,11 +57,11 @@ class SqlObject(object):
 
     @property
     def rconn(self):
-        return SqlWrapper.rconn()
+        return SqlWrapper.rc()
 
     @property
     def wconn(self):
-        return SqlWrapper.wconn()
+        return SqlWrapper.wc()
 
     def sFetchAll(self, sel):
         return self.rexec(sel).fetchall()

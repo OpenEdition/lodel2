@@ -37,18 +37,14 @@ class EmComponent(object):
     def populate(self):
         dbo = SqlObject(self.table)
         
-        t = dbo.table
-
         req = dbo.sel
-        print(t.c.__dict__)
         
         if self.id is None:
-            req.where(t.c.name == self.name)
+            req.where(dbo.col.name == self.name)
         else:
             req.where(dbo.col.id == self.id)
 
         sqlresult = dbo.rexec(req)
-        print (sqlresult)
 
         # Transformation du résultat en une liste de dictionnaires
         records = sqlresult.fetchall()
