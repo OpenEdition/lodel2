@@ -18,7 +18,10 @@ class MlString(object):
         self.translations[lang] = text
 
     def __str__(self):
-        return json.dumps(self.translations)
+        if self.translations:
+            return json.dumps(self.translations)
+        else:
+            return ""
 
     @staticmethod
     def load(json_string):
