@@ -66,7 +66,8 @@ class SqlWrapper(object):
         self.w_conn = None
 
 
-        self.meta = None
+        self.meta = None #TODO : use it to load all db schema in 1 request and don't load it each table instanciation
+        self.meta_crea = None
         pass
 
     @property
@@ -270,19 +271,31 @@ class SqlWrapper(object):
         self.meta_crea = None
         pass
             
-    def createTable(self, name, columns, extra = dict()):
+    def createTable(self, name, columns, **kw):
         """ Create a table
             @param name str: The table name
-            @param columns list: A list of columns schema
+            @param columns list: A list of columns description dict
             @param extra dict: Extra arguments for table creation
             @see SqlWrapper::createColumn()
         """
+
+        if self.meta_crea == None:
+            self.meta_crea = sqla.MetaData()
+            crea_now = True
+        else:
+            crea_now = False
+
         if not isinstance(name, str):
             raise TypeError("<class str> excepted for table name, but got "+type(name))
 
-        res = sqla.Table(name, self.meta_crea, **extra)
+        res = sqla.Table(name, self.meta_crea, **kw)
         for i,col in enumerate(columns):
             res.append_column(self.createColumn(**col))
+
+        if crea_now:
+            self.meta_crea.create_all(self.w_engine)
+
+        pass
 
     def createColumn(self, **kwargs):
         """ Create a Column
