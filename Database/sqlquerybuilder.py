@@ -41,6 +41,12 @@ class SqlQueryBuilder():
     def Update(self):
         self.proxy = self.table.update()
 
+    def Insert(self):
+        self.proxy = self.table.insert()
+
+    def Delete(self):
+        self.proxy = self.proxy.delete()
+
     def Value(self, arg):
         """
         Allow you to specifies the VALUES or SET clause of the statement.
