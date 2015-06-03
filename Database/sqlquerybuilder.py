@@ -54,16 +54,30 @@ class SqlQueryBuilder():
         """
         self.proxy = self.proxy.values(arg)
 
-    def Execute(self):
+    def Execute(self, bindedparam):
         """
         Execute the sql query constructed in the proxy and return the result.
         If no query then return False.
         @return: query result on success else False
         """
         if(self.proxy.__str__().split() == 'SELECT'):
-            return self.sqlwrapper.rconn.execute(self.proxy)
+            if('bindparam' in self.proxy.__str__()):
+                #on test separement la présence de la clause bindparam et le type de l'argument correspondant
+                #car si la clause est présente mais que l'argument est defectueux on doit renvoyer False et non pas executer la requete
+                if(type(bindedparam) is list and type(bindedparam[0]) is dict):
+                    return self.sqlwrapper.rconn.execute(self.proxy, bindedparam)
+                else:
+                    return False
+            else:
+                return self.sqlwrapper.rconn.execute(self.proxy)
         elif(self.proxy is not None):
-            return self.sqlwrapper.wconn.execute(self.proxy)
+            if('bindparam' in self.proxy.__str__()):
+                if(type(bindedparam) is list and type(bindedparam[0]) is dict):
+                    return self.sqlwrapper.wconn.execute(self.proxy, bindedparam)
+                else:
+                    return False
+            else:
+                return self.sqlwrapper.wconn.execute(self.proxy)
         else:
             return False
 
