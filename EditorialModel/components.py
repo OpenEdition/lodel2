@@ -25,6 +25,7 @@ class EmComponent(object):
             raise EnvironmentError('Abstract class')
         if isinstance(id_or_name, int):
             self.id = id_or_name
+            self.name = None
         elif isinstance(id_or_name, str):
             self.id = None
             self.name = id_or_name
@@ -41,7 +42,7 @@ class EmComponent(object):
         if self.id is None:
             select.where(table.col.name == self.name)
         else:
-            select.where(table.col.id == self.id)
+            select.where(table.col.uid == self.id)
 
         sqlresult = table.rexec(select)
         records = sqlresult.fetchall()
@@ -55,7 +56,7 @@ class EmComponent(object):
             for k in record.keys():
                 setattr(row, k, record[k])
 
-        self.id = row.uid
+        self.id = int(row.uid)
         self.name = row.name
         self.rank = 0 if row.rank is None else int(row.rank)
         self.date_update = row.date_update
@@ -91,6 +92,13 @@ class EmComponent(object):
     """
     def modify_rank(self, new_rank):
         pass
+
+    def __repr__(self):
+        if self.name is None:
+            return "<%s #%s, 'non populated'>" % (type(self).__name__, self.id)
+        else:
+            return "<%s #%s, '%s'>" % (type(self).__name__, self.id, self.name)
+
 
 class EmComponentNotExistError(Exception):
     pass
