@@ -8,9 +8,7 @@
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlobject import SqlObject
-
-import EditorialModel.classtypes
-import EditorialModel.types
+import EditorialModel
 
 class EmClass(EmComponent):
     table = 'em_class'
@@ -61,8 +59,16 @@ class EmClass(EmComponent):
     """ retrieve list of the field_groups of this class
         @return field_groups [EmFieldGroup]:
     """
-    def field_groups(self):
-        pass
+    def fieldgroups(self):
+        fieldgroups_req = SqlObject(EditorialModel.fieldgroups.EmFieldGroup.table)
+        select = fieldgroups_req.sel
+        select.where(fieldgroups_req.col.class_id == self.id)
+
+        sqlresult = fieldgroups_req.rexec(select)
+        records = sqlresult.fetchall()
+        fieldgroups = [ EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records ]
+
+        return fieldgroups
 
     """ retrieve list of fields
         @return fields [EmField]:
