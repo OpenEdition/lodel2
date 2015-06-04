@@ -15,7 +15,11 @@ class MlString(object):
         return self.translations[lang]
 
     def set(self, lang, text):
-        self.translations[lang] = text
+        if not text:
+            if lang in self.translations:
+                del(self.translations[lang])
+        else:
+            self.translations[lang] = text
 
     def __str__(self):
         if self.translations:
