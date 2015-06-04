@@ -6,12 +6,15 @@
 """
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-import EditorialModel.classtypes
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlobject import SqlObject
 
+import EditorialModel.classtypes
+import EditorialModel.types
+
 class EmClass(EmComponent):
     table = 'em_class'
+
     def __init__(self, id_or_name):
         self.table = EmClass.table
         super(EmClass, self).__init__(id_or_name)
@@ -34,7 +37,7 @@ class EmClass(EmComponent):
             SqlWrapper.wc().execute("CREATE TABLE %s (uid VARCHAR(50))" % name)
             return EmClass(name)
 
-        return False
+        return exists
 
     def populate(self):
         row = super(EmClass, self).populate()
@@ -44,7 +47,7 @@ class EmClass(EmComponent):
 
     def save(self):
         # should not be here, but cannot see how to do this
-        if self.id is None:
+        if self.name is None:
             self.populate()
 
         values = {
@@ -58,30 +61,38 @@ class EmClass(EmComponent):
     """ retrieve list of the field_groups of this class
         @return field_groups [EmFieldGroup]:
     """
-    def field_groups():
+    def field_groups(self):
         pass
 
     """ retrieve list of fields
         @return fields [EmField]:
     """
-    def fields():
+    def fields(self):
         pass
 
     """ retrieve list of type of this class
         @return types [EmType]:
     """
-    def types():
-        pass
+    def types(self):
+        emtype = SqlObject(EditorialModel.types.EmType.table)
+        select = emtype.sel
+        select.where(emtype.col.class_id == self.id)
+
+        sqlresult = emtype.rexec(select)
+        records = sqlresult.fetchall()
+        types = [ EditorialModel.types.EmType(int(record.uid)) for record in records ]
+
+        return types
 
     """ add a new EmType that can ben linked to this class
         @param  t EmType: type to link
         @return success bool: done or not
     """
-    def link_type(t):
+    def link_type(self, t):
         pass
 
     """ retrieve list of EmType that are linked to this class
         @return types [EmType]:
     """
-    def linked_types():
+    def linked_types(self):
         pass
