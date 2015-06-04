@@ -23,9 +23,9 @@ class EmComponent(object):
         SqlWrapper.start()
         if self is EmComponent:
             raise EnvironmentError('Abstract class')
-        if type(id_or_name) is int:
+        if isinstance(id_or_name, int):
             self.id = id_or_name
-        elif type(id_or_name) is str:
+        elif isinstance(id_or_name, str):
             self.id = None
             self.name = id_or_name
             self.populate()
@@ -35,43 +35,50 @@ class EmComponent(object):
     """ Lookup in the database properties of the object to populate the properties
     """
     def populate(self):
-        dbo = SqlObject(self.table)
-        
-        req = dbo.sel
-        
+        table = SqlObject(self.table)
+        select = table.sel
+
         if self.id is None:
-            req.where(dbo.col.name == self.name)
+            select.where(table.col.name == self.name)
         else:
-            req.where(dbo.col.id == self.id)
+            select.where(table.col.id == self.id)
 
-        sqlresult = dbo.rexec(req)
-
-        # Transformation du résultat en une liste de dictionnaires
+        sqlresult = table.rexec(select)
         records = sqlresult.fetchall()
-        print (records)
 
-        for record in records:
-            selected_lines.append(dict(zip(record.keys(), record)))
-
-        if not row:
+        if not records:
             # could have two possible Error message for id and for name
             raise EmComponentNotExistError("Bad id_or_name: could not find the component")
 
+        for record in records:
+            row = type('row', (object,), {})()
+            for k in record.keys():
+                setattr(row, k, record[k])
+
+        self.id = row.uid
         self.name = row.name
-        self.rank = int(row.rank)
+        self.rank = 0 if row.rank is None else int(row.rank)
         self.date_update = row.date_update
         self.date_create = row.date_create
-        self.string = MlString.from_json(row.string)
-        self.help = MlString.from_json(row.help)
-        self.icon = row.icon
+        self.string = MlString.load(row.string)
+        self.help = MlString.load(row.help)
 
         return row
 
     """ write the representation of the component in the database
         @return bool
     """
-    def save(self):
-        pass
+    def save(self, values):
+        values['name'] = self.name
+        values['rank'] = self.rank
+        values['date_update'] = self.date_update
+        values['date_create'] = self.date_create
+        values['string'] = str(self.string)
+        values['help']= str(self.help)
+
+        emclass = SqlObject(self.table)
+        update = emclass.table.update(values=values)
+        res = emclass.wexec(update)
 
     """ delete this component data in the database
         @return bool
@@ -83,28 +90,6 @@ class EmComponent(object):
         @param int new_rank new position
     """
     def modify_rank(self, new_rank):
-        pass
-
-    """ set a string representation of the component for a given language
-        @param  lang str: iso 639-2 code of the language http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
-        @param  text str: text to set
-        @return bool
-    """
-    def set_string(self, lang, text):
-        pass
-
-    """ set the string representation of the component
-        @param  ml_string  MlString: strings for all language
-        @return bool
-    """
-    def set_strings(self, ml_string):
-        pass
-
-    """ get the string representation of the component for the given language
-        @param  lang   str: iso 639-2 code of the language
-        @return text   str: 
-    """
-    def get_string(self, lang):
         pass
 
 class EmComponentNotExistError(Exception):
