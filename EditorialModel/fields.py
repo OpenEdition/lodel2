@@ -40,12 +40,8 @@ class EmField(EmComponent):
         try:
             exists = EmField(name)
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmField.table))
-            uid = res.inserted_primary_key
-
             values = {
-                'uid' : uid,
+                'uid' : None,
                 'name' : name,
                 'fieldgroup_id' : em_fieldgroup.id,
                 'fieldtype_id' : em_fieldtype.id,
@@ -53,11 +49,26 @@ class EmField(EmComponent):
                 'internal' : 1 if internal else 0,
             }
 
-            emfield_req = SqlObject(EmField.table)
-            res = emfield_req.wexec(emfield_req.table.insert(values=values))
-            return EmField(name)
+            return EmField._createDb(values)
 
         return exists
+    
+    @classmethod
+    def _createDb(c, values):
+        dbe = c.getDbe()
+        #Create a new uid
+        uids = sql.Table('uids', sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = uids.insert(values={'table':c.table})
+        res = conn.execute(req)
+
+        values['uid'] = res.inserted_primary_key
+        req = sql.Table(c.table).insert(values=values)
+        res = conn.execute(req)
+
+        conn.close()
+
+        return Field(values['name'])
 
     """ Use dictionary (from database) to populate the object
     """
