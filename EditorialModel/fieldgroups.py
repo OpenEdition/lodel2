@@ -41,13 +41,10 @@ class EmFieldGroup(EmComponent):
     @classmethod
     def _createDb(c,name, em_class):
         """ Make the Db insertion for fieldgroup creation """
+        uid = c.newUid()
+
         dbe = c.getDbE()
-        #Create a new uid
-        uids = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
-        req = uids.insert(values={'table': c.table})
-        res = conn.execute(req)
-        uid = res.inserted_primary_key
 
         req = sql.Table(c.table, sqlutils.meta(dbe)).insert().values(uid=uid, name=name, class_id=em_class.id)
         res = conn.execute(req)
