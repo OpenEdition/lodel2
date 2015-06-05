@@ -48,7 +48,7 @@ class EmField(EmComponent):
                 'uid' : uid,
                 'name' : name,
                 'fieldgroup_id' : em_fieldgroup.id,
-                'fieldtype_id' : em_fieldtype.id,
+                'fieldtype' : em_fieldtype.name,
                 'optional' : 1 if optional else 0,
                 'internal' : 1 if internal else 0,
             }
@@ -64,7 +64,7 @@ class EmField(EmComponent):
     def populate(self):
         row = super(EmField, self).populate()
         self.em_fieldgroup = EditorialModel.fieldgroups.EmFieldGroup(int(row.fieldgroup_id))
-        self.em_fieldtype = EditorialModel.fieldtypes.EmFieldType(int(row.fieldtype_id))
+        self.em_fieldtype = EditorialModel.fieldtypes.get_field_type(row.fieldtype)
         self.optional = True if row.optional == 1 else False;
         self.internal = True if row.internal == 1 else False;
         self.icon = row.icon
@@ -78,7 +78,7 @@ class EmField(EmComponent):
 
         values = {
             'fieldgroup_id' : self.em_fieldgroup.id,
-            'fieldtype_id' : self.em_fieldtype.id,
+            'fieldtype' : self.em_fieldtype.name,
             'optional' : 1 if self.optional else 0,
             'internal' : 1 if self.internal else 0,
             'icon' : self.icon,
