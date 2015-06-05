@@ -45,7 +45,7 @@ class EmClass(EmComponent):
         conn = dbe.connect()
         req = uids.insert(values={'table':c.table})
         res = conn.execute(req)
-        
+
         uid = res.inserted_primary_key[0]
 
         #Create a new entry in the em_class table
@@ -61,7 +61,7 @@ class EmClass(EmComponent):
 
         conn.close()
 
-        return EmClass(res.inserted_primary_key[0])
+        return EmClass(name)
 
 
     def populate(self):
