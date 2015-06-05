@@ -6,7 +6,6 @@
 """
 
 from Lodel.utils.mlstring import MlString
-#from Database.sqlwrapper import SqlWrapper
 import logging
 import sqlalchemy as sql
 from Database import sqlutils
@@ -32,7 +31,7 @@ class EmComponent(object):
             self.name = id_or_name
             self.populate()
         else:
-            raise TypeError('Bad argument: expecting <int> or <str>')
+            raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
 
     """ Lookup in the database properties of the object to populate the properties
     """
@@ -97,7 +96,7 @@ class EmComponent(object):
         """ Do the query on the db """
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.update(t, values = values).where(component.id == self.id)
+        req = sql.update(component, values = values).where(component.c.uid == self.id)
 
         c = dbe.connect()
         res = c.execute(req)
@@ -113,7 +112,7 @@ class EmComponent(object):
         #<SQL>
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req= component.delete().where(component.id == self.id)
+        req= component.delete().where(component.c.uid == self.id)
         c = dbe.connect()
         res = c.execute(req)
         c.close

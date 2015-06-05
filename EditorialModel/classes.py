@@ -8,7 +8,6 @@
 import logging as logger
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-#from Database.sqlwrapper import SqlWrapper
 from Database import sqlutils
 import sqlalchemy as sql
 
@@ -47,7 +46,7 @@ class EmClass(EmComponent):
         req = uids.insert(values={'table':c.table})
         res = conn.execute(req)
         
-        uid = res.inserted_primary_key
+        uid = res.inserted_primary_key[0]
 
         #Create a new entry in the em_class table
         dbclass = sql.Table(c.table, sqlutils.meta(dbe))
@@ -62,7 +61,7 @@ class EmClass(EmComponent):
 
         conn.close()
 
-        return EmClass(res.inserted_primary_key)
+        return EmClass(res.inserted_primary_key[0])
 
 
     def populate(self):
@@ -88,15 +87,20 @@ class EmClass(EmComponent):
         @return field_groups [EmFieldGroup]:
     """
     def fieldgroups(self):
-        fieldgroups_req = SqlObject(EditorialModel.fieldgroups.EmFieldGroup.table)
-        select = fieldgroups_req.sel
-        select.where(fieldgroups_req.col.class_id == self.id)
-
-        sqlresult = fieldgroups_req.rexec(select)
-        records = sqlresult.fetchall()
+        records = self._fieldgroupsDb()
         fieldgroups = [ EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records ]
 
         return fieldgroups
+
+    def _fieldgroupsDb(self):
+        dbe = self.__class__.getDbE()
+        emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
+        req = emfg.select().where(emfg.c.class_id == self.id)
+        
+        conn = dbe.connect()
+        res = conn.execute(req)
+        return res.fetchall()
+
 
     """ retrieve list of fields
         @return fields [EmField]:
@@ -108,16 +112,19 @@ class EmClass(EmComponent):
         @return types [EmType]:
     """
     def types(self):
-        emtype = SqlObject(EditorialModel.types.EmType.table)
-        select = emtype.sel
-        select.where(emtype.col.class_id == self.id)
-
-        sqlresult = emtype.rexec(select)
-        records = sqlresult.fetchall()
+        records = self._typesDb()
         types = [ EditorialModel.types.EmType(int(record.uid)) for record in records ]
 
         return types
 
+    def _typesDb(self):
+        dbe = self.__class__.getDbE()
+        emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
+        req = emtype.select().where(emtype.c.class_id == self.id)
+        conn = dbe.connect()
+        res = conn.execute(req)
+        return res.fetchall()
+    
     """ add a new EmType that can ben linked to this class
         @param  t EmType: type to link
         @return success bool: done or not

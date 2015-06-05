@@ -74,8 +74,8 @@ class SQLSetup(object):
         em_field['columns'] = default_columns + [
             {"name":"fieldtype",   "type":"VARCHAR(50)", "extra":{"nullable":False}},
             {"name":"fieldgroup_id",  "type":"INTEGER", "extra":{"foreignkey":"em_fieldgroup.uid", "nullable":False}},
-            {"name":"rel_to_type_id", "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: type this field refer to
-            {"name":"rel_field_id",   "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: field that specify the rel_to_type_id
+            {"name":"rel_to_type_id", "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":True, "default": None}}, # if relational: type this field refer to
+            {"name":"rel_field_id",   "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":True, "default": None}}, # if relational: field that specify the rel_to_type_id
             {"name":"optional",       "type":"BOOLEAN"},
             {"name":"internal",       "type":"BOOLEAN"},
             {"name":"icon",           "type":"INTEGER"},

@@ -1,7 +1,9 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+
+import sqlalchemy as sql
 
 import EditorialModel
 
@@ -55,7 +57,7 @@ class EmField(EmComponent):
     
     @classmethod
     def _createDb(c, values):
-        dbe = c.getDbe()
+        dbe = c.getDbE()
         #Create a new uid
         uids = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
@@ -63,12 +65,12 @@ class EmField(EmComponent):
         res = conn.execute(req)
 
         values['uid'] = res.inserted_primary_key
-        req = sql.Table(c.table).insert(values=values)
+        req = sql.Table(c.table, sqlutils.meta(dbe)).insert(values=values)
         res = conn.execute(req)
 
         conn.close()
 
-        return Field(values['name'])
+        return EmField(values['name'])
 
     """ Use dictionary (from database) to populate the object
     """

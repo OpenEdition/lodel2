@@ -1,7 +1,8 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+import sqlalchemy as sql
 
 import EditorialModel.classes
 
@@ -39,15 +40,27 @@ class EmType(EmComponent):
         try:
             exists = EmType(name)
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmType.table))
-            uid = res.inserted_primary_key
-
-            emtype = SqlObject(EmType.table)
-            res = emtype.wexec(emtype.table.insert().values(uid=uid, name=name, class_id=em_class.id))
-            return EmType(name)
+            return EmType._createDb(name, em_class)
 
         return exists
+
+    @classmethod
+    def _createDb(c, name, em_class):
+        dbe = c.getDbE()
+        #Create a new uid
+        uids = sql.Table('uids', sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = uids.insert(values={'table':c.table})
+        res = conn.execute(req)
+
+        uid = res.inserted_primary_key
+
+        #Insert type in db
+        dbtype = sql.Table(c.table, sqlutils.meta(dbe))
+        req = dbtype.insert().values(uid=uid, name=name, class_id=em_class.id)
+        res = conn.execute(req)
+
+        return EmType(name)
 
     """ Use dictionary (from database) to populate the object
     """
