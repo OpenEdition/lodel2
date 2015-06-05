@@ -1,7 +1,8 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+import sqlalchemy as sql
 
 import EditorialModel
 
@@ -33,15 +34,30 @@ class EmFieldGroup(EmComponent):
         try:
             exists = EmFieldGroup(name)
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmFieldGroup.table))
-            uid = res.inserted_primary_key
-
-            emfieldgroup = SqlObject(EmFieldGroup.table)
-            res = emfieldgroup.wexec(emfieldgroup.table.insert().values(uid=uid, name=name, class_id=em_class.id))
-            return EmFieldGroup(name)
+            return EmFieldGroup._createDb(name, em_class)
 
         return exists
+
+    @classmethod
+    def _createDb(c,name, em_class):
+        """ Make the Db insertion for fieldgroup creation """
+        dbe = c.getDbE()
+        #Create a new uid
+        uids = sql.Table('uids', sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = uids.insert(values={'table': c.table})
+        res = conn.execute(req)
+        uid = res.inserted_primary_key
+
+        req = sql.Table(c.table, sqlutils.meta(dbe)).insert().values(uid=uid, name=name, class_id=em_class.id)
+        res = conn.execute(req)
+
+        conn.close()
+
+        return EmFieldGroup(name)
+        
+
+        
 
     """ Use dictionary (from database) to populate the object
     """
