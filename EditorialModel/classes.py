@@ -29,25 +29,21 @@ class EmClass(EmComponent):
     @classmethod
     def create(c, name, class_type):
         try:
-            exists = EmClass(name)
+            res = EmClass(name)
             logger.info("Trying to create an EmClass that allready exists")
         except EmComponentNotExistError:
-            return c._createDb(name, class_type)
+            res = c._createDb(name, class_type)
+            logger.debug("EmClass successfully created")
 
-        return exists
+        return res
 
     @classmethod
     def _createDb(c, name, class_type):
         """ Do the db querys for EmClass::create() """
-        dbe = c.getDbE()
-        #Create a new uid
-        uids = sql.Table('uids', sqlutils.meta(dbe))
-        conn = dbe.connect()
-        req = uids.insert(values={'table':c.table})
-        res = conn.execute(req)
-        
-        uid = res.inserted_primary_key[0]
+        uid = c.newUid()
 
+        dbe = c.getDbE()
+        conn = dbe.connect()
         #Create a new entry in the em_class table
         dbclass = sql.Table(c.table, sqlutils.meta(dbe))
         req = dbclass.insert().values(uid = uid, name=name, classtype=class_type['name'])

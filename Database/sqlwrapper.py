@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import logging as logger
+import logging
 
 import sqlalchemy as sqla
 from sqlalchemy.ext.compiler import compiles
@@ -10,7 +10,10 @@ from django.conf import settings
 from Database.sqlalter import *
 
 #Logger config
-logger.getLogger().setLevel('DEBUG')
+#logger.getLogger().setLevel('WARNING')
+logger = logging.getLogger('lodel2.Database.sqlwrapper')
+logger.setLevel('WARNING')
+logger.propagate = False
 #To be able to use dango confs
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 

@@ -57,14 +57,10 @@ class EmField(EmComponent):
     
     @classmethod
     def _createDb(c, values):
-        dbe = c.getDbE()
-        #Create a new uid
-        uids = sql.Table('uids', sqlutils.meta(dbe))
-        conn = dbe.connect()
-        req = uids.insert(values={'table':c.table})
-        res = conn.execute(req)
+        values['uid'] = c.newUid()
 
-        values['uid'] = res.inserted_primary_key
+        dbe = c.getDbE()
+        conn = dbe.connect()
         req = sql.Table(c.table, sqlutils.meta(dbe)).insert(values=values)
         res = conn.execute(req)
 

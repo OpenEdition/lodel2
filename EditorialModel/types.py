@@ -46,14 +46,10 @@ class EmType(EmComponent):
 
     @classmethod
     def _createDb(c, name, em_class):
-        dbe = c.getDbE()
-        #Create a new uid
-        uids = sql.Table('uids', sqlutils.meta(dbe))
-        conn = dbe.connect()
-        req = uids.insert(values={'table':c.table})
-        res = conn.execute(req)
+        uid = c.newUid()
 
-        uid = res.inserted_primary_key
+        dbe = c.getDbE()
+        conn = dbe.connect()
 
         #Insert type in db
         dbtype = sql.Table(c.table, sqlutils.meta(dbe))

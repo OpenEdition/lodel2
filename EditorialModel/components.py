@@ -15,7 +15,8 @@ logger = logging.getLogger('Lodel2.EditorialModel')
 class EmComponent(object):
 
     dbconf = 'default' #the name of the engine configuration
-
+    table = None
+    
     """ instaciate an EmComponent
         @param id_or_name int|str: name or id of the object
         @exception TypeError
@@ -132,6 +133,25 @@ class EmComponent(object):
             return "<%s #%s, 'non populated'>" % (type(self).__name__, self.id)
         else:
             return "<%s #%s, '%s'>" % (type(self).__name__, self.id, self.name)
+
+    @classmethod
+    def newUid(c):
+        """ This function register a new component in uids table
+            @return The new uid
+        """
+        dbe = c.getDbE()
+
+        uidtable = sql.Table('uids', sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = uidtable.insert(values={'table':c.table})
+        res = conn.execute(req)
+
+        uid = res.inserted_primary_key[0]
+        logger.debug("Registering a new UID '"+str(uid)+"' for '"+c.table+"' component")
+
+        conn.close()
+
+        return uid
 
 
 class EmComponentNotExistError(Exception):
