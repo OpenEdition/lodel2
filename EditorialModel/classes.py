@@ -5,10 +5,16 @@
     @see EmClass, EmType, EmFieldGroup, EmField
 """
 
+import logging as logger
+
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlobject import SqlObject
+#from Database.sqlwrapper import SqlWrapper
+from Database import sqlutils
+import sqlalchemy as sql
+
 import EditorialModel
+
+
 
 class EmClass(EmComponent):
     table = 'em_class'
@@ -21,21 +27,43 @@ class EmClass(EmComponent):
         @param name str: name of the new class
         @param class_type EmClasstype: type of the class
     """
-    @staticmethod
-    def create(name, class_type):
+    @classmethod
+    def create(c, name, class_type):
         try:
             exists = EmClass(name)
+            logger.info("Trying to create an EmClass that allready exists")
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmClass.table))
-            uid = res.inserted_primary_key
-
-            emclass = SqlObject(EmClass.table)
-            res = emclass.wexec(emclass.table.insert().values(uid=uid, name=name, classtype=class_type['name']))
-            SqlWrapper.wc().execute("CREATE TABLE %s (uid VARCHAR(50))" % name)
-            return EmClass(name)
+            return c._createDb(name, class_type)
 
         return exists
+
+    @classmethod
+    def _createDb(c, name, class_type):
+        """ Do the db querys for EmClass::create() """
+        dbe = c.getDbE()
+        #Create a new uid
+        uids = sql.Table('uids', sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = uids.insert(values={'table':c.table})
+        res = conn.execute(req)
+        
+        uid = res.inserted_primary_key
+
+        #Create a new entry in the em_class table
+        dbclass = sql.Table(c.table, sqlutils.meta(dbe))
+        req = dbclass.insert().values(uid = uid, name=name, classtype=class_type['name'])
+        res = conn.execute(req)
+
+        #Create a new table storing LodelObjects of this EmClass
+        meta = sql.MetaData()
+        emclasstable = sql.Table(name, meta,
+            sql.Column('uid', sql.VARCHAR(50), primary_key = True))
+        emclasstable.create(conn)
+
+        conn.close()
+
+        return EmClass(res.inserted_primary_key)
+
 
     def populate(self):
         row = super(EmClass, self).populate()
