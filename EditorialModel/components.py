@@ -6,21 +6,22 @@
 """
 
 from Lodel.utils.mlstring import MlString
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlobject import SqlObject
+#from Database.sqlwrapper import SqlWrapper
 import logging
 import sqlalchemy as sql
+from Database import sqlutils
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
 class EmComponent(object):
+
+    dbconf = 'default' #the name of the engine configuration
 
     """ instaciate an EmComponent
         @param id_or_name int|str: name or id of the object
         @exception TypeError
     """
     def __init__(self, id_or_name):
-        SqlWrapper.start()
         if self is EmComponent:
             raise EnvironmentError('Abstract class')
         if isinstance(id_or_name, int):
@@ -36,20 +37,7 @@ class EmComponent(object):
     """ Lookup in the database properties of the object to populate the properties
     """
     def populate(self):
-        table = SqlObject(self.table)
-        select = table.sel
-
-        if self.id is None:
-            select.where(table.col.name == self.name)
-        else:
-            select.where(table.col.uid == self.id)
-
-        sqlresult = table.rexec(select)
-        records = sqlresult.fetchall()
-
-        if not records:
-            # could have two possible Error message for id and for name
-            raise EmComponentNotExistError("Bad id_or_name: could not find the component")
+        records = self._populateDb() #Db query
 
         for record in records:
             row = type('row', (object,), {})()
@@ -66,6 +54,32 @@ class EmComponent(object):
 
         return row
 
+    @classmethod
+    def getDbE(c):
+        """ Shortcut that return the sqlAlchemy engine """
+        return sqlutils.getEngine(c.dbconf)
+
+    def _populateDb(self):
+        """ Do the query on the db """
+        dbe = self.__class__.getDbE()
+        component = sql.Table(self.table, sqlutils.meta(dbe))
+        req = sql.sql.select([component])
+
+        if self.id == None:
+            req.where(component.c.name == self.name)
+        else:
+            req.where(component.c.uid == self.id)
+        c = dbe.connect()
+        res = c.execute(req)
+        c.close()
+
+        res = res.fetchall()
+
+        if not res or len(res) == 0:
+            raise EmComponentNotExistError("No component found with "+('name '+self.name if self.id == None else 'id '+self.id ))
+
+        return res
+
     """ write the representation of the component in the database
         @return bool
     """
@@ -77,14 +91,35 @@ class EmComponent(object):
         values['string'] = str(self.string)
         values['help']= str(self.help)
 
-        emclass = SqlObject(self.table)
-        update = emclass.table.update(values=values)
-        res = emclass.wexec(update)
+        self._saveDb(values)
+
+    def _saveDb(self, values):
+        """ Do the query on the db """
+        dbe = self.__class__.getDbE()
+        component = sql.Table(self.table, sqlutils.meta(dbe))
+        req = sql.update(t, values = values).where(component.id == self.id)
+
+        c = dbe.connect()
+        res = c.execute(req)
+        c.close()
+        if not res:
+            raise RuntimeError("Unable to save the component in the database")
+        
 
     """ delete this component data in the database
         @return bool
     """
     def delete(self):
+        #<SQL>
+        dbe = self.__class__.getDbE()
+        component = sql.Table(self.table, sqlutils.meta(dbe))
+        req= component.delete().where(component.id == self.id)
+        c = dbe.connect()
+        res = c.execute(req)
+        c.close
+        if not res:
+            raise RuntimeError("Unable to delete the component in the database")
+        #</SQL>
         pass
 
     """ change the rank of the component

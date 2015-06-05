@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import logging as logger
 
 import sqlalchemy as sqla
+from sqlalchemy.ext.compiler import compiles
 from django.conf import settings
+
+from Database.sqlalter import *
 
 #Logger config
 logger.getLogger().setLevel('DEBUG')
@@ -11,108 +15,191 @@ logger.getLogger().setLevel('DEBUG')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 class SqlWrapper(object):
-    """ A wrapper class to sqlalchemy 
+    """ A wrapper class to sqlalchemy
+
         Usefull to provide a standart API
+
+        __Note__ : This class is not thread safe (sqlAlchemy connections are not). Create a new instance of the class to use in different threads or use SqlWrapper::copy
     """
-
-    ##Read Engine
-    rengine = None
-    ##Write Engine
-    wengine = None
-
-    ##Read connection
-    rconn = None
-    ##Write connection
-    wconn = None
-
+    ENGINES = {'mysql': {
+                    'driver': 'pymysql',
+                    'encoding': 'utf8'
+                },
+                'postgresql': {
+                    'driver': 'psycopg2',
+                    'encoding': 'utf8',
+                },
+                'sqlite': {
+                    'driver': 'pysqlite',
+                    'encoding': 'utf8',
+                },
+    }
+    
     ##Configuration dict alias for class access
     config=settings.LODEL2SQLWRAPPER
-    ##SqlAlchemy logging
-    sqla_logging = False
+    
+    ##Wrapper instance list
+    wrapinstance = dict()
 
-    def __init__(self, alchemy_logs=None):
+    def __init__(self, name=None, alchemy_logs=None, read_db = "default", write_db = "default"):
         """ Instanciate a new SqlWrapper
+            @param name str: The wrapper name
             @param alchemy_logs bool: If true activate sqlalchemy logger
+            @param read_db str: The name of the db conf
+            @param write_db str: The name of the db conf
+
+            @todo Better use of name (should use self.cfg['wrapper'][name] to get engines configs
+            @todo Is it a really good idea to store instance in class scope ? Maybe not !!
         """
         
-        if (alchemy_logs != None and bool(alchemy_logs) != self.__class__.sqla_logging):
-            #logging config changed for sqlalchemy
-            self.__class__.restart()
+        self.sqlalogging = False if alchemy_logs == None else bool(alchemy_logs)
 
-        if not self.__class__.started():
-            self.__class__.start()
-        
+        if name == None:
+            self.name = read_db+'+'+write_db
+        else:
+            self.name = name
+    
+        self.r_dbconf = read_db
+        self.w_dbconf = write_db
+
+        self._checkConf() #raise if errors in configuration
+
+        if self.name in self.__class__.wrapinstance:
+            logger.warning("A SqlWrapper with the name "+self.name+" allready exist. Replacing the old one by the new one")
+        SqlWrapper.wrapinstance[self.name] = self
+
+        #Engine and wrapper initialisation
+        self.r_engine = self._getEngine(True, self.sqlalogging)
+        self.w_engine = self._getEngine(False, self.sqlalogging)
+        self.r_conn = None
+        self.w_conn = None
+
+
+        self.metadata = None #TODO : use it to load all db schema in 1 request and don't load it each table instanciation
+        self.meta_crea = None
+
+        logger.debug("New wrapper instance : <"+self.name+" read:"+str(self.r_engine)+" write:"+str(self.w_engine))
         pass
 
     @classmethod
-    def table(c, tname):
-        """ Return a SqlAlchemy Table object
-            @param o str: Table name
-            @return a SqlAlchemy Table instance
+    def getEngine(c, ename = 'default', logs = None):
+        return c(read_db = ename, write_db = ename, alchemy_logs = logs).r_engine
+
+    @property
+    def cfg(self):
+        """ Return the SqlWrapper.config dict """
+        return self.__class__.config;
+    @property
+    def _engines_cfg(self):
+        return self.__class__.ENGINES;
+
+    @property
+    def meta(self):
+        if self.metadata == None:
+            self.renewMetaData()
+        return self.metadata
+
+    def renewMetaData(self):
+        """ (Re)load the database schema """
+        if self.metadata == None:
+            self.metadata = sqla.MetaData(bind=self.r_engine, reflect=True)
+        else:
+            self.metadata = sqla.MetaData(bind=self.r_engine, reflect=True)
+
+    @property
+    def rconn(self):
+        """ Return the read connection
+            @warning Do not store the connection, call this method each time you need it
+        """
+        return self._getConnection(True)
+    @property
+    def wconn(self):
+        """ Return the write connection
+            @warning Do not store the connection, call this method each time you need it
+        """
+        return self._getConnection(False)
+
+    def _getConnection(self, read):
+        """ Return an opened connection
+            @param read bool: If true return the reading connection
+            @return A sqlAlchemy db connection
+            @private
+        """
+        if read:
+            r = self.r_conn
+        else:
+            r = self.w_conn
+
+        if r == None:
+            #Connection not yet opened
+            self.connect(read)
+            r = self._getConnection(read) #TODO : Un truc plus safe/propre qu'un appel reccursif ?
+        return r
+
+
+    def connect(self, read = None):
+        """ Open a connection to a database
+            @param read bool|None: If None connect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        if read or read == None:
+            if self.r_conn != None:
+                logger.debug(' SqlWrapper("'+self.name+'") Unable to connect, already connected')
+            else:
+                self.r_conn = self.r_engine.connect()
+
+        if not read or read == None:
+            if self.w_conn != None:
+                logger.debug(' SqlWrapper("'+self.name+'") Unable to connect, already connected')
+            else:
+                self.w_conn = self.w_engine.connect()
+
+    def disconnect(self, read = None):
+        """ Close a connection to a database
+            @param read bool|None: If None disconnect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        if read or read == None:
+            if self.r_conn == None:
+                logger.info('Unable to close read connection : connection not opened')
+            else:
+                self.r_conn.close()
+            self.r_conn = None
+
+        if not read or read == None:
+            if self.r_conn == None:
+                logger.info('Unable to close write connection : connection not opened')
+            else:
+                self.w_conn.close()
+            self.w_conn = None
+
+    def reconnect(self, read = None):
+        """ Close and reopen a connection to a database
+            @param read bool|None: If None disconnect both, if True only connect the read side (False the write side)
+            @return None
+        """
+        self.disconnect(read)
+        self.connect(read)
+
+    @classmethod
+    def reconnectAll(c, read = None):
+        """ Reconnect all the wrappers 
+            @static
+        """
+        for wname in c.wrapinstance:
+            c.wrapinstance[wname].reconnect(read)
+            
+    def Table(self, tname):
+        """ Instanciate a new SqlAlchemy Table
+            @param tname str: The table name
+            @return A new instance of SqlAlchemy::Table
         """
         if not isinstance(tname, str):
-            raise TypeError("Excepting a str but got a "+str(type(name)))
-        return sqla.Table(o, sqla.MetaData())
+            return TypeError('Excepting a <class str> but got a '+str(type(tname)))
+        #return sqla.Table(tname, self.meta, autoload_with=self.r_engine, autoload=True)
+        return sqla.Table(tname, self.meta)
 
-    @classmethod
-    def connect(c,read = None):
-        
-        if read == None:
-            return c.connect(True) and c.coonect(False)
-        elif read:
-            c.rconn = c.rengine.connect()
-        else:
-            c.wconn = c.wengine.connect()
-        return True #TODO attention c'est pas checké...
-
-    @classmethod   
-    def conn(c, read=True):
-        if read:
-            res = c.rconn
-        else:
-            res = c.wconn
-
-        if res == None:
-            if not c.connect(read):
-                raise RuntimeError('Unable to connect to Db')
-            return c.conn(read)
-
-        return c.rconn
-
-    @classmethod
-    def rc(c): return c.conn(True)
-    @classmethod
-    def wc(c): return c.conn(False)
-
-    @classmethod
-    def start(c, sqlalogging = None):
-        """ Load engines
-            Open connections to databases
-            @param sqlalogging bool: overwrite class parameter about sqlalchemy logging
-            @return False if already started
-        """
-        c.checkConf()
-        if c.started():
-            logger.warning('Starting SqlWrapper but it is allready started')
-            return False
-
-        c.rengine = c._getEngine(read=True, sqlalogging=None)
-        c.wengine = c._getEngine(read=False, sqlalogging=None)
-        return True
-
-    @classmethod
-    def stop(c): c.rengine = c.wengine = None; pass
-    @classmethod
-    def restart(c): c.stop(); c.start(); pass
-    @classmethod
-    def started(c): return (c.rengine != None and c.rengine != None)
-    
-    @classmethod
-    def _sqllog(c,sqlalogging = None):
-        return bool(sqlalogging) if sqlalogging != None else c.sqla_logging
-
-    @classmethod
-    def _getEngine(c, read=True, sqlalogging = None):
+    def _getEngine(self, read=True, sqlalogging = None):
         """ Return a sqlalchemy engine
             @param read bool: If True return the read engine, else 
             return the write one
@@ -121,16 +208,10 @@ class SqlWrapper(object):
             @todo Put the check on db config in SqlWrapper.checkConf()
         """
         #Loading confs
-        connconf = 'dbread' if read else 'dbwrite'
-        dbconf = connconf if connconf in c.config['db'] else 'default'
+        cfg = self.cfg['db'][self.r_dbconf if read else self.w_dbconf]
 
-        if dbconf not in c.config['db']: #This check should not be here
-            raise NameError('Configuration error no db "'+dbconf+'" in configuration files')
-        
-        cfg = c.config['db'][dbconf] #Database config
-        
-        edata = c.config['engines'][cfg['ENGINE']] #engine infos
-        conn_str = cfg['ENGINE']+'+'+edata['driver']+'://'
+        edata = self._engines_cfg[cfg['ENGINE']] #engine infos
+        conn_str = ""
 
         if cfg['ENGINE'] == 'sqlite':
             #Sqlite connection string
@@ -153,10 +234,26 @@ class SqlWrapper(object):
             conn_str = '%s+%s://'%(cfg['ENGINE'], edata['driver'])
             conn_str += '%s@%s/%s'%(user,host,cfg['NAME'])
 
-        return sqla.create_engine(conn_str, encoding=edata['encoding'], echo=c._sqllog(sqlalogging))
+
+        ret = sqla.create_engine(conn_str, encoding=edata['encoding'], echo=self.sqlalogging)
+
+        logger.debug("Getting engine :"+str(ret))
+
+        return ret
 
     @classmethod
-    def checkConf(c):
+    def getWrapper(c, name):
+        """ Return a wrapper instance from a wrapper name
+            @param name str: The wrapper name
+            @return a SqlWrapper instance
+
+            @throw KeyError
+        """
+        if name not in c.wrapinstance:
+            raise KeyError("No wrapper named '"+name+"' exists")
+        return c.wrapinstance[name]
+
+    def _checkConf(self):
         """ Class method that check the configuration
             
             Configuration looks like
@@ -172,44 +269,226 @@ class SqlWrapper(object):
             - dbwrite (mandatory if no default db)
         """
         err = []
-        if 'db' not in c.config:
+        if 'db' not in self.cfg:
             err.append('Missing "db" in configuration')
         else:
-            if 'default' not in c.config['db']:
-                if 'dbread' not in c.config:
-                    err.append('Missing "dbread" in configuration and  no "default" db declared')
-                if 'dbwrite' not in c.config:
-                    err.append('Missing "dbwrite" in configuration and no "default" db declared')
-            for dbname in c.config['db']:
-                db = c.config['db'][dbname]
-                if 'ENGINE' not in db:
-                    err.append('Missing "ENGINE" in database "'+db+'"')
+            for dbname in [self.r_dbconf, self.w_dbconf]:
+                if dbname not in self.cfg['db']:    
+                    err.append('Missing "'+dbname+'" db configuration')
                 else:
-                    if db['ENGINE'] != 'sqlite' and 'USER' not in db:
-                        err.append('Missing "USER" in database "'+db+'"')
-                if 'NAME' not in db:
-                    err.append('Missing "NAME" in database "'+db+'"')
-        
-        if len(c.config['engines']) == 0:
-            err.append('Missing "engines" in configuration')
-        for ename in c.config['engines']:
-            engine = c.config['engines'][ename]
-            if 'driver' not in engine:
-                err.append('Missing "driver" in database engine "'+ename+'"')
-            if 'encoding' not in engine:
-                err.append('Missing "encoding" in database engine "'+ename+'"')
-
+                    db = self.cfg['db'][dbname]
+                    if db['ENGINE'] not in self._engines_cfg:
+                        err.append('Unknown engine "'+db['ENGINE']+'"')
+                    elif db['ENGINE'] != 'sqlite' and 'USER' not in db:
+                        err.append('Missing "User" in configuration of database "'+dbname+'"')
+                    if 'NAME' not in db:
+                        err.append('Missing "NAME" in database "'+dbname+'"')
+                        
         if len(err)>0:
             err_str = "\n"
             for e in err:
                 err_str += "\t\t"+e+"\n"
             raise NameError('Configuration errors in LODEL2SQLWRAPPER:'+err_str)
-                
+    
+    def dropAll(self):
+        """ Drop ALL tables from the database """
+        if not settings.DEBUG:
+            logger.critical("Trying to drop all tables but we are not in DEBUG !!!")
+            raise RuntimeError("Trying to drop all tables but we are not in DEBUG !!!")
+        meta = sqla.MetaData(bind=self.w_engine)
+        meta.reflect()
+        meta.drop_all()
+        pass
 
-    @property
-    def cfg(self):
-        """ Get the dict of options for the wrapper
-            Its an alias to the classes property SqlWrapper.config
-            @return a dict containing the Db settings"""
-        return self.__class__.config
+    def createAllFromConf(self, schema):
+        """ Create a bunch of tables from a schema
+            @param schema list: A list of table schema
+            @see SqlWrapper::createTable()
+        """
+        self.meta_crea = sqla.MetaData()
+
+        logger.info("Running function createAllFromConf")
+        for i,table in enumerate(schema):
+            if not isinstance(table, dict):
+                raise TypeError("Excepted a list of dict but got a "+str(type(schema))+" in the list")
+            self.createTable(**table)
+        
+        self.meta_crea.create_all(bind = self.w_engine)
+        logger.info("All tables created")
+        self.meta_crea = None
+        self.renewMetaData()
+        pass
+            
+    def createTable(self, name, columns, **kw):
+        """ Create a table
+            @param name str: The table name
+            @param columns list: A list of columns description dict
+            @param extra dict: Extra arguments for table creation
+            @see SqlWrapper::createColumn()
+        """
+
+        if self.meta_crea == None:
+            self.meta_crea = sqla.MetaData()
+            crea_now = True
+        else:
+            crea_now = False
+
+        if not isinstance(name, str):
+            raise TypeError("<class str> excepted for table name, but got "+type(name))
+
+        #if not 'mysql_engine' in kw and self.w_engine.dialect.name == 'mysql':
+        #    kw['mysql_engine'] = 'InnoDB'
+
+        res = sqla.Table(name, self.meta_crea, **kw)
+        for i,col in enumerate(columns):
+            res.append_column(self.createColumn(**col))
+
+        if crea_now:
+            self.meta_crea.create_all(self.w_engine)
+            logger.debug("Table '"+name+"' created")
+
+        pass
+
+    def createColumn(self, **kwargs):
+        """ Create a Column
+            
+            Accepte named parameters :
+                - name : The column name
+                - type : see SqlWrapper::_strToSqlAType()
+                - extra : a dict like { "primarykey":True, "nullable":False, "default":"test"...}
+            @param **kwargs 
+        """
+        if not 'name' in kwargs or ('type' not in kwargs and 'type_' not in kwargs):
+            pass#ERROR
+
+        #Converting parameters
+        if 'type_' not in kwargs and 'type' in kwargs:
+            kwargs['type_'] = self._strToSqlAType(kwargs['type'])
+            del kwargs['type']
+
+        if 'extra' in kwargs:
+            #put the extra keys in kwargs
+            for exname in kwargs['extra']:
+                kwargs[exname] = kwargs['extra'][exname]
+            del kwargs['extra']
+
+        if 'foreignkey' in kwargs:
+            #Instanciate a fk
+            fk = sqla.ForeignKey(kwargs['foreignkey'])
+            del kwargs['foreignkey']
+        else:
+            fk = None
+
+        if 'primarykey' in kwargs:
+            #renaming primary_key in primarykey in kwargs
+            kwargs['primary_key'] = kwargs['primarykey']
+            del kwargs['primarykey']
+
+        res = sqla.Column(**kwargs)
+
+        if fk != None:
+            res.append_foreign_key(fk)
+
+        #logger.debug("Column '"+kwargs['name']+"' created")
+        return res
+    
+    def _strToSqlAType(self, strtype):
+        """ Convert a string to an sqlAlchemy column type """
+
+        if 'VARCHAR' in strtype:
+            return self._strToVarchar(strtype)
+        else:
+            try:
+                return getattr(sqla, strtype)
+            except AttributeError:
+                raise NameError("Unknown type '"+strtype+"'")
+        pass
+
+    def _strToVarchar(self, vstr):
+        """ Convert a string like 'VARCHAR(XX)' (with XX an integer) to a SqlAlchemy varchar type"""
+        check_length = re.search(re.compile('VARCHAR\(([\d]+)\)', re.IGNORECASE), vstr)
+        column_length = int(check_length.groups()[0]) if check_length else None
+        return sqla.VARCHAR(length=column_length)
+     
+
+    def dropColumn(self, tname, colname):
+        """ Drop a column from a table
+            @param tname str|sqlalchemy.Table: The table name or a Table object
+            @param colname str|sqlalchemy.Column: The column name or a column object
+            @return None
+        """
+        if tname not in self.meta.tables: #Useless ?
+            raise NameError("The table '"+tname+"' dont exist")
+        table = self.Table(tname)
+        col = sqla.Column(colname)
+
+        ddl = DropColumn(table, col)
+        sql = ddl.compile(dialect=self.w_engine.dialect)
+        sql = str(sql)
+        logger.debug("Executing SQL  : '"+sql+"'")
+        ret = bool(self.w_engine.execute(sql))
+
+        self.renewMetaData()
+        return ret
+
+    
+    def addColumn(self, tname, colname, coltype):
+        """ Add a column to a table
+            @param tname str: The table name
+            @param colname str: The column name
+            @param coltype str: The new column type
+
+            @return True if query success False if it fails
+        """
+        if tname not in self.meta.tables: #Useless ?
+            raise NameError("The table '"+tname+"' dont exist")
+        table = self.Table(tname)
+        newcol = self.createColumn(name=colname, type_ = coltype)
+
+        ddl = AddColumn(table, newcol)
+        sql = ddl.compile(dialect=self.w_engine.dialect)
+        sql = str(sql)
+        logger.debug("Executing SQL  : '"+sql+"'")
+        ret = bool(self.wconn.execute(sql))
+
+        self.renewMetaData()
+        return ret
+
+    def alterColumn(self, tname, colname, col_newtype):
+        """ Change the type of a column
+            @param tname str: The table name
+            @param colname str: The column name
+            @param col_newtype str: The column new type
+
+            @return True if query successs False if it fails
+        """
+        
+        if tname not in self.meta.tables: #Useless ?
+            raise NameError("The table '"+tname+"' dont exist")
+
+        col = self.createColumn(name=colname, type_=col_newtype)
+        table = self.Table(tname)
+
+        ddl = AlterColumn(table, newcol)
+        sql = ddl.compile(dialect=self.w_engine.dialect)
+        sql = str(sql)
+        logger.debug("Executing SQL  : '"+sql+"'")
+        ret = bool(self.wconn.execute(sql))
+
+        self.renewMetaData()
+        return ret
+
+    def _debug__printSchema(self):
+        """ Debug function to print the db schema """
+        print(self.meta)
+        for tname in self.meta.tables:
+            self._debug__printTable(tname)
+
+    def _debug__printTable(self, tname):
+        t = self.meta.tables[tname]
+        tstr = 'Table : "'+tname+'" :\n'
+        for c in t.c:
+            tstr += '\t\t"'+c.name+'"('+str(c.type)+') \n'
+        print(tstr)
+            
 
