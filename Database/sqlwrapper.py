@@ -62,7 +62,7 @@ class SqlWrapper(object):
         self.r_dbconf = read_db
         self.w_dbconf = write_db
 
-        self.checkConf() #raise if errors in configuration
+        self._checkConf() #raise if errors in configuration
 
         if self.name in self.__class__.wrapinstance:
             logger.warning("A SqlWrapper with the name "+self.name+" allready exist. Replacing the old one by the new one")
@@ -82,9 +82,12 @@ class SqlWrapper(object):
         pass
 
     @property
-    def cfg(self): return self.__class__.config;
+    def cfg(self):
+        """ Return the SqlWrapper.config dict """
+        return self.__class__.config;
     @property
-    def engines_cfg(self): return self.__class__.ENGINES;
+    def _engines_cfg(self):
+        return self.__class__.ENGINES;
 
     @property
     def meta(self):
@@ -104,18 +107,19 @@ class SqlWrapper(object):
         """ Return the read connection
             @warning Do not store the connection, call this method each time you need it
         """
-        return self.getConnection(True)
+        return self._getConnection(True)
     @property
     def wconn(self):
         """ Return the write connection
             @warning Do not store the connection, call this method each time you need it
         """
-        return self.getConnection(False)
+        return self._getConnection(False)
 
-    def getConnection(self, read):
+    def _getConnection(self, read):
         """ Return an opened connection
             @param read bool: If true return the reading connection
             @return A sqlAlchemy db connection
+            @private
         """
         if read:
             r = self.r_conn
@@ -125,7 +129,7 @@ class SqlWrapper(object):
         if r == None:
             #Connection not yet opened
             self.connect(read)
-            r = self.getConnection(read) #TODO : Un truc plus safe/propre qu'un appel reccursif ?
+            r = self._getConnection(read) #TODO : Un truc plus safe/propre qu'un appel reccursif ?
         return r
 
 
@@ -175,6 +179,9 @@ class SqlWrapper(object):
 
     @classmethod
     def reconnectAll(c, read = None):
+        """ Reconnect all the wrappers 
+            @static
+        """
         for wname in c.wrapinstance:
             c.wrapinstance[wname].reconnect(read)
             
@@ -199,7 +206,7 @@ class SqlWrapper(object):
         #Loading confs
         cfg = self.cfg['db'][self.r_dbconf if read else self.w_dbconf]
 
-        edata = self.engines_cfg[cfg['ENGINE']] #engine infos
+        edata = self._engines_cfg[cfg['ENGINE']] #engine infos
         conn_str = ""
 
         if cfg['ENGINE'] == 'sqlite':
@@ -242,7 +249,7 @@ class SqlWrapper(object):
             raise KeyError("No wrapper named '"+name+"' exists")
         return c.wrapinstance[name]
 
-    def checkConf(self):
+    def _checkConf(self):
         """ Class method that check the configuration
             
             Configuration looks like
@@ -269,7 +276,7 @@ class SqlWrapper(object):
                     if 'ENGINE' not in db:
                         err.append('Missing "ENGINE" in database "'+db+'"')
                     else:
-                        if db['ENGINE'] not in self.engines_cfg:
+                        if db['ENGINE'] not in self._engines_cfg:
                             err.append('Unknown engine "'+db['ENGINE']+'"')
                         elif db['ENGINE'] != 'sqlite' and 'USER' not in db:
                             err.append('Missing "User" in configuration of database "'+dbname+'"')
@@ -300,6 +307,8 @@ class SqlWrapper(object):
 
         logger.info("Running function createAllFromConf")
         for i,table in enumerate(schema):
+            if not isinstance(table, dict):
+                raise TypeError("Excepted a list of dict but got a "+str(type(schema))+" in the list")
             self.createTable(**table)
 
         self.meta_crea.create_all(bind = self.w_engine)
@@ -370,7 +379,6 @@ class SqlWrapper(object):
             kwargs['primary_key'] = kwargs['primarykey']
             del kwargs['primarykey']
 
-
         res = sqla.Column(**kwargs)
 
         if fk != None:
@@ -397,29 +405,6 @@ class SqlWrapper(object):
         column_length = int(check_length.groups()[0]) if check_length else None
         return sqla.VARCHAR(length=column_length)
      
-    @classmethod
-    def engineFamily(c, engine):
-        """ Given an engine return the db family
-            @see SqlWrapper::ENGINES
-            @return A str or None
-        """
-        for fam in c.ENGINES:
-            if engine.driver == c.ENGINES[fam]['driver']:
-                return fam
-        return None
-
-    @property
-    def wEngineFamily(self):
-        """ Return the db family of the write engine
-            @return a string or None
-        """
-        return self.__class__.engineFamily(self.w_engine)
-    @property   
-    def rEngineFamily(self):
-        """ Return the db family of the read engine
-            @return a string or None
-        """
-        return self.__class__.engineFamily(self.r_engine)
 
     def dropColumn(self, tname, colname):
         """ Drop a column from a table
@@ -450,10 +435,10 @@ class SqlWrapper(object):
 
             @return True if query success False if it fails
         """
-        newcol = self.createColumn(name=colname, type_ = coltype)
         if tname not in self.meta.tables: #Useless ?
             raise NameError("The table '"+tname+"' dont exist")
         table = self.Table(tname)
+        newcol = self.createColumn(name=colname, type_ = coltype)
 
         ddl = AddColumn(table, newcol)
         sql = ddl.compile(dialect=self.w_engine.dialect)
@@ -473,20 +458,17 @@ class SqlWrapper(object):
             @return True if query successs False if it fails
         """
         
-        if self.wEngineFamily == 'sqlite':
-            raise NotImplementedError('AlterColumn not yet implemented for sqlite engines')
-            
+        if tname not in self.meta.tables: #Useless ?
+            raise NameError("The table '"+tname+"' dont exist")
 
         col = self.createColumn(name=colname, type_=col_newtype)
         table = self.Table(tname)
 
-        typepref = 'TYPE ' if self.wEngineFamily == 'postgresql' else ''
-
-        query = 'ALTER TABLE %s ALTER COLUMN %s %s'%(table.name, col.name, typepref+col.type)
-
-        logger.debug("Executing SQL : '"+query+"'")
-
-        ret = bool(self.wconn.execute(query))
+        ddl = AlterColumn(table, newcol)
+        sql = ddl.compile(dialect=self.w_engine.dialect)
+        sql = str(sql)
+        logger.debug("Executing SQL  : '"+sql+"'")
+        ret = bool(self.wconn.execute(sql))
 
         self.renewMetaData()
         return ret
