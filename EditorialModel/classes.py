@@ -57,7 +57,7 @@ class EmClass(EmComponent):
 
         conn.close()
 
-        return EmClass(res.inserted_primary_key[0])
+        return EmClass(name)
 
 
     def populate(self):
