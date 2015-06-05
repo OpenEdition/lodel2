@@ -81,6 +81,10 @@ class SqlWrapper(object):
         logger.debug("New wrapper instance : <"+self.name+" read:"+str(self.r_engine)+" write:"+str(self.w_engine))
         pass
 
+    @classmethod
+    def getEngine(c, ename = 'default', logs = None):
+        return c(read_db = ename, write_db = ename, alchemy_logs = logs).r_engine
+
     @property
     def cfg(self):
         """ Return the SqlWrapper.config dict """
@@ -273,13 +277,10 @@ class SqlWrapper(object):
                     err.append('Missing "'+dbname+'" db configuration')
                 else:
                     db = self.cfg['db'][dbname]
-                    if 'ENGINE' not in db:
-                        err.append('Missing "ENGINE" in database "'+db+'"')
-                    else:
-                        if db['ENGINE'] not in self._engines_cfg:
-                            err.append('Unknown engine "'+db['ENGINE']+'"')
-                        elif db['ENGINE'] != 'sqlite' and 'USER' not in db:
-                            err.append('Missing "User" in configuration of database "'+dbname+'"')
+                    if db['ENGINE'] not in self._engines_cfg:
+                        err.append('Unknown engine "'+db['ENGINE']+'"')
+                    elif db['ENGINE'] != 'sqlite' and 'USER' not in db:
+                        err.append('Missing "User" in configuration of database "'+dbname+'"')
                     if 'NAME' not in db:
                         err.append('Missing "NAME" in database "'+dbname+'"')
                         
@@ -294,7 +295,8 @@ class SqlWrapper(object):
         if not settings.DEBUG:
             logger.critical("Trying to drop all tables but we are not in DEBUG !!!")
             raise RuntimeError("Trying to drop all tables but we are not in DEBUG !!!")
-        meta = sqla.MetaData(bind=self.w_engine, reflect = True)
+        meta = sqla.MetaData(bind=self.w_engine)
+        meta.reflect()
         meta.drop_all()
         pass
 
@@ -310,7 +312,7 @@ class SqlWrapper(object):
             if not isinstance(table, dict):
                 raise TypeError("Excepted a list of dict but got a "+str(type(schema))+" in the list")
             self.createTable(**table)
-
+        
         self.meta_crea.create_all(bind = self.w_engine)
         logger.info("All tables created")
         self.meta_crea = None
@@ -334,14 +336,17 @@ class SqlWrapper(object):
         if not isinstance(name, str):
             raise TypeError("<class str> excepted for table name, but got "+type(name))
 
+        #if not 'mysql_engine' in kw and self.w_engine.dialect.name == 'mysql':
+        #    kw['mysql_engine'] = 'InnoDB'
+
         res = sqla.Table(name, self.meta_crea, **kw)
         for i,col in enumerate(columns):
             res.append_column(self.createColumn(**col))
 
         if crea_now:
             self.meta_crea.create_all(self.w_engine)
+            logger.debug("Table '"+name+"' created")
 
-        #logger.debug("Table '"+name+"' created")
         pass
 
     def createColumn(self, **kwargs):
