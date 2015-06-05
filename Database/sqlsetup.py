@@ -72,7 +72,7 @@ class SQLSetup(object):
         # Table listing the fields of a fieldgroup
         em_field = {"name":"em_field"}
         em_field['columns'] = default_columns + [
-            {"name":"fieldtype_id",   "type":"INTEGER", "extra":{"nullable":False}},
+            {"name":"fieldtype",   "type":"VARCHAR(50)", "extra":{"nullable":False}},
             {"name":"fieldgroup_id",  "type":"INTEGER", "extra":{"foreignkey":"em_fieldgroup.uid", "nullable":False}},
             {"name":"rel_to_type_id", "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: type this field refer to
             {"name":"rel_field_id",   "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False}}, # if relational: field that specify the rel_to_type_id
