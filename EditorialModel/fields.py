@@ -1,78 +1,89 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.components import EmComponent
+from EditorialModel.components import EmComponent, EmComponentNotExistError
+from Database.sqlobject import SqlObject
+
+import EditorialModel
 
 """Represent one data for a lodel2 document"""
 class EmField(EmComponent):
 
-    
-    def __init__(id_or_name):
-        """ Instanciate an EmType with data fetched from db
+    table = 'em_field'
+
+    def __init__(self, id_or_name):
+        """ Instanciate an EmField with data fetched from db
             @param id_or_name str|int: Identify the EmType by name or by global_id
             @throw TypeError
             @see EmComponent::__init__()
         """
-        super(EmField, self).__init__()
-        pass
+        self.table = EmField.table
+        super(EmField, self).__init__(id_or_name)
 
     @staticmethod
-    def create( name, em_fieldgroup, ml_repr = None, ml_help = None,
-                icon = None, optionnal = False, type_relation = None,
-                relationnal_field = None, primary_data = False,
-                default_value = None, params = None, value = None):
-        """ Create a new EmType and instanciate it
-            
-            @todo Change the icon param type
-            @todo simplify function aguments ?
-            @todo typeof default_value argument ?
-            @todo typeof params argument ?
-            @todo typeof value argument ?
-            
+    def create(name, em_fieldgroup, em_fieldtype, optional=True, internal=False):
+        """ Create a new EmField and instanciate it
             @static
-            
+
             @param name str: The name of the new Type
             @param em_fieldgroup EmFieldGroup: The new field will belong to this fieldgroup
             @param ml_repr MlString|None: Multilingual representation of the type
             @param ml_help MlString|None: Multilingual help for the type
             @param The string|None: filename of the icon
-            
-            @param optionnal bool: Is the field optionnal ?
-            @param type_relation EmType|None: If not None make a link between the class of the new EmField and this EmType
-            @param relationnal_field EmField|None: If not None indicates that the new field defines the relation created by this EmField argument
-            @param primary_data bool: Is the new field a primary data field ?
-            @param default_value str: The field's default value
-            @param params str: Params of the field
-            @param value str: Value of the field
-            
+
+            @param optional bool: Is the field optional ?
+            @param internal bool: Is the field internal?
+
             @throw TypeError
             @see EmComponent::__init__()
             @staticmethod
         """
-        pass
+        try:
+            exists = EmField(name)
+        except EmComponentNotExistError:
+            uids = SqlObject('uids')
+            res = uids.wexec(uids.table.insert().values(table=EmField.table))
+            uid = res.inserted_primary_key
 
-    def set_default(default_value):
-        """ Set the default value
-            @todo argument type ?
-            @todo return type ?
-            @param default_value anytype: The default value
-        """
-        pass
+            values = {
+                'uid' : uid,
+                'name' : name,
+                'fieldgroup_id' : em_fieldgroup.id,
+                'fieldtype_id' : em_fieldtype.id,
+                'optional' : 1 if optional else 0,
+                'internal' : 1 if internal else 0,
+            }
 
-    def set_param(params):
-        """ Set the field parameters
-            @todo argument type ? EmFieldParam ?
-            @todo return type ?
-            @param params anytype: The field parameters
-        """
-        pass
+            emfield_req = SqlObject(EmField.table)
+            res = emfield_req.wexec(emfield_req.table.insert(values=values))
+            return EmField(name)
 
-    def set_value(v):
-        """ Set the field value
-            
-            @todo Better explanations
-            
-            Don't set the field value in a document, it's a special kind of value
-            
-            @param The v: value
-        """
-        pass
+        return exists
+
+    """ Use dictionary (from database) to populate the object
+    """
+    def populate(self):
+        row = super(EmField, self).populate()
+        self.em_fieldgroup = EditorialModel.fieldgroups.EmFieldGroup(int(row.fieldgroup_id))
+        self.em_fieldtype = EditorialModel.fieldtypes.EmFieldType(int(row.fieldtype_id))
+        self.optional = True if row.optional == 1 else False;
+        self.internal = True if row.internal == 1 else False;
+        self.icon = row.icon
+        self.rel_to_type_id = EditorialModel.fieldtypes.EmFieldType(int(row.rel_to_type_id)) if row.rel_to_type_id else ''
+        self.rel_field_id = EmField(int(row.rel_field_id)) if row.rel_field_id else ''
+
+    def save(self):
+        # should not be here, but cannot see how to do this
+        if self.name is None:
+            self.populate()
+
+        values = {
+            'fieldgroup_id' : self.em_fieldgroup.id,
+            'fieldtype_id' : self.em_fieldtype.id,
+            'optional' : 1 if self.optional else 0,
+            'internal' : 1 if self.internal else 0,
+            'icon' : self.icon,
+            'rel_to_type_id' : self.rel_to_type_id,
+            'rel_field_id' : self.rel_field_id
+        }
+
+        return super(EmField, self).save(values)

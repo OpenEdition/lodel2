@@ -27,9 +27,8 @@ class SQLSetup(object):
         uids = {
                 "name":"uids",
                 "columns":[
-                    {"name":"uid",          "type":"VARCHAR(50)", "extra":{"nullable":False, "primarykey":True}},
-                    {"name":"class",        "type":"VARCHAR(50)"},
-                    {"name":"type",         "type":"VARCHAR(50)"}
+                    {"name":"uid",          "type":"INTEGER", "extra":{"nullable":False, "primarykey":True, 'autoincrement':True}},
+                    {"name":"table",        "type":"VARCHAR(50)"}
                 ]
             }
         tables.append(uids)
@@ -38,7 +37,7 @@ class SQLSetup(object):
         # Table listing the classes
         em_class = {"name":"em_class"}
         em_class['columns'] = default_columns + [
-            {"name":"classtype",    "type":"INTEGER"},
+            {"name":"classtype",    "type":"VARCHAR(50)"},
             {"name":"sortcolumn",   "type":"VARCHAR(50)", "extra":{"default":"rank"}},
             {"name":"icon",         "type":"INTEGER"},
         ]
