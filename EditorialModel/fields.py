@@ -81,8 +81,8 @@ class EmField(EmComponent):
         self.optional = True if row.optional == 1 else False;
         self.internal = True if row.internal == 1 else False;
         self.icon = row.icon
-        self.rel_to_type_id = EditorialModel.fieldtypes.EmFieldType(int(row.rel_to_type_id)) if row.rel_to_type_id else ''
-        self.rel_field_id = EmField(int(row.rel_field_id)) if row.rel_field_id else ''
+        self.rel_to_type_id = EditorialModel.fieldtypes.EmFieldType(int(row.rel_to_type_id)) if row.rel_to_type_id else None
+        self.rel_field_id = EmField(int(row.rel_field_id)) if row.rel_field_id else None
 
     def save(self):
         # should not be here, but cannot see how to do this
@@ -95,8 +95,8 @@ class EmField(EmComponent):
             'optional' : 1 if self.optional else 0,
             'internal' : 1 if self.internal else 0,
             'icon' : self.icon,
-            'rel_to_type_id' : self.rel_to_type_id,
-            'rel_field_id' : self.rel_field_id
+            'rel_to_type_id' : self.rel_to_type_id.id if self.rel_to_type_id is not None else None,
+            'rel_field_id' : self.rel_field_id.id if self.rel_field_id is not None else None
         }
 
         return super(EmField, self).save(values)
