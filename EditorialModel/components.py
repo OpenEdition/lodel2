@@ -66,9 +66,9 @@ class EmComponent(object):
         req = sql.sql.select([component])
 
         if self.id == None:
-            req.where(component.c.name == self.name)
+            req = req.where(component.c.name == self.name)
         else:
-            req.where(component.c.uid == self.id)
+            req = req.where(component.c.uid == self.id)
         c = dbe.connect()
         res = c.execute(req)
         c.close()
