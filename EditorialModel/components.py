@@ -22,7 +22,7 @@ class EmComponent(object):
         @exception TypeError
     """
     def __init__(self, id_or_name):
-        if self is EmComponent:
+        if type(self) is EmComponent:
             raise EnvironmentError('Abstract class')
         if isinstance(id_or_name, int):
             self.id = id_or_name
