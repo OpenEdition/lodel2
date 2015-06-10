@@ -2,7 +2,7 @@
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from Lodel.utils.mlstring import MlString
-from sqlalchemy import Column, INTEGER, BOOLEAN
+from sqlalchemy import Column, INTEGER, BOOLEAN, VARCHAR
 
 def get_field_type(name):
     class_name = 'EmField_' + name
