@@ -1,7 +1,8 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+import sqlalchemy as sql
 
 import EditorialModel.classes
 
@@ -24,8 +25,8 @@ class EmType(EmComponent):
         self.table = EmType.table
         super(EmType, self).__init__(id_or_name)
 
-    @staticmethod
-    def create(name, em_class):
+    @classmethod
+    def create(c, name, em_class):
         """ Create a new EmType and instanciate it
 
             @param name str: The name of the new type
@@ -34,18 +35,12 @@ class EmType(EmComponent):
             @see EmComponent::__init__()
 
             @todo Change the icon param type
-            @todo change staticmethod to classmethod
+            @todo check that em_class is an EmClass object
         """
         try:
             exists = EmType(name)
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmType.table))
-            uid = res.inserted_primary_key
-
-            emtype = SqlObject(EmType.table)
-            res = emtype.wexec(emtype.table.insert().values(uid=uid, name=name, class_id=em_class.id))
-            return EmType(name)
+            return super(EmType, c).create({'name':name, 'class_id': em_class.id})
 
         return exists
 

@@ -1,7 +1,8 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+import sqlalchemy as sql
 
 import EditorialModel
 
@@ -23,8 +24,8 @@ class EmFieldGroup(EmComponent):
         self.table = EmFieldGroup.table
         super(EmFieldGroup, self).__init__(id_or_name)
 
-    @staticmethod
-    def create(name, em_class):
+    @classmethod
+    def create(c, name, em_class):
         """ Create a new EmFieldGroup, save it and instanciate it
 
             @param name str: The name of the new fielgroup
@@ -33,13 +34,7 @@ class EmFieldGroup(EmComponent):
         try:
             exists = EmFieldGroup(name)
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmFieldGroup.table))
-            uid = res.inserted_primary_key
-
-            emfieldgroup = SqlObject(EmFieldGroup.table)
-            res = emfieldgroup.wexec(emfieldgroup.table.insert().values(uid=uid, name=name, class_id=em_class.id))
-            return EmFieldGroup(name)
+            return super(EmFieldGroup, c).create({'name': name, 'class_id':em_class.id}) #Check the return value ?
 
         return exists
 

@@ -5,10 +5,15 @@
     @see EmClass, EmType, EmFieldGroup, EmField
 """
 
+import logging as logger
+
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlobject import SqlObject
+from Database import sqlutils
+import sqlalchemy as sql
+
 import EditorialModel
+
+
 
 class EmClass(EmComponent):
     table = 'em_class'
@@ -21,21 +26,39 @@ class EmClass(EmComponent):
         @param name str: name of the new class
         @param class_type EmClasstype: type of the class
     """
-    @staticmethod
-    def create(name, class_type):
+    @classmethod
+    def create(c, name, class_type):
         try:
-            exists = EmClass(name)
+            res = EmClass(name)
+            logger.info("Trying to create an EmClass that allready exists")
         except EmComponentNotExistError:
-            uids = SqlObject('uids')
-            res = uids.wexec(uids.table.insert().values(table=EmClass.table))
-            uid = res.inserted_primary_key
+            res = c._createDb(name, class_type)
+            logger.debug("EmClass successfully created")
 
-            emclass = SqlObject(EmClass.table)
-            res = emclass.wexec(emclass.table.insert().values(uid=uid, name=name, classtype=class_type['name']))
-            SqlWrapper.wc().execute("CREATE TABLE %s (uid VARCHAR(50))" % name)
-            return EmClass(name)
+        return res
 
-        return exists
+    @classmethod
+    def _createDb(c, name, class_type):
+        """ Do the db querys for EmClass::create() """
+
+        #Create a new entry in the em_class table
+        values = { 'name':name, 'classtype':class_type['name'] }
+        resclass = super(EmClass,c).create(values)
+
+
+        dbe = c.getDbE()
+        conn = dbe.connect()
+
+        #Create a new table storing LodelObjects of this EmClass
+        meta = sql.MetaData()
+        emclasstable = sql.Table(name, meta,
+            sql.Column('uid', sql.VARCHAR(50), primary_key = True))
+        emclasstable.create(conn)
+
+        conn.close()
+
+        return resclass
+
 
     def populate(self):
         row = super(EmClass, self).populate()
@@ -60,15 +83,20 @@ class EmClass(EmComponent):
         @return field_groups [EmFieldGroup]:
     """
     def fieldgroups(self):
-        fieldgroups_req = SqlObject(EditorialModel.fieldgroups.EmFieldGroup.table)
-        select = fieldgroups_req.sel
-        select.where(fieldgroups_req.col.class_id == self.id)
-
-        sqlresult = fieldgroups_req.rexec(select)
-        records = sqlresult.fetchall()
+        records = self._fieldgroupsDb()
         fieldgroups = [ EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records ]
 
         return fieldgroups
+
+    def _fieldgroupsDb(self):
+        dbe = self.__class__.getDbE()
+        emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
+        req = emfg.select().where(emfg.c.class_id == self.id)
+        
+        conn = dbe.connect()
+        res = conn.execute(req)
+        return res.fetchall()
+
 
     """ retrieve list of fields
         @return fields [EmField]:
@@ -80,16 +108,19 @@ class EmClass(EmComponent):
         @return types [EmType]:
     """
     def types(self):
-        emtype = SqlObject(EditorialModel.types.EmType.table)
-        select = emtype.sel
-        select.where(emtype.col.class_id == self.id)
-
-        sqlresult = emtype.rexec(select)
-        records = sqlresult.fetchall()
+        records = self._typesDb()
         types = [ EditorialModel.types.EmType(int(record.uid)) for record in records ]
 
         return types
 
+    def _typesDb(self):
+        dbe = self.__class__.getDbE()
+        emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
+        req = emtype.select().where(emtype.c.class_id == self.id)
+        conn = dbe.connect()
+        res = conn.execute(req)
+        return res.fetchall()
+    
     """ add a new EmType that can ben linked to this class
         @param  t EmType: type to link
         @return success bool: done or not
