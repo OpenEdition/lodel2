@@ -5,8 +5,8 @@ import sqlalchemy as sql
 
 class SQLSetup(object): 
 
-    def initDb(self, dbconfname = 'default'):
-        db = SqlWrapper(read_db = dbconfname, write_db = dbconfname, alchemy_logs=True)
+    def initDb(self, dbconfname = 'default', alchemy_logs=None):
+        db = SqlWrapper(read_db = dbconfname, write_db = dbconfname, alchemy_logs=alchemy_logs)
         tables = self.get_schema()
         db.dropAll()
         db.createAllFromConf(tables)
