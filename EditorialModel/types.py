@@ -25,8 +25,8 @@ class EmType(EmComponent):
         self.table = EmType.table
         super(EmType, self).__init__(id_or_name)
 
-    @staticmethod
-    def create(name, em_class):
+    @classmethod
+    def create(c, name, em_class):
         """ Create a new EmType and instanciate it
 
             @param name str: The name of the new type
@@ -35,28 +35,14 @@ class EmType(EmComponent):
             @see EmComponent::__init__()
 
             @todo Change the icon param type
-            @todo change staticmethod to classmethod
+            @todo check that em_class is an EmClass object
         """
         try:
             exists = EmType(name)
         except EmComponentNotExistError:
-            return EmType._createDb(name, em_class)
+            return super(EmType, c).create({'name':name, 'class_id': em_class.id})
 
         return exists
-
-    @classmethod
-    def _createDb(c, name, em_class):
-        uid = c.newUid()
-
-        dbe = c.getDbE()
-        conn = dbe.connect()
-
-        #Insert type in db
-        dbtype = sql.Table(c.table, sqlutils.meta(dbe))
-        req = dbtype.insert().values(uid=uid, name=name, class_id=em_class.id)
-        res = conn.execute(req)
-
-        return EmType(name)
 
     """ Use dictionary (from database) to populate the object
     """

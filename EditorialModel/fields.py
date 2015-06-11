@@ -21,8 +21,8 @@ class EmField(EmComponent):
         self.table = EmField.table
         super(EmField, self).__init__(id_or_name)
 
-    @staticmethod
-    def create(name, em_fieldgroup, em_fieldtype, optional=True, internal=False):
+    @classmethod
+    def create(c, name, em_fieldgroup, em_fieldtype, optional=True, internal=False):
         """ Create a new EmField and instanciate it
             @static
 
@@ -50,23 +50,10 @@ class EmField(EmComponent):
                 'optional' : 1 if optional else 0,
                 'internal' : 1 if internal else 0,
             }
-
-            return EmField._createDb(values)
+            return super(EmField,c).create(values)
 
         return exists
-    
-    @classmethod
-    def _createDb(c, values):
-        values['uid'] = c.newUid()
 
-        dbe = c.getDbE()
-        conn = dbe.connect()
-        req = sql.Table(c.table, sqlutils.meta(dbe)).insert(values=values)
-        res = conn.execute(req)
-
-        conn.close()
-
-        return EmField(values['name'])
 
     """ Use dictionary (from database) to populate the object
     """

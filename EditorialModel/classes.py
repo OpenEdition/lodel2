@@ -40,14 +40,14 @@ class EmClass(EmComponent):
     @classmethod
     def _createDb(c, name, class_type):
         """ Do the db querys for EmClass::create() """
-        uid = c.newUid()
+
+        #Create a new entry in the em_class table
+        values = { 'name':name, 'classtype':class_type['name'] }
+        resclass = super(EmClass,c).create(values)
+
 
         dbe = c.getDbE()
         conn = dbe.connect()
-        #Create a new entry in the em_class table
-        dbclass = sql.Table(c.table, sqlutils.meta(dbe))
-        req = dbclass.insert().values(uid = uid, name=name, classtype=class_type['name'])
-        res = conn.execute(req)
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
@@ -57,7 +57,7 @@ class EmClass(EmComponent):
 
         conn.close()
 
-        return EmClass(name)
+        return resclass
 
 
     def populate(self):

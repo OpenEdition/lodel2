@@ -20,8 +20,8 @@ class SQLSetup(object):
             {"name":"string",       "type":"TEXT"},
             {"name":"help",         "type":"TEXT"},
             {"name":"rank",         "type":"INTEGER"},
-            {"name":"date_update",  "type":"DATE"},
-            {"name":"date_create",  "type":"DATE"}
+            {"name":"date_create",  "type":"DATETIME"},
+            {"name":"date_update",  "type":"DATETIME"},
         ]
 
         # Table listing all objects created by lodel, giving them an unique id
@@ -99,8 +99,8 @@ class SQLSetup(object):
                 {"name":"string",      "type":"VARCHAR(50)"},
                 {"name":"class_id",    "type":"INTEGER", "extra":{"foreignkey":"em_class.uid"}},
                 {"name":"type_id",     "type":"INTEGER", "extra":{"foreignkey":"em_type.uid"}},
-                {"name":"date_update", "type":"DATE"},
-                {"name":"date_create", "type":"DATE"},
+                {"name":"date_create", "type":"DATETIME"},
+                {"name":"date_update", "type":"DATETIME"},
                 {"name":"history",     "type":"TEXT"}
             ]
         }

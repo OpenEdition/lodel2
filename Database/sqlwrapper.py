@@ -104,10 +104,8 @@ class SqlWrapper(object):
 
     def renewMetaData(self):
         """ (Re)load the database schema """
-        if self.metadata == None:
-            self.metadata = sqla.MetaData(bind=self.r_engine, reflect=True)
-        else:
-            self.metadata = sqla.MetaData(bind=self.r_engine, reflect=True)
+        self.metadata = sqla.MetaData(bind=self.r_engine, reflect=True)
+        self.metadata.reflect()
 
     @property
     def rconn(self):

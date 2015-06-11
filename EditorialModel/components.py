@@ -5,6 +5,8 @@
     @see EmClass, EmType, EmFieldGroup, EmField
 """
 
+import datetime
+
 from Lodel.utils.mlstring import MlString
 import logging
 import sqlalchemy as sql
@@ -79,17 +81,42 @@ class EmComponent(object):
             raise EmComponentNotExistError("No component found with "+('name '+self.name if self.id == None else 'id '+self.id ))
 
         return res
+    
+    ## Insert a new component in the database
+    # This function create and assign a new UID and handle the date_create value
+    # @param values The values of the new component
+    # @return An instance of the created component
+    #
+    # @todo Check that the query didn't failed
+    @classmethod
+    def create(c, values):
+        values['uid'] = c.newUid()
+        values['date_update'] = values['date_create'] = datetime.datetime.utcnow()
+
+        dbe = c.getDbE()
+        conn = dbe.connect()
+        table = sql.Table(c.table, sqlutils.meta(dbe))
+        req = table.insert(values)
+        res = conn.execute(req) #Check res?
+        conn.close()
+        return c(values['name']) #Maybe no need to check res because this would fail if the query failed
+        
 
     """ write the representation of the component in the database
         @return bool
     """
     def save(self, values):
+
         values['name'] = self.name
         values['rank'] = self.rank
-        values['date_update'] = self.date_update
-        values['date_create'] = self.date_create
+        values['date_update'] = datetime.datetime.utcnow()
         values['string'] = str(self.string)
         values['help']= str(self.help)
+
+        #Don't allow creation date overwritting
+        if 'date_create' in values:
+            del values['date_create']
+            logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
 
         self._saveDb(values)
 

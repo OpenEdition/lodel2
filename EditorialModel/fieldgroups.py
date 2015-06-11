@@ -24,8 +24,8 @@ class EmFieldGroup(EmComponent):
         self.table = EmFieldGroup.table
         super(EmFieldGroup, self).__init__(id_or_name)
 
-    @staticmethod
-    def create(name, em_class):
+    @classmethod
+    def create(c, name, em_class):
         """ Create a new EmFieldGroup, save it and instanciate it
 
             @param name str: The name of the new fielgroup
@@ -34,27 +34,9 @@ class EmFieldGroup(EmComponent):
         try:
             exists = EmFieldGroup(name)
         except EmComponentNotExistError:
-            return EmFieldGroup._createDb(name, em_class)
+            return super(EmFieldGroup, c).create({'name': name, 'class_id':em_class.id}) #Check the return value ?
 
         return exists
-
-    @classmethod
-    def _createDb(c,name, em_class):
-        """ Make the Db insertion for fieldgroup creation """
-        uid = c.newUid()
-
-        dbe = c.getDbE()
-        conn = dbe.connect()
-
-        req = sql.Table(c.table, sqlutils.meta(dbe)).insert().values(uid=uid, name=name, class_id=em_class.id)
-        res = conn.execute(req)
-
-        conn.close()
-
-        return EmFieldGroup(name)
-        
-
-        
 
     """ Use dictionary (from database) to populate the object
     """
