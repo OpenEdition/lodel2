@@ -11,15 +11,14 @@ from EditorialModel.components import EmComponent, EmComponentNotExistError
 from Database import sqlutils
 import sqlalchemy as sql
 
-import EditorialModel
-
-
+import EditorialModel.fieldtypes as ftypes
 
 class EmClass(EmComponent):
     table = 'em_class'
 
     def __init__(self, id_or_name):
         self.table = EmClass.table
+        self._fields = [('classtype', ftypes.EmField_char()), ('icon', ftypes.EmField_integer()), ('sortcolumn', ftypes.EmField_char())]
         super(EmClass, self).__init__(id_or_name)
 
     """ create a new class
@@ -60,25 +59,6 @@ class EmClass(EmComponent):
         return resclass
 
 
-    def populate(self):
-        row = super(EmClass, self).populate()
-        self.classtype = row.classtype
-        self.icon = row.icon
-        self.sortcolumn = row.sortcolumn
-
-    def save(self):
-        # should not be here, but cannot see how to do this
-        if self.name is None:
-            self.populate()
-
-        values = {
-            'classtype' : self.classtype,
-            'icon' : self.icon,
-            'sortcolumn' : self.sortcolumn,
-        }
-
-        return super(EmClass, self).save(values)
-
     """ retrieve list of the field_groups of this class
         @return field_groups [EmFieldGroup]:
     """
@@ -92,7 +72,7 @@ class EmClass(EmComponent):
         dbe = self.__class__.getDbE()
         emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
         req = emfg.select().where(emfg.c.class_id == self.id)
-        
+
         conn = dbe.connect()
         res = conn.execute(req)
         return res.fetchall()
@@ -120,7 +100,7 @@ class EmClass(EmComponent):
         conn = dbe.connect()
         res = conn.execute(req)
         return res.fetchall()
-    
+
     """ add a new EmType that can ben linked to this class
         @param  t EmType: type to link
         @return success bool: done or not

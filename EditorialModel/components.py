@@ -11,6 +11,8 @@ from Lodel.utils.mlstring import MlString
 import logging
 import sqlalchemy as sql
 from Database import sqlutils
+import EditorialModel.fieldtypes as ftypes
+from collections import OrderedDict
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
@@ -19,7 +21,7 @@ class EmComponent(object):
     dbconf = 'default' #the name of the engine configuration
     table = None
     ranked_in = None
-    
+
     """ instaciate an EmComponent
         @param id_or_name int|str: name or id of the object
         @exception TypeError
@@ -27,15 +29,34 @@ class EmComponent(object):
     def __init__(self, id_or_name):
         if type(self) is EmComponent:
             raise EnvironmentError('Abstract class')
+
+        # data fields of the object
+        self._fields = OrderedDict([('uid', ftypes.EmField_integer()), ('name', ftypes.EmField_char()), ('rank', ftypes.EmField_integer()), ('date_update', ftypes.EmField_date()), ('date_create', ftypes.EmField_date()), ('string', ftypes.EmField_mlstring()), ('help', ftypes.EmField_mlstring())] + self._fields)
+
+        # populate
         if isinstance(id_or_name, int):
-            self.id = id_or_name
+            self.uid = id_or_name
             self.name = None
         elif isinstance(id_or_name, str):
-            self.id = None
+            self.uid = None
             self.name = id_or_name
             self.populate()
         else:
             raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
+
+    # access values of data fields from the object properties
+    def __getattr__(self, name):
+        if name != '_fields' and name in self._fields:
+            return self._fields[name].value
+
+        raise AttributeError
+
+    # set values of data fields from the object properties
+    def __setattr__(self, name, value):
+        if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
+            self._fields[name].from_python(value)
+        else:
+            object.__setattr__(self, name, value)
 
     """ Lookup in the database properties of the object to populate the properties
     """
@@ -43,19 +64,9 @@ class EmComponent(object):
         records = self._populateDb() #Db query
 
         for record in records:
-            row = type('row', (object,), {})()
-            for k in record.keys():
-                setattr(row, k, record[k])
-
-        self.id = int(row.uid)
-        self.name = row.name
-        self.rank = 0 if row.rank is None else int(row.rank)
-        self.date_update = row.date_update
-        self.date_create = row.date_create
-        self.string = MlString.load(row.string)
-        self.help = MlString.load(row.help)
-
-        return row
+            for keys in self._fields.keys():
+                if keys in record:
+                    self._fields[keys].from_string(record[keys])
 
     @classmethod
     def getDbE(c):
@@ -68,10 +79,10 @@ class EmComponent(object):
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component])
 
-        if self.id == None:
+        if self.uid == None:
             req = req.where(component.c.name == self.name)
         else:
-            req = req.where(component.c.uid == self.id)
+            req = req.where(component.c.uid == self.uid)
         c = dbe.connect()
         res = c.execute(req)
         c.close()
@@ -79,10 +90,10 @@ class EmComponent(object):
         res = res.fetchall()
 
         if not res or len(res) == 0:
-            raise EmComponentNotExistError("No component found with "+('name '+self.name if self.id == None else 'id '+self.id ))
+            raise EmComponentNotExistError("No component found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
 
         return res
-    
+
     ## Insert a new component in the database
     # This function create and assign a new UID and handle the date_create value
     # @param values The values of the new component
@@ -101,18 +112,18 @@ class EmComponent(object):
         res = conn.execute(req) #Check res?
         conn.close()
         return c(values['name']) #Maybe no need to check res because this would fail if the query failed
-        
+
 
     """ write the representation of the component in the database
         @return bool
     """
-    def save(self, values):
+    def save(self):
+        if self.name id None:
+            self.populate()
 
-        values['name'] = self.name
-        values['rank'] = self.rank
-        values['date_update'] = datetime.datetime.utcnow()
-        values['string'] = str(self.string)
-        values['help']= str(self.help)
+        values = {}
+        for name, field in self._fields.items():
+            values[name] = field.to_sql()
 
         #Don't allow creation date overwritting
         if 'date_create' in values:
@@ -125,14 +136,14 @@ class EmComponent(object):
         """ Do the query on the db """
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.update(component, values = values).where(component.c.uid == self.id)
+        req = sql.update(component, values = values).where(component.c.uid == self.uid)
 
         c = dbe.connect()
         res = c.execute(req)
         c.close()
         if not res:
             raise RuntimeError("Unable to save the component in the database")
-        
+
 
     """ delete this component data in the database
         @return bool
@@ -141,7 +152,7 @@ class EmComponent(object):
         #<SQL>
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req= component.delete().where(component.c.uid == self.id)
+        req= component.delete().where(component.c.uid == self.uid)
         c = dbe.connect()
         res = c.execute(req)
         c.close
@@ -263,9 +274,9 @@ class EmComponent(object):
 
     def __repr__(self):
         if self.name is None:
-            return "<%s #%s, 'non populated'>" % (type(self).__name__, self.id)
+            return "<%s #%s, 'non populated'>" % (type(self).__name__, self.uid)
         else:
-            return "<%s #%s, '%s'>" % (type(self).__name__, self.id, self.name)
+            return "<%s #%s, '%s'>" % (type(self).__name__, self.uid, self.name)
 
     @classmethod
     def newUid(c):
