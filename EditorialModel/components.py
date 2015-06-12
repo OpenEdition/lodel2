@@ -170,6 +170,9 @@ class EmComponent(object):
                     res = c.execute(req)
                     res = res.fetchone()
                     c.close()
+
+                    req = sql.sql.select([component.c.uid, component.c.rank])
+
                     if(res != None):
                         if(new_rank < self.rank):
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & ( component.c.rank >= new_rank) & (component.c.rank < self.rank))
@@ -183,11 +186,10 @@ class EmComponent(object):
                         vals = list()
                         vals.append({'id' : self.id, 'rank' : new_rank})
 
-                        if(new_rank < self.rank):
-                            for row in res:
+                        for row in res:
+                            if(new_rank < self.rank):
                                 vals.append({'id' : row.uid, 'rank' : row.rank+1})
-                        else:
-                            for row in res:
+                            else:
                                 vals.append({'id' : row.uid, 'rank' : row.rank-1})
 
 
@@ -196,7 +198,6 @@ class EmComponent(object):
                         c.close()
 
                         self.rank = new_rank
-                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
@@ -219,7 +220,6 @@ class EmComponent(object):
                         c.close()
 
                         self.rank += new_rank
-                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
@@ -242,7 +242,6 @@ class EmComponent(object):
                         c.close()
 
                         self.rank -= new_rank
-                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
