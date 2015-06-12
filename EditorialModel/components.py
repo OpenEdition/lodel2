@@ -165,7 +165,7 @@ class EmComponent(object):
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
                 if(sign == '='):
-                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and component.c.rank == new_rank - 1)
+                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and component.c.rank == new_rank)
                     c = dbe.connect()
                     res = c.execute(req)
                     res = res.fetchone()
