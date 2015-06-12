@@ -182,6 +182,7 @@ class EmComponent(object):
                     c.execute(req, vals)
                     c.close()
 
+                    self.rank = new_rank
                 elif(sign == '+'):
                     req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
 
@@ -199,6 +200,8 @@ class EmComponent(object):
                     c.execute(req, vals)
                     c.close()
 
+                    self.rank += new_rank
+
                 elif(sign == '-'):
                     req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= self.rank - new_rank and component.c.rank < self.rank))
 
@@ -215,6 +218,8 @@ class EmComponent(object):
                     req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
                     c.execute(req, vals)
                     c.close()
+
+                    self.rank -= new_rank
                 else:
                     logger.error("Bad argument")
                     raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str(type(new_rank)))
