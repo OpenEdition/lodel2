@@ -165,24 +165,39 @@ class EmComponent(object):
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
                 if(sign == '='):
-                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= new_rank or component.c.rank >= new_rank - 1))
-
+                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank == new_rank - 1))
                     c = dbe.connect()
                     res = c.execute(req)
-                    res = res.fetchall()
+                    res = res.fetchone()
+                    if(res):
+                        if(new_rank < self.rank):
+                            req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= new_rank))
+                        else:
+                            req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= new_rank ))
 
-                    vals = list()
-                    vals.append({'id' : self.id, 'rank' : new_rank})
+                        c = dbe.connect()
+                        res = c.execute(req)
+                        res = res.fetchall()
 
-                    for row in res:
-                        vals.append({'id' : row.uid, 'rank' : row.rank+1})
+                        vals = list()
+                        vals.append({'id' : self.id, 'rank' : new_rank})
+
+                        if(new_rank < self.rank):
+                            for row in res:
+                                vals.append({'id' : row.uid, 'rank' : row.rank+1})
+                        else:
+                            for row in res:
+                                vals.append({'id' : row.uid, 'rank' : row.rank-1})
 
 
-                    req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                    c.execute(req, vals)
-                    c.close()
+                        req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
+                        c.execute(req, vals)
+                        c.close()
 
-                    self.rank = new_rank
+                        self.rank = new_rank
+                    else:
+                        logger.error("Bad argument")
+                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
                 elif(sign == '+'):
                     req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
 
