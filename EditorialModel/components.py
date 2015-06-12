@@ -248,7 +248,7 @@ class EmComponent(object):
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
                 else:
                     logger.error("Bad argument")
-                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((new_rank)))
+                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
             else:
                 logger.error("Bad argument")
                 raise ValueError('Excepted a positive int not a negative. new_rank = '+str((new_rank)))
