@@ -30,6 +30,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 #=#############=#
 
 def setUpModule():
+    """ This function is run once for this module.
+        
+        The goal are to overwrtie Db configs, and prepare objects for test_case initialisation
+    """
     #Overwritting db confs to make tests
     settings.LODEL2SQLWRAPPER = {
         'default': {
@@ -42,7 +46,6 @@ def setUpModule():
     logging.basicConfig(level=logging.CRITICAL)
 
     #testDB setup
-    #   TODO May be slow
     sqls = SQLSetup()
     tables = sqls.get_schema()
     ttest = {   'name':'ttest',
@@ -59,9 +62,9 @@ def setUpModule():
             }
     tables.append(ttest)
 
-    
     globals()['dbwrapper'] = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
     globals()['tables'] = tables
+    pass
 
 
 #A dummy EmComponent child class use to make tests
@@ -70,16 +73,19 @@ class EmTestComp(EmComponent):
     ranked_in = 'rank_fam'
     def __init__(self, ion):
         super(EmTestComp, self).__init__(ion)
+        pass
 
     def populate(self):
         row = super(EmTestComp, self).populate()
         self.rank_fam = row.rank_fam
+        pass
 
     def save(self):
         values = { 'rank_fam': self.rank_fam }
-        
         return super(EmTestComp, self).save(values)
 
+# The parent class of all other test cases for component
+# It defines a SetUp function and some utility functions for EmComponent tests
 class ComponentTestCase(TestCase):
 
     @classmethod
@@ -95,13 +101,14 @@ class ComponentTestCase(TestCase):
 
     def setUp(self):
         # Db RAZ
-        self.db.dropAll()
+        globals()['dbwrapper'].dropAll()
         # Db schema creation
-        self.db.createAllFromConf(self.tables);
-        self.dber = self.db.r_engine
-        self.dbew = self.db.w_engine
+        globals()['dbwrapper'].createAllFromConf(globals()['tables']);
+        #Db Engines init
+        self.dber = globals()['dbwrapper'].r_engine
+        self.dbew = globals()['dbwrapper'].w_engine
         
-        # Test Em creation
+        # Insertion of testings datas
         conn = self.dber.connect()
         test_table = sqla.Table(EmTestComp.table, sqlutils.meta(self.dber))
         uids_table = sqla.Table('uids', sqlutils.meta(self.dber))
@@ -131,7 +138,7 @@ class ComponentTestCase(TestCase):
         req = test_table.insert(values=self.test_values)
         conn.execute(req)
     
-        """#This commented block allow to dump the test values at each setup
+        """#Uncomment this block to dump the test values at each setup
         req = sqla.select([test_table])
         res = conn.execute(req).fetchall()
         print("\nDEBUG (dump inserted)")
@@ -142,7 +149,6 @@ class ComponentTestCase(TestCase):
             print(strrow)
         print("\n")
         """
-
         conn.close()
 
         footable = sqla.Table('em_class', sqlutils.meta(self.dber))
@@ -187,15 +193,16 @@ class ComponentTestCase(TestCase):
         
         super(ComponentTestCase, self).run(result)
 
-    #=#############=#
-    #  TESTS BEGIN  #
-    #=#############=#
+#=#############=#
+#  TESTS BEGIN  #
+#=#############=#
 
+#=======================#
+#   EmComponent.newUid  #
+#=======================#
 class TestUid(ComponentTestCase):
 
-    #=======================#
-    #   EmComponent.newUid  #
-    #=======================#
+    
     def test_newuid(self):
         """ Test valid calls for newUid method """
         for _ in range(10):
@@ -207,10 +214,10 @@ class TestUid(ComponentTestCase):
             rep = conn.execute(req)
             res = rep.fetchall()
         
-            self.assertEqual(len(res), 1)
+            self.assertEqual(len(res), 1, "Error when selecting : mutliple rows returned for 1 UID")
             res = res[0]
-            self.assertEqual(res.uid, nuid)
-            self.assertEqual(res.table, EmTestComp.table)
+            self.assertEqual(res.uid, nuid, "Selected UID didn't match created uid")
+            self.assertEqual(res.table, EmTestComp.table, "Table not match with class table : expected '"+res.table+"' but got '"+EmTestComp.table+"'")
         pass
     
     def test_newuid_abstract(self):
@@ -218,12 +225,13 @@ class TestUid(ComponentTestCase):
         with self.assertRaises(NotImplementedError):
             EmComponent.newUid()
         pass
-
+        
+#===========================#
+#   EmComponent.__init__    #
+#===========================#
 class TestInit(ComponentTestCase):
 
-    #===========================#
-    #   EmComponent.__init__    #
-    #===========================#
+
     def test_component_abstract_init(self):
         """ Test not valid call (from EmComponent) of __init__ """
         with self.assertRaises(EnvironmentError):
@@ -264,11 +272,12 @@ class TestInit(ComponentTestCase):
             with self.assertRaises(TypeError):
                 EmTestComp(badarg)
         pass
-
+        
+#=======================#
+#   EmComponent.save    #
+#=======================#
 class TestSave(ComponentTestCase):
-    #=======================#
-    #   EmComponent.save    #
-    #=======================#
+
 
     def _savecheck(self, test_comp, newval):
         """ Utility function for test_component_save_namechange """
@@ -334,9 +343,12 @@ class TestSave(ComponentTestCase):
 
         #change all
         with self.subTest("Save after name, help and string change"):
-            newval['name'] = test_comp.name = 'newnewname'
+            test_comp.name = newval['name'] = test_comp.name = 'newnewname'
             newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
+            test_comp.help = MlString.load(newval['help'])
             newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
+            test_comp.string = MlString.load(newval['string'])
+
             test_comp.save()
             self._savecheck(test_comp, newval)
 
@@ -405,10 +417,10 @@ class TestSave(ComponentTestCase):
                 """
         pass
     
+#===========================#
+# EmComponent.modify_rank   #
+#===========================#
 class TestModifyRank(ComponentTestCase):
-    #===========================#
-    # EmComponent.modify_rank   #
-    #===========================#
 
     def dump_ranks(self):
         names = [ v['name'] for v in self.test_values ]
