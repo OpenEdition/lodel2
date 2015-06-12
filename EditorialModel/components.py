@@ -172,9 +172,9 @@ class EmComponent(object):
                     c.close()
                     if(res != None):
                         if(new_rank < self.rank):
-                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank >= new_rank))
+                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and component.c.rank >= new_rank and component.c.rank < self.rank)
                         else:
-                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank <= new_rank ))
+                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and component.c.rank <= new_rank and component.c.rank > self.rank)
 
                         c = dbe.connect()
                         res = c.execute(req)
@@ -245,7 +245,7 @@ class EmComponent(object):
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
                 else:
                     logger.error("Bad argument")
-                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str(type(new_rank)))
+                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((new_rank)))
             else:
                 logger.error("Bad argument")
                 raise ValueError('Excepted a positive int not a negative. new_rank = '+str((new_rank)))
