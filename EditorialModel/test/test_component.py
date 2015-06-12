@@ -18,68 +18,80 @@ from Database.sqlwrapper import SqlWrapper
 from Database import sqlutils
 import sqlalchemy as sqla
 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
+
+#
+# TODO : test create
+#
+
+#=#############=# 
+#  TESTS SETUP  #
+#=#############=#
+
+def setUpModule():
+    #Overwritting db confs to make tests
+    settings.LODEL2SQLWRAPPER = {
+        'default': {
+            'ENGINE': 'sqlite',
+            'NAME': '/tmp/testdb.sqlite'
+        }
+    }
+    
+    #Disable logging but CRITICAL
+    logging.basicConfig(level=logging.CRITICAL)
+
+    #testDB setup
+    #   TODO May be slow
+    sqls = SQLSetup()
+    tables = sqls.get_schema()
+    ttest = {   'name':'ttest',
+                'columns':  [
+                    {"name":"uid",          "type":"INTEGER", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
+                    {"name":"name",         "type":"VARCHAR(50)", "extra":{"nullable":False, "unique":True}},
+                    {"name":"string",       "type":"TEXT"},
+                    {"name":"help",         "type":"TEXT"},
+                    {"name":"rank",         "type":"INTEGER"},
+                    {"name":"rank_fam",    "type":"VARCHAR(1)"},
+                    {"name":"date_update",  "type":"DATETIME"},
+                    {"name":"date_create",  "type":"DATETIME"}
+                ]
+            }
+    tables.append(ttest)
+
+    
+    globals()['dbwrapper'] = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
+    globals()['tables'] = tables
+
 
 #A dummy EmComponent child class use to make tests
 class EmTestComp(EmComponent):
     table = 'ttest'
+    ranked_in = 'rank_fam'
     def __init__(self, ion):
         super(EmTestComp, self).__init__(ion)
 
+    def populate(self):
+        row = super(EmTestComp, self).populate()
+        self.rank_fam = row.rank_fam
+
+    def save(self):
+        values = { 'rank_fam': self.rank_fam }
+        
+        return super(EmTestComp, self).save(values)
+
 class ComponentTestCase(TestCase):
 
-    # ############# # 
-    #  TESTS SETUP  #
-    # ############# #
     @classmethod
     def setUpClass(cls):
-        #Overwritting db confs to make tests
-        settings.LODEL2SQLWRAPPER = {
-            'default': {
-                'ENGINE': 'sqlite',
-                'NAME': '/tmp/testdb.sqlite'
-            }
-        }
+        pass
         
-        """
-            'default': {
-                'ENGINE': 'mysql',
-                'NAME': 'lodel2crea',
-                'USER': 'lodel',
-                'PASSWORD': 'bruno',
-            },
-        """
-        #Disable logging but CRITICAL
-        logging.basicConfig(level=logging.CRITICAL)
-
-        #testDB setup
-        #   TODO May be slow
-        sqls = SQLSetup()
-        tables = sqls.get_schema()
-        ttest = {   'name':'ttest',
-                    'columns':  [
-                        {"name":"uid",          "type":"INTEGER", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
-                        {"name":"name",         "type":"VARCHAR(50)", "extra":{"nullable":False, "unique":True}},
-                        {"name":"string",       "type":"TEXT"},
-                        {"name":"help",         "type":"TEXT"},
-                        {"name":"rank",         "type":"INTEGER"},
-                        {"name":"date_update",  "type":"DATETIME"},
-                        {"name":"date_create",  "type":"DATETIME"}
-                    ]
-                }
-        tables.append(ttest)
-
-        
-        #cls.db = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=True)
-        cls.db = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
-        cls.tables = tables
-
     @property
     def db(self):
-        return self.__class__.db
+        return globals()['dbwrapper']
     @property
     def tables(self):
-        return self.__class__.tables
+        return globals()['tables']
 
     def setUp(self):
         # Db RAZ
@@ -113,10 +125,24 @@ class ComponentTestCase(TestCase):
         for i in range(len(self.test_values)):
             self.test_values[i]['date_create'] = datetime.datetime.utcnow()
             self.test_values[i]['date_update'] = datetime.datetime.utcnow()
+            self.test_values[i]['rank_fam'] = '1'
             
 
         req = test_table.insert(values=self.test_values)
         conn.execute(req)
+    
+        """#This commented block allow to dump the test values at each setup
+        req = sqla.select([test_table])
+        res = conn.execute(req).fetchall()
+        print("\nDEBUG (dump inserted)")
+        for row in res:
+            strrow=""
+            for cname in row.keys():
+                strrow += "\t"+str(cname)+'\t: '+str(row[cname])+"\n"
+            print(strrow)
+        print("\n")
+        """
+
         conn.close()
 
         footable = sqla.Table('em_class', sqlutils.meta(self.dber))
@@ -157,13 +183,19 @@ class ComponentTestCase(TestCase):
         for n in ms1t:
             self.assertEqual(ms1t[n], ms2t[n])
 
-    # ############# #
-    #  TESTS BEGIN  #
-    # ############# #
+    def run(self, result=None):
+        
+        super(ComponentTestCase, self).run(result)
 
-    #
-    #   EmComponent.newUid
-    #
+    #=#############=#
+    #  TESTS BEGIN  #
+    #=#############=#
+
+class TestUid(ComponentTestCase):
+
+    #=======================#
+    #   EmComponent.newUid  #
+    #=======================#
     def test_newuid(self):
         """ Test valid calls for newUid method """
         for _ in range(10):
@@ -180,15 +212,18 @@ class ComponentTestCase(TestCase):
             self.assertEqual(res.uid, nuid)
             self.assertEqual(res.table, EmTestComp.table)
         pass
-
+    
     def test_newuid_abstract(self):
         """ Test not valit call for newUid method """
         with self.assertRaises(NotImplementedError):
             EmComponent.newUid()
         pass
-    #
-    #   EmComponent.__init__
-    #
+
+class TestInit(ComponentTestCase):
+
+    #===========================#
+    #   EmComponent.__init__    #
+    #===========================#
     def test_component_abstract_init(self):
         """ Test not valid call (from EmComponent) of __init__ """
         with self.assertRaises(EnvironmentError):
@@ -230,9 +265,10 @@ class ComponentTestCase(TestCase):
                 EmTestComp(badarg)
         pass
 
-    #
-    #   EmComponent.save
-    #
+class TestSave(ComponentTestCase):
+    #=======================#
+    #   EmComponent.save    #
+    #=======================#
 
     def _savecheck(self, test_comp, newval):
         """ Utility function for test_component_save_namechange """
@@ -270,34 +306,40 @@ class ComponentTestCase(TestCase):
         newval = val.copy()
 
         time.sleep(2) # We have to sleep 2 secs here, so the update_date will be at least 2 secs more than newval['date_update']
-
+        
         #name change
-        newval['name'] = test_comp.name = 'newname'
-        test_comp.save({})
-        self._savecheck(test_comp, newval)
+        with self.subTest("Save after name change"):
+            newval['name'] = test_comp.name = 'newname'
+            test_comp.save()
+            self._savecheck(test_comp, newval)
 
         #help change
-        newval['help'] = '{"fr": "help fr", "en":"help en", "es":"help es"}'
-        test_comp.help = MlString.load(newval['help'])
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        with self.subTest("Save after help change"):
+            newval['help'] = '{"fr": "help fr", "en":"help en", "es":"help es"}'
+            test_comp.help = MlString.load(newval['help'])
+            test_comp.save()
+            self._savecheck(test_comp, newval)
         
         #string change
-        newval['string'] = '{"fr": "string fr", "en":"string en", "es":"string es"}'
-        test_comp.string = MlString.load(newval['string'])
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        with self.subTest("Save after string change"):
+            newval['string'] = '{"fr": "string fr", "en":"string en", "es":"string es"}'
+            test_comp.string = MlString.load(newval['string'])
+            test_comp.save()
+            self._savecheck(test_comp, newval)
 
         #no change
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        with self.subTest("Save without any change"):
+            test_comp.save()
+            self._savecheck(test_comp, newval)
 
         #change all
-        newval['name'] = test_comp.name = 'newnewname'
-        newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
-        newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        with self.subTest("Save after name, help and string change"):
+            newval['name'] = test_comp.name = 'newnewname'
+            newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
+            newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
+            test_comp.save()
+            self._savecheck(test_comp, newval)
+
         pass
 
     @unittest.skip("Soon we will not use anymore the values argument of the savec method")
@@ -333,38 +375,49 @@ class ComponentTestCase(TestCase):
         changes = { 'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,2,22,43), 'rank': 42 }
 
         for prop in changes:
-            test_comp = EmTestComp(val['name'])
-            self.check_equals(val, test_comp)
-            
-            setattr(test_comp, prop, changes[prop])
-            test_comp.save({})
-
-            test_comp2 = EmTestComp(val['name'])
-
-            if prop in ['date_create', 'date_update']:
-                assertion = self.assertEqualDatetime
-            else: #rank
-                assertion = self.assertEqual
-
-            assertion(getattr(test_comp,prop), val[prop], "When using setattr the "+prop+" of a component is set : ")
-            assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the "+prop+" of a loaded component is set : ")
-
-            # The code block commented bellow uses the values argument of the save method.
-            # soon this argument will not being used anymore
-            """
-            test_comp = EmTestComp(val['name'])
-            self.check_equals(val, test_comp)
-            test_comp.save({ prop: changes['prop'] })
-
-            test_comp2 = EmTestComp(val['name'])
-            self.assertEqualDatetime(test_comp.date_create, val[prop], "The "+prop+" of the component instance has been changed")
-            self.assertEqualDatetime(test_comp2.date_create, val[prop], "When loaded the "+prop+" has been changed")
-            """
+            with self.subTest("Illega change of "+prop):
+                test_comp = EmTestComp(val['name'])
+                self.check_equals(val, test_comp)
+                
+                setattr(test_comp, prop, changes[prop])
+                test_comp.save()
+    
+                test_comp2 = EmTestComp(val['name'])
+    
+                if prop in ['date_create', 'date_update']:
+                    assertion = self.assertEqualDatetime
+                else: #rank
+                    assertion = self.assertEqual
+    
+                assertion(getattr(test_comp,prop), val[prop], "When using setattr the "+prop+" of a component is set : ")
+                assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the "+prop+" of a loaded component is set : ")
+    
+                # The code block commented bellow uses the values argument of the save method.
+                # soon this argument will not being used anymore
+                """
+                test_comp = EmTestComp(val['name'])
+                self.check_equals(val, test_comp)
+                test_comp.save({ prop: changes['prop'] })
+    
+                test_comp2 = EmTestComp(val['name'])
+                self.assertEqualDatetime(test_comp.date_create, val[prop], "The "+prop+" of the component instance has been changed")
+                self.assertEqualDatetime(test_comp2.date_create, val[prop], "When loaded the "+prop+" has been changed")
+                """
         pass
     
-    #
-    # EmComponent.modify_rank
-    #
+class TestModifyRank(ComponentTestCase):
+    #===========================#
+    # EmComponent.modify_rank   #
+    #===========================#
+
+    def dump_ranks(self):
+        names = [ v['name'] for v in self.test_values ]
+        ranks=""
+        for i in range(len(names)):
+            tc = EmTestComp(names[i])
+            ranks += " "+str(tc.rank)
+        return ranks
+
     def test_modify_rank_absolute(self):
         """ Testing modify_rank with absolute rank """
         
@@ -372,25 +425,31 @@ class ComponentTestCase(TestCase):
         nmax = len(names)-1
         
         #moving first to 3
+        #-----------------
         test_comp = EmTestComp(names[0])
 
         test_comp.modify_rank(3, '=')
-        self.assertEqual(test_comp.rank, 3)
+        self.assertEqual(test_comp.rank, 3, "Called modify_rank(3, '=') but rank is '"+str(test_comp.rank)+"'. Ranks dump : "+self.dump_ranks())
+        tc2 = EmTestComp(names[0])
+        self.assertEqual(tc2.rank, 3, "Called modify_rank(3, '=') but rank is '"+str(tc2.rank)+"'. Ranks dump : "+self.dump_ranks())
 
         for i in range(1,4):
             test_comp = EmTestComp(names[i])
-            self.assertEqual(test_comp.rank, i-1, "Excepted rank was '"+str(i-1)+"' but found '"+str(test_comp.rank)+"'")
+            self.assertEqual(test_comp.rank, i-1, "Excepted rank was '"+str(i-1)+"' but found '"+str(test_comp.rank)+"'. Ranks dump : "+self.dump_ranks())
 
         for i in [4,nmax]:
             test_comp = EmTestComp(names[i])
-            self.assertEqual(test_comp.rank, i, "Rank wasn't excepted to change, but : previous value was '"+str(i)+"' current value is '"+str(test_comp.rank)+"'")
+            self.assertEqual(test_comp.rank, i, "Rank wasn't excepted to change, but : previous value was '"+str(i)+"' current value is '"+str(test_comp.rank)+"'. Ranks dump : "+self.dump_ranks())
 
         #undoing last rank change
         test_comp = EmTestComp(names[0])
         test_comp.modify_rank(0,'=')
         self.assertEqual(test_comp.rank, 0)
+        tc2 = EmTestComp(names[0])
+        self.assertEqual(tc2.rank, 0)
 
         #moving last to 2
+        #----------------
         test_comp = EmTestComp(names[nmax])
 
         test_comp.modify_rank(2, '=')
@@ -398,9 +457,9 @@ class ComponentTestCase(TestCase):
         for i in [0,1]:
             test_comp = EmTestComp(names[i])
             self.assertEqual(test_comp.rank, i)
-        for i in range(3,nmax+1):
+        for i in range(3,nmax-1):
             test_comp = EmTestComp(names[i])
-            self.assertEqual(testc_omp.rank, i+1)
+            self.assertEqual(test_comp.rank, i+1, "Excepted rank was '"+str(i+1)+"' but found '"+str(test_comp.rank)+"'. Ranks dump : "+self.dump_ranks())
 
         #undoing last rank change
         test_comp = EmTestComp(names[nmax])
@@ -410,9 +469,10 @@ class ComponentTestCase(TestCase):
         #Checking that we are in original state again
         for i,name in enumerate(names):
             test_comp = EmTestComp(name)
-            self.assertEqual(test_comp.rank, i, "Excepted rank was '"+str(i-1)+"' but found '"+str(test_comp.rank)+"'")
+            self.assertEqual(test_comp.rank, i, "Excepted rank was '"+str(i-1)+"' but found '"+str(test_comp.rank)+"'. Ranks dump : "+self.dump_ranks())
         
         #Inverting the list
+        #------------------
         for i,name in enumerate(names):
             test_comp = EmTestComp(name)
             test_comp.modify_rank(0,'=')
@@ -424,14 +484,15 @@ class ComponentTestCase(TestCase):
                 test_comp = EmTestComp(names[j])
                 self.assertEqual(test_comp.rank, j)
 
-        #Not inverting the list
+        #Not inverting the list (makes swap but at the end we are in reverse state again)
+        #--------------------------------------------------------------------------------
         for i in range(nmax,-1,-1):
-            test_comp = EmTestComp(name)
+            test_comp = EmTestComp(names[i])
             test_comp.modify_rank(nmax,'=')
             self.assertEqual(test_comp.rank, nmax)
             for j in range(i,nmax+1):
                 test_comp = EmTestComp(names[j])
-                self.assertEqual(test_comp.rank, nmax-(j-i))
+                self.assertEqual(test_comp.rank, nmax-(j-i), "Excepted rank was '"+str(nmax-(j-i))+"' but got '"+str(test_comp.rank)+"'). Ranks dump : "+self.dump_ranks())
             for j in range(0,i):
                 test_comp = EmTestComp(names[j])
                 self.assertEqual(test_comp.rank, i-j-1)
@@ -444,9 +505,10 @@ class ComponentTestCase(TestCase):
         nmax = len(names)-1
         
         test_comp = EmTestComp(names[0])
+        #Running modify_rank(i,'+') and the modify_rank(i,'-') for i in range(1,nmax)
         for i in range(1,nmax):
             test_comp.modify_rank(i,'+')
-            self.assertEqual(test_comp.rank, i, "The instance on wich we applied the modify_rank doesn't have expected rank : expected '"+str(i)+"' but got '"+str(test_comp.rank)+"'")
+            self.assertEqual(test_comp.rank, i, "The instance (name="+names[0]+") on wich we applied the modify_rank doesn't have expected rank : expected '"+str(i)+"' but got '"+str(test_comp.rank)+"'")
             test_comp2 = EmTestComp(names[0])
             self.assertEqual(test_comp.rank, i, "The instance fetched in Db does'n't have expected rank : expected '"+str(i)+"' but got '"+str(test_comp.rank)+"'")
 
@@ -460,14 +522,14 @@ class ComponentTestCase(TestCase):
             test_comp.modify_rank(i,'-')
             self.assertEqual(test_comp.rank, 0, "The instance on wich we applied the modify_rank -"+str(i)+" doesn't have excepted rank : excepted '0' but got '"+str(test_comp.rank)+"'")
             test_comp2 = EmTestComp(names[0])
-            self.assertEqual(test_comp.rank, i, "The instance fetched in Db does'n't have expected rank : expected '0' but got '"+str(test_comp.rank)+"'")
+            self.assertEqual(test_comp.rank, 0, "The instance fetched in Db does'n't have expected rank : expected '0' but got '"+str(test_comp.rank)+"'"+self.dump_ranks())
 
             for j in range(1,nmax+1):
                 test_comp2 = EmTestComp(names[j])
                 self.assertEqual(test_comp2.rank, j)
 
         test_comp = EmTestComp(names[3])
-        test_comp.modify_rank('2','+')
+        test_comp.modify_rank(2,'+')
         self.assertEqual(test_comp.rank, 5)
         tc2 = EmTestComp(names[3])
         self.assertEqual(tc2.rank,5)
@@ -478,7 +540,7 @@ class ComponentTestCase(TestCase):
             tc2 = EmTestComp(names[i])
             self.assertEqual(tc2.rank, i)
 
-        test_comp.modify_rank('2', '-')
+        test_comp.modify_rank(2, '-')
         self.assertEqual(test_comp.rank, 3)
         for i in range(0,6):
             tc2 = EmTestComp(names[i])
@@ -514,8 +576,8 @@ class ComponentTestCase(TestCase):
             ((1, 'Hello world !'), ValueError),
             
             #Out of bounds
-            ((42*10**9), '+', ValueError),
-            ((-42*10**9), '+', ValueError),
+            ((42*10**9, '+'), ValueError),
+            ((-42*10**9, '+'), ValueError),
             ((len(names), '+'), ValueError),
             ((len(names), '-'), ValueError),
             ((len(names), '='), ValueError),
@@ -524,8 +586,8 @@ class ComponentTestCase(TestCase):
         ]
 
         for (args, err) in badargs:
-            with self.assertRaises(TypeError, "Bad arguments supplied : "+str(args)+" but no error raised"):
-                test_comp.modify_rank(*args)
+            with self.assertRaises(err, msg="Bad arguments supplied : "+str(args)+" for a component at rank 3 but no error raised"):
+                tc.modify_rank(*args)
             self.assertEqual(tc.rank, 3, "The function raises an error but modify the rank")
         pass
 
