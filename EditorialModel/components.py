@@ -158,23 +158,23 @@ class EmComponent(object):
     # @param sign str: Un charactère qui peut être : '=' pour afecter un rank, '+' pour ajouter le modificateur de rank ou '-' pour soustraire le modificateur de rank.
     #
     # @return bool: True en cas de réussite False en cas d'echec.
-    def modify_rank(self, new_rank, sign):
+    def modify_rank(self, new_rank, sign = '='):
         if(type(new_rank) is int):
             if(new_rank >= 0):
                 dbe = self.__class__.getDbE()
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
                 if(sign == '='):
-                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and component.c.rank == new_rank)
+                    req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and component.c.rank == new_rank)
                     c = dbe.connect()
                     res = c.execute(req)
                     res = res.fetchone()
                     c.close()
                     if(res != None):
                         if(new_rank < self.rank):
-                            req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= new_rank))
+                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank >= new_rank))
                         else:
-                            req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= new_rank ))
+                            req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank <= new_rank ))
 
                         c = dbe.connect()
                         res = c.execute(req)
@@ -201,7 +201,7 @@ class EmComponent(object):
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
                 elif(sign == '+'):
                     if(new_rank != 0):
-                        req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
+                        req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
 
                         c = dbe.connect()
                         res = c.execute(req)
@@ -223,7 +223,7 @@ class EmComponent(object):
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
                 elif(sign == '-'):
                     if(new_rank != 0):
-                        req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= self.rank - new_rank and component.c.rank < self.rank))
+                        req = req.where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in) and (component.c.rank >= self.rank - new_rank and component.c.rank < self.rank))
 
                         c = dbe.connect()
                         res = c.execute(req)
