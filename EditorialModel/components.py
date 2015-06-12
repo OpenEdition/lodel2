@@ -168,16 +168,17 @@ class EmComponent(object):
                 if(type(sign) is not str):
                     logger.error("Bad argument")
                     raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str(type(sign)))
-                if(sign == '='):
-                    req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == new_rank))
-                    c = dbe.connect()
-                    res = c.execute(req)
-                    res = res.fetchone()
-                    c.close()
 
-                    req = sql.sql.select([component.c.uid, component.c.rank])
+                req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == new_rank))
+                c = dbe.connect()
+                res = c.execute(req)
+                res = res.fetchone()
+                c.close()
 
-                    if(res != None):
+                req = sql.sql.select([component.c.uid, component.c.rank])
+
+                if(res != None):
+                    if(sign == '='):
                         if(new_rank < self.rank):
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & ( component.c.rank >= new_rank) & (component.c.rank < self.rank))
                         else:
@@ -202,56 +203,56 @@ class EmComponent(object):
                         c.close()
 
                         self.rank = new_rank
+                    elif(sign == '+'):
+                        if(new_rank != 0):
+                            req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank <= self.rank + new_rank) & (component.c.rank > self.rank))
+
+                            c = dbe.connect()
+                            res = c.execute(req)
+                            res = res.fetchall()
+
+                            vals = list()
+                            vals.append({'id' : self.id, 'rank' : self.rank + new_rank})
+
+                            for row in res:
+                                vals.append({'id' : row.uid, 'rank' : row.rank - 1})
+
+                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
+                            c.execute(req, vals)
+                            c.close()
+
+                            self.rank += new_rank
+                        else:
+                            logger.error("Bad argument")
+                            raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
+                    elif(sign == '-'):
+                        if(new_rank != 0):
+                            req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= self.rank - new_rank) & (component.c.rank < self.rank))
+
+                            c = dbe.connect()
+                            res = c.execute(req)
+                            res = res.fetchall()
+
+                            vals = list()
+                            vals.append({'id' : self.id, 'rank' : self.rank - new_rank})
+
+                            for row in res:
+                                vals.append({'id' : row.uid, 'rank' : row.rank + 1})
+
+                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
+                            c.execute(req, vals)
+                            c.close()
+
+                            self.rank -= new_rank
+                        else:
+                            logger.error("Bad argument")
+                            raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
                     else:
                         logger.error("Bad argument")
-                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '+'):
-                    if(new_rank != 0):
-                        req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank <= self.rank + new_rank) & (component.c.rank > self.rank))
-
-                        c = dbe.connect()
-                        res = c.execute(req)
-                        res = res.fetchall()
-
-                        vals = list()
-                        vals.append({'id' : self.id, 'rank' : self.rank + new_rank})
-
-                        for row in res:
-                            vals.append({'id' : row.uid, 'rank' : row.rank - 1})
-
-                        req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                        c.execute(req, vals)
-                        c.close()
-
-                        self.rank += new_rank
-                    else:
-                        logger.error("Bad argument")
-                        raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
-                elif(sign == '-'):
-                    if(new_rank != 0):
-                        req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= self.rank - new_rank) & (component.c.rank < self.rank))
-
-                        c = dbe.connect()
-                        res = c.execute(req)
-                        res = res.fetchall()
-
-                        vals = list()
-                        vals.append({'id' : self.id, 'rank' : self.rank - new_rank})
-
-                        for row in res:
-                            vals.append({'id' : row.uid, 'rank' : row.rank + 1})
-
-                        req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                        c.execute(req, vals)
-                        c.close()
-
-                        self.rank -= new_rank
-                    else:
-                        logger.error("Bad argument")
-                        raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
+                        raise ValueError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
                 else:
                     logger.error("Bad argument")
-                    raise ValueError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
+                    raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
             else:
                 logger.error("Bad argument")
                 raise ValueError('Excepted a positive int not a negative. new_rank = '+str((new_rank)))
