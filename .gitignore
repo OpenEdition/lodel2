@@ -3,3 +3,4 @@
 .git
 .idea
 Lodel/settings/locale.py
+Lodel/settings/local.py
