@@ -196,6 +196,7 @@ class EmComponent(object):
                         c.close()
 
                         self.rank = new_rank
+                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
@@ -218,6 +219,7 @@ class EmComponent(object):
                         c.close()
 
                         self.rank += new_rank
+                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
@@ -240,6 +242,7 @@ class EmComponent(object):
                         c.close()
 
                         self.rank -= new_rank
+                        self.save()
                     else:
                         logger.error("Bad argument")
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
