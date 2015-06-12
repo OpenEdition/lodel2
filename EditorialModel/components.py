@@ -18,6 +18,7 @@ class EmComponent(object):
 
     dbconf = 'default' #the name of the engine configuration
     table = None
+    ranked_in = None
     
     """ instaciate an EmComponent
         @param id_or_name int|str: name or id of the object
@@ -164,7 +165,7 @@ class EmComponent(object):
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
                 if(sign == '='):
-                    req = req.where(component.c.ranked_in == self.ranked_in and (component.c.rank >= new_rank or component.c.rank >= new_rank - 1))
+                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= new_rank or component.c.rank >= new_rank - 1))
 
                     c = dbe.connect()
                     res = c.execute(req)
@@ -182,7 +183,7 @@ class EmComponent(object):
                     c.close()
 
                 elif(sign == '+'):
-                    req = req.where(component.c.ranked_in == self.ranked_in and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
+                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank <= self.rank + new_rank and component.c.rank > self.rank))
 
                     c = dbe.connect()
                     res = c.execute(req)
@@ -199,7 +200,7 @@ class EmComponent(object):
                     c.close()
 
                 elif(sign == '-'):
-                    req = req.where(component.c.ranked_in == self.ranked_in and (component.c.rank >= self.rank - new_rank and component.c.rank < self.rank))
+                    req = req.where(getattr(component.c, self.ranked_in) == self.ranked_in and (component.c.rank >= self.rank - new_rank and component.c.rank < self.rank))
 
                     c = dbe.connect()
                     res = c.execute(req)
