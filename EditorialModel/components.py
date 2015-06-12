@@ -164,6 +164,10 @@ class EmComponent(object):
                 dbe = self.__class__.getDbE()
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
+
+                if(type(sign) is not str):
+                    logger.error("Bad argument")
+                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str(type(sign)))
                 if(sign == '='):
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == new_rank))
                     c = dbe.connect()
@@ -247,7 +251,7 @@ class EmComponent(object):
                         raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
                 else:
                     logger.error("Bad argument")
-                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
+                    raise ValueError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
             else:
                 logger.error("Bad argument")
                 raise ValueError('Excepted a positive int not a negative. new_rank = '+str((new_rank)))
