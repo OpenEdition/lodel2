@@ -455,6 +455,26 @@ class SqlWrapper(object):
         self.renewMetaData()
         return ret
 
+    ## AddColumnObject
+    #
+    # Adds a column from a SQLAlchemy Column Object
+    #
+    # @param tname str: Name of the table in which to add the column
+    # @param column Column: Column object to add to the table
+    # @return True if query is successful, False if it fails
+    def addColumnObject(self, tname, column):
+        if tname not in self.meta.tables:
+            raise NameError("The table '%s' doesn't exist" % tname)
+        table = self.Table(tname)
+
+        ddl = AddColumn(table, column)
+        sql = ddl.compile(dialect=self.w_engine.dialect)
+        sql = str(sql)
+        logger.debug("Executing SQL : '%s'" % sql)
+        ret = book(self.wconn.execute(sql))
+        self.renewMetaData()
+        return ret
+
     def alterColumn(self, tname, colname, col_newtype):
         """ Change the type of a column
             @param tname str: The table name
