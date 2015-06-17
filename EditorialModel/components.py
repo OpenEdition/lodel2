@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-""" Main object to manipulate Editorial Model
-    parent of all other EM editing classes
-    @see EmClass, EmType, EmFieldGroup, EmField
-"""
+## Main object to manipulate Editorial Model
+#    parent of all other EM editing classes
+#    @see EmClass, EmType, EmFieldGroup, EmField
+
 
 import datetime
 
