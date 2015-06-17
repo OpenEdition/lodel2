@@ -57,7 +57,7 @@ class EmField(EmComponent):
                 'internal' : 1 if internal else 0,
             }
 
-            createdField = super(EmField,c).create(values)
+            createdField = super(EmField,c).create(**values)
             if createdField:
                 # The field was created, we then add its column in the corresponding class' table
                 is_field_column_added = EmField.addFieldColumnToClassTable(createdField)
@@ -154,3 +154,6 @@ class EmField(EmComponent):
         }
 
         return super(EmField, self).save(values)
+
+class EmFieldNotExistError(Exception):
+    pass
