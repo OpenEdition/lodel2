@@ -40,16 +40,16 @@ class EmComponent(object):
         elif isinstance(id_or_name, str):
             self.uid = None
             self.name = id_or_name
-            self.populate()
         else:
             raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
+        self.populate()
 
     # access values of data fields from the object properties
     def __getattr__(self, name):
         if name != '_fields' and name in self._fields:
             return self._fields[name].value
 
-        raise AttributeError
+        raise AttributeError('Error unknown attribute : '+name)
 
     # set values of data fields from the object properties
     def __setattr__(self, name, value):
@@ -118,9 +118,6 @@ class EmComponent(object):
         @return bool
     """
     def save(self):
-        if self.name id None:
-            self.populate()
-
         values = {}
         for name, field in self._fields.items():
             values[name] = field.to_sql()
