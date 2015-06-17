@@ -11,6 +11,7 @@ from unittest import TestCase
 import unittest
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
+import EditorialModel.fieldtypes as ftypes
 from Lodel.utils.mlstring import MlString
 
 from Database.sqlsetup import SQLSetup
@@ -72,9 +73,10 @@ class EmTestComp(EmComponent):
     table = 'ttest'
     ranked_in = 'rank_fam'
     def __init__(self, ion):
+        self._fields = [('rank_fam', ftypes.EmField_char())]
         super(EmTestComp, self).__init__(ion)
         pass
-
+    """
     def populate(self):
         row = super(EmTestComp, self).populate()
         self.rank_fam = row.rank_fam
@@ -83,6 +85,7 @@ class EmTestComp(EmComponent):
     def save(self):
         values = { 'rank_fam': self.rank_fam }
         return super(EmTestComp, self).save(values)
+    """
 
 # The parent class of all other test cases for component
 # It defines a SetUp function and some utility functions for EmComponent tests
@@ -170,10 +173,7 @@ class ComponentTestCase(TestCase):
                 if check_date:
                     self.assertEqualDatetime(val[vname], getattr(test_comp, vname))
             else:
-                if vname == 'uid':
-                    prop = 'id'
-                else:
-                    prop = vname
+                prop = vname
                 self.assertEqual(getattr(test_comp, prop), val[vname], "Inconsistency for "+prop+" property")
         pass
 
@@ -257,7 +257,7 @@ class TestInit(ComponentTestCase):
         for val in self.test_values:
             test_comp = EmTestComp(val['uid'])
             self.assertIsInstance(test_comp, EmTestComp)
-            self.assertEqual(test_comp.id, val['uid'])
+            self.assertEqual(test_comp.uid, val['uid'])
         pass
 
     def test_component_init_name(self):
