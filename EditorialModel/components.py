@@ -198,7 +198,7 @@ class EmComponent(object):
                         res = res.fetchall()
 
                         vals = list()
-                        vals.append({'id' : self.id, 'rank' : new_rank})
+                        vals.append({'id' : self.uid, 'rank' : new_rank})
 
                         for row in res:
                             if(new_rank < self.rank):
@@ -233,7 +233,7 @@ class EmComponent(object):
                             res = res.fetchall()
 
                             vals = list()
-                            vals.append({'id' : self.id, 'rank' : self.rank + new_rank})
+                            vals.append({'id' : self.uid, 'rank' : self.rank + new_rank})
 
                             for row in res:
                                 vals.append({'id' : row.uid, 'rank' : row.rank - 1})
@@ -259,7 +259,7 @@ class EmComponent(object):
                             res = res.fetchall()
 
                             vals = list()
-                            vals.append({'id' : self.id, 'rank' : self.rank - new_rank})
+                            vals.append({'id' : self.uid, 'rank' : self.rank - new_rank})
 
                             for row in res:
                                 vals.append({'id' : row.uid, 'rank' : row.rank + 1})
