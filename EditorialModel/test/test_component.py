@@ -22,10 +22,6 @@ import sqlalchemy as sqla
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
-#
-# TODO : test create
-#
-
 #=#############=# 
 #  TESTS SETUP  #
 #=#############=#
@@ -158,23 +154,23 @@ class ComponentTestCase(TestCase):
         foocol = footable.c.date_update
         pass
     
-    def check_equals(self, excepted_val, test_comp, check_date=True):
+    def check_equals(self, excepted_val, test_comp, check_date=True, msg=''):
         """ This function check that a EmTestComp has excepted_val for values """
         val = excepted_val
-        self.assertIsInstance(test_comp, EmTestComp)
+        self.assertIsInstance(test_comp, EmTestComp, msg)
         for vname in val:
             if vname in ['string', 'help']: #Special test for mlStrings
                 #MlString comparison
                 vml = json.loads(val[vname])
                 for vn in vml:
-                    self.assertEqual(vml[vn], getattr(test_comp, vname).get(vn))
+                    self.assertEqual(vml[vn], getattr(test_comp, vname).get(vn), msg)
             elif vname in ['date_create', 'date_update']:
                 # Datetime comparison
                 if check_date:
-                    self.assertEqualDatetime(val[vname], getattr(test_comp, vname))
+                    self.assertEqualDatetime(val[vname], getattr(test_comp, vname), msg)
             else:
                 prop = vname
-                self.assertEqual(getattr(test_comp, prop), val[vname], "Inconsistency for "+prop+" property")
+                self.assertEqual(getattr(test_comp, prop), val[vname], msg+"Inconsistency for "+prop+" property")
         pass
 
     def assertEqualDatetime(self, d1,d2, msg=""):
@@ -196,36 +192,7 @@ class ComponentTestCase(TestCase):
 #=#############=#
 #  TESTS BEGIN  #
 #=#############=#
-
-#=======================#
-#   EmComponent.newUid  #
-#=======================#
-class TestUid(ComponentTestCase):
-
-    
-    def test_newuid(self):
-        """ Test valid calls for newUid method """
-        for _ in range(10):
-            nuid = EmTestComp.newUid()
-        
-            conn = self.dber.connect()
-            tuid = sqla.Table('uids', sqlutils.meta(self.dber))
-            req = sqla.select([tuid]).where(tuid.c.uid == nuid)
-            rep = conn.execute(req)
-            res = rep.fetchall()
-        
-            self.assertEqual(len(res), 1, "Error when selecting : mutliple rows returned for 1 UID")
-            res = res[0]
-            self.assertEqual(res.uid, nuid, "Selected UID didn't match created uid")
-            self.assertEqual(res.table, EmTestComp.table, "Table not match with class table : expected '"+res.table+"' but got '"+EmTestComp.table+"'")
-        pass
-    
-    def test_newuid_abstract(self):
-        """ Test not valit call for newUid method """
-        with self.assertRaises(NotImplementedError):
-            EmComponent.newUid()
-        pass
-        
+       
 #===========================#
 #   EmComponent.__init__    #
 #===========================#
@@ -271,6 +238,35 @@ class TestInit(ComponentTestCase):
         for badarg in [ print, json, [], [1,2,3,4,5,6], {'hello': 'world'} ]:
             with self.assertRaises(TypeError):
                 EmTestComp(badarg)
+        pass
+
+#=======================#
+#   EmComponent.newUid  #
+#=======================#
+class TestUid(ComponentTestCase):
+
+    
+    def test_newuid(self):
+        """ Test valid calls for newUid method """
+        for _ in range(10):
+            nuid = EmTestComp.newUid()
+        
+            conn = self.dber.connect()
+            tuid = sqla.Table('uids', sqlutils.meta(self.dber))
+            req = sqla.select([tuid]).where(tuid.c.uid == nuid)
+            rep = conn.execute(req)
+            res = rep.fetchall()
+        
+            self.assertEqual(len(res), 1, "Error when selecting : mutliple rows returned for 1 UID")
+            res = res[0]
+            self.assertEqual(res.uid, nuid, "Selected UID didn't match created uid")
+            self.assertEqual(res.table, EmTestComp.table, "Table not match with class table : expected '"+res.table+"' but got '"+EmTestComp.table+"'")
+        pass
+    
+    def test_newuid_abstract(self):
+        """ Test not valit call for newUid method """
+        with self.assertRaises(NotImplementedError):
+            EmComponent.newUid()
         pass
         
 #=======================#
@@ -416,7 +412,47 @@ class TestSave(ComponentTestCase):
                 self.assertEqualDatetime(test_comp2.date_create, val[prop], "When loaded the "+prop+" has been changed")
                 """
         pass
+
+#====================#
+# EmComponent.create #
+#====================#
+class TestCreate(ComponentTestCase):
     
+    def test_create(self):
+        
+        with self.subTest("Create with all infos"):
+            vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
+            tc = EmTestComp.create(*vals)
+            self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
+            tcdb = EmTestComp('created1')
+            self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
+        
+        # This test assume that string and help has default values
+        with self.subTest("Create with minimal infos"):
+            vals = { 'name': 'created2', 'rank_fam': 'f' }
+            tc = EmTestComp.create(*vals)
+            self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
+            tcdb = EmTestComp('created1')
+            self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
+        pass
+
+    def test_create_badargs(self):
+        
+        with self.subTest("Create with illegal arguments"):
+            with self.assertRaises(TypeError, msg="But given a function as argument"):
+                tc = EmTestComp.create(print)
+            with self.assertRaises(TypeError, msg="But values contains date_create and date_update"):
+                vals = { 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+                tc = EmTestComp.create(*vals)
+        with self.subTest("Create without mandatory arguments"):
+            with self.assertRaises(TypeError, msg="But no name was given"):
+                vals = { 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+                tc = EmTestComp.create(*vals)
+            with self.assertRaises(TypeError, msg="But no rank_fam was given"):
+                vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+                tc = EmTestComp.create(*vals)
+        pass
+
 #===========================#
 # EmComponent.modify_rank   #
 #===========================#
