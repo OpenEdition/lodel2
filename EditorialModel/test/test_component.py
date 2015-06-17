@@ -10,6 +10,9 @@ from django.conf import settings
 from unittest import TestCase
 import unittest
 
+from EditorialModel.classes import EmClass
+from EditorialModel.classtypes import EmClassType
+
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 import EditorialModel.fieldtypes as ftypes
 from Lodel.utils.mlstring import MlString
@@ -197,7 +200,6 @@ class ComponentTestCase(TestCase):
 #   EmComponent.__init__    #
 #===========================#
 class TestInit(ComponentTestCase):
-
 
     def test_component_abstract_init(self):
         """ Test not valid call (from EmComponent) of __init__ """
@@ -422,7 +424,7 @@ class TestCreate(ComponentTestCase):
         
         with self.subTest("Create with all infos"):
             vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
-            tc = EmTestComp.create(*vals)
+            tc = EmTestComp.create(**vals)
             self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
             tcdb = EmTestComp('created1')
             self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
@@ -430,7 +432,7 @@ class TestCreate(ComponentTestCase):
         # This test assume that string and help has default values
         with self.subTest("Create with minimal infos"):
             vals = { 'name': 'created2', 'rank_fam': 'f' }
-            tc = EmTestComp.create(*vals)
+            tc = EmTestComp.create(**vals)
             self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
             tcdb = EmTestComp('created1')
             self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
@@ -443,14 +445,14 @@ class TestCreate(ComponentTestCase):
                 tc = EmTestComp.create(print)
             with self.assertRaises(TypeError, msg="But values contains date_create and date_update"):
                 vals = { 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(*vals)
+                tc = EmTestComp.create(**vals)
         with self.subTest("Create without mandatory arguments"):
             with self.assertRaises(TypeError, msg="But no name was given"):
                 vals = { 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(*vals)
+                tc = EmTestComp.create(**vals)
             with self.assertRaises(TypeError, msg="But no rank_fam was given"):
                 vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(*vals)
+                tc = EmTestComp.create(**vals)
         pass
 
 #===========================#

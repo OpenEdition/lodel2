@@ -37,12 +37,14 @@ class EmClass(EmComponent):
         return res
 
     @classmethod
+    ## Isolate SQL for create
+    # @todo Remove hardcoded default value for icon
     def _createDb(c, name, class_type):
         """ Do the db querys for EmClass::create() """
 
         #Create a new entry in the em_class table
-        values = { 'name':name, 'classtype':class_type['name'] }
-        resclass = super(EmClass,c).create(values)
+        values = { 'name':name, 'classtype':class_type['name'], 'icon':0 }
+        resclass = super(EmClass,c).create(**values)
 
 
         dbe = c.getDbE()

@@ -100,18 +100,32 @@ class EmComponent(object):
     # @return An instance of the created component
     #
     # @todo Check that the query didn't failed
+    # @todo Check that every mandatory _fields are given in args
+    # @todo Put a real rank at creation
     @classmethod
-    def create(c, values):
-        values['uid'] = c.newUid()
-        values['date_update'] = values['date_create'] = datetime.datetime.utcnow()
+    def create(cl, **kwargs):
+        for argname in kwargs:
+            if argname in ['date_update', 'date_create', 'rank', 'uid']: #Automatic properties
+                raise TypeError("Invalid argument : "+argname)
 
-        dbe = c.getDbE()
+        #TODO check that every mandatory _fields are here like below for example
+        #for name in cl._fields:
+        #    if cl._fields[name].notNull and cl._fields[name].default == None:
+        #        raise TypeError("Missing argument : "+name)
+
+        kwargs['uid'] = cl.newUid()
+        kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
+
+        dbe = cl.getDbE()
         conn = dbe.connect()
-        table = sql.Table(c.table, sqlutils.meta(dbe))
-        req = table.insert(values)
+
+        kwargs['rank'] = -1 #Warning !!!
+
+        table = sql.Table(cl.table, sqlutils.meta(dbe))
+        req = table.insert(kwargs)
         res = conn.execute(req) #Check res?
         conn.close()
-        return c(values['name']) #Maybe no need to check res because this would fail if the query failed
+        return cl(kwargs['name']) #Maybe no need to check res because this would fail if the query failed
 
 
     """ write the representation of the component in the database
