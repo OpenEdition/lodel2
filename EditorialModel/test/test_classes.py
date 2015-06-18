@@ -9,6 +9,7 @@ from unittest import TestCase
 from django.conf import settings
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
+from EditorialModel.fieldgroups import EmFieldGroup
 from Database.sqlsetup import SQLSetup
 from Database import sqlutils
 import sqlalchemy as sqla
@@ -74,3 +75,32 @@ class TestEmClassCreation(ClassesTestCase):
     def test_classtype(self):
         cl = EmClass('testClass')
         self.assertEqual(cl.classtype, EmClassType.entity['name'])
+
+# interface to fieldGroups
+class TestEmClassFieldgroups(ClassesTestCase):
+
+    # create a new EmClass, then test on it
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self):
+        ClassesTestCase.setUpClass()
+        test_class = EmClass.create('testClass', EmClassType.entity)
+
+    # test if fieldgroups() return a list of EmFieldGroup
+    def test_fieldgroups(self):
+        test_class = EmClass('testClass')
+        fg1 = EmFieldGroup.create('fg1', test_class)
+        fg2 = EmFieldGroup.create('fg2', test_class)
+
+        fieldgroups = test_class.fieldgroups()
+        self.assertIsInstance(fieldgroups, list)
+        for fieldgroup in fieldgroups:
+            self.assertIsInstance(fieldgroup, EmFieldGroup)
+
+    # with no fieldgroups fieldgroups() should return an empty list
+    def test_no_fieldgroups(self):
+        test_class = EmClass('testClass')
+        fieldgroups = test_class.fieldgroups()
+        self.assertEqual(fieldgroups, [])
