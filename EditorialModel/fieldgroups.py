@@ -9,33 +9,38 @@ import sqlalchemy as sql
 
 import EditorialModel
 
+## Represents groups of EmField associated with an EmClass
+#
+# EmClass fields representation is organised with EmFieldGroup
+# @see EditorialModel::fields::EmField EditorialModel::classes::EmClass
 class EmFieldGroup(EmComponent):
-    """ Represents groups of EmField
 
-        EmClass fields representation is organised with EmFieldGroup
-        @see EmField
-    """
-
+    ## The database table name
     table = 'em_fieldgroup'
+    ## List of fields
+    # @todo Bad storage, here we want an ordereddict not a tuple list
     _fields = [('class_id', ftypes.EmField_integer())]
-
+    
+    ## Instanciate an EmFieldGroup with data fetched from db
+    # @param id_or_name str|int: Identify the EmFieldGroup by name or by global_id
+    # @throw TypeError
+    # @see EditorialModel::components::EmComponent::__init__()
+    # @throw EditorialModel::components::EmComponentNotExistError
     def __init__(self, id_or_name):
-        """ Instanciate an EmFieldGroup with data fetched from db
-            @param id_or_name str|int: Identify the EmFieldGroup by name or by global_id
-            @throw TypeError
-            @see component::EmComponent::__init__()
-        """
         self.table = EmFieldGroup.table
         self._fields = self.__class__._fields
         super(EmFieldGroup, self).__init__(id_or_name)
 
     @classmethod
+    ## Create a new EmFieldGroup
+    #
+    # Save it in database and return an instance*
+    # @param name str: The name of the new EmFieldGroup
+    # @param em_class EmClass|str|int : Can be an EditorialModel::classes::EmClass uid, name or instance
+    # @throw ValueError If an EmFieldGroup with this name allready exists
+    # @throw ValueError If the specified EmClass don't exists
+    # @throw TypeError If an argument is of an unexepted type
     def create(c, name, em_class):
-        """ Create a new EmFieldGroup, save it and instanciate it
-
-            @param name str: The name of the new fielgroup
-            @param em_class EmClass|str|int: The new EmFieldGroup will belong to this class
-        """
         if not isinstance(em_class, EmClass):
             if isinstance(em_class, int) or isinstance(em_class, str):
                 try:
@@ -57,8 +62,8 @@ class EmFieldGroup(EmComponent):
 
         return exists
 
+    ## Get the list of associated fields
+    # @return A list of EditorialModel::fields::EmField
+    # @todo Implement this method
     def fields(self):
-        """ Get the list of associated fields
-            @return A list of EmField
-        """
         pass
