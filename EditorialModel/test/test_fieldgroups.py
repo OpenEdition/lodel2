@@ -33,7 +33,6 @@ def setUpModule():
     }
 
     logging.basicConfig(level=logging.CRITICAL)
-    print(sqlutils.getEngine())
 
 class FieldGroupTestCase(TestCase):
     
@@ -158,7 +157,7 @@ class TestCreate(FieldGroupTestCase):
                 with self.assertRaises(TypeError, msg="Should raise because trying to give "+badarg_name+" as em_class"):
                     fg = EmFieldGroup('new_fg'+i, badargs[badarg_name])
 
-        with self.subTest("With badarg as first argument")
+        with self.subTest("With badarg as first argument"):
             #Creating a fieldgroup to test duplicate name
             exfg = FieldGroup.create('existingfg', EmClass('entity1'))
 
@@ -205,7 +204,7 @@ class TestFields(FieldGroupTestCase):
         excepted1 = set(excepted1)
  
         tests = {
-            'newly': EmFieldGroup('testfg')
+            'newly': EmFieldGroup('testfg'),
             'old' : self.fg1
         }
 
