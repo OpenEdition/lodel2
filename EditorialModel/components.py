@@ -337,7 +337,7 @@ class EmComponent(object):
         """ This function register a new component in uids table
             @return The new uid
         """
-        dbe = c.getDbE()
+        dbe = cl.getDbE()
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
