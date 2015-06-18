@@ -108,7 +108,7 @@ class EmField(EmComponent):
         columns=('table')
         query_builder = SqlQueryBuilder(sql_wrapper,'uids')
         query_builder.Select(columns)
-        query_builder.From('uids')
+        query_builder.From(uidtable)
         query_builder.Where('uids.uid=%s' % self.uid)
 
         records = query.Execute().fetchall()
