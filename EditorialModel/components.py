@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-## Main object to manipulate Editorial Model
-#    parent of all other EM editing classes
-#    @see EmClass, EmType, EmFieldGroup, EmField
-
+## @file components.py
+# Defines the EditorialModel::components::EmComponent class and the EditorialModel::components::ComponentNotExistError exception class
 
 import datetime
 
@@ -16,19 +14,30 @@ from collections import OrderedDict
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
+## This class is the mother class of all editorial model objects
+#
+# It gather all the properties and mechanism that are common to every editorial model objects
+# @see EditorialModel::classes::EmClass, EditorialModel::types::EmType, EditorialModel::fieldgroups::EmFieldGroup, EditorialModel::fields::EmField
+# @pure
 class EmComponent(object):
 
-    dbconf = 'default' #the name of the engine configuration
+    ## The name of the engine configuration
+    # @todo Not a good idea to store it here
+    dbconf = 'default'
+    ## The table in wich we store data for this object
+    # None for EmComponent
     table = None
+    ## Used by EmComponent::modify_rank
     ranked_in = None
 
-    """ instaciate an EmComponent
-        @param id_or_name int|str: name or id of the object
-        @exception TypeError
-    """
+    ## Instaciate an EmComponent
+    # @param id_or_name int|str: name or id of the object
+    # @throw TypeError if id_or_name is not an integer nor a string
+    # @throw NotImplementedError if called with EmComponent
     def __init__(self, id_or_name):
+
         if type(self) is EmComponent:
-            raise EnvironmentError('Abstract class')
+            raise NotImplementedError('Abstract class')
 
         # data fields of the object
         self._fields = OrderedDict([('uid', ftypes.EmField_integer()), ('name', ftypes.EmField_char()), ('rank', ftypes.EmField_integer()), ('date_update', ftypes.EmField_date()), ('date_create', ftypes.EmField_date()), ('string', ftypes.EmField_mlstring()), ('help', ftypes.EmField_mlstring())] + self._fields)
@@ -44,22 +53,26 @@ class EmComponent(object):
             raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
         self.populate()
 
-    # access values of data fields from the object properties
+    ## Access values of data fields from the object properties
+    # @param name str: The propertie name
+    # @throw AttributeError if attribute don't exists
     def __getattr__(self, name):
         if name != '_fields' and name in self._fields:
             return self._fields[name].value
 
         raise AttributeError('Error unknown attribute : '+name)
 
-    # set values of data fields from the object properties
+    ## Set values of data fields from the object properties
+    # @param name str: The propertie name
+    # @param value *: The value
     def __setattr__(self, name, value):
         if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
             self._fields[name].from_python(value)
         else:
             object.__setattr__(self, name, value)
 
-    """ Lookup in the database properties of the object to populate the properties
-    """
+    ## Lookup in the database properties of the object to populate the properties
+    # @throw EmComponentNotExistError if the instance is not anymore stored in database
     def populate(self):
         records = self._populateDb() #Db query
 
@@ -69,12 +82,13 @@ class EmComponent(object):
                     self._fields[keys].from_string(record[keys])
 
     @classmethod
+    ## Shortcut that return the sqlAlchemy engine
     def getDbE(c):
-        """ Shortcut that return the sqlAlchemy engine """
         return sqlutils.getEngine(c.dbconf)
-
+    
+    ## Do the query on the database for EmComponent::populate()
+    # @throw EmComponentNotExistError if the instance is not anymore stored in database
     def _populateDb(self):
-        """ Do the query on the db """
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component])
@@ -95,9 +109,12 @@ class EmComponent(object):
         return res
 
     ## Insert a new component in the database
-    # This function create and assign a new UID and handle the date_create value
-    # @param values The values of the new component
+    #
+    # This function create and assign a new UID and handle the date_create and date_update values
+    #
+    # @param **kwargs : Names arguments representing object properties
     # @return An instance of the created component
+    # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
     #
     # @todo Check that the query didn't failed
     # @todo Check that every mandatory _fields are given in args
@@ -128,9 +145,8 @@ class EmComponent(object):
         return cl(kwargs['name']) #Maybe no need to check res because this would fail if the query failed
 
 
-    """ write the representation of the component in the database
-        @return bool
-    """
+    ## Write the representation of the component in the database
+    # @return bool
     def save(self):
         values = {}
         for name, field in self._fields.items():
@@ -142,7 +158,10 @@ class EmComponent(object):
             logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
 
         self._saveDb(values)
-
+    
+    ## Do the query in the datbase for EmComponent::save()
+    # @param values dict: A dictionnary of the values to insert
+    # @throw RunTimeError if it was unable to do the Db update
     def _saveDb(self, values):
         """ Do the query on the db """
         dbe = self.__class__.getDbE()
@@ -156,9 +175,10 @@ class EmComponent(object):
             raise RuntimeError("Unable to save the component in the database")
 
 
-    """ delete this component data in the database
-        @return bool
-    """
+    ## Delete this component data in the database
+    # @return bool
+    # @todo Use something like __del__ instead (or call it at the end)
+    # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
         #<SQL>
         dbe = self.__class__.getDbE()
@@ -180,6 +200,8 @@ class EmComponent(object):
     # @param sign str: Un charactère qui peut être : '=' pour afecter un rank, '+' pour ajouter le modificateur de rank ou '-' pour soustraire le modificateur de rank.
     #
     # @return bool: True en cas de réussite False en cas d'echec.
+    # @throw TypeError if an argument isn't from the expected type
+    # @thrown ValueError if an argument as a wrong value but is of the good type
     def modify_rank(self, new_rank, sign = '='):
 
         if(type(new_rank) is int):
@@ -308,7 +330,10 @@ class EmComponent(object):
             return "<%s #%s, '%s'>" % (type(self).__name__, self.uid, self.name)
 
     @classmethod
-    def newUid(c):
+    ## Register a new component in UID table
+    # 
+    # Use the class property table
+    def newUid(cl):
         """ This function register a new component in uids table
             @return The new uid
         """
@@ -316,16 +341,16 @@ class EmComponent(object):
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
-        req = uidtable.insert(values={'table':c.table})
+        req = uidtable.insert(values={'table':cl.table})
         res = conn.execute(req)
 
         uid = res.inserted_primary_key[0]
-        logger.debug("Registering a new UID '"+str(uid)+"' for '"+c.table+"' component")
+        logger.debug("Registering a new UID '"+str(uid)+"' for '"+cl.table+"' component")
 
         conn.close()
 
         return uid
 
-
+## An exception class to tell that a component don't exist
 class EmComponentNotExistError(Exception):
     pass
