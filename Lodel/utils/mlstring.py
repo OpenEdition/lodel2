@@ -27,6 +27,16 @@ class MlString(object):
         else:
             return ""
 
+    def __eq__(self, other):
+        if not isinstance(other, MlString):
+            return False
+        if not set(lng for lng in self.translations) == set( lng for lng in other.translations):
+            return False
+        for lng in self.translations:
+            if self.get(lng) != other.get(lng):
+                return False
+        return True
+
     @staticmethod
     def load(json_string):
         if isinstance(json_string, str) and json_string != '':
