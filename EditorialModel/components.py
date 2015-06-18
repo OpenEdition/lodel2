@@ -30,6 +30,9 @@ class EmComponent(object):
     ## Used by EmComponent::modify_rank
     ranked_in = None
 
+    ##Read only properties
+    _ro_properties = [ 'date_update', 'date_create', 'uid', 'rank']
+
     ## Instaciate an EmComponent
     # @param id_or_name int|str: name or id of the object
     # @throw TypeError if id_or_name is not an integer nor a string
@@ -44,10 +47,8 @@ class EmComponent(object):
 
         # populate
         if isinstance(id_or_name, int):
-            self.uid = id_or_name
-            self.name = None
+            self._fields['uid'].value = id_or_name #read only propertie set
         elif isinstance(id_or_name, str):
-            self.uid = None
             self.name = id_or_name
         else:
             raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
@@ -66,6 +67,9 @@ class EmComponent(object):
     # @param name str: The propertie name
     # @param value *: The value
     def __setattr__(self, name, value):
+        if name in  self.__class__._ro_properties:
+            raise TypeError("Propertie '"+name+"' is readonly")
+
         if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
             self._fields[name].from_python(value)
         else:
@@ -119,6 +123,7 @@ class EmComponent(object):
     # @todo Check that the query didn't failed
     # @todo Check that every mandatory _fields are given in args
     # @todo Put a real rank at creation
+    # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
     @classmethod
     def create(cl, **kwargs):
         for argname in kwargs:
@@ -147,15 +152,19 @@ class EmComponent(object):
 
     ## Write the representation of the component in the database
     # @return bool
+    # @todo stop using datetime.datetime.utcnow() for date_update update
     def save(self):
         values = {}
         for name, field in self._fields.items():
             values[name] = field.to_sql()
 
         #Don't allow creation date overwritting
+        """
         if 'date_create' in values:
             del values['date_create']
             logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
+        """
+        values['date_update'] = datetime.datetime.utcnow()
 
         self._saveDb(values)
     
@@ -247,7 +256,7 @@ class EmComponent(object):
                         c.execute(req, vals)
                         c.close()
 
-                        self.rank = new_rank
+                        self._fields['rank'].value = new_rank
 
                     else:
                         logger.error("Bad argument")
@@ -277,8 +286,8 @@ class EmComponent(object):
                             req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
                             c.execute(req, vals)
                             c.close()
-
-                            self.rank += new_rank
+                            
+                            self._fields['rank'] += new_rank
                         else:
                             logger.error("Bad argument")
                             raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
@@ -304,7 +313,7 @@ class EmComponent(object):
                             c.execute(req, vals)
                             c.close()
 
-                            self.rank -= new_rank
+                            self._fields['rank'] -= new_rank
                         else:
                             logger.error("Bad argument")
                             raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
@@ -333,10 +342,11 @@ class EmComponent(object):
     ## Register a new component in UID table
     # 
     # Use the class property table
+    # @return A new uid (an integer)
     def newUid(cl):
-        """ This function register a new component in uids table
-            @return The new uid
-        """
+        if cl.table == None:
+            raise NotImplementedError("Abstract method")
+
         dbe = cl.getDbE()
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))

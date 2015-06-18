@@ -170,7 +170,7 @@ class ComponentTestCase(TestCase):
             elif vname in ['date_create', 'date_update']:
                 # Datetime comparison
                 if check_date:
-                    self.assertEqualDatetime(val[vname], getattr(test_comp, vname), msg)
+                    self.assertEqualDatetime(val[vname], getattr(test_comp, vname), vname+" assertion error : "+msg)
             else:
                 prop = vname
                 self.assertEqual(getattr(test_comp, prop), val[vname], msg+"Inconsistency for "+prop+" property")
@@ -203,9 +203,9 @@ class TestInit(ComponentTestCase):
 
     def test_component_abstract_init(self):
         """ Test not valid call (from EmComponent) of __init__ """
-        with self.assertRaises(EnvironmentError):
+        with self.assertRaises(NotImplementedError):
             test_comp = EmComponent(2)
-        with self.assertRaises(EnvironmentError):
+        with self.assertRaises(NotImplementedError):
             test_comp = EmComponent('name')
         pass
 
@@ -294,12 +294,14 @@ class TestSave(ComponentTestCase):
         for prop in ['name', 'help', 'string', 'date_update', 'date_create', 'rank' ]:
             if prop in ['string', 'help']:
                 assertion = self.assertEqualMlString
-            elif prop in ['date_update', 'date_create']:
+            elif prop == 'date_create':
                 assertion = self.assertEqualDatetime
+            elif prop == 'date_update':
+                assertion = self.assertLess
             else:
                 assertion = self.assertEqual
 
-            assertion(getattr(test_comp, prop), getattr(test_comp2, prop), "Save don't propagate modification properly. The '"+prop+"' property differs between the modified instance and a new one fetch from Db : ")
+            assertion(getattr(test_comp, prop), getattr(test_comp2, prop), "Save don't propagate modification properly. The '"+prop+"' property hasn't the exepted value in instance fetched from Db : ")
         pass
 
     def test_component_save_setattr(self):
@@ -352,32 +354,6 @@ class TestSave(ComponentTestCase):
 
         pass
 
-    @unittest.skip("Soon we will not use anymore the values argument of the savec method")
-    def test_component_save(self):
-        """ Checking save method after different changes using values arg of save method """
-        val = self.test_values[0]
-        test_comp = EmTestComp(val['name'])
-        self.check_equals(val, test_comp)
-
-        save_args = [
-            { 'name': 'foonewname' },
-            { 'name': 'foo new name'},
-            { 'help': '{"fr": "strhelp fr", "en":"strhelp en", "es":"strhelp es"}'},
-            { 'string': '{"fr": "helpstr fr", "en":"helpstr en", "es":"helpstr es"}'},
-            { 'name': 'oldname', 'help':'{"fr": "help fra", "en":"help eng", "es":"help esp"}', 'string':'{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'},
-            { 'help': '{}', 'string':'{}'},
-        ]
-        for values in save_args:
-            for vname in values:
-                val[vname] = values[vname]
-
-            v = values.copy()
-            #WARNING : v is set by save
-            test_comp.save(v)
-            
-            print(val,"\n" ,values)
-            self._savecheck(test_comp, val)
-
     def test_component_save_illegalchanges(self):
         """ checking that the save method forbids some changes """
         val = self.test_values[1]
@@ -385,11 +361,12 @@ class TestSave(ComponentTestCase):
         changes = { 'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,2,22,43), 'rank': 42 }
 
         for prop in changes:
-            with self.subTest("Illega change of "+prop):
+            with self.subTest("Illegal change of "+prop):
                 test_comp = EmTestComp(val['name'])
-                self.check_equals(val, test_comp)
+                self.check_equals(val, test_comp, False)
                 
-                setattr(test_comp, prop, changes[prop])
+                with self.assertRaises(TypeError):
+                    setattr(test_comp, prop, changes[prop])
                 test_comp.save()
     
                 test_comp2 = EmTestComp(val['name'])
@@ -564,10 +541,10 @@ class TestModifyRank(ComponentTestCase):
 
             for j in range(1,i+1):
                 test_comp2 = EmTestComp(names[j])
-                self.assertEqual(test_comp2.rank, j-1)
+                self.assertEqual(test_comp2.rank, j-1, self.dump_ranks())
             for j in range(i+1,nmax+1):
                 test_comp2 = EmTestComp(names[j])
-                self.assertEqual(test_comp2.rank, j)
+                self.assertEqual(test_comp2.rank, j, self.dump_ranks())
 
             test_comp.modify_rank(i,'-')
             self.assertEqual(test_comp.rank, 0, "The instance on wich we applied the modify_rank -"+str(i)+" doesn't have excepted rank : excepted '0' but got '"+str(test_comp.rank)+"'")
@@ -576,7 +553,7 @@ class TestModifyRank(ComponentTestCase):
 
             for j in range(1,nmax+1):
                 test_comp2 = EmTestComp(names[j])
-                self.assertEqual(test_comp2.rank, j)
+                self.assertEqual(test_comp2.rank, j, self.dump_ranks())
 
         test_comp = EmTestComp(names[3])
         test_comp.modify_rank(2,'+')

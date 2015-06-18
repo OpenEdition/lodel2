@@ -51,6 +51,40 @@ class EmField_integer(EmFieldType):
             value = self.value
         return value
 
+    def __int__(self):
+        return self.value
+
+    def __add__(self, other):
+        return self.value + other
+
+    def __sub__(self, other):
+        return self.value - other
+
+    def __mul__(self, other):
+        return self.value * other
+
+    def __div__(self, other):
+        return self.value / other
+
+    def __mod__(self, other):
+        return self.value % other
+
+    def __iadd__(self, other):
+        self.value = int(self.value + other)
+        return self
+
+    def __isub__(self, other):
+        self.value = int(self.value - other)
+        return self
+
+    def __imul__(self, other):
+        self.value = int(self.value * other)
+        return self
+
+    def __idiv__(self, other):
+        self.value = int(self.value / other)
+        return self
+
     def sql_column(self):
         return "int(11) NOT NULL"
 
