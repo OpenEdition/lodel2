@@ -3,6 +3,7 @@ import datetime
 import time
 import logging
 import json
+import shutil
 
 #from django.test import TestCase
 from django.conf import settings
@@ -35,10 +36,12 @@ def setUpModule():
         The goal are to overwrtie Db configs, and prepare objects for test_case initialisation
     """
     #Overwritting db confs to make tests
+    globals()['component_test_dbfilename'] = '/tmp/test_em_component_db.sqlite'
+
     settings.LODEL2SQLWRAPPER['db'] = {
         'default': {
             'ENGINE': 'sqlite',
-            'NAME': '/tmp/testdb.sqlite'
+            'NAME': globals()['component_test_dbfilename']
         }
     }
     
@@ -62,10 +65,51 @@ def setUpModule():
             }
     tables.append(ttest)
 
-    globals()['dbwrapper'] = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
+    sqlwrap = globals()['dbwrapper'] = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
     globals()['tables'] = tables
+
+    #Creating db structure
+    sqlwrap.dropAll()
+    sqlwrap.createAllFromConf(tables)
+
+    dbe = sqlwrap.r_engine
+
+    # Insertion of testings datas
+    conn = dbe.connect()
+    test_table = sqla.Table(EmTestComp.table, sqlutils.meta(dbe))
+    uids_table = sqla.Table('uids', sqlutils.meta(dbe))
+
+    #Creating uid for the EmTestComp
+    for v in ComponentTestCase.test_values:
+        uid = v['uid']
+        req = uids_table.insert(values={'uid':uid, 'table': EmTestComp.table })
+        conn.execute(req)
+
+    # WARNING !!! Rank has to be ordened and incremented by one for the modify_rank tests
+
+    for i in range(len(ComponentTestCase.test_values)):
+        ComponentTestCase.test_values[i]['date_create'] = datetime.datetime.utcnow()
+        ComponentTestCase.test_values[i]['date_update'] = datetime.datetime.utcnow()
+        ComponentTestCase.test_values[i]['rank_fam'] = '1'
+        
+
+    req = test_table.insert(values=ComponentTestCase.test_values)
+    conn.execute(req)
+    conn.close()
+
+    shutil.copyfile(globals()['component_test_dbfilename'], globals()['component_test_dbfilename']+'_bck')
+
+
+    logging.getLogger().setLevel(logging.CRITICAL)
     pass
 
+def tearDownModule():
+    try:
+        os.unlink(globals()['component_test_dbfilename'])
+    except:pass
+    try:
+        os.unlink(globals()['component_test_dbfilename']+'_bck')
+    except:pass
 
 #A dummy EmComponent child class use to make tests
 class EmTestComp(EmComponent):
@@ -75,86 +119,33 @@ class EmTestComp(EmComponent):
         self._fields = [('rank_fam', ftypes.EmField_char())]
         super(EmTestComp, self).__init__(ion)
         pass
-    """
-    def populate(self):
-        row = super(EmTestComp, self).populate()
-        self.rank_fam = row.rank_fam
-        pass
-
-    def save(self):
-        values = { 'rank_fam': self.rank_fam }
-        return super(EmTestComp, self).save(values)
-    """
 
 # The parent class of all other test cases for component
 # It defines a SetUp function and some utility functions for EmComponent tests
 class ComponentTestCase(TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        pass
-        
+    test_values = [
+        { 'uid': 1, 'name': 'test', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}', 'rank': 0},
+        { 'uid': 2, 'name': 'test-em_comp', 'string': '{"fr":"Super test comp"}', 'help': '{}', 'rank': 1},
+        { 'uid': 3, 'name': 'test2', 'string': '{}', 'help': '{}', 'rank': 2},
+        { 'uid': 42, 'name': 'foo', 'string': '{"foo":"bar"}', 'help': '{"foo":"foobar"}', 'rank': 3},
+        { 'uid': 84, 'name': '123', 'string': '{"num":"456"}', 'help': '{"num":"4242"}', 'rank': 4},
+        { 'uid': 1025, 'name': 'name', 'string': '{}', 'help': '{}', 'rank': 5},
+    ]
+
     @property
     def db(self):
         return globals()['dbwrapper']
     @property
     def tables(self):
         return globals()['tables']
-
+    
     def setUp(self):
-        # Db RAZ
-        globals()['dbwrapper'].dropAll()
-        # Db schema creation
-        globals()['dbwrapper'].createAllFromConf(globals()['tables']);
-        #Db Engines init
         self.dber = globals()['dbwrapper'].r_engine
         self.dbew = globals()['dbwrapper'].w_engine
-        
-        # Insertion of testings datas
-        conn = self.dber.connect()
-        test_table = sqla.Table(EmTestComp.table, sqlutils.meta(self.dber))
-        uids_table = sqla.Table('uids', sqlutils.meta(self.dber))
-        tuid = [ 1, 2, 3 , 42, 84 , 1025 ]
-
-        #Creating uid for the EmTestComp
-        for uid in tuid:
-            req = uids_table.insert(values={'uid':uid, 'table': EmTestComp.table })
-            conn.execute(req)
-
-        # WARNING !!! Rank has to be ordened and incremented by one for the modify_rank tests
-        self.test_values = [
-            { 'uid': tuid[0], 'name': 'test', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}', 'rank': 0},
-            { 'uid': tuid[1], 'name': 'test-em_comp', 'string': '{"fr":"Super test comp"}', 'help': '{}', 'rank': 1},
-            { 'uid': tuid[2], 'name': 'test2', 'string': '{}', 'help': '{}', 'rank': 2},
-            { 'uid': tuid[3], 'name': 'foo', 'string': '{"foo":"bar"}', 'help': '{"foo":"foobar"}', 'rank': 3},
-            { 'uid': tuid[4], 'name': '123', 'string': '{"num":"456"}', 'help': '{"num":"4242"}', 'rank': 4},
-            { 'uid': tuid[5], 'name': 'name', 'string': '{}', 'help': '{}', 'rank': 5},
-        ]
-
-        for i in range(len(self.test_values)):
-            self.test_values[i]['date_create'] = datetime.datetime.utcnow()
-            self.test_values[i]['date_update'] = datetime.datetime.utcnow()
-            self.test_values[i]['rank_fam'] = '1'
-            
-
-        req = test_table.insert(values=self.test_values)
-        conn.execute(req)
-    
-        """#Uncomment this block to dump the test values at each setup
-        req = sqla.select([test_table])
-        res = conn.execute(req).fetchall()
-        print("\nDEBUG (dump inserted)")
-        for row in res:
-            strrow=""
-            for cname in row.keys():
-                strrow += "\t"+str(cname)+'\t: '+str(row[cname])+"\n"
-            print(strrow)
-        print("\n")
-        """
-        conn.close()
-
-        footable = sqla.Table('em_class', sqlutils.meta(self.dber))
-        foocol = footable.c.date_update
+        self.test_values = self.__class__.test_values
+        #Db RAZ
+        shutil.copyfile(globals()['component_test_dbfilename']+'_bck', globals()['component_test_dbfilename'])
         pass
     
     def check_equals(self, excepted_val, test_comp, check_date=True, msg=''):
@@ -178,7 +169,12 @@ class ComponentTestCase(TestCase):
 
     def assertEqualDatetime(self, d1,d2, msg=""):
         """ Compare a date from the database with a datetime (that have microsecs, in db we dont have microsecs) """
-        self.assertTrue( d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and d1.hour == d2.hour and d1.minute == d2.minute and d1.second == d2.second, msg+" Error the two dates differs : '"+str(d1)+"' '"+str(d2)+"'")
+        self.assertTrue(    d1.year == d2.year
+                            and d1.month == d2.month
+                            and d1.day == d2.day
+                            and d1.hour == d2.hour
+                            and d1.minute == d2.minute
+                            and d1.second == d2.second, msg+" Error the two dates differs : '"+str(d1)+"' '"+str(d2)+"'")
 
     def assertEqualMlString(self, ms1, ms2, msg=""):
         """ Compare two MlStrings """
@@ -189,7 +185,6 @@ class ComponentTestCase(TestCase):
             self.assertEqual(ms1t[n], ms2t[n])
 
     def run(self, result=None):
-        
         super(ComponentTestCase, self).run(result)
 
 #=#############=#
@@ -371,8 +366,10 @@ class TestSave(ComponentTestCase):
     
                 test_comp2 = EmTestComp(val['name'])
     
-                if prop in ['date_create', 'date_update']:
+                if prop  == 'date_create':
                     assertion = self.assertEqualDatetime
+                elif prop == 'date_update':
+                    continue
                 else: #rank
                     assertion = self.assertEqual
     

@@ -1,6 +1,7 @@
 import os
 import logging
 import datetime
+import shutil
 
 from django.conf import settings
 
@@ -28,29 +29,38 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 def setUpModule():
     #Overwritting db confs to make tests
+    globals()['fieldgroup_test_dbfilename'] = '/tmp/test_em_component_db.sqlite'
     settings.LODEL2SQLWRAPPER['db'] = {
         'default': {
             'ENGINE': 'sqlite',
-            'NAME': '/tmp/testdb.sqlite'
+            'NAME': globals()['fieldgroup_test_dbfilename']
         }
     }
 
     logging.basicConfig(level=logging.CRITICAL)
+    SQLSetup().initDb()
+    #Classes creation
+    EmClass.create("entity1", EmClassType.entity)
+    EmClass.create("entity2", EmClassType.entity)
+    EmClass.create("entry1", EmClassType.entry)
+    EmClass.create("entry2", EmClassType.entry)
+    EmClass.create("person1", EmClassType.person)
+    EmClass.create("person2", EmClassType.person)
+
+    shutil.copyfile(globals()['fieldgroup_test_dbfilename'], globals()['fieldgroup_test_dbfilename']+'_bck')
+
+def tearDownModule():
+    try:
+        os.unlink(globals()['fieldgroup_test_dbfilename'])
+    except:pass
+    try:
+        os.unlink(globals()['fieldgroup_test_dbfilename']+'_bck')
+    except:pass
 
 class FieldGroupTestCase(TestCase):
     
     def setUp(self):
-        sqls = SQLSetup()
-        sqls.initDb()
-        #Samples values insertion
-
-        #Classes creation
-        EmClass.create("entity1", EmClassType.entity)
-        EmClass.create("entity2", EmClassType.entity)
-        EmClass.create("entry1", EmClassType.entry)
-        EmClass.create("entry2", EmClassType.entry)
-        EmClass.create("person1", EmClassType.person)
-        EmClass.create("person2", EmClassType.person)
+        shutil.copyfile(globals()['fieldgroup_test_dbfilename']+'_bck', globals()['fieldgroup_test_dbfilename'])
         pass
 
 
