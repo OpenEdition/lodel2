@@ -12,7 +12,7 @@ from Database.sqlalter import *
 #Logger config
 #logger.getLogger().setLevel('WARNING')
 logger = logging.getLogger('lodel2.Database.sqlwrapper')
-logger.setLevel('WARNING')
+logger.setLevel('CRITICAL')
 logger.propagate = False
 #To be able to use dango confs
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
@@ -58,7 +58,7 @@ class SqlWrapper(object):
         self.sqlalogging = False if alchemy_logs == None else bool(alchemy_logs)
 
         if name == None:
-            self.name = read_db+'+'+write_db
+            self.name = read_db+':'+write_db
         else:
             self.name = name
     

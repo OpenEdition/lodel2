@@ -35,7 +35,7 @@ def setUpModule():
         The goal are to overwrtie Db configs, and prepare objects for test_case initialisation
     """
     #Overwritting db confs to make tests
-    settings.LODEL2SQLWRAPPER = {
+    settings.LODEL2SQLWRAPPER['db'] = {
         'default': {
             'ENGINE': 'sqlite',
             'NAME': '/tmp/testdb.sqlite'
