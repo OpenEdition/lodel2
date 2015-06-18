@@ -85,9 +85,9 @@ class EmComponent(object):
             req = req.where(component.c.uid == self.uid)
         c = dbe.connect()
         res = c.execute(req)
-        c.close()
 
         res = res.fetchall()
+        c.close()
 
         if not res or len(res) == 0:
             raise EmComponentNotExistError("No component found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
