@@ -12,7 +12,9 @@ import logging
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
-"""Represent one data for a lodel2 document"""
+## EmField (Class)
+#
+# Represents one data for a lodel2 document
 class EmField(EmComponent):
 
     table = 'em_field'
@@ -78,7 +80,7 @@ class EmField(EmComponent):
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
     @classmethod
-    def addFieldColumnToClassTable(cls, emField):
+    def addFieldColumnToClassTable(c, emField):
         field_type = EditorialModel.fieldtypes.get_field_type(emField.em_fieldtype)
         field_sqlalchemy_args = field_type.sqlalchemy_args()
         field_sqlalchemy_args['name'] = emField.name
@@ -111,7 +113,7 @@ class EmField(EmComponent):
         query_builder.From(uidtable)
         query_builder.Where('uids.uid=%s' % self.uid)
 
-        records = query.Execute().fetchall()
+        records = query_builder.Execute().fetchall()
         table_records = []
         for record in records:
             table_records.append(dict(zip(record.keys(), record)))
@@ -155,5 +157,3 @@ class EmField(EmComponent):
 
         return super(EmField, self).save(values)
 
-class EmFieldNotExistError(Exception):
-    pass
