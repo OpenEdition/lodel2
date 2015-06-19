@@ -169,13 +169,3 @@ class EmField(EmComponent):
 
         return super(EmField, self).save(values)
 
-
-    ## Select_field (Function)
-    #
-    # @param type EmType: Type to link this field to
-    # @return True if success, False if failure
-    def select_field(self, type):
-        if Em_Field_Type.create(self.uid, type.uid):
-            return True
-        else:
-            return False

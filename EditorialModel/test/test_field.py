@@ -172,17 +172,3 @@ class TestField(FieldTestCase):
         field_column = sqla.Column(**field_column_args)
         self.assertIn(field_column,field_table_columns)
         pass
-
-
-    ## Test_Select (Function)
-    #
-    # The selected field has a record in the em_field_type table
-    def testSelectField(self):
-        testType = EmType.create('testtype2',self.testClass)
-
-        field=EmField('testfield1')
-        field.select_field('testtype2')
-
-        field_type_object = Em_Field_Type(testType.uid, field.uid)
-        self.assertEqual(field_type_object.exists(),True)
-        pass

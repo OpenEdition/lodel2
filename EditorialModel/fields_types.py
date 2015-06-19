@@ -66,6 +66,28 @@ class Em_Field_Type(object):
         conn.close()
         return Em_Field_Type(kwargs['type_id'], kwargs['field_id'])
 
+    ## Delete (Function)
+    #
+    # Deletes a relation between a field and a type
+    #
+    # @return Boolean
+    def delete(self):
+        return _deleteDb()
+
+    def _deleteDb(self):
+        dbe = self.getDbe()
+        table = sqla.Table(self.table, sqlutils.meta(dbe))
+        req = table.Delete().Where(table.c.type_id==self.type_id).Where(table.c.field_id==self.field_id)
+        conn = dbe.connect()
+        try:
+            conn.execute(req)
+            res = True
+        except:
+            res = False
+        conn.close()
+
+        return res
+
     ## Exists (Function)
     #
     # Checks if a the relation exists in the database
