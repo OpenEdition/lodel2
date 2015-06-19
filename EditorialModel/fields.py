@@ -3,6 +3,8 @@
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldtypes import *
 from EditorialModel.fields_types import Em_Field_Type
+from EditorialModel.fieldgroups import EmFieldGroup
+
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlquerybuilder import SqlQueryBuilder
@@ -127,10 +129,10 @@ class EmField(EmComponent):
     # Sets the object's properties using the values from the database
     def populate(self):
         row = super(EmField, self).populate()
-        self.em_fieldgroup = EditorialModel.fieldgroups.EmFieldGroup(int(row.fieldgroup_id))
-        self.em_fieldtype = EditorialModel.fieldtypes.get_field_type(row.fieldtype)
-        self.optional = True if row.optional == 1 else False;
-        self.internal = True if row.internal == 1 else False;
+        self.fieldtype = EditorialModel.fieldtypes.get_field_type(row.fieldtype)
+        self.fieldgroup_id = EmFieldGroup(int(row.fieldgroup_id)).uid
+        self.optional = True if row.optional == 1 else False
+        self.internal = True if row.internal == 1 else False
         self.icon = row.icon
         self.rel_to_type_id = EditorialModel.fieldtypes.EmFieldType(int(row.rel_to_type_id)) if row.rel_to_type_id else None
         self.rel_field_id = EmField(int(row.rel_field_id)) if row.rel_field_id else None
@@ -146,8 +148,8 @@ class EmField(EmComponent):
             self.populate()
 
         values = {
-            'fieldgroup_id' : self.em_fieldgroup.id,
-            'fieldtype' : self.em_fieldtype.name,
+            'fieldgroup_id' : self.fieldgroup.id,
+            'fieldtype' : self.fieldtype.name,
             'optional' : 1 if self.optional else 0,
             'internal' : 1 if self.internal else 0,
             'icon' : self.icon,

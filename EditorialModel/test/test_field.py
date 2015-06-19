@@ -148,11 +148,10 @@ class TestField(FieldTestCase):
     def testCreate(self):
 
         field = EmField.create('testfield1', self.testFieldgroup, self.testFieldType)
-        fieldUid = field.uid
         # We check that the field has been added in the em_field table
-        field_records = self.get_field_records(fieldUid)
-        self.assertEqual(len(field_records),1)
-        self.assertEqual(fieldUid,field_record[0]['uid'])
+        field_records = self.get_field_records(field.uid)
+        self.assertEqual(len(field_records),field.uid)
+        self.assertEqual(field.uid,field_record[0]['uid'])
         self.assertEqual(field.name,field_record[0]['name'])
 
         # We check that the field has been added as a column in the corresponding table
