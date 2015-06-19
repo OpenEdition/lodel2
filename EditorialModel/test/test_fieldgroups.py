@@ -16,6 +16,8 @@ from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldtypes import *
 
+from EditorialModel.test.utils import *
+
 from Database.sqlsetup import SQLSetup
 from Database import sqlutils
 
@@ -27,18 +29,27 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 # TESTS SETUP #
 #=###########=#
 
+TEST_FIELDGROUP_DBNAME = 'test_em_component_db.sqlite'
+
 def setUpModule():
+
+    logging.basicConfig(level=logging.CRITICAL)
+
+    initTestDb(TEST_FIELDGROUP_DBNAME)
+    setDbConf(TEST_FIELDGROUP_DBNAME)
+    
+    """
     #Overwritting db confs to make tests
-    globals()['fieldgroup_test_dbfilename'] = '/tmp/test_em_component_db.sqlite'
     settings.LODEL2SQLWRAPPER['db'] = {
         'default': {
             'ENGINE': 'sqlite',
-            'NAME': globals()['fieldgroup_test_dbfilename']
+            'NAME': TEST_FIELDGROUP_DBNAME
         }
     }
 
-    logging.basicConfig(level=logging.CRITICAL)
     SQLSetup().initDb()
+    """
+
     #Classes creation
     EmClass.create("entity1", EmClassType.entity)
     EmClass.create("entity2", EmClassType.entity)
@@ -46,21 +57,19 @@ def setUpModule():
     EmClass.create("entry2", EmClassType.entry)
     EmClass.create("person1", EmClassType.person)
     EmClass.create("person2", EmClassType.person)
+    
+    saveDbState(TEST_FIELDGROUP_DBNAME)
 
-    shutil.copyfile(globals()['fieldgroup_test_dbfilename'], globals()['fieldgroup_test_dbfilename']+'_bck')
+    #shutil.copyfile(TEST_FIELDGROUP_DBNAME, globals()['fieldgroup_test_dbfilename']+'_bck')
 
 def tearDownModule():
-    try:
-        os.unlink(globals()['fieldgroup_test_dbfilename'])
-    except:pass
-    try:
-        os.unlink(globals()['fieldgroup_test_dbfilename']+'_bck')
-    except:pass
+    cleanDb(TEST_FIELDGROUP_DBNAME)
+    pass
 
 class FieldGroupTestCase(TestCase):
     
     def setUp(self):
-        shutil.copyfile(globals()['fieldgroup_test_dbfilename']+'_bck', globals()['fieldgroup_test_dbfilename'])
+        restoreDbState(TEST_FIELDGROUP_DBNAME)
         pass
 
 

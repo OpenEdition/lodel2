@@ -16,6 +16,9 @@ from EditorialModel.classtypes import EmClassType
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 import EditorialModel.fieldtypes as ftypes
+
+from EditorialModel.test.utils import *
+
 from Lodel.utils.mlstring import MlString
 
 from Database.sqlsetup import SQLSetup
@@ -25,6 +28,8 @@ import sqlalchemy as sqla
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
+
+TEST_COMPONENT_DBNAME = 'test_em_component_db.sqlite'
 
 #=#############=# 
 #  TESTS SETUP  #
@@ -36,15 +41,18 @@ def setUpModule():
         The goal are to overwrtie Db configs, and prepare objects for test_case initialisation
     """
     #Overwritting db confs to make tests
-    globals()['component_test_dbfilename'] = '/tmp/test_em_component_db.sqlite'
 
+
+    """
     settings.LODEL2SQLWRAPPER['db'] = {
         'default': {
             'ENGINE': 'sqlite',
-            'NAME': globals()['component_test_dbfilename']
+            'NAME': TEST_COMPONENT_DBNAME
         }
     }
     
+    """
+    setDbConf(TEST_COMPONENT_DBNAME)
     #Disable logging but CRITICAL
     logging.basicConfig(level=logging.CRITICAL)
 
@@ -69,7 +77,10 @@ def setUpModule():
     globals()['tables'] = tables
 
     #Creating db structure
-    sqlwrap.dropAll()
+
+    initTestDb(TEST_COMPONENT_DBNAME)
+    setDbConf(TEST_COMPONENT_DBNAME)
+
     sqlwrap.createAllFromConf(tables)
 
     dbe = sqlwrap.r_engine
@@ -97,19 +108,21 @@ def setUpModule():
     conn.execute(req)
     conn.close()
 
-    shutil.copyfile(globals()['component_test_dbfilename'], globals()['component_test_dbfilename']+'_bck')
-
+    saveDbState(TEST_COMPONENT_DBNAME)
 
     logging.getLogger().setLevel(logging.CRITICAL)
     pass
 
 def tearDownModule():
+    cleanDb(TEST_COMPONENT_DBNAME)
+    """
     try:
-        os.unlink(globals()['component_test_dbfilename'])
+        os.unlink(TEST_COMPONENT_DBNAME)
     except:pass
     try:
-        os.unlink(globals()['component_test_dbfilename']+'_bck')
+        os.unlink(TEST_COMPONENT_DBNAME+'_bck')
     except:pass
+    """
 
 #A dummy EmComponent child class use to make tests
 class EmTestComp(EmComponent):
@@ -142,7 +155,8 @@ class ComponentTestCase(TestCase):
         self.dbew = globals()['dbwrapper'].w_engine
         self.test_values = self.__class__.test_values
         #Db RAZ
-        shutil.copyfile(globals()['component_test_dbfilename']+'_bck', globals()['component_test_dbfilename'])
+        #shutil.copyfile(TEST_COMPONENT_DBNAME+'_bck', globals()['component_test_dbfilename'])
+        restoreDbState(TEST_COMPONENT_DBNAME)
         pass
     
     def check_equals(self, excepted_val, test_comp, check_date=True, msg=''):
