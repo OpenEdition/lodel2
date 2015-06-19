@@ -11,6 +11,9 @@ from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
+from EditorialModel.fields import EmField
+import EditorialModel.fieldtypes  as fieldTypes
+
 from Database.sqlsetup import SQLSetup
 from Database import sqlutils
 import sqlalchemy as sqla
@@ -80,7 +83,6 @@ class TestEmClassCreation(ClassesTestCase):
 # interface to fieldGroups
 class TestEmClassFieldgroups(ClassesTestCase):
 
-    # create a new EmClass, then test on it
     @classmethod
     def setUpClass(cls):
         pass
@@ -106,10 +108,9 @@ class TestEmClassFieldgroups(ClassesTestCase):
         fieldgroups = test_class.fieldgroups()
         self.assertEqual(fieldgroups, [])
 
-# interface to fieldGroups
+# interface to types
 class TestEmClassTypes(ClassesTestCase):
 
-    # create a new EmClass, then test on it
     @classmethod
     def setUpClass(cls):
         pass
@@ -134,3 +135,32 @@ class TestEmClassTypes(ClassesTestCase):
         test_class = EmClass('testClass')
         types = test_class.types()
         self.assertEqual(types, [])
+
+# interface to fields
+class TestEmClassFields(ClassesTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self):
+        ClassesTestCase.setUpClass()
+        test_class = EmClass.create('testClass', EmClassType.entity)
+
+    # test if fields() return a list of EmField
+    def test_fields(self):
+        test_class = EmClass('testClass')
+        fg = EmFieldGroup.create('fg', test_class)
+        f1 = EmField.create('f1', fg, fieldTypes.EmField_char())
+        f2 = EmField.create('f2', fg, fieldTypes.EmField_char())
+
+        fields = test_class.fields()
+        self.assertIsInstance(fields, list)
+        for field in fields:
+            self.assertIsInstance(field, EmField)
+
+    # with no field fields() should return an empty list
+    def test_no_fields(self):
+        test_class = EmClass('testClass')
+        fields = test_class.fields()
+        self.assertEqual(fields, [])
