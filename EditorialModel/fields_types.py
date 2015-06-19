@@ -1,7 +1,5 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fields import EmField
-from EditorialModel.types import EmType
 from EditorialModel.fieldtypes import EmField_integer
 
 from Database import sqlutils
