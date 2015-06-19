@@ -15,7 +15,7 @@ logger = logging.getLogger('Lodel2.EditorialModel')
 class Em_Field_Type(object):
 
     table = 'em_field_type'
-    _fields = [('type_id', EmField_integer()),('field_id', EmField_integer())]
+    _fields = [('type_id', EmField_integer),('field_id', EmField_integer)]
     dbconf = 'default'
 
     ## __init__ (Function)
