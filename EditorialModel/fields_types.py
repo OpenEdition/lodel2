@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.fieldtypes import EmField_integer
+from EditorialModel.components import EmComponent
 
 from Database import sqlutils
 import sqlalchemy as sqla
@@ -16,7 +17,6 @@ class Em_Field_Type(object):
 
     table = 'em_field_type'
     _fields = [('type_id', EmField_integer),('field_id', EmField_integer)]
-    dbconf = 'default'
 
     ## __init__ (Function)
     #
@@ -29,13 +29,6 @@ class Em_Field_Type(object):
         self._fields = self.__class__._fields
         self.type_id = type_id
         self.field_id = field_id
-
-    ## GetDbe (Function)
-    #
-    # Returns the sqlAlchemy engine
-    @classmethod
-    def getDbe(cls):
-        return sqlutils.getEngine(cls.dbconf)
 
     ## Create (Function)
     #
@@ -58,7 +51,7 @@ class Em_Field_Type(object):
 
     @classmethod
     def _createDb(cls, **kwargs):
-        dbe = cls.getDbe()
+        dbe = EmComponent.getDbE()
         conn = dbe.connect()
         table = sqla.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
@@ -75,7 +68,7 @@ class Em_Field_Type(object):
         return _deleteDb()
 
     def _deleteDb(self):
-        dbe = self.getDbe()
+        dbe = EmComponent.getDbe()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.Delete().Where(table.c.type_id==self.type_id).Where(table.c.field_id==self.field_id)
         conn = dbe.connect()
@@ -102,7 +95,7 @@ class Em_Field_Type(object):
     #
     # @return True if success, False if failure
     def _existsDb(self):
-        dbe = self.getDbe()
+        dbe = EmComponent.getDbe()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.Select().Where(table.c.type_id==self.type_id).Where(table.c.field_id==self.field_id)
         conn = dbe.connect()
