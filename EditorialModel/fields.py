@@ -59,6 +59,9 @@ class EmField(EmComponent):
                 'fieldtype' : em_fieldtype.name,
                 'optional' : 1 if optional else 0,
                 'internal' : 1 if internal else 0,
+                'rel_to_type_id': 0,
+                'rel_field_id': 0,
+                'icon':0
             }
 
             createdField = super(EmField,c).create(**values)
@@ -83,13 +86,10 @@ class EmField(EmComponent):
     # @return True in case of success, False if not
     @classmethod
     def addFieldColumnToClassTable(c, emField):
-        field_type = EditorialModel.fieldtypes.get_field_type(emField.em_fieldtype)
-        field_sqlalchemy_args = field_type.sqlalchemy_args()
-        field_sqlalchemy_args['name'] = emField.name
-        field_sqlalchemy_column_object = sqlwrapper.createColumn(**field_sqlalchemy_args)
+        field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(emField.fieldtype).sql_column(), " DEFAULT 0" if emField.fieldtype=='integer' else '')
         field_uid = emField.uid
         field_class_table = emField.get_class_table()
-        return sqlwrapper.addColumnObject(tname=field_class_table, column=field_sqlalchemy_column_object)
+        return SqlWrapper().addColumn(tname=field_class_table, colname=emField.name, coltype=field_type)
 
     ## get_class_table (Function)
     #
@@ -108,14 +108,9 @@ class EmField(EmComponent):
         dbe = self.getDbE()
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
-        sql_wrapper = SqlWrapper(read_db='default', write_db='default', alchemy_logs=False)
-        columns=('table')
-        query_builder = SqlQueryBuilder(sql_wrapper,'uids')
-        query_builder.Select(columns)
-        query_builder.From(uidtable)
-        query_builder.Where('uids.uid=%s' % self.uid)
+        req = uidtable.select().where(uidtable.c.uid==self.uid)
+        records = conn.execute(req).fetchall()
 
-        records = query_builder.Execute().fetchall()
         table_records = []
         for record in records:
             table_records.append(dict(zip(record.keys(), record)))
@@ -123,39 +118,4 @@ class EmField(EmComponent):
         table_name = table_record['table']
 
         return table_name
-
-    ## Populate (Function)
-    #
-    # Sets the object's properties using the values from the database
-    def populate(self):
-        row = super(EmField, self).populate()
-        self.fieldtype = EditorialModel.fieldtypes.get_field_type(row.fieldtype)
-        self.fieldgroup_id = EmFieldGroup(int(row.fieldgroup_id)).uid
-        self.optional = True if row.optional == 1 else False
-        self.internal = True if row.internal == 1 else False
-        self.icon = row.icon
-        self.rel_to_type_id = EditorialModel.fieldtypes.EmFieldType(int(row.rel_to_type_id)) if row.rel_to_type_id else None
-        self.rel_field_id = EmField(int(row.rel_field_id)) if row.rel_field_id else None
-
-    ## Save (Function)
-    #
-    # Saves the properties of the object as a record in the database
-    #
-    # @return True in case of success, False if not
-    def save(self):
-        # should not be here, but cannot see how to do this
-        if self.name is None:
-            self.populate()
-
-        values = {
-            'fieldgroup_id' : self.fieldgroup.id,
-            'fieldtype' : self.fieldtype.name,
-            'optional' : 1 if self.optional else 0,
-            'internal' : 1 if self.internal else 0,
-            'icon' : self.icon,
-            'rel_to_type_id' : self.rel_to_type_id.id if self.rel_to_type_id is not None else None,
-            'rel_field_id' : self.rel_field_id.id if self.rel_field_id is not None else None
-        }
-
-        return super(EmField, self).save(values)
 
