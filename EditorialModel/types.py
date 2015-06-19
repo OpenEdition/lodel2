@@ -53,7 +53,7 @@ class EmType(EmComponent):
         rows = res.fetchall()
         conn.close()
 
-        return [ row['uid'] for row in rows ]
+        return [ EmFieldGroup(row['uid']) for row in rows ]
 
     ## Get the list of associated fields
     # @return A list of EmField uid
@@ -130,3 +130,4 @@ class EmType(EmComponent):
     # @see EmFields
     def linked_types(self):
         pass
+

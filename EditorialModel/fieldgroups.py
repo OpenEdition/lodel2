@@ -68,4 +68,5 @@ class EmFieldGroup(EmComponent):
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()
-        return [ row['uid'] for row in rows]
+        return [ EmField(row['uid']) for row in rows]
+
