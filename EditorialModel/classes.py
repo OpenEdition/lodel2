@@ -90,7 +90,21 @@ class EmClass(EmComponent):
     ## Retrieve list of fields
     # @return fields [EmField]:
     def fields(self):
-        pass
+        fieldgroups = self.fieldgroups()
+        fields = []
+        for fieldgroup in fieldgroups:
+            fields += self._fieldsDb(fieldgroup.uid)
+
+        return fields
+
+    def _fieldsDb(fieldgroup_id):
+        dbe = self.__class__.getDbE()
+        fields = sql.Table(EditorialModel.fields.EmField.table, sqlutils.meta(dbe))
+        req = fields.select().where(fields.c.fieldgroup_id == fieldgroup_id)
+
+        conn = dbe.connect()
+        res = conn.execute(req)
+        return res.fetchall()
 
     ## Retrieve list of type of this class
     # @return types [EmType]:
