@@ -4,6 +4,7 @@ from EditorialModel.components import EmComponent, EmComponentNotExistError
 from Database import sqlutils
 import sqlalchemy as sql
 
+import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
 class EmType(EmComponent):
@@ -16,14 +17,13 @@ class EmType(EmComponent):
     """
     table = 'em_type'
 
-    def __init__(self, id_or_name):
-        """  Instanciate an EmType with data fetched from db
-            @param id_or_name str|int: Identify the EmType by name or by global_id
-            @throw TypeError
-            @see EmComponent::__init__()
-        """
-        self.table = EmType.table
-        super(EmType, self).__init__(id_or_name)
+    ## @brief Specific EmClass fields
+    # @see EditorialModel::components::EmComponent::_fields
+    _fields = [
+        ('class_id', ftypes.EmField_integer),
+        ('icon', ftypes.EmField_integer),
+        ('sortcolumn', ftypes.EmField_char)
+        ]
 
     @classmethod
     def create(c, name, em_class):
@@ -34,36 +34,15 @@ class EmType(EmComponent):
 
             @see EmComponent::__init__()
 
-            @todo Change the icon param type
+            @todo Remove hardcoded default value for icon
             @todo check that em_class is an EmClass object
         """
         try:
             exists = EmType(name)
         except EmComponentNotExistError:
-            return super(EmType, c).create({'name':name, 'class_id': em_class.id})
+            return super(EmType, c).create(name=name, class_id=em_class.uid, icon=0)
 
         return exists
-
-    """ Use dictionary (from database) to populate the object
-    """
-    def populate(self):
-        row = super(EmType, self).populate()
-        self.em_class = EditorialModel.classes.EmClass(int(row.class_id))
-        self.icon = row.icon
-        self.sortcolumn = row.sortcolumn
-
-    def save(self):
-        # should not be here, but cannot see how to do this
-        if self.name is None:
-            self.populate()
-
-        values = {
-            'class_id' : self.em_class.id,
-            'icon' : self.icon,
-            'sortcolumn' : self.sortcolumn,
-        }
-
-        return super(EmType, self).save(values)
 
     def field_groups(self):
         """ Get the list of associated fieldgroups
