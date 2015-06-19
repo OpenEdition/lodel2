@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.fieldtypes import *
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlquerybuilder import SqlQueryBuilder
@@ -18,6 +19,15 @@ logger = logging.getLogger('Lodel2.EditorialModel')
 class EmField(EmComponent):
 
     table = 'em_field'
+    _fields = [
+        ('fieldtype', EmField_char()),
+        ('fieldgroup_id', EmField_integer()),
+        ('rel_to_type_id', EmField_integer()),
+        ('rel_field_id', EmField_integer()),
+        ('optional', EmField_boolean()),
+        ('internal', EmField_boolean()),
+        ('icon', EmField_integer())
+    ]
 
     ## __init__ (Function)
     #
@@ -28,6 +38,7 @@ class EmField(EmComponent):
     # @see EmComponent::__init__()
     def __init__(self, id_or_name):
         self.table = EmField.table
+        self._fields = self.__class__._fields
         super(EmField, self).__init__(id_or_name)
 
     ## Create (Function)
