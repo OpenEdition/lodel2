@@ -70,7 +70,7 @@ class Em_Field_Type(object):
     def _deleteDb(self):
         dbe = EmComponent.getDbe()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
-        req = table.Delete().Where(table.c.type_id==self.type_id).Where(table.c.field_id==self.field_id)
+        req = table.delete().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
         conn = dbe.connect()
         try:
             conn.execute(req)
@@ -97,7 +97,7 @@ class Em_Field_Type(object):
     def _existsDb(self):
         dbe = EmComponent.getDbe()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
-        req = table.Select().Where(table.c.type_id==self.type_id).Where(table.c.field_id==self.field_id)
+        req = table.select().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
         conn = dbe.connect()
         res = conn.execute(req).fetchall()
         conn.close()
