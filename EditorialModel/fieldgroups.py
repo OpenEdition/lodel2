@@ -62,4 +62,10 @@ class EmFieldGroup(EmComponent):
     # @return A list of EmField uid
     # @todo Implement this method
     def fields(self):
-        pass
+        field_table = sqlutils.getTable(EmField)
+        req = field_table.select(field_table.c.uid).where(field_table.c.fieldgroup_id == self.uid)
+        conn = self.__class__.getDbE().connect()
+        res = conn.execute(req)
+        rows = res.fetchall()
+        conn.close()
+        return [ row['uid'] for row in rows]
