@@ -10,6 +10,7 @@ from django.conf import settings
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.types import EmType
 from Database.sqlsetup import SQLSetup
 from Database import sqlutils
 import sqlalchemy as sqla
@@ -104,3 +105,32 @@ class TestEmClassFieldgroups(ClassesTestCase):
         test_class = EmClass('testClass')
         fieldgroups = test_class.fieldgroups()
         self.assertEqual(fieldgroups, [])
+
+# interface to fieldGroups
+class TestEmClassTypes(ClassesTestCase):
+
+    # create a new EmClass, then test on it
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self):
+        ClassesTestCase.setUpClass()
+        test_class = EmClass.create('testClass', EmClassType.entity)
+
+    # test if types() return a list of EmType
+    def test_types(self):
+        test_class = EmClass('testClass')
+        t1 = EmType.create('t1', test_class)
+        t2 = EmType.create('t2', test_class)
+
+        types = test_class.types()
+        self.assertIsInstance(types, list)
+        for t in types:
+            self.assertIsInstance(t, EmType)
+
+    # with no type types() should return an empty list
+    def test_no_types(self):
+        test_class = EmClass('testClass')
+        types = test_class.types()
+        self.assertEqual(types, [])

@@ -99,7 +99,7 @@ class EmClass(EmComponent):
     def _typesDb(self):
         dbe = self.__class__.getDbE()
         emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
-        req = emtype.select().where(emtype.c.class_id == self.id)
+        req = emtype.select().where(emtype.c.class_id == self.uid)
         conn = dbe.connect()
         res = conn.execute(req)
         return res.fetchall()
