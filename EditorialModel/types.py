@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.fields_types import Em_Field_Type
 from Database import sqlutils
 import sqlalchemy as sql
 
@@ -64,19 +65,27 @@ class EmType(EmComponent):
         return res
         pass
 
-    ## Indicate that an optionnal field is used
+    ## Select_field (Function)
+    #
+    # Indicates that an optional field is used
+    #
     # @param field EmField: The optional field to select
-    # @throw TypeError if field is not an EmField
-    # @throw ValueError if field is not an optionnal field
+    # @throw ValueError, TypeError
+    # @todo change exception type and define return value and raise condition
     def select_field(self, field):
-        pass
+        Em_Field_Type.create(self, field)
 
-    ## Indicate that an optionnal field will not be used (anymore)
-    # @param field EmField: The optionnal field to unselect
-    # @throw TypeError if field is not an EmField
-    # @throw ValueError if field is not an optionnal field
+    ## Unselect_field (Function)
+    #
+    # Indicates that an optional field will not be used
+    #
+    # @param field EmField: The optional field to unselect
+    # @throw ValueError, TypeError
+    # @todo change exception type and define return value and raise condition
     def unselect_field(self, field):
-        pass
+        emFieldType = Em_Field_Type(self.uid, field.uid)
+        emFieldType.delete()
+        del emFieldType
 
     ## Get the list of associated hooks
     # @note Not conceptualized yet
