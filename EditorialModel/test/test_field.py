@@ -33,7 +33,7 @@ def setUpModule():
     settings.LODEL2SQLWRAPPER['db'] = {
         'default':{
             'ENGINE': 'sqlite',
-            'NAME': '/tmp/roland.testdb.sqlite'
+            'NAME': '/tmp/lodel2_test_db.sqlite'
         }
     }
 
