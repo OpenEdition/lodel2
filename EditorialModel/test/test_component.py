@@ -420,6 +420,7 @@ class TestCreate(ComponentTestCase):
             with self.assertRaises(TypeError, msg="But values contains date_create and date_update"):
                 vals = { 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
                 tc = EmTestComp.create(**vals)
+
         with self.subTest("Create without mandatory arguments"):
             with self.assertRaises(TypeError, msg="But no name was given"):
                 vals = { 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
@@ -427,7 +428,51 @@ class TestCreate(ComponentTestCase):
             with self.assertRaises(TypeError, msg="But no rank_fam was given"):
                 vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
                 tc = EmTestComp.create(**vals)
+
         pass
+
+class TestDelete(ComponentTestCase):
+    
+    def test_delete(self):
+        """ Create and delete TestComponent """
+        vals = [
+            {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'},
+            {'name': 'created2', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'},
+            {'name': 'created3', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'},
+        ]
+
+        tcomps = []
+
+        for val in vals:
+            tcomps.append(EmTestComp.create(**val))
+
+        failmsg = "This component should be deleted"
+
+        for i,tcv in enumerate(vals):
+            tc = EmTestComp(tcv['name'])
+            tc.delete()
+
+            with self.assertRaises(EmComponentNotExistError, msg = failmsg):
+                tc2 = EmTestComp(tcv['name'])
+
+            with self.assertRaises(EmComponentNotExistError, msg = failmsg):
+                tmp = tc.uid
+            with self.assertRaises(EmComponentNotExistError, msg = failmsg):
+                tmp = tc.__str__()
+            with self.assertRaises(EmComponentNotExistError, msg = failmsg):
+                tmp = tc.name
+            with self.assertRaises(EmComponentNotExistError, msg = failmsg):
+                print(tc)
+
+            for j in range(i+1,len(vals)):
+                try:
+                    tc = EmTestComp(tcv['name'])
+                except EmComponentNotExistError:
+                    self.fail('EmComponent should not be deleted')
+        pass
+
+
+
 
 #===========================#
 # EmComponent.modify_rank   #
