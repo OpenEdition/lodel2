@@ -30,8 +30,24 @@ class EmComponent(object):
     ## Used by EmComponent::modify_rank
     ranked_in = None
 
-    ##Read only properties
-    _ro_properties = [ 'date_update', 'date_create', 'uid', 'rank']
+    ## Read only properties
+    _ro_properties = [ 'date_update', 'date_create', 'uid', 'rank', 'deleted']
+
+    ## @brief List fields name and fieldtype
+    #
+    # This is a list that describe database fields common for each EmComponent child classes.
+    # A database field is defined here by a tuple(name, type) with name a string and type an EditorialModel.fieldtypes.EmFieldType
+    # @warning The EmFieldType in second position in the tuples must be a class type and not a class instance !!!
+    # @see EditorialModel::classes::EmClass::_fields EditorialModel::fieldgroups::EmFieldGroup::_fields EditorialModel::types::EmType::_fields EditorialModel::fields::EmField::_fields
+    _fields = [
+        ('uid', ftypes.EmField_integer),
+        ('name', ftypes.EmField_char),
+        ('rank', ftypes.EmField_integer),
+        ('date_update', ftypes.EmField_date),
+        ('date_create', ftypes.EmField_date),
+        ('string', ftypes.EmField_mlstring),
+        ('help', ftypes.EmField_mlstring)
+    ]
 
     ## Instaciate an EmComponent
     # @param id_or_name int|str: name or id of the object
@@ -42,8 +58,11 @@ class EmComponent(object):
         if type(self) is EmComponent:
             raise NotImplementedError('Abstract class')
 
-        # data fields of the object
-        self._fields = OrderedDict([('uid', ftypes.EmField_integer()), ('name', ftypes.EmField_char()), ('rank', ftypes.EmField_integer()), ('date_update', ftypes.EmField_date()), ('date_create', ftypes.EmField_date()), ('string', ftypes.EmField_mlstring()), ('help', ftypes.EmField_mlstring())] + self._fields)
+        ## @brief An OrderedDict storing fields name and values
+        # Values are handled by EditorialModel::fieldtypes::EmFieldType
+        # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
+        # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
+        self._fields = OrderedDict([ (name, ftype()) for (name,ftype) in (EmComponent._fields + self.__class__._fields) ] )
 
         # populate
         if isinstance(id_or_name, int):
@@ -52,6 +71,7 @@ class EmComponent(object):
             self.name = id_or_name
         else:
             raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
+        self.table = self.__class__.table
         self.populate()
 
     ## Access values of data fields from the object properties
@@ -60,8 +80,17 @@ class EmComponent(object):
     def __getattr__(self, name):
         if name != '_fields' and name in self._fields:
             return self._fields[name].value
+        else:
+            return super(EmComponent, self).__getattribute__(name)
 
-        raise AttributeError('Error unknown attribute : '+name)
+        #raise AttributeError('Error unknown attribute : '+name)
+
+    def __getattribute__(self, name):
+        if super(EmComponent, self).__getattribute__('deleted'):
+            #raise EmComponentNotExistError("This component has been deleted")
+            raise EmComponentNotExistError("This "+super(EmComponent, self).__getattribute__('__class__').__name__+" has been deleted")
+        res = super(EmComponent, self).__getattribute(name)
+        return res
 
     ## Set values of data fields from the object properties
     # @param name str: The propertie name
@@ -84,6 +113,8 @@ class EmComponent(object):
             for keys in self._fields.keys():
                 if keys in record:
                     self._fields[keys].from_string(record[keys])
+
+        super(EmComponent, self).__setattr__('deleted', False)
 
     @classmethod
     ## Shortcut that return the sqlAlchemy engine
@@ -108,7 +139,7 @@ class EmComponent(object):
         c.close()
 
         if not res or len(res) == 0:
-            raise EmComponentNotExistError("No component found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
+            raise EmComponentNotExistError("No "+self.__class__.__name__+" found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
 
         return res
 
@@ -198,6 +229,8 @@ class EmComponent(object):
         c.close
         if not res:
             raise RuntimeError("Unable to delete the component in the database")
+
+        super(EmComponent, self).__setattr__('deleted', True)
         #</SQL>
         pass
 

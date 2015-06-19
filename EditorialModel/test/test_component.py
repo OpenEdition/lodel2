@@ -115,10 +115,7 @@ def tearDownModule():
 class EmTestComp(EmComponent):
     table = 'ttest'
     ranked_in = 'rank_fam'
-    def __init__(self, ion):
-        self._fields = [('rank_fam', ftypes.EmField_char())]
-        super(EmTestComp, self).__init__(ion)
-        pass
+    _fields = [('rank_fam', ftypes.EmField_char)]
 
 # The parent class of all other test cases for component
 # It defines a SetUp function and some utility functions for EmComponent tests
@@ -431,6 +428,9 @@ class TestCreate(ComponentTestCase):
 
         pass
 
+#====================#
+# EmComponent.delete #
+#====================#
 class TestDelete(ComponentTestCase):
     
     def test_delete(self):
@@ -466,7 +466,7 @@ class TestDelete(ComponentTestCase):
 
             for j in range(i+1,len(vals)):
                 try:
-                    tc = EmTestComp(tcv['name'])
+                    tc = EmTestComp(vals[j]['name'])
                 except EmComponentNotExistError:
                     self.fail('EmComponent should not be deleted')
         pass
