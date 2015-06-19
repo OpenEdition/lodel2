@@ -53,7 +53,7 @@ class EmField(EmComponent):
             values = {
                 'uid' : None,
                 'name' : name,
-                'fieldgroup_id' : em_fieldgroup.id,
+                'fieldgroup_id' : em_fieldgroup.uid,
                 'fieldtype' : em_fieldtype.name,
                 'optional' : 1 if optional else 0,
                 'internal' : 1 if internal else 0,
