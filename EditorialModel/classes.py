@@ -12,6 +12,7 @@ from Database import sqlutils
 import sqlalchemy as sql
 
 import EditorialModel.fieldtypes as ftypes
+import EditorialModel
 
 class EmClass(EmComponent):
     table = 'em_class'
@@ -73,7 +74,7 @@ class EmClass(EmComponent):
     def _fieldgroupsDb(self):
         dbe = self.__class__.getDbE()
         emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
-        req = emfg.select().where(emfg.c.class_id == self.id)
+        req = emfg.select().where(emfg.c.class_id == self.uid)
 
         conn = dbe.connect()
         res = conn.execute(req)
