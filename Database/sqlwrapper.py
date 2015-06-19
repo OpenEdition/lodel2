@@ -471,7 +471,7 @@ class SqlWrapper(object):
         sql = ddl.compile(dialect=self.w_engine.dialect)
         sql = str(sql)
         logger.debug("Executing SQL : '%s'" % sql)
-        ret = book(self.wconn.execute(sql))
+        ret = bool(self.wconn.execute(sql))
         self.renewMetaData()
         return ret
 
