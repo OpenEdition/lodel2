@@ -2,6 +2,7 @@
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldtypes import *
+from EditorialModel.fields_types import Em_Field_Type
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlquerybuilder import SqlQueryBuilder
@@ -168,3 +169,13 @@ class EmField(EmComponent):
 
         return super(EmField, self).save(values)
 
+
+    ## Select_field (Function)
+    #
+    # @param type EmType: Type to link this field to
+    # @return True if success, False if failure
+    def select_field(self, type):
+        if Em_Field_Type.create(self.uid, type.uid):
+            return True
+        else:
+            return False

@@ -12,6 +12,7 @@ from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.fieldtypes import *
 
 from Database.sqlsetup import SQLSetup
@@ -62,6 +63,35 @@ class FieldTestCase(TestCase):
         self.testFieldgroupUid = self.testFieldgroup.uid
 
         pass
+
+
+    ## Get_Field_Type_Record (Function)
+    #
+    # Returns associations between field and type from the em_field_type table
+    #
+    # @param field EmField: Field object
+    # @param type EmType: Type object
+    # @return list of found associations
+    def get_field_type_record(self, field, type):
+        return self._get_field_type_record_Db(field, type)
+
+    ## _Get_Field_Type_Record_Db (Function)
+    #
+    # Queries the database to get the record from the em_field_type table corresponding to a given field and type
+    # @param field EmField: Field object
+    # @param type EmType: Type object
+    # @return found associations
+    def _get_field_type_record_Db(self, field, type):
+        sqlwrapper = SqlWrapper(read_db='default', write_db='default', alchemy_logs=False)
+        sql_builder = SqlQueryBuilder(sql_wrapper, 'em_field_type')
+        sql_builder.Select().From('em_field_type').Where('em_field_type.field_id=%s' % field.uid).Where('em_field_type.type_id=%s' % type.uid)
+        records = sql_builder.Execute().fetchall()
+        field_type_records = []
+        for record in records:
+            field_type_records.append(dict(zip(record.keys(),record)))
+
+        return field_type_records
+
 
     ## Get_Field_Records (Function)
     #
@@ -143,3 +173,16 @@ class TestField(FieldTestCase):
         self.assertIn(field_column,field_table_columns)
         pass
 
+
+    ## Test_Select (Function)
+    #
+    # The selected field has a record in the em_field_type table
+    def testSelectField(self):
+        testType = EmType.create('testtype2',self.testClass)
+
+        field=EmField('testfield1')
+        field.select_field('testtype2')
+
+        field_type_object = Em_Field_Type(testType.uid, field.uid)
+        self.assertEqual(field_type_object.exists(),True)
+        pass
