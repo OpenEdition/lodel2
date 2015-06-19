@@ -51,13 +51,8 @@ class FieldTestCase(TestCase):
 
         # Generation of the test data
         self.testClass = EmClass.create("testclass1",EmClassType.entity)
-        self.testClassUid = self.testClass.uid
-
         self.testFieldType = EmField_integer()
-
         self.testFieldgroup = EmFieldGroup.create('fieldgrp1',self.testClass)
-
-        pass
 
 
     ## Get_Field_Type_Record (Function)
