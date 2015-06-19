@@ -4,6 +4,7 @@ from EditorialModel.components import EmComponent, EmComponentNotExistError
 from Database import sqlutils
 import sqlalchemy as sql
 
+from EditorialModel.fieldgroups import EmFieldGroup
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
@@ -43,9 +44,16 @@ class EmType(EmComponent):
         return exists
     
     ## Get the list of associated fieldgroups
-    # @return A list of EditorialModel::fieldgroups::EmFieldGroup
+    # @return A list of uid
     def field_groups(self):
-        pass
+        fg_table = sqlutils.getTable(EmFieldGroup)
+        req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
+        conn = self.__class__.getDbE().connect()
+        res = conn.execute(req)
+        rows = res.fetchall()
+        conn.close()
+
+        return [ row['uid'] for row in rows ]
 
     ## Get the list of associated fields
     # @return A list of EditorialModel::fields::EmField
