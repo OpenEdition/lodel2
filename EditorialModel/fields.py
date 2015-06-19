@@ -4,6 +4,8 @@ from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldtypes import *
 from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.classes import EmClass
+from EditorialModel.types import EmType
 
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
@@ -38,30 +40,25 @@ class EmField(EmComponent):
     #
     # @static
     #
-    # @param name str: The name of the new Type
-    # @param em_fieldgroup EmFieldGroup: The new field will belong to this fieldgroup
-    # @param em_fieldtype EmFieldType: The new field will have this type
-    # @param optional bool: Is the field optional ?
-    # @param optional bool: Is the field internal ?
+    # @param kwargs dict: Dictionary of the values to insert in the field record
     #
     # @throw TypeError
     # @see EmComponent::__init__()
     # @staticmethod
     @classmethod
-    def create(c, name, em_fieldgroup, em_fieldtype, optional=True, internal=False):
+    def create(c, **kwargs):
         try:
-            exists = EmField(name)
+            exists = EmField(kwargs['name'])
         except EmComponentNotExistError:
             values = {
-                #'uid' : None,
-                'name' : name,
-                'fieldgroup_id' : em_fieldgroup.uid,
-                'fieldtype' : em_fieldtype.name,
-                'optional' : 1 if optional else 0,
-                'internal' : 1 if internal else 0,
-                'rel_to_type_id': 0,
-                'rel_field_id': 0,
-                'icon':0
+                'name' : kwargs['name'],
+                'fieldgroup_id' : kwargs['fieldgroup_id'],
+                'fieldtype' : kwargs['fieldtype'].name,
+                'optional' : 1 if 'optional' in kwargs else 0,
+                'internal' : 1 if 'internal' in kwargs else 0,
+                'rel_to_type_id': 0 if 'rel_to_type_id' not in kwargs else kwargs['rel_to_type_id'],
+                'rel_field_id': 0 if 'rel_field_id' not in kwargs else kwargs['rel_field_id'],
+                'icon': 0 if 'icon' not in kwargs else kwargs['icon']
             }
 
             createdField = super(EmField,c).create(**values)
@@ -106,16 +103,17 @@ class EmField(EmComponent):
     # @return Name of the table
     def _get_class_tableDb(self):
         dbe = self.getDbE()
-        uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
-        req = uidtable.select().where(uidtable.c.uid==self.uid)
-        records = conn.execute(req).fetchall()
+        typetable = sql.Table(EmType.table, sqlutils.meta(dbe))
+        fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
+        reqGetClassId = typetable.select().where(typetable.c.uid==fieldtable.c.rel_to_type_id)
+        resGetClassId = conn.execute(reqGetClassId).fetchall()
+        class_id = dict(zip(resGetClassId[0].keys(), resGetClassId[0]))['class_id']
 
-        table_records = []
-        for record in records:
-            table_records.append(dict(zip(record.keys(), record)))
-        table_record = table_records[0]
-        table_name = table_record['table']
+        classtable = sql.Table(EmClass.table, sqlutils.meta(dbe))
+        reqGetClassTable = classtable.select().where(classtable.c.uid == class_id)
+        resGetClassTable = conn.execute(reqGetClassTable).fetchall()
+        classTableName = dict(zip(resGetClassTable[0].keys(), resGetClassTable[0]))['name']
 
-        return table_name
+        return classTableName
 

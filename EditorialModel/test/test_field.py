@@ -53,6 +53,7 @@ class FieldTestCase(TestCase):
         self.testClass = EmClass.create("testclass1",EmClassType.entity)
         self.testFieldType = EmField_integer()
         self.testFieldgroup = EmFieldGroup.create('fieldgrp1',self.testClass)
+        self.testType = EmType.create('testtype1',self.testClass)
 
 
     ## Get_Field_Type_Record (Function)
@@ -146,8 +147,14 @@ class TestField(FieldTestCase):
     #
     # tests the creation process of a field
     def testCreate(self):
+        field_values = {
+            'name':'testfield1',
+            'fieldgroup_id' : self.testFieldgroup.uid,
+            'fieldtype' : self.testFieldType,
+            'rel_to_type_id': self.testType.uid
+        }
+        field = EmField.create(**field_values)
 
-        field = EmField.create('testfield1', self.testFieldgroup, self.testFieldType)
         # We check that the field has been added in the em_field table
         field_records = self.get_field_records(field.uid)
         self.assertEqual(len(field_records),field.uid)
