@@ -51,7 +51,7 @@ class EmField(EmComponent):
             exists = EmField(name)
         except EmComponentNotExistError:
             values = {
-                'uid' : None,
+                #'uid' : None,
                 'name' : name,
                 'fieldgroup_id' : em_fieldgroup.uid,
                 'fieldtype' : em_fieldtype.name,

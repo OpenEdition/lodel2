@@ -53,14 +53,9 @@ class FieldTestCase(TestCase):
         self.testClass = EmClass.create("testclass1",EmClassType.entity)
         self.testClassUid = self.testClass.uid
 
-        self.testType = EmType.create('testtype1',self.testClass)
-        self.testTypeUid = self.testType.uid
-
-        self.testFieldType = EmFieldType('testfieldtype1')
-        self.testFieldTypeUid = self.testFieldType.uid
+        self.testFieldType = EmField_integer()
 
         self.testFieldgroup = EmFieldGroup.create('fieldgrp1',self.testClass)
-        self.testFieldgroupUid = self.testFieldgroup.uid
 
         pass
 
@@ -157,7 +152,7 @@ class TestField(FieldTestCase):
     # tests the creation process of a field
     def testCreate(self):
 
-        field = EmField.create('testfield1', self.testFieldgroup, self.testFieldtype)
+        field = EmField.create('testfield1', self.testFieldgroup, self.testFieldType)
         fieldUid = field.uid
         # We check that the field has been added in the em_field table
         field_records = self.get_field_records(fieldUid)
