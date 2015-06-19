@@ -59,7 +59,7 @@ class EmFieldGroup(EmComponent):
         return exists
 
     ## Get the list of associated fields
-    # @return A list of EditorialModel::fields::EmField
+    # @return A list of EmField uid
     # @todo Implement this method
     def fields(self):
         pass

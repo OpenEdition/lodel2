@@ -44,7 +44,7 @@ class EmType(EmComponent):
         return exists
     
     ## Get the list of associated fieldgroups
-    # @return A list of uid
+    # @return A list of EmFieldGroup uid
     def field_groups(self):
         fg_table = sqlutils.getTable(EmFieldGroup)
         req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
@@ -56,8 +56,12 @@ class EmType(EmComponent):
         return [ row['uid'] for row in rows ]
 
     ## Get the list of associated fields
-    # @return A list of EditorialModel::fields::EmField
+    # @return A list of EmField uid
     def fields(self):
+        res = []
+        for fguid in self.field_groups():
+            res += EmFieldGroup(fguid).fields()
+        return res
         pass
 
     ## Indicate that an optionnal field is used
