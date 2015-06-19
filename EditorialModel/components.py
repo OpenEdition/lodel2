@@ -285,6 +285,7 @@ class EmComponent(object):
                     c.close()
 
                     if(res != None):
+                        req = sql.sql.select([component.c.uid, component.c.rank])
                         if(new_rank < self.rank):
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & ( component.c.rank >= new_rank) & (component.c.rank < self.rank))
                         else:
@@ -313,7 +314,7 @@ class EmComponent(object):
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '+' and new_rank + self.rank <= self.get_max_rank()):
+                elif(sign == '+' and self.rank + new_rank <= self.get_max_rank()):
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == self.rank + new_rank))
                     c = dbe.connect()
@@ -323,6 +324,7 @@ class EmComponent(object):
 
                     if(res != None):
                         if(new_rank != 0):
+                            req = sql.sql.select([component.c.uid, component.c.rank])
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank <= self.rank + new_rank) & (component.c.rank > self.rank))
 
                             c = dbe.connect()
@@ -346,9 +348,10 @@ class EmComponent(object):
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, rank + new rank doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '-' and new_rank - self.rank >= 0):
+                elif(sign == '-' and self.rank - new_rank >= 0):
                     if((self.rank + new_rank) > 0):
                         if(new_rank != 0):
+                            req = sql.sql.select([component.c.uid, component.c.rank])
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= self.rank - new_rank) & (component.c.rank < self.rank))
 
                             c = dbe.connect()
