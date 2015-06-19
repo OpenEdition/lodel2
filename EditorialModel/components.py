@@ -234,6 +234,25 @@ class EmComponent(object):
         #</SQL>
         pass
 
+    ## get_max_rank
+    # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
+    #return int
+    def get_max_rank(self):
+        dbe = self.__class__.getDbE()
+        component = sql.Table(self.table, sqlutils.meta(dbe))
+        req = sql.sql.select([component.c.rank]).where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)).order_by(component.c.rank.desc())
+        c = dbe.connect()
+        res = c.execute(req)
+        res = res.fetchone()
+        c.close()
+
+        if(res != None):
+            return res['rank']
+        else:
+            return -1
+            #logger.error("Bad argument")
+            #raise EmComponentRankingNotExistError('The ranking of the component named : ' + self.name + 'is empty')
+
     ## modify_rank
     #
     # Permet de changer le rank d'un component, soit en lui donnant un rank précis, soit en augmentant ou reduisant sont rank actuelle d'une valleur donné.
@@ -294,7 +313,7 @@ class EmComponent(object):
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '+'):
+                elif(sign == '+' and new_rank + self.rank <= self.get_max_rank()):
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == self.rank + new_rank))
                     c = dbe.connect()
@@ -327,7 +346,7 @@ class EmComponent(object):
                     else:
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, rank + new rank doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '-'):
+                elif(sign == '-' and new_rank - self.rank >= 0):
                     if((self.rank + new_rank) > 0):
                         if(new_rank != 0):
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= self.rank - new_rank) & (component.c.rank < self.rank))
@@ -396,4 +415,8 @@ class EmComponent(object):
 
 ## An exception class to tell that a component don't exist
 class EmComponentNotExistError(Exception):
+    pass
+
+## An exception class to tell that no ranking exist yet for the group of the object
+class EmComponentRankingNotExistError(Exception):
     pass
