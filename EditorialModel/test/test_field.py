@@ -136,13 +136,15 @@ class TestField(FieldTestCase):
     #
     # tests the creation process of a field
     def testCreate(self):
+        '''
         field_values = {
             'name':'testfield1',
             'fieldgroup_id' : self.testFieldgroup.uid,
             'fieldtype' : self.testFieldType,
             'rel_to_type_id': self.testType.uid
         }
-        field = EmField.create(**field_values)
+        '''
+        field = EmField.create(name='testfield1', fieldgroup=self.testFieldgroup, fieldtype=self.testFieldType, rel_to_type_id=self.testType.uid)
 
         # We check that the field has been added in the em_field table
         field_records = self.get_field_records(field)
