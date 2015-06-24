@@ -40,25 +40,33 @@ class EmField(EmComponent):
     #
     # @static
     #
+    # @param name str: Name of the field
+    # @param fieldgroup EmFieldGroup: Field group in which the field is
+    # @param fieldtype EmFieldType: Type of the field
+    # @param optional int: is the field optional ? (default=0)
+    # @param internal int: is the field internal ? (default=0)
+    # @param rel_to_type_id int: default=0
+    # @param rel_field_id int: default=0
+    # @param icon int: default=0
     # @param kwargs dict: Dictionary of the values to insert in the field record
     #
     # @throw TypeError
     # @see EmComponent::__init__()
     # @staticmethod
     @classmethod
-    def create(c, **kwargs):
+    def create(c, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
         try:
-            exists = EmField(kwargs['name'])
+            exists = EmField(name)
         except EmComponentNotExistError:
             values = {
-                'name' : kwargs['name'],
-                'fieldgroup_id' : kwargs['fieldgroup_id'],
-                'fieldtype' : kwargs['fieldtype'].name,
-                'optional' : 1 if 'optional' in kwargs else 0,
-                'internal' : 1 if 'internal' in kwargs else 0,
-                'rel_to_type_id': 0 if 'rel_to_type_id' not in kwargs else kwargs['rel_to_type_id'],
-                'rel_field_id': 0 if 'rel_field_id' not in kwargs else kwargs['rel_field_id'],
-                'icon': 0 if 'icon' not in kwargs else kwargs['icon']
+                'name' : name,
+                'fieldgroup_id' : fieldgroup.uid,
+                'fieldtype' : fieldtype.name,
+                'optional' : optional,
+                'internal' : internal,
+                'rel_to_type_id': rel_to_type_id,
+                'rel_field_id': rel_field_id,
+                'icon': icon
             }
 
             createdField = super(EmField,c).create(**values)
