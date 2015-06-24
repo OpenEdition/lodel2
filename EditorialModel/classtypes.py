@@ -70,3 +70,17 @@ class EmClassType(object):
             },
         },
     }
+
+    @staticmethod
+    ## Return possible nature of relations for a classtype name
+    # @param classtype str: The classtype name
+    # @reurn A list of EmNature names (list of str)
+    def natures(classtype_name):
+        if not isinstance(classtype_name, str):
+            raise TypeError("Excepted <class str> but got "+str(type(classtype_name)))
+        try:
+            classtype = getattr(EmClassType, classtype_name)
+        except AttributeError:
+            raise AttributeError("Unknown classtype : '"+classtype_name+"'")
+        return classtype['hierarchy'].keys()
+

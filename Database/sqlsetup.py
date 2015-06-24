@@ -59,7 +59,7 @@ class SQLSetup(object):
         em_type_hierarchy['columns'] = [
             {"name":"superior_id",    "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False, "primarykey":True}},
             {"name":"subordinate_id", "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":False, "primarykey":True}},
-            {"name":"nature",         "type":"VARCHAR(50)"},
+            {"name":"nature",         "type":"VARCHAR(50)", "extra":{"primarykey":True}},
         ]
         tables.append(em_type_hierarchy)
 

@@ -122,54 +122,100 @@ class EmType(EmComponent):
 
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
-    def _getClassType(self):
+    def classType(self):
         return getattr(EmClassType, EmClass(self.class_id).class_type)
 
     ## @brief Get the list of subordinates EmType
     # Get a list of EmType instance that have this EmType for superior
-    #
     # @return Return a dict with relation nature as keys and values as a list of subordinates
     # EmType instance
-    #
     # @throw RuntimeError if a nature fetched from db is not valid
     def subordinates(self):
+        return self._subOrSup(False)
 
+    ## @brief Get the list of subordinates EmType
+    # Get a list of EmType instance that have this EmType for superior
+    # @return Return a dict with relation nature as keys and values as a list of subordinates
+    # EmType instance
+    # @throw RuntimeError if a nature fetched from db is not valid
+    # @see EmType::_subOrSup()
+    def superiors(self):
+        return self._subOrSup(True)
+
+    ## @brief Return the list of subordinates or superiors for an EmType
+    # This is the logic function that implements EmType::subordinates() and EmType::superiors()
+    # @param sup bool: If True returns superiors, if False returns..... subordinates
+    # @return A dict with relation nature as keys and list of subordinates/superiors as values
+    # @throw RunTimeError if a nature fetched from db is not valid
+    # @see EmType::subordinates(), EmType::superiors()
+    def _subOrSup(self, sup = True):
         conn = self.getDbE().connect()
         htable = self.__class__._tableHierarchy()
-        req = htable.select(htable.c.subordinate_id, htable.c.nature).where(htable.c.superior_id == self.uid)
+        req = htable.select(htable.c.subordinate_id, htable.c.nature)
+        if sup:
+            req = req.where(htable.c.subordinate_id == self.uid)
+        else:
+            req = req.where(htable.c.superior_id == self.uid)
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()
 
         result = dict()
-        for nname in EmNature.__dict__():
-            result[getattr(EmNature, nname)] = []
-        
+        for nature in EmClasstype.natures(self.classType):
+            result[nname] = []
+
         for row in rows:
             if row['nature'] not in result:
                 #Maybe security issue ?
-                logger.error("Unreconized nature in Database for EmType<"+str(self.uid)+"> subordinate <"+str(row['subordinate_id'])+"> : '"+row['nature']+"'")
+                logger.error("Unreconized or unauthorized nature in Database for EmType<"+str(self.uid)+"> subordinate <"+str(row['subordinate_id'])+"> : '"+row['nature']+"'")
                 raise RuntimeError("Unreconized nature from database : "+row['nature'])
 
             result[row['nature']].append( EmType(row['subordinate_id']) )
-
         return result
+
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
     # @param relation_nature str: The name of the relation's nature
+    # @return False if no modification made, True if modifications success
+    #
     # @throw TypeError when em_type not an EmType instance
     # @throw ValueError when relation_nature isn't reconized or not allowed for this type
-    # @todo define return value and raise condition
     def add_superior(self, em_type, relation_nature):
-        pass
+        if not isinstance(em_type, EmType) or not isinstance(relation_nature, str):
+            raise TypeError("Excepted <class EmType> and <class str> as arguments. But got : "+str(type(em_type))+" "+str(type(relation_nature)))
+        if relation_nature not in EmClassType.natures(self.classType):
+            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classType)))
+
+        conn = self.getDbE().connect()
+        htable = self.__class__._tableHierarchy()
+        req = htable.insert(subordinate_id = self.uid, superior_id = em_type.uid, nature = relation_nature)
+
+        try:
+            res = conn.execute(req)
+        except sql.exc.IntegrityError:
+            ret = False
+        else:
+            ret = True
+        finally:
+            conn.close()
+
+        return ret
 
     ## Delete a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
     # @throw TypeError when em_type isn't an EmType instance
-    # @todo define return value and raise condition
-    def del_superior(self, em_type):
-        pass
+    def del_superior(self, em_type, relation_nature):
+        if not isinstance(em_type, EmType):
+            raise TypeError("Excepted <class EmType> as argument. But got : "+str(type(em_type)))
+        if relation_nature not in EmClassType.natures(self.classType):
+            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classType)))
+
+        conn = self.getDbE().connect()
+        htable = self.__class__._tableHierarchy()
+        req = htable.delete().where(superior_id = em_type.uid, nature = relation_nature)
+        conn.execute(req)
+        conn.close()
 
     ## @brief Get the list of linked type
     # Types are linked with special fields called relation_to_type fields
