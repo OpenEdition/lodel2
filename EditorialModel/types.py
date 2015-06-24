@@ -1,11 +1,12 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fields_types import Em_Field_Type
 from Database import sqlutils
 import sqlalchemy as sql
 
+from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.classtypes import EmNature, EmClassType
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
@@ -45,7 +46,7 @@ class EmType(EmComponent):
         return exists
     
     ## Get the list of associated fieldgroups
-    # @return A list of EmFieldGroup uid
+    # @return A list of EmFieldGroup instance
     def field_groups(self):
         fg_table = sqlutils.getTable(EmFieldGroup)
         req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
@@ -57,7 +58,8 @@ class EmType(EmComponent):
         return [ EmFieldGroup(row['uid']) for row in rows ]
 
     ## Get the list of associated fields
-    # @return A list of EmField uid
+    # @return A list of EmField instance
+    # @todo handle optionnal fields
     def fields(self):
         res = []
         for fguid in self.field_groups():
@@ -111,11 +113,47 @@ class EmType(EmComponent):
         pass
 
 
-    ## Get the list of superiors EmType in the type hierarchy
-    # @return A list of EmType
-    def superiors(self):
-        pass
+    @classmethod
+    ## Return an sqlalchemy table for type hierarchy
+    # @return sqlalchemy em_type_hierarchy table object
+    # @todo Don't hardcode table name
+    def _tableHierarchy(cl):
+        return sql.Table('em_type_hierarchy', cl.getDbE())
 
+    ## Return the EmClassType of the type
+    # @return EditorialModel.classtypes.*
+    def _getClassType(self):
+        return getattr(EmClassType, EmClass(self.class_id).class_type)
+
+    ## @brief Get the list of subordinates EmType
+    # Get a list of EmType instance that have this EmType for superior
+    #
+    # @return Return a dict with relation nature as keys and values as a list of subordinates
+    # EmType instance
+    #
+    # @throw RuntimeError if a nature fetched from db is not valid
+    def subordinates(self):
+
+        conn = self.getDbE().connect()
+        htable = self.__class__._tableHierarchy()
+        req = htable.select(htable.c.subordinate_id, htable.c.nature).where(htable.c.superior_id == self.uid)
+        res = conn.execute(req)
+        rows = res.fetchall()
+        conn.close()
+
+        result = dict()
+        for nname in EmNature.__dict__():
+            result[getattr(EmNature, nname)] = []
+        
+        for row in rows:
+            if row['nature'] not in result:
+                #Maybe security issue ?
+                logger.error("Unreconized nature in Database for EmType<"+str(self.uid)+"> subordinate <"+str(row['subordinate_id'])+"> : '"+row['nature']+"'")
+                raise RuntimeError("Unreconized nature from database : "+row['nature'])
+
+            result[row['nature']].append( EmType(row['subordinate_id']) )
+
+        return result
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance

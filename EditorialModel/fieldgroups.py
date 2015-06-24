@@ -59,7 +59,7 @@ class EmFieldGroup(EmComponent):
         return exists
 
     ## Get the list of associated fields
-    # @return A list of EmField uid
+    # @return A list of EmField instance
     # @todo Implement this method
     def fields(self):
         field_table = sqlutils.getTable(EmField)
