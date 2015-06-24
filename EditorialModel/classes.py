@@ -12,12 +12,14 @@ import sqlalchemy as sql
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
+
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
 #@see EmClass, EmType, EmFieldGroup, EmField
 class EmClass(EmComponent):
+
     table = 'em_class'
-    
+
     ## @brief Specific EmClass fields
     # @see EditorialModel::components::EmComponent::_fields
     _fields = [
@@ -31,12 +33,12 @@ class EmClass(EmComponent):
     # @param class_type EmClasstype: type of the class
     # @return An EmClass instance
     @classmethod
-    def create(c, name, class_type):
+    def create(cls, name, class_type):
         try:
             res = EmClass(name)
             logger.info("Trying to create an EmClass that allready exists")
         except EmComponentNotExistError:
-            res = c._createDb(name, class_type)
+            res = cls._create_db(name, class_type)
             logger.debug("EmClass successfully created")
 
         return res
@@ -45,39 +47,37 @@ class EmClass(EmComponent):
     ## Isolate SQL for EmClass::create
     # @todo Remove hardcoded default value for icon
     # @return An instance of EmClass
-    def _createDb(c, name, class_type):
+    def _create_db(cls, name, class_type):
         """ Do the db querys for EmClass::create() """
 
         #Create a new entry in the em_class table
-        values = { 'name':name, 'classtype':class_type['name'], 'icon':0 }
-        resclass = super(EmClass,c).create(**values)
+        values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
+        resclass = super(EmClass, cls).create(**values)
 
-
-        dbe = c.getDbE()
+        dbe = cls.getDbE()
         conn = dbe.connect()
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
         emclasstable = sql.Table(name, meta,
-            sql.Column('uid', sql.VARCHAR(50), primary_key = True))
+            sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
 
         return resclass
 
-
     ## Retrieve list of the field_groups of this class
     # @return field_groups [EmFieldGroup]:
     def fieldgroups(self):
-        records = self._fieldgroupsDb()
-        fieldgroups = [ EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records ]
+        records = self._fieldgroups_db()
+        fieldgroups = [EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records]
 
         return fieldgroups
 
     ## Isolate SQL for EmClass::fieldgroups
     # @return An array of dict (sqlalchemy fetchall)
-    def _fieldgroupsDb(self):
+    def _fieldgroups_db(self):
         dbe = self.__class__.getDbE()
         emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
         req = emfg.select().where(emfg.c.class_id == self.uid)
@@ -86,18 +86,17 @@ class EmClass(EmComponent):
         res = conn.execute(req)
         return res.fetchall()
 
-
     ## Retrieve list of fields
     # @return fields [EmField]:
     def fields(self):
         fieldgroups = self.fieldgroups()
         fields = []
         for fieldgroup in fieldgroups:
-            fields += self._fieldsDb(fieldgroup.uid)
+            fields += self._fields_db(fieldgroup.uid)
 
         return fields
 
-    def _fieldsDb(fieldgroup_id):
+    def _fields_db(self, fieldgroup_id):
         dbe = self.__class__.getDbE()
         fields = sql.Table(EditorialModel.fields.EmField.table, sqlutils.meta(dbe))
         req = fields.select().where(fields.c.fieldgroup_id == fieldgroup_id)
@@ -109,14 +108,14 @@ class EmClass(EmComponent):
     ## Retrieve list of type of this class
     # @return types [EmType]:
     def types(self):
-        records = self._typesDb()
-        types = [ EditorialModel.types.EmType(int(record.uid)) for record in records ]
+        records = self._types_db()
+        types = [EditorialModel.types.EmType(int(record.uid)) for record in records]
 
         return types
 
     ## Isolate SQL for EmCLass::types
     # @return An array of dict (sqlalchemy fetchall)
-    def _typesDb(self):
+    def _types_db(self):
         dbe = self.__class__.getDbE()
         emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
         req = emtype.select().where(emtype.c.class_id == self.uid)
@@ -137,7 +136,7 @@ class EmClass(EmComponent):
         #Create a new table storing LodelObjects that are linked to this EmClass
         conn = self.__class__.getDbE().connect()
         meta = sql.MetaData()
-        emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key = True))
+        emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emlinketable.create(conn)
         conn.close()
 
