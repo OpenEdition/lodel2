@@ -88,29 +88,25 @@ class FieldTestCase(TestCase):
     #
     # Returns the list of fields corresponding to a given uid
     #
-    # @param uid int: Global identifier of the field
-    # @return list of found fields
-    def get_field_records(self,uid):
-        return self._get_field_records_Db(uid)
+    # @param field EmField: EmField object
+    # @return Number of found records
+    def get_field_records(self,field):
+        return self._get_field_records_Db(field)
 
     ## _Get_Field_Records_Db (Function)
     #
     # Queries the database to get the list of fields for a given uid
     #
-    # @param uid int: Global identifier of the field
-    # @return list of found fields
-    def _get_field_records_Db(self,uid):
-        sql_wrapper = SqlWrapper(read_db='default', write_db='default', alchemy_logs=False)
-        sql_builder = SqlQueryBuilder(sql_wrapper, 'em_field')
-        sql_builder.Select(('uid'))
-        sql_builder.From('em_field')
-        sql_builder.Where('em_field.uid=%s' % uid)
-        records = sql_builder.Execute().fetchall()
-        field_records = []
-        for record in records:
-            field_records.append(dict(zip(record.keys(), record)))
+    # @param field EmField: EmField object
+    # @return Number of found records
+    def _get_field_records_Db(self,field):
+        dbe = EmComponent.getDbE()
+        fieldtable = sqla.Table(EmField.table, sqlutils.meta(dbe))
+        conn = dbe.connect()
+        req = fieldtable.select().where(fieldtable.c.uid==field.uid).where(fieldtable.c.name==field.name)
+        res = conn.execute(req).fetchall()
 
-        return field_records
+        return len(res)
 
     ## Get_table_columns (Function)
     #
@@ -128,20 +124,13 @@ class FieldTestCase(TestCase):
     # @param table_name str: Name of the table
     # @return list of columns
     def _get_table_columns_Db(self, table_name):
-        table = sqla.Table(table_name, self.dber)
+        table = sqla.Table(table_name, sqlutils.meta(EmComponent.getDbE()))
         return table.c
 
 ## TestField (Class)
 #
 # The test class for the fields module
 class TestField(FieldTestCase):
-
-    ## TestFieldName (Function)
-    #
-    # The field's name is correctly populated
-    def testFieldName(self):
-        emField = EmField('testfield')
-        self.assertEqual(emField.name,'testfield')
 
     ## Test_create (Function)
     #
@@ -156,15 +145,13 @@ class TestField(FieldTestCase):
         field = EmField.create(**field_values)
 
         # We check that the field has been added in the em_field table
-        field_records = self.get_field_records(field.uid)
-        self.assertEqual(len(field_records),field.uid)
-        self.assertEqual(field.uid,field_record[0]['uid'])
-        self.assertEqual(field.name,field_record[0]['name'])
+        field_records = self.get_field_records(field)
+        self.assertGreater(field_records,0)
 
         # We check that the field has been added as a column in the corresponding table
         field_table_columns = self.get_table_columns(field.get_class_table())
-        field_column_args = EmField_boolean.sqlalchemy_args()
+        field_column_args = self.testFieldType.sqlalchemy_args()
         field_column_args['name']='testfield1'
         field_column = sqla.Column(**field_column_args)
-        self.assertIn(field_column,field_table_columns)
+        self.assertIn(field_column.name, field_table_columns)
         pass
