@@ -125,10 +125,21 @@ class EmClass(EmComponent):
         return res.fetchall()
 
     ## Add a new EmType that can ben linked to this class
-    # @param  t EmType: type to link
+    # @param  em_type EmType: type to link
     # @return success bool: done or not
-    def link_type(self, t):
-        pass
+    def link_type(self, em_type):
+        table_name = self.name + '_' + em_type.name
+        self._link_type_db(table_name)
+
+        return True
+
+    def _link_type_db(self, table_name):
+        #Create a new table storing LodelObjects that are linked to this EmClass
+        conn = self.__class__.getDbE().connect()
+        meta = sql.MetaData()
+        emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key = True))
+        emlinketable.create(conn)
+        conn.close()
 
     ## Retrieve list of EmType that are linked to this class
     #  @return types [EmType]:
