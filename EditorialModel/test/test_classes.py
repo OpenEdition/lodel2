@@ -164,3 +164,38 @@ class TestEmClassFields(ClassesTestCase):
         test_class = EmClass('testClass')
         fields = test_class.fields()
         self.assertEqual(fields, [])
+
+# creating an new EmClass should
+# - create a table named like the created EmClass
+# - insert a new line in em_classes
+class TestEmClassLinkType(ClassesTestCase):
+
+    # create a new EmClass, then test on it
+    @classmethod
+    def setUpClass(cls):
+        ClassesTestCase.setUpClass()
+        testEntity = EmClass.create('testEntity', EmClassType.entity)
+        testEntry = EmClass.create('testEntry', EmClassType.entry)
+        keywords = EmType.create('keywords', testEntry)
+        testEntity.link_type(keywords)
+
+    # test if a table 'testEntity_keywords' was created
+    # should be able to select on the created table
+    def test_table_classes_types(self):
+        conn = sqlutils.getEngine().connect()
+        a = sqlutils.meta(conn)
+        try:
+            newtable = sqla.Table('testEntity_keywords', sqlutils.meta(conn))
+            req = sqla.sql.select([newtable])
+            res = conn.execute(req)
+            res = res.fetchall()
+            conn.close()
+        except:
+            self.fail("unable to select table testEntity_keywords")
+        self.assertEqual(res, [])
+
+    # test if we can retrieve the linked type
+    def test_linked_types(self):
+        testEntity = EmClass('testEntity')
+        linked_types = testEntity.linked_types()
+        self.assertEqual(linked_types[0].name, 'keywords')
