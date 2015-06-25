@@ -22,9 +22,9 @@ class EmType(EmComponent):
     ## @brief Specific EmClass fields
     # @see EditorialModel::components::EmComponent::_fields
     _fields = [
-        ('class_id', ftypes.EmField_integer),
-        ('icon', ftypes.EmField_integer),
-        ('sortcolumn', ftypes.EmField_char)
+        ('class_id', ftypes.EmField_integer()),
+        ('icon', ftypes.EmField_integer()),
+        ('sortcolumn', ftypes.EmField_char())
         ]
 
     @classmethod

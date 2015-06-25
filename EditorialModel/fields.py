@@ -25,13 +25,13 @@ class EmField(EmComponent):
 
     table = 'em_field'
     _fields = [
-        ('fieldtype', EmField_char),
-        ('fieldgroup_id', EmField_integer),
-        ('rel_to_type_id', EmField_integer),
-        ('rel_field_id', EmField_integer),
-        ('optional', EmField_boolean),
-        ('internal', EmField_boolean),
-        ('icon', EmField_integer)
+        ('fieldtype', EmField_char()),
+        ('fieldgroup_id', EmField_integer()),
+        ('rel_to_type_id', EmField_integer()),
+        ('rel_field_id', EmField_integer()),
+        ('optional', EmField_boolean()),
+        ('internal', EmField_boolean()),
+        ('icon', EmField_integer())
     ]
 
     ## Create (Function)

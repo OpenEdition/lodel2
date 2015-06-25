@@ -19,7 +19,7 @@ class EmFieldGroup(EmComponent):
     table = 'em_fieldgroup'
     ## List of fields
     # @todo Bad storage, here we want an ordereddict not a tuple list
-    _fields = [('class_id', ftypes.EmField_integer)]
+    _fields = [('class_id', ftypes.EmField_integer())]
     
     ## Instanciate an EmFieldGroup with data fetched from db
     # @param id_or_name str|int: Identify the EmFieldGroup by name or by global_id

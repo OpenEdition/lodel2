@@ -23,9 +23,9 @@ class EmClass(EmComponent):
     ## @brief Specific EmClass fields
     # @see EditorialModel::components::EmComponent::_fields
     _fields = [
-        ('classtype', ftypes.EmField_char),
-        ('icon', ftypes.EmField_integer),
-        ('sortcolumn', ftypes.EmField_char)
+        ('classtype', ftypes.EmField_char()),
+        ('icon', ftypes.EmField_integer()),
+        ('sortcolumn', ftypes.EmField_char())
     ]
 
     ## Create a new class
