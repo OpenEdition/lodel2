@@ -7,19 +7,51 @@ import datetime
 import re
 import copy
 
+## @file fieldtypes.py
+# This file contains classes about SQL column (EmFieldType)
+# and their values (EmFieldValue)
+# For the moment the code is in quick & dirty version and is
+# more like a proof of concept
+
+## @brief Handles SQL types
+# This class handles SQL types and their options.
+# For the moment it is designed to handles SQLAlchemy types but it
+# can be easily ( I hope ) transformed for other purpose
 class EmFieldSQLType(object):
     
+    ## @brief Dict handling type infos for integers
     _integer = { 'sql' : sql.INTEGER }
+    ## @brief Dict handling type infos for big integers
     _bigint = { 'sql' : sql.BIGINT }
+    ## @brief Dict handling type infos for small integers
     _smallint = { 'sql' : sql.SMALLINT }
+    ## @brief Dict handling type infos for boolean
     _boolean = { 'sql' : sql.BOOLEAN }
+    ## @brief Dict handling type infos for floating point numbers
     _float = { 'sql' : sql.FLOAT }
+    ## @brief Dict handling type infos for strings
     _varchar = { 'sql' : sql.VARCHAR }
+    ## @brief Dict handling type infos for texts
     _text = { 'sql' : sql.TEXT }
+    ## @brief Dict handling type infos for time
     _time = { 'sql' : sql.TIME }
+    ## @brief Dict handling type infos for date
     _date = { 'sql' : sql.DATE }
+    ## @brief Dict handling type infos for datetime
     _datetime = { 'sql' : sql.DATETIME }
 
+    ## @brief Link types names with types informations
+    # Names to type associations :
+    # - Integer : ''int'', ''integer''
+    # - Big integer : ''bigint''
+    # - Small integer : ''smallint''
+    # - Boolean value : ''bool'', ''boolean''
+    # - Floating point number : ''float''
+    # - String : ''char'', ''varchar''
+    # - Text : ''text''
+    # - Time : ''time''
+    # - Date : ''date''
+    # - Date & time : ''datetime''
     _names = {
         'int' : _integer,
         'integer' : _integer,
@@ -134,17 +166,20 @@ class EmFieldType(object):
         pass
 
     @property
+    ## A predicate that indicate wether or not an EmFieldType is ''abstract''
     def abstract(self):
         return (self.type == None)
 
     ## MUST been called first in each constructor
+    # @todo this solution is not good (look at the __init__ for EmFieldType childs)
     def _init(self, kwargs):
         try:
             self.args_copy
         except AttributeError:
             self.args_copy = kwargs.copy()
         pass
-
+    
+    ## Return a copy of the current EmFieldType
     def copy(self):
         args = self.args_copy.copy()
         return self.__class__(**args)
@@ -264,6 +299,16 @@ class EmFieldValue(object):
         setv('from_python', self.fieldtype.to_value)
         setv('from_string', self.fieldtype.to_value)
         setv('sqlCol', self.fieldtype.sqlCol)
+        pass
+
+    ## @fn from_python
+    # Alias for EmFieldType::to_value()
+
+    ## @fn from_string
+    # Alias for EmFieldType::to_value()
+
+    ## @fn sqlCol
+    # Alias for EmFieldType::sqlCol()
 
     ## The only writable attribute of EmFieldValue is the value
     # @param name str: Have to be value
@@ -297,6 +342,7 @@ class EmFieldValue(object):
             return self.fieldtype.to_sql(value[0])
         return self.fieldtype.to_sql(self.value)
 
+## @brief Designed to handle values that has common arithmetic operations
 class EmFieldValue_int(EmFieldValue):
        
     def __int__(self):
@@ -381,7 +427,9 @@ class EmField_char(EmFieldType):
         super(EmField_char, self).__init__(**kwargs)
     def to_sql(self, value):
         return str(value)
-
+##
+# @todo rename to EmField_datetime
+# @todo timezones support
 class EmField_date(EmFieldType):
     def __init__(self, **kwargs):
         self._init(kwargs)
