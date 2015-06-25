@@ -74,6 +74,7 @@ class SQLSetup(object):
         em_field = {"name":"em_field"}
         em_field['columns'] = default_columns + [
             {"name":"fieldtype",   "type":"VARCHAR(50)", "extra":{"nullable":False}},
+            {"name":"fieldtype_opt", "type":"VARCHAR(512)", "nullable": False},
             {"name":"fieldgroup_id",  "type":"INTEGER", "extra":{"foreignkey":"em_fieldgroup.uid", "nullable":False}},
             {"name":"rel_to_type_id", "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":True, "server_default": sql.text('NULL')}}, # if relational: type this field refer to
             {"name":"rel_field_id",   "type":"INTEGER", "extra":{"foreignkey":"em_type.uid", "nullable":True, "server_default": sql.text('NULL')}}, # if relational: field that specify the rel_to_type_id

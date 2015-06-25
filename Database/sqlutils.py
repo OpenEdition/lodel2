@@ -91,3 +91,11 @@ def getTable(cls):
     engine = cls.getDbE()
     return sqla.Table(cls.table, meta(engine))
 
+def ddlExecute(ddl, db_engine):
+    conn = db_engine.connect()
+    req = str(ddl.compile(dialect=db_engine.dialect))
+    logger.debug("Executing custom raw SQL query : '"+req+"'")
+    ret = conn.execute(req)
+    conn.close()
+    return bool(ret)
+

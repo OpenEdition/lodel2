@@ -123,8 +123,10 @@ class TestField(FieldTestCase):
 
         # We check that the field has been added as a column in the corresponding table
         field_table_columns = self.get_table_columns(field.get_class_table())
-        field_column_args = self.testFieldType.sqlalchemy_args()
-        field_column_args['name']='testfield1'
-        field_column = sqla.Column(**field_column_args)
-        self.assertIn(field_column.name, field_table_columns)
+        print(field_table_columns)
+        self.assertIn('testfield1', field_table_columns)
+        #field_column_args = self.testFieldType.sqlalchemy_args()
+        #field_column_args['name']='testfield1'
+        #field_column = sqla.Column(**field_column_args)
+        #self.assertIn(field_column.name, field_table_columns)
         pass

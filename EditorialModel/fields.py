@@ -9,6 +9,7 @@ from EditorialModel.types import EmType
 
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
+from Database.sqlalter import AddColumn
 from Database.sqlquerybuilder import SqlQueryBuilder
 
 import sqlalchemy as sql
@@ -26,6 +27,7 @@ class EmField(EmComponent):
     table = 'em_field'
     _fields = [
         ('fieldtype', EmField_char()),
+        ('fieldtype_opt', EmField_char()),
         ('fieldgroup_id', EmField_integer()),
         ('rel_to_type_id', EmField_integer()),
         ('rel_field_id', EmField_integer()),
@@ -61,7 +63,8 @@ class EmField(EmComponent):
             values = {
                 'name' : name,
                 'fieldgroup_id' : fieldgroup.uid,
-                'fieldtype' : fieldtype.name,
+                'fieldtype' : fieldtype.__class__.__name__,
+                'fieldtype_opt' : fieldtype.dump_opt(),
                 'optional' : optional,
                 'internal' : internal,
                 'rel_to_type_id': rel_to_type_id,
@@ -91,10 +94,15 @@ class EmField(EmComponent):
     # @return True in case of success, False if not
     @classmethod
     def addFieldColumnToClassTable(c, emField):
-        field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(emField.fieldtype).sql_column(), " DEFAULT 0" if emField.fieldtype=='integer' else '')
-        field_uid = emField.uid
-        field_class_table = emField.get_class_table()
-        return SqlWrapper().addColumn(tname=field_class_table, colname=emField.name, coltype=field_type)
+        tname = emField.get_class_table()
+        ctable = sql.Table(tname, sqlutils.meta(c.getDbE()))
+        ddl =  AddColumn(ctable, emField._fieldtype.sqlCol())
+        return sqlutils.ddlExecute(ddl, c.getDbE())
+    
+    ## Set _fieldtype to the fieldtype instance
+    def populate(self):
+        super(EmField, self).populate()
+        super(EmComponent, self).__setattr__('_fieldtype', EmFieldType.restore(self.name, self.fieldtype, self.fieldtype_opt))
 
     ## get_class_table (Function)
     #

@@ -1,9 +1,12 @@
 #-*- coding: utf-8 -*-
+import EditorialModel
 
 from Lodel.utils.mlstring import MlString
 from sqlalchemy import Column
 import sqlalchemy as sql
 import datetime
+import json
+import importlib
 import re
 import copy
 
@@ -183,6 +186,19 @@ class EmFieldType(object):
     def copy(self):
         args = self.args_copy.copy()
         return self.__class__(**args)
+
+    def dump_opt(self):
+        return json.dumps(self.args_copy)
+
+    @staticmethod
+    ## Return an instance from a classname and options from dump_opt
+    # @param classname str: The EmFieldType class name
+    # @param json_opt str: getted from dump_opt
+    def restore(colname, classname, json_opt):
+        fieldTypeClass = getattr(EditorialModel.fieldtypes, classname)
+        init_opt = json.loads(json_opt)
+        init_opt['name'] = colname
+        return fieldTypeClass(**init_opt)
 
     ## Return a SQL column (actually an sqlAlchemy column)
     def sqlCol(self):
