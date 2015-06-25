@@ -57,7 +57,7 @@ def setUpModule():
     EmClass.create("entry2", EmClassType.entry)
     EmClass.create("person1", EmClassType.person)
     EmClass.create("person2", EmClassType.person)
-    
+
     saveDbState(TEST_FIELDGROUP_DBNAME)
 
     #shutil.copyfile(TEST_FIELDGROUP_DBNAME, globals()['fieldgroup_test_dbfilename']+'_bck')
@@ -81,7 +81,7 @@ class TestInit(FieldGroupTestCase):
     def setUp(self):
         super(TestInit, self).setUp()
         conn = sqlutils.getEngine().connect()
-        
+
         ent1 = EmClass('entity1')
         idx1 = EmClass('entry1')
 
@@ -101,25 +101,23 @@ class TestInit(FieldGroupTestCase):
 
     def test_init(self):
         """ Test that EmFieldgroup are correctly instanciated compare to self.tfg """
-        with self.subTest("Call __init__ with name"):
-            for tfg in self.tfg:
-                fg = EmFieldGroup(tfg['name'])
-                for attr in tfg:
-                    if attr in ['string', 'help']:
-                        v = MlString.load(tfg[attr])
-                    else:
-                        v = tfg[attr]
-                    self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
+        for tfg in self.tfg:
+            fg = EmFieldGroup(tfg['name'])
+            for attr in tfg:
+                if attr in ['string', 'help']:
+                    v = MlString.load(tfg[attr])
+                else:
+                    v = tfg[attr]
+                self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
 
-        with self.subTest("Call __init__ with id"):
-            for tfg in self.tfg:
-                fg = EmFieldGroup(tfg['uid'])
-                for attr in tfg:
-                    if attr in ['string', 'help']:
-                        v = MlString.load(tfg[attr])
-                    else:
-                        v = tfg[attr]
-                    self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
+        for tfg in self.tfg:
+            fg = EmFieldGroup(tfg['uid'])
+            for attr in tfg:
+                if attr in ['string', 'help']:
+                    v = MlString.load(tfg[attr])
+                else:
+                    v = tfg[attr]
+                self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
 
         pass
 
@@ -142,7 +140,7 @@ class TestInit(FieldGroupTestCase):
 # EmFieldgroup.create #
 #=====================#
 class TestCreate(FieldGroupTestCase):
-    
+
     def test_create(self):
         """ Does create actually create a fieldgroup ? """
 
@@ -154,58 +152,55 @@ class TestCreate(FieldGroupTestCase):
                 }
 
         for i,param_name in enumerate(params):
-            with self.subTest("Create from an "+param_name):
-                arg = params[param_name]
-                if isinstance(arg, EmClass):
-                    cl = arg
-                else:
-                    cl = EmClass(arg)
+            arg = params[param_name]
+            if isinstance(arg, EmClass):
+                cl = arg
+            else:
+                cl = EmClass(arg)
 
-                fgname = 'new_fg'+str(i)
-                fg = EmFieldGroup.create(fgname, arg)
-                self.assertEqual(fg.name, fgname, "EmFieldGroup.create() dont instanciate name correctly")
-                self.assertEqual(fg.class_id, cl.uid, "EmFieldGroup.create() dont instanciate class_id correctly")
-    
-                nfg = EmFieldGroup(fgname)
+            fgname = 'new_fg'+str(i)
+            fg = EmFieldGroup.create(fgname, arg)
+            self.assertEqual(fg.name, fgname, "EmFieldGroup.create() dont instanciate name correctly")
+            self.assertEqual(fg.class_id, cl.uid, "EmFieldGroup.create() dont instanciate class_id correctly")
 
-                #Checking object property
-                for fname in fg._fields:
-                    self.assertEqual(getattr(nfg,fname), getattr(fg,fname), "Msg inconsistency when a created fieldgroup is fecthed from Db (in "+fname+" property)")
+            nfg = EmFieldGroup(fgname)
+
+            #Checking object property
+            for fname in fg._fields:
+                self.assertEqual(getattr(nfg,fname), getattr(fg,fname), "Msg inconsistency when a created fieldgroup is fecthed from Db (in "+fname+" property)")
         pass
 
     def test_create_badargs(self):
         """ Does create fails when badargs given ? """
 
-        with self.subTest("With badarg as second argument"):
-            badargs = { 'EmClass type (not an instance)': EmClass,
-                        'Non Existing name': 'fooClassThatDontExist',
-                        'Non Existing Id': 4042, #Hope that it didnt exist ;)
-                        'Another component instance': EmType.create('fooType', EmClass('entity1')),
-                        'A function': print
-                    }
-            for i,badarg_name in enumerate(badargs):
-                with self.assertRaises(TypeError, msg="Should raise because trying to give "+badarg_name+" as em_class"):
-                    fg = EmFieldGroup.create('new_fg'+i, badargs[badarg_name])
+        badargs = { 'EmClass type (not an instance)': EmClass,
+                    'Non Existing name': 'fooClassThatDontExist',
+                    'Non Existing Id': 4042, #Hope that it didnt exist ;)
+                    'Another component instance': EmType.create('fooType', EmClass('entity1')),
+                    'A function': print
+                }
+        for i,badarg_name in enumerate(badargs):
+            with self.assertRaises(TypeError, msg="Should raise because trying to give "+badarg_name+" as em_class"):
+                fg = EmFieldGroup.create('new_fg'+i, badargs[badarg_name])
 
-        with self.subTest("With badarg as first argument"):
-            #Creating a fieldgroup to test duplicate name
-            exfg = EmFieldGroup.create('existingfg', EmClass('entity1'))
+        #Creating a fieldgroup to test duplicate name
+        exfg = EmFieldGroup.create('existingfg', EmClass('entity1'))
 
-            badargs = { 'a duplicate name': ('existingfg', ValueError),
-                        'an integer': (42, TypeError),
-                        'a function': (print, TypeError),
-                        'an EmClass': (EmClass('entry1'), TypeError),
-                    }
-            for badarg_name in badargs:
-                (badarg,expt) = badargs[badarg_name]
-                with self.assertRaises(expt, msg="Should raise because trying to give "+badarg_name+" as first argument"):
-                    fg = EmFieldGroup.create(badarg, EmClass('entity1'))
+        badargs = { 'a duplicate name': ('existingfg', ValueError),
+                    'an integer': (42, TypeError),
+                    'a function': (print, TypeError),
+                    'an EmClass': (EmClass('entry1'), TypeError),
+                }
+        for badarg_name in badargs:
+            (badarg,expt) = badargs[badarg_name]
+            with self.assertRaises(expt, msg="Should raise because trying to give "+badarg_name+" as first argument"):
+                fg = EmFieldGroup.create(badarg, EmClass('entity1'))
 
 #=====================#
 # EmFieldgroup.fields #
 #=====================#
 class TestFields(FieldGroupTestCase):
-    
+
     def setUp(self):
         self.fg1 = EmFieldGroup.create('testfg', EmClass('entity1'))
         self.fg2 = EmFieldGroup.create('testfg2', EmClass('entry1'))
@@ -217,15 +212,15 @@ class TestFields(FieldGroupTestCase):
 
         #Creating fields
         test_fields1 = [
-            { 'name': 'field1', 'em_fieldgroup': self.fg1, 'em_fieldtype': EmField_integer() },
-            { 'name': 'field2', 'em_fieldgroup': self.fg1, 'em_fieldtype': EmField_integer() },
-            { 'name': 'field4', 'em_fieldgroup': self.fg1, 'em_fieldtype': EmField_integer() },
+            { 'name': 'field1', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
+            { 'name': 'field2', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
+            { 'name': 'field4', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
         ]
 
         test_fields2 = [ 
-            { 'name': 'field3', 'em_fieldgroup': self.fg2, 'em_fieldtype': EmField_integer() },
+            { 'name': 'field3', 'fieldgroup': self.fg2, 'fieldtype': EmField_integer() },
         ]
-            
+
         excepted1 = []
 
         for finfo in test_fields1:
@@ -236,7 +231,7 @@ class TestFields(FieldGroupTestCase):
             f = EmField.create(**finfo)
 
         excepted1 = set(excepted1)
- 
+
         tests = {
             'newly': EmFieldGroup('testfg'),
             'old' : self.fg1
