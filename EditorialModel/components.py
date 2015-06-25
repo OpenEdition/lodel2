@@ -40,13 +40,13 @@ class EmComponent(object):
     # @warning The EmFieldType in second position in the tuples must be a class type and not a class instance !!!
     # @see EditorialModel::classes::EmClass::_fields EditorialModel::fieldgroups::EmFieldGroup::_fields EditorialModel::types::EmType::_fields EditorialModel::fields::EmField::_fields
     _fields = [
-        ('uid', ftypes.EmField_integer),
-        ('name', ftypes.EmField_char),
-        ('rank', ftypes.EmField_integer),
-        ('date_update', ftypes.EmField_date),
-        ('date_create', ftypes.EmField_date),
-        ('string', ftypes.EmField_mlstring),
-        ('help', ftypes.EmField_mlstring)
+        ('uid', ftypes.EmField_uid()),
+        ('name', ftypes.EmField_char()),
+        ('rank', ftypes.EmField_integer()),
+        ('date_update', ftypes.EmField_date()),
+        ('date_create', ftypes.EmField_date()),
+        ('string', ftypes.EmField_mlstring()),
+        ('help', ftypes.EmField_mlstring())
     ]
 
     ## Instaciate an EmComponent
@@ -62,7 +62,7 @@ class EmComponent(object):
         # Values are handled by EditorialModel::fieldtypes::EmFieldType
         # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
         # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
-        self._fields = OrderedDict([ (name, ftype()) for (name,ftype) in (EmComponent._fields + self.__class__._fields) ] )
+        self._fields = OrderedDict([ (name, ftype.valueObject(name)) for (name,ftype) in (EmComponent._fields + self.__class__._fields) ] )
 
         # populate
         if isinstance(id_or_name, int):
@@ -100,7 +100,7 @@ class EmComponent(object):
             raise TypeError("Propertie '"+name+"' is readonly")
 
         if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
-            self._fields[name].from_python(value)
+            self._fields[name].value = value
         else:
             object.__setattr__(self, name, value)
 
@@ -112,7 +112,7 @@ class EmComponent(object):
         for record in records:
             for keys in self._fields.keys():
                 if keys in record:
-                    self._fields[keys].from_string(record[keys])
+                    self._fields[keys].value = record[keys]
 
         super(EmComponent, self).__setattr__('deleted', False)
 
@@ -137,7 +137,7 @@ class EmComponent(object):
 
         res = res.fetchall()
         c.close()
-
+        
         if not res or len(res) == 0:
             raise EmComponentNotExistError("No "+self.__class__.__name__+" found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
 

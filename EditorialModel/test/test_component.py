@@ -128,7 +128,7 @@ def tearDownModule():
 class EmTestComp(EmComponent):
     table = 'ttest'
     ranked_in = 'rank_fam'
-    _fields = [('rank_fam', ftypes.EmField_char)]
+    _fields = [('rank_fam', ftypes.EmField_char())]
 
 # The parent class of all other test cases for component
 # It defines a SetUp function and some utility functions for EmComponent tests
