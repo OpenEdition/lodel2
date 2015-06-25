@@ -65,10 +65,10 @@ class Em_Field_Type(object):
     #
     # @return Boolean
     def delete(self):
-        return _deleteDb()
+        return self._deleteDb()
 
     def _deleteDb(self):
-        dbe = EmComponent.getDbe()
+        dbe = EmComponent.getDbE()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.delete().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
         conn = dbe.connect()
@@ -87,7 +87,7 @@ class Em_Field_Type(object):
     #
     # @return True if success, False if failure
     def exists(self):
-        return _existsDb()
+        return self._existsDb()
 
     ## _ExistsDb (Function)
     #
@@ -95,7 +95,7 @@ class Em_Field_Type(object):
     #
     # @return True if success, False if failure
     def _existsDb(self):
-        dbe = EmComponent.getDbe()
+        dbe = EmComponent.getDbE()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.select().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
         conn = dbe.connect()
