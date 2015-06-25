@@ -1,182 +1,342 @@
 #-*- coding: utf-8 -*-
 
 from Lodel.utils.mlstring import MlString
-from sqlalchemy import Column, INTEGER, BOOLEAN, VARCHAR
+from sqlalchemy import Column
+import sqlalchemy as sql
 import datetime
+import re
+import copy
 
-def get_field_type(name):
-    class_name = 'EmField_' + name
-    constructor = globals()[class_name]
-    instance = constructor()
-    return instance
+class EmFieldSQLType(object):
+    
+    _integer = { 'sql' : sql.INTEGER }
+    _bigint = { 'sql' : sql.BIGINT }
+    _smallint = { 'sql' : sql.SMALLINT }
+    _boolean = { 'sql' : sql.BOOLEAN }
+    _float = { 'sql' : sql.FLOAT }
+    _varchar = { 'sql' : sql.VARCHAR }
+    _text = { 'sql' : sql.TEXT }
+    _time = { 'sql' : sql.TIME }
+    _date = { 'sql' : sql.DATE }
+    _datetime = { 'sql' : sql.DATETIME }
 
-class EmFieldType():
+    _names = {
+        'int' : _integer,
+        'integer' : _integer,
+        'bigint' : _bigint,
+        'smallint' : _smallint,
+        'boolean' : _boolean,
+        'bool' : _boolean,
+        'float' : _float,
+        'char' : _varchar,
+        'varchar' : _varchar,
+        'text' : _text,
+        'time' : _time,
+        'date' : _date,
+        'datetime' : _datetime,
+    }
 
-    def __init__(self, name):
-        self.name = name
-        self.value = None
+    @classmethod
+    ## Get an sql type (actually sqlalchemy type)
+    # @param str: Type name
+    # @param **kwargs : Please refer to sqlalchemy doc to see available options for each type
+    # @return An sqlalchemy type
+    # @throw TypeError if name not str or size not int nor None
+    # @throw ValueError if name is not a valid type name
+    def sqlType(cl, name, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError("Expect <class str>, <class int>|None but got : "+str(type(name))+" "+str(type(size)))
+        name = name.lower()
+        if name not in cl._names:
+            raise ValueError("Unknown type '"+name+"'")
+        if len(kwargs) == 0:
+            return cl._names[name]
+        return cl._names[name](**kwargs)
+        
+        
 
-    def from_python(self, value):
-        self.value = value
+class EmFieldType(object):
+ 
+    ## Stores options and default value for EmFieldType
+    # options list : 
+    # - type (str|None) : if None will make an 'abstract' fieldtype (with no value assignement possible)
+    # - size (int) : The size for this type
+    # - nullable (bool) : tell whether or not a fieldType accept NULL value
+    # - default (mixed) : The default value for a FieldType
+    # - primarykey (bool) : If true the fieldType represent a PK
+    # - autoincrement (bool) : If true the fieldType will be autoincremented
+    # - index (bool) : If true the columns will be indexed in Db
+    # - name (str) : FieldType name
+    # - doc (str) : FieldType documentation
+    # - onupdate (callable) : A callback to call on_update
+    # - type_* (mixed) : Use to construct an options dictinnary for a type (exemple : type_length => nnewColumn(lenght= [type_lenght VALUE] ))
+    _opt = {
+        'name' : None,
+        'type' : None,
+        'size': None,
+        'nullable': True,
+        'default' : None,
+        'primarykey': False,
+        'autoincrement' : False,
+        'uniq' : False,
+        'index': False,
+        'doc' : None,
+        'onupdate': None,
+    }
+    
 
-    # if an attribute is not in the FieldType, try the attributes of the value
-    #def __getattr__(self, name):
-        #if hasattr(self.value, name):
-            #value_attr = getattr(self.value, name)
-            #if hasattr(value_attr, '__call__'):
-                #def value_method(*args, **kwargs):
-                    #result = value_attr(*args, **kwargs)
-                    #return result
-                #return value_method
-            #else:
-                #return value_attr
+    ## Instanciate an EmFieldType
+    # For arguments see @ref EmFieldType::_opt
+    def __init__(self, **kwargs):
+        self._init(kwargs)
+        self.type_options = dict()
+        #Stores all col_* arguments into the self.col_options dictionnary
+        args = kwargs.copy()
+        for optname in args:
+            type_opt = re.sub(r'^type_', '', optname)
+            if type_opt != optname:
+                self.type_options[type_opt] = args[optname]
+                del kwargs[optname]
+                
+        #Check if the others arguments are valids
+        if len(set(kwargs.keys()) - set(self.__class__._opt.keys())) > 0:
+            badargs = ""
+            for bad in set(kwargs.keys()) - set(self.__class__._opt.keys()):
+                badargs += " "+bad
+            raise TypeError("Unexpected arguments : "+badargs)
 
-    # str() refer to str() of the value
-    #def __str__(self):
-        #return str(self.value)
+        #Stores other arguments as instance attribute
+        for opt_name in self.__class__._opt:
+            setattr(self, opt_name, (kwargs[opt_name] if opt_name in kwargs else self.__class__._opt[opt_name]))
 
-class EmField_integer(EmFieldType):
+        #Checking type's options validity
+        if self.type != None:
+            try:
+                EmFieldSQLType.sqlType(self.type, **self.type_options)
+            except TypeError:
+                raise TypeError("Bad type option in on of those arguments : "+str(["type_"+opt for opt in self.type_options]))
 
-    def __init__(self):
-        super(EmField_integer, self).__init__('integer')
+        #Default value for name
+        if self.name == None:
+            if self.__class__ == EmFieldType:
+                self.name = 'generic'
+            else:
+                self.name = self.__class__.__name__
+        # Default value for doc
+        if self.doc == None:
+            if self.__class__ == EmFieldType:
+                self.doc = 'Abstract generic EmFieldType'
+            else:
+                self.doc = self.__class__.__name__
+        pass
 
-    def from_string(self, value):
-        if value == '':
-            self.value = 0
-        else:
-            self.value = int(value)
+    @property
+    def abstract(self):
+        return (self.type == None)
 
-    def to_sql(self, value = None):
-        if value is None:
-            value = self.value
-        return value
+    ## MUST been called first in each constructor
+    def _init(self, kwargs):
+        try:
+            self.args_copy
+        except AttributeError:
+            self.args_copy = kwargs.copy()
+        pass
 
-    def __int__(self):
+    def copy(self):
+        args = self.args_copy.copy()
+        return self.__class__(**args)
+
+    ## Return a SQL column (actually an sqlAlchemy column)
+    def sqlCol(self):
+        return sql.Column(
+            name = self.name,
+            type_ = EmFieldSQLType.sqlType(self.type, **self.type_options),
+            autoincrement = self.autoincrement,
+            nullable = self.nullable,
+            default = self.default,
+            doc = self.doc,
+            index = self.index,
+            primary_key = self.primarykey,
+            onupdate = self.onupdate,
+        )
+
+    ## Return a value object 'driven' by this EmFieldType
+    # @param name str: The column name associated with the value
+    # @param *init_val mixed: If given this will be the initialisation value
+    # @return a EmFieldValue instance
+    def valueObject(self, name, *init_val):
+        return EmFieldValue(name, self, *init_val)
+
+    ## Cast to the correct value
+    # @param v mixed: The value to cast
+    # @return A gently casted value
+    # @throw ValueError if v is innapropriate
+    # @throw NotImplementedError if self is an abstract EmFieldType
+    def toValue(self, v):
+        if self.type == None:
+            raise NotImplementedError("This EmFieldType is abstract")
+    ## toValue alias
+    def from_string(self, value): return self.toValue(value)
+
+    ## Return a gently sql forged value
+    # @return A gently sql forged value
+    # @warning It assume that value is corret and comes from an EmFieldValue object
+    def to_sql(self, value):
+        if self.abstract:
+            raise NotImplementedError("This EmFieldType is abstract")
         return self.value
 
-    def __add__(self, other):
-        return self.value + other
+    @classmethod
+    ## Function designed to be called by child class to enforce a type
+    # @param args dict: The kwargs argument of __init__
+    # @param typename str: The typename to enforce
+    # @return The new kwargs to be used
+    # @throw TypeError if type is present is args
+    def _setType(cl, args, typename):
+        return cl._argEnforce(args, 'type', typename, True)
 
-    def __sub__(self, other):
-        return self.value - other
+    @classmethod
+    ## Function designed to be called by child's constructo to enforce an argument
+    # @param args dict: The constructor's kwargs 
+    # @param argname str: The name of the argument to enforce
+    # @param argval mixed: The value we want to enforce
+    # @param Return a new kwargs
+    # @throw TypeError if type is present is args and exception argument is True
+    def _argEnforce(cl, args, argname, argval, exception=True):
+        if exception and argname in args:
+            raise TypeError("Invalid argument '"+argname+"' for "+cl.__class__.__name__+" __init__")
+        args[argname] = argval
+        return args
 
-    def __mul__(self, other):
-        return self.value * other
+    @classmethod
+    ## Function designed to be called by child's constructor to set a default value
+    # @param args dict: The constructor's kwargs
+    # @param argname str: The name of the argument with default value
+    # @param argval mixed : The default value
+    # @return a new kwargs dict
+    def _argDefault(cl, args, argname, argval):
+        if argname not in args:
+            args[argname] = argval
+        return args
 
-    def __div__(self, other):
-        return self.value / other
 
-    def __mod__(self, other):
-        return self.value % other
+class EmFieldValue(object):
 
-    def __iadd__(self, other):
-        self.value = int(self.value + other)
-        return self
+    ## Instanciate a EmFieldValue
+    # @param name str: The column name associated with this value
+    # @param fieldtype EmFieldType: The EmFieldType defining the value
+    # @param *value *list: This argument allow to pass a value to set (even None) and to detect if no value given to set to EmFieldType's default value
+    # @throw TypeError if more than 2 arguments given
+    # @throw TypeError if fieldtype is not an EmFieldType
+    # @throw TypeError if fieldtype is an abstract EmFieldType
+    def __init__(self, name, fieldtype, *value):
+        if not isinstance(fieldtype, EmFieldType):
+            raise TypeError("Excepted <class EmFieldType> for 'fieldtype' argument. But got : "+str(type(fieldtype)))
+        if fieldtype.abstract:
+            raise TypeError("The fieldtype given in argument is abstract.")
 
-    def __isub__(self, other):
-        self.value = int(self.value - other)
-        return self
+        # This copy ensure that the fieldtype will not change during the value lifecycle
+        super(EmFieldValue,self).__setattr__('fieldtype', fieldtype.copy())
 
-    def __imul__(self, other):
-        self.value = int(self.value * other)
-        return self
+        if len(value) > 1:
+            raise TypeError("Accept only 2 positionnal parameters. "+str(len(value)+1)+" given.")
+        elif len(value) == 1:
+            self.value = value[0]
+        else:
+            self.value = fieldtype.default
 
-    def __idiv__(self, other):
-        self.value = int(self.value / other)
-        return self
+        #use this to set value in the constructor
+        setv = super(EmFieldValue, self).__setattr__
+        # This copy makes column attributes accessible easily
+        for attrname in self.fieldtype.__dict__:
+            setv(attrname, getattr(self.fieldtype, attrname))
+        
+        # Assign some EmFieldType methods to the value
+        setv('castValue', self.fieldtype.toValue)
+        setv('sqlCol', self.fieldtype.sqlCol)
 
-    def sql_column(self):
-        return "int(11) NOT NULL"
+    ## The only writable attribute of EmFieldValue is the value
+    # @param name str: Have to be value
+    # @param value mixed: The value to set
+    # @throw AtrributeError if another attribute than value is to be set
+    # @throw ValueError if self.toValue raises it
+    # @see EmFieldType::toValue()
+    def __setattr__(self, name, value):
+        if name != "value":
+            raise AttributeError("EmFieldValue has only the value property settable")
+        super(EmFieldValue,self).__setattr__('value', self.fieldtype.toValue(value))
+    
 
-    def sqlalchemy_args(self):
-        # TODO Ajouter la prise en charge de la taille max
-        return {'type_': INTEGER, 'nullable': False}
+    ##
+    # @warning When getting the fieldtype you actually get a copy of it to prevent any modifications !
+    def __getattr__(self, name):
+        if name == 'fieldtype':
+            return self.fieldtype.copy()
+        return super(EmFieldValue, self).__getattr__(name)
+
+        
+    ## @brief Return an sql valid value
+    #
+    # Can be used to convert any value (giving one positionnal argument) or to return the current value
+    # @param *value list: If a positionnal argument is given return it and not the instance value 
+    # @return A value suitable for sql
+    def to_sql(self, *value):
+        if len(value) > 1:
+            raise TypeError("Excepted 0 or 1 positional argument but got "+str(len(value)))
+        elif len(value) == 1:
+            return self.fieldtype.to_sql(value[0])
+        return self.fieldtype.to_sql(self.value)
+        
+        
+class EmField_integer(EmFieldType):
+    def __init__(self, **kwargs):
+        super(EmField_integer, self).__init__(**kwargs)
+        #Default name
+        kwargs = self.__class__._argDefault(kwargs, 'name', 'integer')
+        #Type enforcing
+        kwargs = self.__class__._setType(kwargs, 'int')
+        pass
+    ##
+    # @todo catch cast error ?
+    def to_sql(self, value):
+        return value
+
+    def toValue(self,value):
+        return int(value)
+
 
 class EmField_boolean(EmFieldType):
-
-    def __init__(self):
-        super(EmField_boolean, self).__init__('boolean')
-
-    def from_string(self, value):
-        if value:
-            self.value = True
-        else:
-            self.value = False
-
-    def to_sql(self, value = None):
-        if value is None:
-            value = self.value
-        return 1 if value else 0
-
-    def sql_column(self):
-        return "tinyint(1) DEFAULT NULL"
-
-    def sqlalchemy_args(self):
-        return {'type_': BOOLEAN, 'nullable': True, 'default': None}
+    def __init__(self, **kwargs):
+        super(EmField_boolean, self).__init__(**kwargs)
+        #Default name
+        kwargs = self.__class__._argDefault(kwargs, 'name', 'boolean')
+        #Type enforcing
+        kwargs = self.__class__._setType(kwargs, 'boolean')
+        pass
+    def to_sql(self, value):
+        return 1 if super(EmField_boolean, self).to_sql(value) else 0
+    def to_value(self, value):
+        self.value = bool(value)
 
 class EmField_char(EmFieldType):
-
-    def __init__(self):
-        super(EmField_char, self).__init__('char')
-
-    def from_string(self, value):
-        if value:
-            self.value = value
-        else:
-            self.value = ''
-
-    def to_sql(self, value = None):
-        if value is None:
-            value = self.value
-        return value
-
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
-
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
-
-# TODO
-class EmField_date(EmFieldType):
-
-    def __init__(self):
-        super(EmField_date, self).__init__('date')
-
-    def from_string(self, value):
-        if value:
-            self.value = value
-        else:
-            self.value = ''
-
-    def to_sql(self, value = None):
-        if value is None:
-            value = self.value
-        if not value:
-            return datetime.datetime.now()
-        return value
-
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
-
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
-
-
-class EmField_mlstring(EmFieldType):
-
-    def __init__(self):
-        super(EmField_mlstring, self).__init__('mlstring')
-
-    def from_string(self, value):
-        self.value = MlString.load(value)
-
-    def to_sql(self, value = None):
-        if value is None:
-            value = self.value
+    def __init__(self, **kwargs):
+        super(EmField_char, self).__init__(**kwargs)
+        kwargs = self.__class__._argDefault(kwargs, 'name', 'char')
+        #Type enforcing
+        kwargs = self.__class__._setType(kwargs, 'varchar')
+    def to_sql(self, value):
         return str(value)
 
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
+class EmField_date(EmFieldType):
+    def __init__(self, **kwargs):
+        super(EmField_date, self).__init__(**kwargs)
+        kwargs = self.__class__._argDefault(kwargs, 'name', 'date')
+        #Type enforcing
+        kwargs = self.__class__._setType(kwargs, 'datetime')
 
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
+class EmField_mlstring(EmField_char):
+    
+    def __init__(self, **kwargs):
+        super(EmField_mlstring, self).__init__(**kwargs)
+        kwargs = self.__class__.argDefault(kwargs, 'name', 'mlstr')
+
