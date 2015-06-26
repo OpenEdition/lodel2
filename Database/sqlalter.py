@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 
 import sqlalchemy as sqla
 from sqlalchemy.ext.compiler import compiles
@@ -55,8 +56,42 @@ def visit_drop_column(element, ddlcompiler, **kw):
     return 'ALTER TABLE %s DROP COLUMN %s'%(tname, colname)
 
 @compiles(DropColumn)
+##
+# @warning Returns more than one query @ref Database.sqlutils.ddl_execute
 def visit_drop_column(element, ddlcompiler, **kw):
-    raise NotImplementedError('Drop column not yet implemented for '+str(ddlcompiler.dialect.name))
+    prep = ddlcompiler.sql_compiler.preparer
+    tname = prep.format_table(element.table)
+
+    #Temporary table
+    tmpname = str(element.table)+'_copydropcol'
+    tmpTable = sqla.Table(tmpname, sqla.MetaData())
+    tmptname = prep.format_table(tmpTable)
+
+    query =  'ALTER TABLE %s RENAME TO %s; '%(tname, tmptname)
+
+    colname = prep.format_column(element.col)
+
+    meta = sqla.MetaData()
+    newtable = sqla.Table(element.table, meta)
+    clist = element.table.columns
+
+    cols = []
+    for col in clist:
+        if col.name != element.col.name:
+            newtable.append_column(col.copy())
+            cols.append(prep.format_column(col))
+    cols=', '.join(cols)
+
+    query += str(sqla.schema.CreateTable(newtable).compile(dialect = ddlcompiler.dialect))+';'
+
+    query += 'INSERT INTO %s ( %s ) SELECT %s FROM %s;' % (newtable, cols, cols, tmptname)
+
+    query += 'DROP TABLE %s'% (tmpname)
+
+    return query
+
+
+    #raise NotImplementedError('Drop column not yet implemented for '+str(ddlcompiler.dialect.name))
 
 class AlterColumn(sqla.schema.DDLElement):
     """ Defines the DDL for changing the type of a column """

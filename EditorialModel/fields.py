@@ -85,7 +85,8 @@ class EmField(EmComponent):
     # @return bool : True if deleted False if deletion aborded
     # @todo Check if unconditionnal deletion is correct
     def delete(self):
-        class_table = self.get_class_table()
+        dbe = self.__class__.getDbE()
+        class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
         field_col = sql.Column(self.name)
         ddl = DropColumn(class_table, field_col)
         sqlutils.ddl_execute(ddl, self.__class__.getDbE())

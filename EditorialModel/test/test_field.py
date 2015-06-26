@@ -129,7 +129,6 @@ class TestField(FieldTestCase):
         self.assertIn(field_column.name, field_table_columns)
         pass
     
-    @unittest.skip("Delete not implemente for sqlite...")
     def test_deletion(self):
         field_names = ['field1', 'field2']
         for name in field_names:
@@ -143,7 +142,7 @@ class TestField(FieldTestCase):
             for deleted_name in field_names[:i+1]:
                 self.assertNotIn(deleted_name, cols, "Column is  not deleted")
             for not_deleted_name in field_names[i+1:]:
-                self.assertIn(deleted_name, cols, "A bad column was deleted")
+                self.assertIn(not_deleted_name, cols, "A bad column was deleted")
                 
             with self.assertRaises(EmComponentNotExistError, msg="This field should be deleted"):
                 EmField(name)

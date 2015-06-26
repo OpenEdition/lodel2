@@ -91,11 +91,20 @@ def getTable(cls):
     engine = cls.getDbE()
     return sqla.Table(cls.table, meta(engine))
 
+## This function is intended to execute ddl defined in sqlalter
+# @warning There is a dirty workaround here, DDL should returns only one query, but DropColumn for sqlite has to return 4 queries (rename, create, insert, drop). There is a split on the compiled SQL to extract and execute one query at a time
+# @param ddl DDLElement: Can be an Database.sqlalter.DropColumn Database.sqlalter.AddColumn or Database.sqlalter.AlterColumn
+# @param db_engine: A database engine
+# @return True if success, else False
 def ddl_execute(ddl, db_engine):
     conn = db_engine.connect()
     req = str(ddl.compile(dialect=db_engine.dialect))
-    logger.debug("Executing custom raw SQL query : '"+req+"'")
-    ret = conn.execute(req)
+    queries = req.split(';')
+    for query in queries:
+        logger.debug("Executing custom raw SQL query : '"+query+"'")
+        ret = conn.execute(query)
+        if not bool(ret):
+            return False
     conn.close()
-    return bool(ret)
+    return True
 
