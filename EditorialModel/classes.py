@@ -161,4 +161,17 @@ class EmClass(EmComponent):
     ## Retrieve list of EmType that are linked to this class
     #  @return types [EmType]:
     def linked_types(self):
-        pass
+        return self._linked_types_db()
+
+    def _linked_types_db(self):
+        dbe = self.__class__.getDbE()
+        meta = sql.MetaData()
+        meta.reflect(dbe)
+
+        linked_types=[]
+        for table in meta.tables.values():
+            table_name_elements = table.name.split('_')
+            if len(table_name_elements) == 2:
+                linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
+
+        return linked_types
