@@ -5,7 +5,6 @@
 
 import datetime
 
-from Lodel.utils.mlstring import MlString
 import logging
 import sqlalchemy as sql
 from Database import sqlutils
@@ -13,6 +12,7 @@ import EditorialModel.fieldtypes as ftypes
 from collections import OrderedDict
 
 logger = logging.getLogger('Lodel2.EditorialModel')
+
 
 ## This class is the mother class of all editorial model objects
 #
@@ -31,7 +31,7 @@ class EmComponent(object):
     ranked_in = None
 
     ## Read only properties
-    _ro_properties = [ 'date_update', 'date_create', 'uid', 'rank', 'deleted']
+    _ro_properties = ['date_update', 'date_create', 'uid', 'rank', 'deleted']
 
     ## @brief List fields name and fieldtype
     #
@@ -62,15 +62,15 @@ class EmComponent(object):
         # Values are handled by EditorialModel::fieldtypes::EmFieldType
         # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
         # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
-        self._fields = OrderedDict([ (name, ftype()) for (name,ftype) in (EmComponent._fields + self.__class__._fields) ] )
+        self._fields = OrderedDict([(name, ftype()) for (name, ftype) in (EmComponent._fields + self.__class__._fields)])
 
         # populate
         if isinstance(id_or_name, int):
-            self._fields['uid'].value = id_or_name #read only propertie set
+            self._fields['uid'].value = id_or_name  # read only propertie set
         elif isinstance(id_or_name, str):
             self.name = id_or_name
         else:
-            raise TypeError('Bad argument: expecting <int> or <str> but got : '+str(type(id_or_name)))
+            raise TypeError('Bad argument: expecting <int> or <str> but got : ' + str(type(id_or_name)))
         self.table = self.__class__.table
         self.populate()
 
@@ -88,7 +88,7 @@ class EmComponent(object):
     def __getattribute__(self, name):
         if super(EmComponent, self).__getattribute__('deleted'):
             #raise EmComponentNotExistError("This component has been deleted")
-            raise EmComponentNotExistError("This "+super(EmComponent, self).__getattribute__('__class__').__name__+" has been deleted")
+            raise EmComponentNotExistError("This " + super(EmComponent, self).__getattribute__('__class__').__name__ + " has been deleted")
         res = super(EmComponent, self).__getattribute(name)
         return res
 
@@ -96,8 +96,8 @@ class EmComponent(object):
     # @param name str: The propertie name
     # @param value *: The value
     def __setattr__(self, name, value):
-        if name in  self.__class__._ro_properties:
-            raise TypeError("Propertie '"+name+"' is readonly")
+        if name in self.__class__._ro_properties:
+            raise TypeError("Propertie '" + name + "' is readonly")
 
         if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
             self._fields[name].from_python(value)
@@ -107,7 +107,7 @@ class EmComponent(object):
     ## Lookup in the database properties of the object to populate the properties
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
     def populate(self):
-        records = self._populateDb() #Db query
+        records = self._populate_db()  # Db query
 
         for record in records:
             for keys in self._fields.keys():
@@ -118,28 +118,28 @@ class EmComponent(object):
 
     @classmethod
     ## Shortcut that return the sqlAlchemy engine
-    def getDbE(c):
-        return sqlutils.getEngine(c.dbconf)
-    
+    def getDbE(cls):
+        return sqlutils.getEngine(cls.dbconf)
+
     ## Do the query on the database for EmComponent::populate()
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
-    def _populateDb(self):
+    def _populate_db(self):
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component])
 
-        if self.uid == None:
+        if self.uid is None:
             req = req.where(component.c.name == self.name)
         else:
             req = req.where(component.c.uid == self.uid)
-        c = dbe.connect()
-        res = c.execute(req)
+        conn = dbe.connect()
+        res = conn.execute(req)
 
         res = res.fetchall()
-        c.close()
+        conn.close()
 
         if not res or len(res) == 0:
-            raise EmComponentNotExistError("No "+self.__class__.__name__+" found with "+('name ' + self.name if self.uid == None else 'uid ' + str(self.uid) ))
+            raise EmComponentNotExistError("No " + self.__class__.__name__ + " found with " + ('name ' + self.name if self.uid is None else 'uid ' + str(self.uid)))
 
         return res
 
@@ -156,30 +156,29 @@ class EmComponent(object):
     # @todo Put a real rank at creation
     # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
     @classmethod
-    def create(cl, **kwargs):
+    def create(cls, **kwargs):
         for argname in kwargs:
-            if argname in ['date_update', 'date_create', 'rank', 'uid']: #Automatic properties
-                raise TypeError("Invalid argument : "+argname)
+            if argname in ['date_update', 'date_create', 'rank', 'uid']:  # Automatic properties
+                raise TypeError("Invalid argument : " + argname)
 
         #TODO check that every mandatory _fields are here like below for example
-        #for name in cl._fields:
-        #    if cl._fields[name].notNull and cl._fields[name].default == None:
+        #for name in cls._fields:
+        #    if cls._fields[name].notNull and cls._fields[name].default == None:
         #        raise TypeError("Missing argument : "+name)
 
-        kwargs['uid'] = cl.newUid()
+        kwargs['uid'] = cls.new_uid()
         kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
 
-        dbe = cl.getDbE()
+        dbe = cls.getDbE()
         conn = dbe.connect()
 
-        kwargs['rank'] = -1 #Warning !!!
+        kwargs['rank'] = -1  # Warning !!!
 
-        table = sql.Table(cl.table, sqlutils.meta(dbe))
+        table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
-        res = conn.execute(req) #Check res?
+        conn.execute(req)  # Check ?
         conn.close()
-        return cl(kwargs['name']) #Maybe no need to check res because this would fail if the query failed
-
+        return cls(kwargs['name'])  # Maybe no need to check res because this would fail if the query failed
 
     ## Write the representation of the component in the database
     # @return bool
@@ -189,31 +188,29 @@ class EmComponent(object):
         for name, field in self._fields.items():
             values[name] = field.to_sql()
 
-        #Don't allow creation date overwritting
-        """
-        if 'date_create' in values:
-            del values['date_create']
-            logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
-        """
+        # Don't allow creation date overwritting
+        #if 'date_create' in values:
+            #del values['date_create']
+            #logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
+
         values['date_update'] = datetime.datetime.utcnow()
 
-        self._saveDb(values)
-    
+        self._save_db(values)
+
     ## Do the query in the datbase for EmComponent::save()
     # @param values dict: A dictionnary of the values to insert
     # @throw RunTimeError if it was unable to do the Db update
-    def _saveDb(self, values):
+    def _save_db(self, values):
         """ Do the query on the db """
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.update(component, values = values).where(component.c.uid == self.uid)
+        req = sql.update(component, values=values).where(component.c.uid == self.uid)
 
-        c = dbe.connect()
-        res = c.execute(req)
-        c.close()
+        conn = dbe.connect()
+        res = conn.execute(req)
+        conn.close()
         if not res:
             raise RuntimeError("Unable to save the component in the database")
-
 
     ## Delete this component data in the database
     # @return bool
@@ -223,16 +220,15 @@ class EmComponent(object):
         #<SQL>
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
-        req= component.delete().where(component.c.uid == self.uid)
-        c = dbe.connect()
-        res = c.execute(req)
-        c.close
+        req = component.delete().where(component.c.uid == self.uid)
+        conn = dbe.connect()
+        res = conn.execute(req)
+        conn.close()
         if not res:
             raise RuntimeError("Unable to delete the component in the database")
 
         super(EmComponent, self).__setattr__('deleted', True)
         #</SQL>
-        pass
 
     ## get_max_rank
     # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
@@ -241,12 +237,12 @@ class EmComponent(object):
         dbe = self.__class__.getDbE()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component.c.rank]).where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)).order_by(component.c.rank.desc())
-        c = dbe.connect()
-        res = c.execute(req)
+        conn = dbe.connect()
+        res = conn.execute(req)
         res = res.fetchone()
-        c.close()
+        conn.close()
 
-        if(res != None):
+        if (res is not None):
             return res['rank']
         else:
             return -1
@@ -263,129 +259,126 @@ class EmComponent(object):
     # @return bool: True en cas de réussite False en cas d'echec.
     # @throw TypeError if an argument isn't from the expected type
     # @thrown ValueError if an argument as a wrong value but is of the good type
-    def modify_rank(self, new_rank, sign = '='):
+    def modify_rank(self, new_rank, sign='='):
 
-        if(type(new_rank) is int):
-            if(new_rank >= 0):
+        if (type(new_rank) is int):
+            if (new_rank >= 0):
                 dbe = self.__class__.getDbE()
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
 
-                if(type(sign) is not str):
+                if (type(sign) is not str):
                     logger.error("Bad argument")
-                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str(type(sign)))
+                    raise TypeError('Excepted a string (\'=\' or \'+\' or \'-\') not a ' + str(type(sign)))
 
-                if(sign == '='):
-
+                if (sign == '='):
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == new_rank))
-                    c = dbe.connect()
-                    res = c.execute(req)
+                    conn = dbe.connect()
+                    res = conn.execute(req)
                     res = res.fetchone()
-                    c.close()
+                    conn.close()
 
-                    if(res != None):
+                    if (res is not None):
                         req = sql.sql.select([component.c.uid, component.c.rank])
                         if(new_rank < self.rank):
-                            req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & ( component.c.rank >= new_rank) & (component.c.rank < self.rank))
+                            req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= new_rank) & (component.c.rank < self.rank))
                         else:
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank <= new_rank) & (component.c.rank > self.rank))
 
-                        c = dbe.connect()
-                        res = c.execute(req)
+                        conn = dbe.connect()
+                        res = conn.execute(req)
                         res = res.fetchall()
 
                         vals = list()
-                        vals.append({'id' : self.uid, 'rank' : new_rank})
+                        vals.append({'id': self.uid, 'rank': new_rank})
 
                         for row in res:
                             if(new_rank < self.rank):
-                                vals.append({'id' : row.uid, 'rank' : row.rank+1})
+                                vals.append({'id': row.uid, 'rank': row.rank + 1})
                             else:
-                                vals.append({'id' : row.uid, 'rank' : row.rank-1})
+                                vals.append({'id': row.uid, 'rank': row.rank - 1})
 
-
-                        req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                        c.execute(req, vals)
-                        c.close()
+                        req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank=sql.bindparam('rank'))
+                        conn.execute(req, vals)
+                        conn.close()
 
                         self._fields['rank'].value = new_rank
 
                     else:
                         logger.error("Bad argument")
-                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '+' and self.rank + new_rank <= self.get_max_rank()):
+                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = ' + str((new_rank)))
+                elif (sign == '+' and self.rank + new_rank <= self.get_max_rank()):
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == self.rank + new_rank))
-                    c = dbe.connect()
-                    res = c.execute(req)
+                    conn = dbe.connect()
+                    res = conn.execute(req)
                     res = res.fetchone()
-                    c.close()
+                    conn.close()
 
-                    if(res != None):
-                        if(new_rank != 0):
+                    if (res is not None):
+                        if (new_rank != 0):
                             req = sql.sql.select([component.c.uid, component.c.rank])
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank <= self.rank + new_rank) & (component.c.rank > self.rank))
 
-                            c = dbe.connect()
-                            res = c.execute(req)
+                            conn = dbe.connect()
+                            res = conn.execute(req)
                             res = res.fetchall()
 
                             vals = list()
-                            vals.append({'id' : self.uid, 'rank' : self.rank + new_rank})
+                            vals.append({'id': self.uid, 'rank': self.rank + new_rank})
 
                             for row in res:
-                                vals.append({'id' : row.uid, 'rank' : row.rank - 1})
+                                vals.append({'id': row.uid, 'rank': row.rank - 1})
 
-                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                            c.execute(req, vals)
-                            c.close()
-                            
+                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank=sql.bindparam('rank'))
+                            conn.execute(req, vals)
+                            conn.close()
+
                             self._fields['rank'] += new_rank
                         else:
                             logger.error("Bad argument")
-                            raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
+                            raise ValueError('Excepted a positive int not a null. new_rank = ' + str((new_rank)))
                     else:
                         logger.error("Bad argument")
-                        raise ValueError('new_rank to big, rank + new rank doesn\'t exist. new_rank = '+str((new_rank)))
-                elif(sign == '-' and self.rank - new_rank >= 0):
-                    if((self.rank + new_rank) > 0):
-                        if(new_rank != 0):
+                        raise ValueError('new_rank to big, rank + new rank doesn\'t exist. new_rank = ' + str((new_rank)))
+                elif (sign == '-' and self.rank - new_rank >= 0):
+                    if ((self.rank + new_rank) > 0):
+                        if (new_rank != 0):
                             req = sql.sql.select([component.c.uid, component.c.rank])
                             req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank >= self.rank - new_rank) & (component.c.rank < self.rank))
 
-                            c = dbe.connect()
-                            res = c.execute(req)
+                            conn = dbe.connect()
+                            res = conn.execute(req)
                             res = res.fetchall()
 
                             vals = list()
-                            vals.append({'id' : self.uid, 'rank' : self.rank - new_rank})
+                            vals.append({'id': self.uid, 'rank': self.rank - new_rank})
 
                             for row in res:
-                                vals.append({'id' : row.uid, 'rank' : row.rank + 1})
+                                vals.append({'id': row.uid, 'rank': row.rank + 1})
 
-                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank = sql.bindparam('rank'))
-                            c.execute(req, vals)
-                            c.close()
+                            req = component.update().where(component.c.uid == sql.bindparam('id')).values(rank=sql.bindparam('rank'))
+                            conn.execute(req, vals)
+                            conn.close()
 
                             self._fields['rank'] -= new_rank
                         else:
                             logger.error("Bad argument")
-                            raise ValueError('Excepted a positive int not a null. new_rank = '+str((new_rank)))
+                            raise ValueError('Excepted a positive int not a null. new_rank = ' + str((new_rank)))
                     else:
                         logger.error("Bad argument")
-                        raise ValueError('new_rank to big, rank - new rank is negative. new_rank = '+str((new_rank)))
+                        raise ValueError('new_rank to big, rank - new rank is negative. new_rank = ' + str((new_rank)))
                 else:
                     logger.error("Bad argument")
-                    raise ValueError('Excepted a string (\'=\' or \'+\' or \'-\') not a '+str((sign)))
+                    raise ValueError('Excepted a string (\'=\' or \'+\' or \'-\') not a ' + str((sign)))
 
             else:
                 logger.error("Bad argument")
-                raise ValueError('Excepted a positive int not a negative. new_rank = '+str((new_rank)))
+                raise ValueError('Excepted a positive int not a negative. new_rank = ' + str((new_rank)))
         else:
             logger.error("Bad argument")
-            raise TypeError('Excepted a int not a '+str(type(new_rank)))
-
+            raise TypeError('Excepted a int not a ' + str(type(new_rank)))
 
     def __repr__(self):
         if self.name is None:
@@ -395,30 +388,32 @@ class EmComponent(object):
 
     @classmethod
     ## Register a new component in UID table
-    # 
+    #
     # Use the class property table
     # @return A new uid (an integer)
-    def newUid(cl):
-        if cl.table == None:
+    def new_uid(cls):
+        if cls.table is None:
             raise NotImplementedError("Abstract method")
 
-        dbe = cl.getDbE()
+        dbe = cls.getDbE()
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
-        req = uidtable.insert(values={'table':cl.table})
+        req = uidtable.insert(values={'table': cls.table})
         res = conn.execute(req)
 
         uid = res.inserted_primary_key[0]
-        logger.debug("Registering a new UID '"+str(uid)+"' for '"+cl.table+"' component")
+        logger.debug("Registering a new UID '" + str(uid) + "' for '" + cls.table + "' component")
 
         conn.close()
 
         return uid
 
+
 ## An exception class to tell that a component don't exist
 class EmComponentNotExistError(Exception):
     pass
+
 
 ## An exception class to tell that no ranking exist yet for the group of the object
 class EmComponentRankingNotExistError(Exception):
