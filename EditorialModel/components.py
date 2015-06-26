@@ -216,7 +216,7 @@ class EmComponent(object):
 
 
     ## Delete this component data in the database
-    # @return bool
+    # @return bool : True if deleted False if deletion aborded
     # @todo Use something like __del__ instead (or call it at the end)
     # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
@@ -232,7 +232,7 @@ class EmComponent(object):
 
         super(EmComponent, self).__setattr__('deleted', True)
         #</SQL>
-        pass
+        return True
 
     ## get_max_rank
     # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle

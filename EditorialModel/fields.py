@@ -10,6 +10,7 @@ from EditorialModel.types import EmType
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
 from Database.sqlquerybuilder import SqlQueryBuilder
+from Database.sqlalter import DropColumn
 
 import sqlalchemy as sql
 
@@ -79,7 +80,17 @@ class EmField(EmComponent):
             exists = createdField
 
         return exists
-
+    
+    ## @brief Delete a field if it's not linked
+    # @return bool : True if deleted False if deletion aborded
+    # @todo Check if unconditionnal deletion is correct
+    def delete(self):
+        class_table = self.get_class_table()
+        field_col = sql.Column(self.name)
+        ddl = DropColumn(class_table, field_col)
+        sqlutils.ddl_execute(ddl, self.__class__.getDbE())
+        return super(EmField, self).delete()
+    
 
     ## addFieldColumnToClassTable (Function)
     #

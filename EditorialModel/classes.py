@@ -67,8 +67,26 @@ class EmClass(EmComponent):
 
         return resclass
 
+    ## @brief Delete a class if it's ''empty''
+    # If a class has no fieldgroups delete it
+    # @return bool : True if deleted False if deletion aborded
+    def delete(self):
+        do_delete = True
+        fieldgroups = self.fieldgroups()
+        if len(fieldgroups) > 0:
+            do_delete = False
+            return False
+
+        dbe = self.__class__.getDbE()
+        meta = sqlutils.meta(dbe)
+        #Here we have to give a connection
+        class_table = sql.Table(self.name, meta)
+        meta.drop_all(tables=[class_table], bind=dbe)
+        return super(EmClass, self).delete()
+
+
     ## Retrieve list of the field_groups of this class
-    # @return field_groups [EmFieldGroup]:
+    # @return A list of fieldgroups instance
     def fieldgroups(self):
         records = self._fieldgroups_db()
         fieldgroups = [EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records]
