@@ -45,6 +45,18 @@ class EmType(EmComponent):
 
         return exists
     
+    ## @brief Delete an EmType
+    # The deletion is only possible if a type is not linked by any EmClass
+    # and if it has no subordinates
+    # @return True if delete False if not deleted
+    # @todo Check if the type is not linked by any EmClass
+    # @todo Check if there is no other ''non-deletion'' conditions
+    def delete(self):
+        if len(self.subordinates()) > 0:
+            return False
+        return super(EmType, self).delete()
+        
+
     ## Get the list of associated fieldgroups
     # @return A list of EmFieldGroup instance
     def field_groups(self):
