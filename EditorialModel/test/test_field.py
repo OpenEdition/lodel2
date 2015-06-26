@@ -115,7 +115,7 @@ class TestField(FieldTestCase):
             'rel_to_type_id': self.testType.uid
         }
         '''
-        field = EmField.create(name='testfield1', fieldgroup=self.testFieldgroup, fieldtype=self.testFieldType, rel_to_type_id=self.testType.uid)
+        field = EmField.create(name='testfield1', fieldgroup=self.testFieldgroup, fieldtype=self.testFieldType)
 
         # We check that the field has been added in the em_field table
         field_records = self.get_field_records(field)
