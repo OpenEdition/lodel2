@@ -89,9 +89,9 @@ class TestInit(FieldGroupTestCase):
         self.creadate = datetime.datetime.utcnow()
         #Test fieldgroup
         self.tfg = [
-            { 'uid': EmFieldGroup.newUid(), 'name': 'fg1', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 0 , 'class_id': ent1.uid, 'date_create' : self.creadate, 'date_update': self.creadate},
-            { 'uid': EmFieldGroup.newUid(), 'name': 'fg2', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 1 , 'class_id': ent1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
-            { 'uid': EmFieldGroup.newUid(), 'name': 'fg3', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 2 , 'class_id': idx1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
+            { 'uid': EmFieldGroup.new_uid(), 'name': 'fg1', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 0 , 'class_id': ent1.uid, 'date_create' : self.creadate, 'date_update': self.creadate},
+            { 'uid': EmFieldGroup.new_uid(), 'name': 'fg2', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 1 , 'class_id': ent1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
+            { 'uid': EmFieldGroup.new_uid(), 'name': 'fg3', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 2 , 'class_id': idx1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
         ]
 
         req = sqla.Table('em_fieldgroup', sqlutils.meta(sqlutils.getEngine())).insert(self.tfg)

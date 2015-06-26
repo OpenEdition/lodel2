@@ -249,15 +249,15 @@ class TestInit(ComponentTestCase):
         pass
 
 #=======================#
-#   EmComponent.newUid  #
+#   EmComponent.new_uid  #
 #=======================#
 class TestUid(ComponentTestCase):
 
     
     def test_newuid(self):
-        """ Test valid calls for newUid method """
+        """ Test valid calls for new_uid method """
         for _ in range(10):
-            nuid = EmTestComp.newUid()
+            nuid = EmTestComp.new_uid()
         
             conn = self.dber.connect()
             tuid = sqla.Table('uids', sqlutils.meta(self.dber))
@@ -272,9 +272,9 @@ class TestUid(ComponentTestCase):
         pass
     
     def test_newuid_abstract(self):
-        """ Test not valit call for newUid method """
+        """ Test not valit call for new_uid method """
         with self.assertRaises(NotImplementedError):
-            EmComponent.newUid()
+            EmComponent.new_uid()
         pass
         
 #=======================#
