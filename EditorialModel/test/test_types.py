@@ -9,7 +9,7 @@ import unittest
 from EditorialModel.types import EmType
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType, EmNature
-from EditorialModel.components import EmComponent
+from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fieldtypes import *
 from EditorialModel.fields_types import Em_Field_Type
@@ -69,3 +69,9 @@ class TestLinkedTypes(TypeTestCase):
         self.assertNotIn(self.emtype,linked_types)
         self.assertIn(self.emtype2, linked_types)
         self.assertIn(self.emtype3, linked_types)
+
+class TestDeleteTypes(TypeTestCase):
+    def testDeleteTypes(self):
+        type_name = self.emtype.name
+        self.emtype.delete()
+        self.assertRaises(EmComponentNotExistError, EmType(type_name))
