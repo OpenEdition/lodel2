@@ -29,7 +29,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 # TESTS SETUP #
 #=###########=#
 
-TEST_FIELDGROUP_DBNAME = 'test_em_component_db.sqlite'
+TEST_FIELDGROUP_DBNAME = 'test_em_fieldgroup_db.sqlite'
 
 def setUpModule():
 
@@ -38,18 +38,6 @@ def setUpModule():
     initTestDb(TEST_FIELDGROUP_DBNAME)
     setDbConf(TEST_FIELDGROUP_DBNAME)
     
-    """
-    #Overwritting db confs to make tests
-    settings.LODEL2SQLWRAPPER['db'] = {
-        'default': {
-            'ENGINE': 'sqlite',
-            'NAME': TEST_FIELDGROUP_DBNAME
-        }
-    }
-
-    SQLSetup().initDb()
-    """
-
     #Classes creation
     EmClass.create("entity1", EmClassType.entity)
     EmClass.create("entity2", EmClassType.entity)
@@ -239,7 +227,7 @@ class TestFields(FieldGroupTestCase):
 
         for name in tests:
             with self.subTest("Testing on "+name+" instanciated EmFieldGroups"):
-                fg = test[name]
+                fg = tests[name]
                 flist = fg.fields()
                 res = []
                 for f in flist:

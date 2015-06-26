@@ -110,7 +110,7 @@ class EmClass(EmComponent):
         fieldgroups = self.fieldgroups()
         fields = []
         for fieldgroup in fieldgroups:
-            fields += self._fields_db(fieldgroup.uid)
+            fields += EditorialModel.fields.EmField(self._fields_db(fieldgroup.uid))
 
         return fields
 

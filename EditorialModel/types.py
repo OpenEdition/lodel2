@@ -130,12 +130,13 @@ class EmType(EmComponent):
     # @return sqlalchemy em_type_hierarchy table object
     # @todo Don't hardcode table name
     def _tableHierarchy(cl):
-        return sql.Table('em_type_hierarchy', cl.getDbE())
+        return sql.Table('em_type_hierarchy', sqlutils.meta(cl.getDbE()))
 
+    @property
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
     def classType(self):
-        return getattr(EmClassType, EmClass(self.class_id).class_type)
+        return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
 
     ## @brief Get the list of subordinates EmType
     # Get a list of EmType instance that have this EmType for superior
@@ -163,7 +164,7 @@ class EmType(EmComponent):
     def _subOrSup(self, sup = True):
         conn = self.getDbE().connect()
         htable = self.__class__._tableHierarchy()
-        req = htable.select(htable.c.subordinate_id, htable.c.nature)
+        req = htable.select()
         if sup:
             req = req.where(htable.c.subordinate_id == self.uid)
         else:
@@ -173,8 +174,8 @@ class EmType(EmComponent):
         conn.close()
 
         result = dict()
-        for nature in EmClasstype.natures(self.classType):
-            result[nname] = []
+        for nature in EmClassType.natures(self.classType['name']):
+            result[nature] = []
 
         for row in rows:
             if row['nature'] not in result:
