@@ -128,3 +128,22 @@ class TestField(FieldTestCase):
         field_column = sqla.Column(**field_column_args)
         self.assertIn(field_column.name, field_table_columns)
         pass
+
+    def test_deletion(self):
+        field_names = ['field1', 'field2']
+        for name in field_names:
+            EmField.create(name=name, fieldgroup=self.testFieldgroup, fieldtype = self.testFieldType)
+
+        for i,name in enumerate(field_names):
+            test_field = EmField(name)
+            self.assertTrue(test_field.delete())
+
+            cols = self.get_table_columns(self.testClass.name)
+            for deleted_name in field_names[:i+1]:
+                self.assertNotIn(deleted_name, cols, "Column is  not deleted")
+            for not_deleted_name in field_names[i+1:]:
+                self.assertIn(deleted_name, cols, "A bad column was deleted")
+                
+            with self.assertRaises(EmComponentNotExistError, msg="This field should be deleted"):
+                EmField(name)
+                
