@@ -72,7 +72,7 @@ class EmField(EmComponent):
             createdField = super(EmField,c).create(**values)
             if createdField:
                 # The field was created, we then add its column in the corresponding class' table
-                is_field_column_added = EmField.addFieldColumnToClassTable(createdField)
+                is_field_column_added = createdField.addFieldColumnToClassTable()
                 if is_field_column_added:
                     return createdField
 
@@ -85,16 +85,13 @@ class EmField(EmComponent):
     #
     # Adds a column representing the field in its class' table
     #
-    # @static
-    #
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
-    @classmethod
-    def addFieldColumnToClassTable(c, emField):
-        field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(emField.fieldtype).sql_column(), " DEFAULT 0" if emField.fieldtype=='integer' else '')
-        field_uid = emField.uid
-        field_class_table = emField.get_class_table()
-        return SqlWrapper().addColumn(tname=field_class_table, colname=emField.name, coltype=field_type)
+    def addFieldColumnToClassTable(self):
+        field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype=='integer' else '')
+        field_uid = self.uid
+        field_class_table = self.get_class_table()
+        return SqlWrapper().addColumn(tname=field_class_table, colname=self.name, coltype=field_type)
 
     ## get_class_table (Function)
     #
@@ -112,9 +109,9 @@ class EmField(EmComponent):
     def _get_class_tableDb(self):
         dbe = self.getDbE()
         conn = dbe.connect()
-        typetable = sql.Table(EmType.table, sqlutils.meta(dbe))
         fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
-        reqGetClassId = typetable.select().where(typetable.c.uid==fieldtable.c.rel_to_type_id)
+        fieldgrouptable = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
+        reqGetClassId = fieldgrouptable.select().where(fieldgrouptable.c.uid == self.fieldgroup_id)
         resGetClassId = conn.execute(reqGetClassId).fetchall()
         class_id = dict(zip(resGetClassId[0].keys(), resGetClassId[0]))['class_id']
 
