@@ -45,6 +45,18 @@ class EmType(EmComponent):
 
         return exists
     
+    ## @brief Delete an EmType
+    # The deletion is only possible if a type is not linked by any EmClass
+    # and if it has no subordinates
+    # @return True if delete False if not deleted
+    # @todo Check if the type is not linked by any EmClass
+    # @todo Check if there is no other ''non-deletion'' conditions
+    def delete(self):
+        if len(self.subordinates()) > 0:
+            return False
+        return super(EmType, self).delete()
+        
+
     ## Get the list of associated fieldgroups
     # @return A list of EmFieldGroup instance
     def field_groups(self):
@@ -222,5 +234,23 @@ class EmType(EmComponent):
     # @return a list of EmType
     # @see EmFields
     def linked_types(self):
-        pass
+        return self._linked_types_Db()
 
+    ## @brief Return the list of all the types linked to this type, should they be superiors or subordinates
+    # @return A list of EmType objects
+    def _linked_types_Db(self):
+        conn = self.getDbE().connect()
+        htable = self.__class__._tableHierarchy()
+        req = htable.select(htable.c.superior_id, htable.c.subordinate_id)
+        req = req.where(sql.or_(htable.c.subordinate_id == self.uid, htable.c.superior_id == self.uid))
+
+        res = conn.execute(req)
+        rows = res.fetchall()
+        conn.close()
+
+        rows = dict(zip(rows.keys(), rows))
+        result = []
+        for row in rows:
+            result.append(EmType(row['subordinate_id'] if row['superior_id']==self.uid else row['superior_id']))
+
+        return result

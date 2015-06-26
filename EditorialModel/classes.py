@@ -67,8 +67,26 @@ class EmClass(EmComponent):
 
         return resclass
 
+    ## @brief Delete a class if it's ''empty''
+    # If a class has no fieldgroups delete it
+    # @return bool : True if deleted False if deletion aborded
+    def delete(self):
+        do_delete = True
+        fieldgroups = self.fieldgroups()
+        if len(fieldgroups) > 0:
+            do_delete = False
+            return False
+
+        dbe = self.__class__.getDbE()
+        meta = sqlutils.meta(dbe)
+        #Here we have to give a connection
+        class_table = sql.Table(self.name, meta)
+        meta.drop_all(tables=[class_table], bind=dbe)
+        return super(EmClass, self).delete()
+
+
     ## Retrieve list of the field_groups of this class
-    # @return field_groups [EmFieldGroup]:
+    # @return A list of fieldgroups instance
     def fieldgroups(self):
         records = self._fieldgroups_db()
         fieldgroups = [EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records]
@@ -143,4 +161,17 @@ class EmClass(EmComponent):
     ## Retrieve list of EmType that are linked to this class
     #  @return types [EmType]:
     def linked_types(self):
-        pass
+        return self._linked_types_db()
+
+    def _linked_types_db(self):
+        dbe = self.__class__.getDbE()
+        meta = sql.MetaData()
+        meta.reflect(dbe)
+
+        linked_types=[]
+        for table in meta.tables.values():
+            table_name_elements = table.name.split('_')
+            if len(table_name_elements) == 2:
+                linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
+
+        return linked_types
