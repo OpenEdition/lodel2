@@ -19,6 +19,7 @@ import EditorialModel
 class EmClass(EmComponent):
 
     table = 'em_class'
+    ranked_in = 'classtype'
 
     ## @brief Specific EmClass fields
     # @see EditorialModel::components::EmComponent::_fields

@@ -23,6 +23,7 @@ logger = logging.getLogger('Lodel2.EditorialModel')
 class EmField(EmComponent):
 
     table = 'em_field'
+    ranked_in = 'fieldgroup_id'
     _fields = [
         ('fieldtype', EmField_char()),
         ('fieldtype_opt', EmField_char()),

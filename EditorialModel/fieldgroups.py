@@ -17,6 +17,8 @@ class EmFieldGroup(EmComponent):
 
     ## The database table name
     table = 'em_fieldgroup'
+    ranked_in='class_id'
+
     ## List of fields
     # @todo Bad storage, here we want an ordereddict not a tuple list
     _fields = [('class_id', ftypes.EmField_integer())]
