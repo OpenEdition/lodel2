@@ -109,19 +109,8 @@ class EmClass(EmComponent):
         fieldgroups = self.fieldgroups()
         fields = []
         for fieldgroup in fieldgroups:
-            fields += EditorialModel.fields.EmField(self._fields_db(fieldgroup.uid))
-
+            fields += fieldgroup.fields()
         return fields
-
-    def _fields_db(self, fieldgroup_id):
-        dbe = self.__class__.db_engine()
-        fields = sql.Table(EditorialModel.fields.EmField.table, sqlutils.meta(dbe))
-        req = fields.select().where(fields.c.fieldgroup_id == fieldgroup_id)
-
-        conn = dbe.connect()
-        res = conn.execute(req)
-
-        return res.fetchall()
 
     ## Retrieve list of type of this class
     # @return types [EmType]:

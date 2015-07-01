@@ -51,8 +51,10 @@ class EmType(EmComponent):
     # @return True if delete False if not deleted
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
+    # @todo Delete it as subordinates for all its superiors
     def delete(self):
-        if len(self.subordinates()) > 0:
+        subs = self.subordinates()
+        if sum([len(subs[subnat]) for subnat in subs]) > 0:
             return False
         return super(EmType, self).delete()
         
@@ -135,7 +137,7 @@ class EmType(EmComponent):
     @property
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
-    def classType(self):
+    def classtype(self):
         return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
 
     ## @brief Get the list of subordinates EmType
@@ -174,7 +176,7 @@ class EmType(EmComponent):
         conn.close()
 
         result = dict()
-        for nature in EmClassType.natures(self.classType['name']):
+        for nature in EmClassType.natures(self.classtype['name']):
             result[nature] = []
 
         for row in rows:
@@ -182,8 +184,9 @@ class EmType(EmComponent):
                 #Maybe security issue ?
                 logger.error("Unreconized or unauthorized nature in Database for EmType<"+str(self.uid)+"> subordinate <"+str(row['subordinate_id'])+"> : '"+row['nature']+"'")
                 raise RuntimeError("Unreconized nature from database : "+row['nature'])
-
-            result[row['nature']].append( EmType(row['subordinate_id']) )
+            
+            to_fetch = 'superior_id' if sup else 'subordinate_id'
+            result[row['nature']].append( EmType(row[to_fetch]) )
         return result
 
 
@@ -194,15 +197,25 @@ class EmType(EmComponent):
     #
     # @throw TypeError when em_type not an EmType instance
     # @throw ValueError when relation_nature isn't reconized or not allowed for this type
+    # @throw ValueError when relation_nature don't allow to link this types together
     def add_superior(self, em_type, relation_nature):
         if not isinstance(em_type, EmType) or not isinstance(relation_nature, str):
-            raise TypeError("Excepted <class EmType> and <class str> as arguments. But got : "+str(type(em_type))+" "+str(type(relation_nature)))
-        if relation_nature not in EmClassType.natures(self.classType):
-            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classType)))
+            raise TypeError("Excepted <class EmType> and <class str> as em_type argument. But got : "+str(type(em_type))+" "+str(type(relation_nature)))
+        if relation_nature not in EmClassType.natures(self.classtype['name']):
+            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classtype['name'])))
+
+        #Checking that this relation is allowed by the nature of the relation
+        att = self.classtype['hierarchy'][relation_nature]['attach']
+        if att == 'classtype':
+            if self.classtype['name'] != em_type.classtype['name']:
+                raise ValueError("Not allowed to put an em_type with a different classtype as superior")
+        elif self.name != em_type.name:
+            raise ValueError("Not allowed to put a different em_type as superior in a relation of nature '"+relation_nature+"'")
 
         conn = self.getDbE().connect()
         htable = self.__class__._tableHierarchy()
-        req = htable.insert(subordinate_id = self.uid, superior_id = em_type.uid, nature = relation_nature)
+        values = { 'subordinate_id': self.uid, 'superior_id': em_type.uid, 'nature': relation_nature }
+        req = htable.insert(values=values)
 
         try:
             res = conn.execute(req)
@@ -221,12 +234,12 @@ class EmType(EmComponent):
     def del_superior(self, em_type, relation_nature):
         if not isinstance(em_type, EmType):
             raise TypeError("Excepted <class EmType> as argument. But got : "+str(type(em_type)))
-        if relation_nature not in EmClassType.natures(self.classType):
-            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classType)))
+        if relation_nature not in EmClassType.natures(self.classtype['name']):
+            raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classtype['name'])))
 
         conn = self.getDbE().connect()
         htable = self.__class__._tableHierarchy()
-        req = htable.delete().where(superior_id = em_type.uid, nature = relation_nature)
+        req = htable.delete(htable.c.superior_id == em_type.uid and htable.c.nature == relation_nature)
         conn.execute(req)
         conn.close()
 
