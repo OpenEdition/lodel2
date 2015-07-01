@@ -4,12 +4,22 @@ from Lodel.utils.mlstring import MlString
 from sqlalchemy import Column, INTEGER, BOOLEAN, VARCHAR
 import datetime
 
+## get_field_type (Function)
+#
+# returns an instance of the corresponding EmFieldType child class for a given name
+#
+# @param name str: name of the field type
+# @return EmFieldType
 def get_field_type(name):
     class_name = 'EmField_' + name
     constructor = globals()[class_name]
     instance = constructor()
     return instance
 
+
+## EmFieldType (Class)
+#
+# Generic field type
 class EmFieldType():
 
     def __init__(self, name):
@@ -19,22 +29,10 @@ class EmFieldType():
     def from_python(self, value):
         self.value = value
 
-    # if an attribute is not in the FieldType, try the attributes of the value
-    #def __getattr__(self, name):
-        #if hasattr(self.value, name):
-            #value_attr = getattr(self.value, name)
-            #if hasattr(value_attr, '__call__'):
-                #def value_method(*args, **kwargs):
-                    #result = value_attr(*args, **kwargs)
-                    #return result
-                #return value_method
-            #else:
-                #return value_attr
 
-    # str() refer to str() of the value
-    #def __str__(self):
-        #return str(self.value)
-
+## EmField_integer (Class)
+#
+# Integer field type
 class EmField_integer(EmFieldType):
 
     def __init__(self):
@@ -46,7 +44,7 @@ class EmField_integer(EmFieldType):
         else:
             self.value = int(value)
 
-    def to_sql(self, value = None):
+    def to_sql(self, value=None):
         if value is None:
             value = self.value
         return value
@@ -92,6 +90,10 @@ class EmField_integer(EmFieldType):
         # TODO Ajouter la prise en charge de la taille max
         return {'type_': INTEGER, 'nullable': False}
 
+
+## EmField_boolean (Class)
+#
+# Boolean field type
 class EmField_boolean(EmFieldType):
 
     def __init__(self):
@@ -103,7 +105,7 @@ class EmField_boolean(EmFieldType):
         else:
             self.value = False
 
-    def to_sql(self, value = None):
+    def to_sql(self, value=None):
         if value is None:
             value = self.value
         return 1 if value else 0
@@ -114,6 +116,10 @@ class EmField_boolean(EmFieldType):
     def sqlalchemy_args(self):
         return {'type_': BOOLEAN, 'nullable': True, 'default': None}
 
+
+## EmField_char (Class)
+#
+# Varchar field type
 class EmField_char(EmFieldType):
 
     def __init__(self):
@@ -125,7 +131,7 @@ class EmField_char(EmFieldType):
         else:
             self.value = ''
 
-    def to_sql(self, value = None):
+    def to_sql(self, value=None):
         if value is None:
             value = self.value
         return value
@@ -136,6 +142,10 @@ class EmField_char(EmFieldType):
     def sqlalchemy_args(self):
         return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
 
+
+## EmField_date (Class)
+#
+# Date Field type
 # TODO
 class EmField_date(EmFieldType):
 
@@ -148,7 +158,7 @@ class EmField_date(EmFieldType):
         else:
             self.value = ''
 
-    def to_sql(self, value = None):
+    def to_sql(self, value=None):
         if value is None:
             value = self.value
         if not value:
@@ -162,6 +172,9 @@ class EmField_date(EmFieldType):
         return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
 
 
+## EmField_mlstring (Class)
+#
+# mlstring Field type
 class EmField_mlstring(EmFieldType):
 
     def __init__(self):
@@ -170,7 +183,7 @@ class EmField_mlstring(EmFieldType):
     def from_string(self, value):
         self.value = MlString.load(value)
 
-    def to_sql(self, value = None):
+    def to_sql(self, value=None):
         if value is None:
             value = self.value
         return str(value)
