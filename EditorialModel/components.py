@@ -175,7 +175,9 @@ class EmComponent(object):
         dbe = cls.db_engine()
         conn = dbe.connect()
 
-        kwargs['rank'] = -1  # Warning !!!
+
+        kwargs['rank'] = get_max_rank() + 1 #Warning !!!
+
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
@@ -313,6 +315,7 @@ class EmComponent(object):
                         logger.error("Bad argument")
                         raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = ' + str((new_rank)))
                 elif (sign == '+' and self.rank + new_rank <= self.get_max_rank()):
+
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == self.rank + new_rank))
                     conn = dbe.connect()
