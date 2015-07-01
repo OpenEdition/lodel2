@@ -121,6 +121,7 @@ class EmClass(EmComponent):
 
         conn = dbe.connect()
         res = conn.execute(req)
+        
         return res.fetchall()
 
     ## Retrieve list of type of this class
