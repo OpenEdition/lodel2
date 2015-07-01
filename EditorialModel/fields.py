@@ -6,12 +6,12 @@ from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
 
 from Database import sqlutils
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlalter import DropColumn
+from Database.sqlalter import DropColumn, AddColumn
 
 import sqlalchemy as sql
 
 import logging
+import re
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
@@ -97,7 +97,59 @@ class EmField(EmComponent):
     def add_field_column_to_class_table(self):
         field_type = "%s%s" % (get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype == 'integer' else '')
         field_class_table = self.get_class_table()
-        return SqlWrapper().addColumn(tname=field_class_table, colname=self.name, coltype=field_type)
+
+        sql_engine = sqlutils.getEngine()
+        conn = sql_engine.connect()
+        meta_data = sqlutils.meta(sql_engine)
+        table = sql.Table(field_class_table, meta_data)
+        new_column = self.create_column(name=self.name, type_=field_type)
+        ddl = AddColumn(table, new_column)
+        sql_query = ddl.compile(dialect=sql_engine.dialect)
+        sql_query = str(sql_query)
+        logger.debug("Executing SQL : '%s'" % sql_query)
+        ret = bool(conn.execute(sql_query))
+        return ret
+
+    def create_column(self, **kwargs):
+        if not 'name' in kwargs or ('type' not in kwargs and 'type_' not in kwargs):
+            pass
+
+        if 'type_' not in kwargs and 'type' in kwargs:
+            kwargs['type_'] = self.sql_to_sqla_type(kwargs['type'])
+            del kwargs['type']
+
+        if 'extra' in kwargs:
+            for extra_name in kwargs['extra']:
+                kwargs[extra_name] = kwargs['extra']['name']
+            del kwargs['extra']
+
+        if 'foreignkey' in kwargs:
+            foreign_key = sql.ForeignKey(kwargs['foreignkey'])
+            del kwargs['foreignkey']
+        else:
+            foreign_key = None
+
+        if 'primarykey' in kwargs:
+            kwargs['primary_key'] = kwargs['primarykey']
+            del kwargs['primarykey']
+
+        result = sql.Column(**kwargs)
+
+        if foreign_key is not None:
+            result.append_foreign_key(foreign_key)
+
+        return result
+
+    def sql_to_sqla_type(self, strtype):
+        if 'VARCHAR' in strtype:
+            check_length = re.search(re.compile('VARCHAR\(([\d]+)\)', re.IGNORECASE), strtype)
+            column_length = int(check_length.groups()[0]) if check_length else None
+            return sql.VARCHAR(lengh=column_length)
+        else:
+            try:
+                return getattr(sql, strtype)
+            except AttributeError:
+                raise NameError("Unknown type '%s'" % strtype)
 
     ## get_class_table (Function)
     #
