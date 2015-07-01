@@ -59,8 +59,7 @@ class EmClass(EmComponent):
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
-        emclasstable = sql.Table(name, meta,
-            sql.Column('uid', sql.VARCHAR(50), primary_key=True))
+        emclasstable = sql.Table(name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
@@ -169,7 +168,7 @@ class EmClass(EmComponent):
         meta = sql.MetaData()
         meta.reflect(dbe)
 
-        linked_types=[]
+        linked_types = []
         for table in meta.tables.values():
             table_name_elements = table.name.split('_')
             if len(table_name_elements) == 2:

@@ -47,11 +47,11 @@ class Em_Field_Type(object):
             'field_id': em_field.uid
         }
 
-        created_relation = Em_Field_Type._createDb(**values)
+        created_relation = Em_Field_Type._create_db(**values)
         return created_relation
 
     @classmethod
-    def _createDb(cls, **kwargs):
+    def _create_db(cls, **kwargs):
         dbe = EmComponent.db_engine()
         conn = dbe.connect()
         table = sqla.Table(cls.table, sqlutils.meta(dbe))
@@ -66,9 +66,9 @@ class Em_Field_Type(object):
     #
     # @return Boolean
     def delete(self):
-        return self._deleteDb()
+        return self._delete_db()
 
-    def _deleteDb(self):
+    def _delete_db(self):
         dbe = EmComponent.db_engine()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.delete().where(table.c.type_id == self.type_id).where(table.c.field_id == self.field_id)
@@ -88,14 +88,14 @@ class Em_Field_Type(object):
     #
     # @return True if success, False if failure
     def exists(self):
-        return self._existsDb()
+        return self._exists_db()
 
     ## _ExistsDb (Function)
     #
     # Queries the database to see if a relation exists or not
     #
     # @return True if success, False if failure
-    def _existsDb(self):
+    def _exists_db(self):
         dbe = EmComponent.db_engine()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
         req = table.select().where(table.c.type_id == self.type_id).where(table.c.field_id == self.field_id)
