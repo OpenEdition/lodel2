@@ -54,8 +54,7 @@ class EmComponent(object):
     # @throw TypeError if id_or_name is not an integer nor a string
     # @throw NotImplementedError if called with EmComponent
     def __init__(self, id_or_name):
-
-        if type(self) is EmComponent:
+        if type(self) == EmComponent:
             raise NotImplementedError('Abstract class')
 
         ## @brief An OrderedDict storing fields name and values
@@ -74,25 +73,29 @@ class EmComponent(object):
         self.table = self.__class__.table
         self.populate()
 
-    ## Access values of data fields from the object properties
-    # @param name str: The propertie name
+    ## @brief Access an attribute of an EmComponent
+    # This method is overloads the default __getattr__ to search in EmComponents::_fields . If there is an EditorialModel::EmField with a corresponding name in the component
+    # it returns its value.
+    # @param name str: The attribute name
     # @throw AttributeError if attribute don't exists
+    # @see EditorialModel::EmField::value
     def __getattr__(self, name):
         if name != '_fields' and name in self._fields:
             return self._fields[name].value
         else:
             return super(EmComponent, self).__getattribute__(name)
 
-        #raise AttributeError('Error unknown attribute : '+name)
-
+    ## @brief Access an EmComponent attribute
+    # This function overload the default __getattribute__ in order to check if the EmComponent was deleted.
+    # @param name str: The attribute name
+    # @throw EmComponentNotExistError if the component was deleted
     def __getattribute__(self, name):
         if super(EmComponent, self).__getattribute__('deleted'):
-            #raise EmComponentNotExistError("This component has been deleted")
             raise EmComponentNotExistError("This " + super(EmComponent, self).__getattribute__('__class__').__name__ + " has been deleted")
         res = super(EmComponent, self).__getattribute(name)
         return res
 
-    ## Set values of data fields from the object properties
+    ## Set the value of an EmComponent attribute
     # @param name str: The propertie name
     # @param value *: The value
     def __setattr__(self, name, value):
@@ -118,8 +121,10 @@ class EmComponent(object):
 
     @classmethod
     ## Shortcut that return the sqlAlchemy engine
-    def getDbE(cls):
+    def db_engine(cls):
         return sqlutils.getEngine(cls.dbconf)
+    @classmethod
+    def getDbE(cls): return cls.db_engine();
 
     ## Do the query on the database for EmComponent::populate()
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
@@ -261,8 +266,8 @@ class EmComponent(object):
     # @throw TypeError if an argument isn't from the expected type
     # @thrown ValueError if an argument as a wrong value but is of the good type
     def modify_rank(self, new_rank, sign='='):
-
-        if (type(new_rank) is int):
+        
+        if isinstance(new_rank, int):
             if (new_rank >= 0):
                 dbe = self.__class__.getDbE()
                 component = sql.Table(self.table, sqlutils.meta(dbe))
@@ -411,11 +416,11 @@ class EmComponent(object):
         return uid
 
 
-## An exception class to tell that a component don't exist
+## @brief An exception class to tell that a component don't exist
 class EmComponentNotExistError(Exception):
     pass
 
 
-## An exception class to tell that no ranking exist yet for the group of the object
+## @brief An exception class to tell that no ranking exist yet for the group of the object
 class EmComponentRankingNotExistError(Exception):
     pass
