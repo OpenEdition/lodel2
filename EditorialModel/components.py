@@ -175,8 +175,7 @@ class EmComponent(object):
         dbe = cls.db_engine()
         conn = dbe.connect()
 
-
-        kwargs['rank'] = get_max_rank() + 1 #Warning !!!
+        kwargs['rank'] = cl.get_max_rank(kwargs[cl.ranked_in]) + 1 #Warning !!!
 
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
@@ -239,16 +238,16 @@ class EmComponent(object):
     ## get_max_rank
     # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
     #return int
-    def get_max_rank(self):
-        dbe = self.__class__.db_engine()
-        component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.sql.select([component.c.rank]).where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)).order_by(component.c.rank.desc())
-        conn = dbe.connect()
-        res = conn.execute(req)
+    @classmethod
+    def get_max_rank(cls, ranked_in_value):
+        dbe = cls.getDbE()
+        component = sql.Table(cls.table, sqlutils.meta(dbe))
+        req = sql.sql.select([component.c.rank]).where(getattr(component.c, cls.ranked_in) == ranked_in_value).order_by(component.c.rank.desc())
+        c = dbe.connect()
+        res = c.execute(req)
         res = res.fetchone()
-        conn.close()
-
-        if (res is not None):
+        c.close()
+        if(res != None):
             return res['rank']
         else:
             return -1
@@ -313,9 +312,9 @@ class EmComponent(object):
 
                     else:
                         logger.error("Bad argument")
-                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = ' + str((new_rank)))
-                elif (sign == '+' and self.rank + new_rank <= self.get_max_rank()):
 
+                        raise ValueError('new_rank to big, new_rank - 1 doesn\'t exist. new_rank = '+str((new_rank)))
+                elif(sign == '+' and self.rank + new_rank <= self.__class__.get_max_rank(getattr(self, self.__class__.ranked_in))):
                     req = sql.sql.select([component.c.uid, component.c.rank])
                     req = req.where((getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)) & (component.c.rank == self.rank + new_rank))
                     conn = dbe.connect()
