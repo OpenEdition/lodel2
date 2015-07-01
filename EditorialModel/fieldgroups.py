@@ -64,7 +64,7 @@ class EmFieldGroup(EmComponent):
     def fields(self):
         field_table = sqlutils.getTable(EditorialModel.fields.EmField)
         req = field_table.select(field_table.c.uid).where(field_table.c.fieldgroup_id == self.uid)
-        conn = self.__class__.getDbE().connect()
+        conn = self.__class__.db_engine().connect()
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()
