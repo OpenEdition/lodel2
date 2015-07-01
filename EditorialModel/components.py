@@ -175,8 +175,7 @@ class EmComponent(object):
         dbe = cls.db_engine()
         conn = dbe.connect()
 
-        #kwargs['rank'] = cls.get_max_rank(kwargs[cls.ranked_in]) + 1 #Warning !!!
-        kwargs['rank'] = -1
+        kwargs['rank'] = -1 #Warning !!!
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)

@@ -16,9 +16,6 @@ from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.test.utils import *
 from EditorialModel.fieldtypes import *
 
-from Database.sqlsetup import SQLSetup
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlquerybuilder import SqlQueryBuilder
 from Database import sqlutils
 
 import sqlalchemy as sqla
@@ -45,8 +42,7 @@ class FieldTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        sqls = SQLSetup()
-        sqls.initDb()
+        sqlsetup.init_db()
 
         # Generation of the test data
         testclass = EmClass.create("testclass1",EmClassType.entity)

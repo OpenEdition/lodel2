@@ -18,7 +18,6 @@ from EditorialModel.fieldtypes import *
 
 from EditorialModel.test.utils import *
 
-from Database.sqlsetup import SQLSetup
 from Database import sqlutils
 
 import sqlalchemy as sqla

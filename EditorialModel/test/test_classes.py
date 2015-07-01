@@ -16,8 +16,7 @@ from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
 import EditorialModel.fieldtypes  as fieldTypes
 
-from Database.sqlsetup import SQLSetup
-from Database import sqlutils
+from Database import sqlutils, sqlsetup
 import sqlalchemy as sqla
 
 
@@ -33,8 +32,7 @@ class ClassesTestCase(TestCase):
     # run before every instanciation of the class
     @classmethod
     def setUpClass(cls):
-        sql = SQLSetup()
-        sql.initDb()
+        sqlsetup.init_db()
 
     # run before every function of the class
     def setUp(self):
