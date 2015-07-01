@@ -79,7 +79,7 @@ class FieldTestCase(TestCase):
     # @param field EmField: EmField object
     # @return Number of found records
     def _get_field_records_Db(self,field):
-        dbe = EmComponent.getDbE()
+        dbe = EmComponent.db_engine()
         fieldtable = sqla.Table(EmField.table, sqlutils.meta(dbe))
         conn = dbe.connect()
         req = fieldtable.select().where(fieldtable.c.uid==field.uid).where(fieldtable.c.name==field.name)
@@ -103,7 +103,7 @@ class FieldTestCase(TestCase):
     # @param table_name str: Name of the table
     # @return list of columns
     def _get_table_columns_Db(self, table_name):
-        table = sqla.Table(table_name, sqlutils.meta(EmComponent.getDbE()))
+        table = sqla.Table(table_name, sqlutils.meta(EmComponent.db_engine()))
         return table.c
 
 ## TestField (Class)

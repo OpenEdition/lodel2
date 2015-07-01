@@ -88,7 +88,7 @@ def getTable(cls):
     from EditorialModel.components import EmComponent #dirty circula inclusion hack
     if not issubclass(cls, EmComponent) or cls.table == None:
         raise TypeError("Excepting an EmComponent child class not an "+str(cls))
-    engine = cls.getDbE()
+    engine = cls.db_engine()
     return sqla.Table(cls.table, meta(engine))
 
 ## This function is intended to execute ddl defined in sqlalter

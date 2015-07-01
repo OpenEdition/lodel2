@@ -123,13 +123,11 @@ class EmComponent(object):
     ## Shortcut that return the sqlAlchemy engine
     def db_engine(cls):
         return sqlutils.getEngine(cls.dbconf)
-    @classmethod
-    def getDbE(cls): return cls.db_engine();
 
     ## Do the query on the database for EmComponent::populate()
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
     def _populate_db(self):
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component])
 
@@ -174,7 +172,7 @@ class EmComponent(object):
         kwargs['uid'] = cls.new_uid()
         kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
 
-        dbe = cls.getDbE()
+        dbe = cls.db_engine()
         conn = dbe.connect()
 
         kwargs['rank'] = -1  # Warning !!!
@@ -207,7 +205,7 @@ class EmComponent(object):
     # @throw RunTimeError if it was unable to do the Db update
     def _save_db(self, values):
         """ Do the query on the db """
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.update(component, values=values).where(component.c.uid == self.uid)
 
@@ -223,7 +221,7 @@ class EmComponent(object):
     # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
         #<SQL>
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = component.delete().where(component.c.uid == self.uid)
         conn = dbe.connect()
@@ -240,7 +238,7 @@ class EmComponent(object):
     # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
     #return int
     def get_max_rank(self):
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component.c.rank]).where(getattr(component.c, self.ranked_in) == getattr(self, self.ranked_in)).order_by(component.c.rank.desc())
         conn = dbe.connect()
@@ -269,7 +267,7 @@ class EmComponent(object):
         
         if isinstance(new_rank, int):
             if (new_rank >= 0):
-                dbe = self.__class__.getDbE()
+                dbe = self.__class__.db_engine()
                 component = sql.Table(self.table, sqlutils.meta(dbe))
                 req = sql.sql.select([component.c.uid, component.c.rank])
 
@@ -401,7 +399,7 @@ class EmComponent(object):
         if cls.table is None:
             raise NotImplementedError("Abstract method")
 
-        dbe = cls.getDbE()
+        dbe = cls.db_engine()
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()
