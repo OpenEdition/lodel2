@@ -1,23 +1,21 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from EditorialModel.fieldtypes import *
-from EditorialModel.fields_types import Em_Field_Type
+from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmFieldType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
-from EditorialModel.types import EmType
 
 from Database import sqlutils
-from Database.sqlwrapper import SqlWrapper
 from Database.sqlalter import AddColumn
-from Database.sqlquerybuilder import SqlQueryBuilder
+from Database.sqlalter import DropColumn, AddColumn
 
 import sqlalchemy as sql
 
-import EditorialModel
 import logging
+import re
 
 logger = logging.getLogger('Lodel2.EditorialModel')
+
 
 ## EmField (Class)
 #
@@ -54,9 +52,10 @@ class EmField(EmComponent):
     #
     # @throw TypeError
     # @see EmComponent::__init__()
+    # @todo Check raise if add column fails
     # @staticmethod
     @classmethod
-    def create(c, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
+    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
         try:
             exists = EmField(name)
         except EmComponentNotExistError:
@@ -72,37 +71,46 @@ class EmField(EmComponent):
                 'icon': icon
             }
 
-            createdField = super(EmField,c).create(**values)
-            if createdField:
-                # The field was created, we then add its column in the corresponding class' table
-                is_field_column_added = EmField.addFieldColumnToClassTable(createdField)
-                if is_field_column_added:
-                    return createdField
+            created_field = super(EmField, cls).create(**values)
+            if created_field:
+                if cls.add_field_column_to_class_table(created_field):
+                    return created_field
+                else:
+                    raise RuntimeError("Error creating the field column")
 
-            exists = createdField
+            exists = created_field
 
         return exists
 
+    ## @brief Delete a field if it's not linked
+    # @return bool : True if deleted False if deletion aborded
+    # @todo Check if unconditionnal deletion is correct
+    def delete(self):
+        dbe = self.__class__.db_engine()
+        class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
+        field_col = sql.Column(self.name)
+        ddl = DropColumn(class_table, field_col)
+        sqlutils.ddl_execute(ddl, self.__class__.db_engine())
+        return super(EmField, self).delete()
 
-    ## addFieldColumnToClassTable (Function)
+    ## add_field_column_to_class_table (Function)
     #
     # Adds a column representing the field in its class' table
-    #
-    # @static
     #
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
     @classmethod
-    def addFieldColumnToClassTable(c, emField):
+    def add_field_column_to_class_table(c, emField):
         tname = emField.get_class_table()
-        ctable = sql.Table(tname, sqlutils.meta(c.getDbE()))
+        ctable = sql.Table(tname, sqlutils.meta(c.db_engine()))
         ddl =  AddColumn(ctable, emField._fieldtype.sqlCol())
-        return sqlutils.ddlExecute(ddl, c.getDbE())
+        return sqlutils.ddl_execute(ddl, c.db_engine())
     
     ## Set _fieldtype to the fieldtype instance
     def populate(self):
         super(EmField, self).populate()
         super(EmComponent, self).__setattr__('_fieldtype', EmFieldType.restore(self.name, self.fieldtype, self.fieldtype_opt))
+        pass
 
     ## get_class_table (Function)
     #
@@ -110,26 +118,24 @@ class EmField(EmComponent):
     #
     # @return Name of the table
     def get_class_table(self):
-        return self._get_class_tableDb()
+        return self._get_class_table_db()
 
     ## _get_class_tableDb (Function)
     #
     # Executes a request to the database to get the name of the table in which to add the field
     #
     # @return Name of the table
-    def _get_class_tableDb(self):
-        dbe = self.getDbE()
+    def _get_class_table_db(self):
+        dbe = self.db_engine()
         conn = dbe.connect()
-        typetable = sql.Table(EmType.table, sqlutils.meta(dbe))
-        fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
-        reqGetClassId = typetable.select().where(typetable.c.uid==fieldtable.c.rel_to_type_id)
-        resGetClassId = conn.execute(reqGetClassId).fetchall()
-        class_id = dict(zip(resGetClassId[0].keys(), resGetClassId[0]))['class_id']
+        field_group_table = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
+        request_get_class_id = field_group_table.select().where(field_group_table.c.uid == self.fieldgroup_id)
+        result_get_class_id = conn.execute(request_get_class_id).fetchall()
+        class_id = dict(zip(result_get_class_id[0].keys(), result_get_class_id[0]))['class_id']
 
-        classtable = sql.Table(EmClass.table, sqlutils.meta(dbe))
-        reqGetClassTable = classtable.select().where(classtable.c.uid == class_id)
-        resGetClassTable = conn.execute(reqGetClassTable).fetchall()
-        classTableName = dict(zip(resGetClassTable[0].keys(), resGetClassTable[0]))['name']
+        class_table = sql.Table(EmClass.table, sqlutils.meta(dbe))
+        request_get_class_table = class_table.select().where(class_table.c.uid == class_id)
+        result_get_class_table = conn.execute(request_get_class_table).fetchall()
+        class_table_name = dict(zip(result_get_class_table[0].keys(), result_get_class_table[0]))['name']
 
-        return classTableName
-
+        return class_table_name

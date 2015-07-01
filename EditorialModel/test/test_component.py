@@ -21,9 +21,8 @@ from EditorialModel.test.utils import *
 
 from Lodel.utils.mlstring import MlString
 
-from Database.sqlsetup import SQLSetup
-from Database.sqlwrapper import SqlWrapper
 from Database import sqlutils
+from Database import sqlsetup
 import sqlalchemy as sqla
 
 
@@ -57,8 +56,7 @@ def setUpModule():
     logging.basicConfig(level=logging.CRITICAL)
 
     #testDB setup
-    sqls = SQLSetup()
-    tables = sqls.get_schema()
+    tables = sqlsetup.get_schema()
     ttest = {   'name':'ttest',
                 'columns':  [
                     {"name":"uid",          "type":"INTEGER", "extra":{"foreignkey":"uids.uid", "nullable":False, "primarykey":True}},
@@ -73,7 +71,6 @@ def setUpModule():
             }
     tables.append(ttest)
 
-    sqlwrap = globals()['dbwrapper'] = SqlWrapper(read_db='default', write_db = 'default', alchemy_logs=False)
     globals()['tables'] = tables
 
     #Creating db structure
@@ -81,9 +78,9 @@ def setUpModule():
     initTestDb(TEST_COMPONENT_DBNAME)
     setDbConf(TEST_COMPONENT_DBNAME)
 
-    sqlwrap.createAllFromConf(tables)
+    sqlsetup.init_db('default', False, tables)   
 
-    dbe = sqlwrap.r_engine
+    dbe = sqlutils.getEngine('default')
 
     # Insertion of testings datas
     conn = dbe.connect()
@@ -144,15 +141,11 @@ class ComponentTestCase(TestCase):
     ]
 
     @property
-    def db(self):
-        return globals()['dbwrapper']
-    @property
     def tables(self):
         return globals()['tables']
     
     def setUp(self):
-        self.dber = globals()['dbwrapper'].r_engine
-        self.dbew = globals()['dbwrapper'].w_engine
+        self.dber = sqlutils.getEngine('default')
         self.test_values = self.__class__.test_values
         #Db RAZ
         #shutil.copyfile(TEST_COMPONENT_DBNAME+'_bck', globals()['component_test_dbfilename'])
@@ -249,15 +242,15 @@ class TestInit(ComponentTestCase):
         pass
 
 #=======================#
-#   EmComponent.newUid  #
+#   EmComponent.new_uid  #
 #=======================#
 class TestUid(ComponentTestCase):
 
     
     def test_newuid(self):
-        """ Test valid calls for newUid method """
+        """ Test valid calls for new_uid method """
         for _ in range(10):
-            nuid = EmTestComp.newUid()
+            nuid = EmTestComp.new_uid()
         
             conn = self.dber.connect()
             tuid = sqla.Table('uids', sqlutils.meta(self.dber))
@@ -272,9 +265,9 @@ class TestUid(ComponentTestCase):
         pass
     
     def test_newuid_abstract(self):
-        """ Test not valit call for newUid method """
+        """ Test not valit call for new_uid method """
         with self.assertRaises(NotImplementedError):
-            EmComponent.newUid()
+            EmComponent.new_uid()
         pass
         
 #=======================#

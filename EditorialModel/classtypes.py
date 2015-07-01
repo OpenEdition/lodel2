@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 
-## constant name for the nature of type hierarchy
+
+## EmNature (Class)
+#
+# constant name for the nature of type hierarchy
 class EmNature(object):
     PARENT = 'parent'
     TRANSLATION = 'translation'
     IDENTITY = 'identity'
 
-##  Representation of the classTypes
+
+## EmClassType (Class)
+#
+# Representation of the classTypes
 #
 #    Defines 3 generic classtype : entity, entry and person
 #        - entity : to define editorial content
@@ -26,55 +32,58 @@ class EmNature(object):
 class EmClassType(object):
 
     entity = {
-        'name' : 'entity',
-        'hierarchy' : {
-            EmNature.PARENT : {
-                'attach'   : 'classtype',
-                'automatic' : False,
-                'maxdepth' : -1,
-                'maxchildren' : -1
-                },
-            EmNature.TRANSLATION : {
-                'attach'   : 'type',
-                'automatic' : False,
-                'maxdepth' : 1,
-                'maxchildren' : -1
-                },
-        },
-    }
-
-    entry = {
-        'name' : 'entry',
-        'hierarchy' : {
-            EmNature.PARENT : {
-                'attach'   : 'type',
-                'automatic' : False,
-                },
-            EmNature.TRANSLATION : {
-                'attach'   : 'type',
-                'automatic' : False,
-                'maxdepth' : 1,
-                'maxchildren' : -1
-                },
-        },
-    }
-
-    person = {
-        'name' : 'person',
-        'hierarchy' : {
-            EmNature.IDENTITY : {
-                'attach'   : 'classtype',
-                'automatic' : True,
-                'maxdepth' : -1,
-                'maxchildren' : 1
+        'name': 'entity',
+        'hierarchy': {
+            EmNature.PARENT: {
+                'attach': 'classtype',
+                'automatic': False,
+                'maxdepth': -1,
+                'maxchildren': -1
+            },
+            EmNature.TRANSLATION: {
+                'attach': 'type',
+                'automatic': False,
+                'maxdepth': 1,
+                'maxchildren': -1
             },
         },
     }
 
-    @staticmethod
-    ## Return possible nature of relations for a classtype name
+    entry = {
+        'name': 'entry',
+        'hierarchy': {
+            EmNature.PARENT: {
+                'attach': 'type',
+                'automatic': False,
+            },
+            EmNature.TRANSLATION: {
+                'attach': 'type',
+                'automatic': False,
+                'maxdepth': 1,
+                'maxchildren': -1
+            },
+        },
+    }
+
+    person = {
+        'name': 'person',
+        'hierarchy': {
+            EmNature.IDENTITY: {
+                'attach': 'classtype',
+                'automatic': True,
+                'maxdepth': -1,
+                'maxchildren': 1
+            },
+        },
+    }
+
+    ## natures (Method)
+    #
+    # Return possible nature of relations for a classtype name
+    #
     # @param classtype str: The classtype name
-    # @reurn A list of EmNature names (list of str)
+    # @return A list of EmNature names (list of str)
+    @staticmethod
     def natures(classtype_name):
         if not isinstance(classtype_name, str):
             raise TypeError("Excepted <class str> but got "+str(type(classtype_name)))

@@ -5,8 +5,10 @@
 import os
 
 from unittest import TestCase
+import unittest
 
 from django.conf import settings
+from EditorialModel.components import EmComponentNotExistError
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
@@ -14,8 +16,7 @@ from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
 import EditorialModel.fieldtypes  as fieldTypes
 
-from Database.sqlsetup import SQLSetup
-from Database import sqlutils
+from Database import sqlutils, sqlsetup
 import sqlalchemy as sqla
 
 
@@ -31,8 +32,7 @@ class ClassesTestCase(TestCase):
     # run before every instanciation of the class
     @classmethod
     def setUpClass(cls):
-        sql = SQLSetup()
-        sql.initDb()
+        sqlsetup.init_db()
 
     # run before every function of the class
     def setUp(self):
@@ -79,6 +79,47 @@ class TestEmClassCreation(ClassesTestCase):
     def test_classtype(self):
         cl = EmClass('testClass')
         self.assertEqual(cl.classtype, EmClassType.entity['name'])
+
+# Testing class deletion (and associated table drop)
+class TestEmClassDeletion(ClassesTestCase):
+    
+    def setUp(self):
+        self.names = ['testClass1', 'testClass2', 'testClass3']
+        EmClass.create(self.names[0], EmClassType.entity)
+        EmClass.create(self.names[1], EmClassType.entry)
+        EmClass.create(self.names[2], EmClassType.person)
+        pass
+    
+    # test if the table is deleted after a call to delete
+    def test_table_delete(self):
+        dbe = sqlutils.getEngine()
+        for i,class_name in enumerate(self.names):
+            cur_class = EmClass(class_name)
+            self.assertTrue(cur_class.delete(), "delete method didn't return True but the class has no fieldgroups")
+            meta = sqlutils.meta(dbe)
+            table_list = meta.tables.keys()
+            for deleted_name in self.names[:i+1]:
+                self.assertNotIn(deleted_name, table_list, "Table still exist but the class was deleted")
+            for not_deleted_name in self.names[i+1:]:
+                self.assertIn(not_deleted_name, table_list, "Table don't exist but the class was NOT deleted")
+            with self.assertRaises(EmComponentNotExistError,msg="This EmClass should be deleted"):
+                EmClass(class_name)
+        pass
+    
+    # test if delete refuse to delete if a class had fieldgroups
+    def test_table_refuse_delete(self):
+        test_class = EmClass(self.names[0])
+        fieldgroup = EmFieldGroup.create('fooFieldGroup', test_class)
+        self.assertFalse(test_class.delete(), "delete method returns True but the class has fieldgroup")
+        dbe = sqlutils.getEngine()
+        meta = sqlutils.meta(dbe)
+        self.assertIn(self.names[0], meta.tables, "Table has been deleted but the class has fieldgroup")
+        try:
+            EmClass(self.names[0])
+        except EmComponentNotExistError:
+            self.fail("The class has been deleted but it has fieldgroups")
+        pass
+
 
 # interface to fieldGroups
 class TestEmClassFieldgroups(ClassesTestCase):
@@ -168,6 +209,7 @@ class TestEmClassFields(ClassesTestCase):
 # creating an new EmClass should
 # - create a table named like the created EmClass
 # - insert a new line in em_classes
+@unittest.skip("Not implemented yet")
 class TestEmClassLinkType(ClassesTestCase):
 
     # create a new EmClass, then test on it

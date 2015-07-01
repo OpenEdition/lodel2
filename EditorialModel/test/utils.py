@@ -3,7 +3,7 @@ import logging
 import shutil
 
 from django.conf import settings
-from Database.sqlsetup import SQLSetup
+from Database import sqlsetup
 
 
 _TESTDB_DEFAULT_DIR = '/tmp/'
@@ -42,7 +42,7 @@ def initTestDb(dbname = _TESTDB_DEFAULT_NAME, dbdir = _TESTDB_DEFAULT_DIR):
             'ENGINE': 'sqlite',
             'NAME': db_default,
         }
-        SQLSetup().initDb(dbconfname = 'dbtest_default')
+        sqlsetup.init_db(dbconfname = 'dbtest_default')
         #Make the backup copy
         shutil.copyfile(db_default, db_copy)
     

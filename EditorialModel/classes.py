@@ -54,21 +54,38 @@ class EmClass(EmComponent):
         values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
         resclass = super(EmClass, cls).create(**values)
 
-        dbe = cls.getDbE()
+        dbe = cls.db_engine()
         conn = dbe.connect()
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
-        emclasstable = sql.Table(name, meta,
-            sql.Column('uid', sql.VARCHAR(50), primary_key=True))
+        emclasstable = sql.Table(name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
 
         return resclass
 
+    ## @brief Delete a class if it's ''empty''
+    # If a class has no fieldgroups delete it
+    # @return bool : True if deleted False if deletion aborded
+    def delete(self):
+        do_delete = True
+        fieldgroups = self.fieldgroups()
+        if len(fieldgroups) > 0:
+            do_delete = False
+            return False
+
+        dbe = self.__class__.db_engine()
+        meta = sqlutils.meta(dbe)
+        #Here we have to give a connection
+        class_table = sql.Table(self.name, meta)
+        meta.drop_all(tables=[class_table], bind=dbe)
+        return super(EmClass, self).delete()
+
+
     ## Retrieve list of the field_groups of this class
-    # @return field_groups [EmFieldGroup]:
+    # @return A list of fieldgroups instance
     def fieldgroups(self):
         records = self._fieldgroups_db()
         fieldgroups = [EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records]
@@ -78,7 +95,7 @@ class EmClass(EmComponent):
     ## Isolate SQL for EmClass::fieldgroups
     # @return An array of dict (sqlalchemy fetchall)
     def _fieldgroups_db(self):
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
         req = emfg.select().where(emfg.c.class_id == self.uid)
 
@@ -92,18 +109,8 @@ class EmClass(EmComponent):
         fieldgroups = self.fieldgroups()
         fields = []
         for fieldgroup in fieldgroups:
-            fields += self._fields_db(fieldgroup.uid)
-
+            fields += fieldgroup.fields()
         return fields
-
-    def _fields_db(self, fieldgroup_id):
-        dbe = self.__class__.getDbE()
-        fields = sql.Table(EditorialModel.fields.EmField.table, sqlutils.meta(dbe))
-        req = fields.select().where(fields.c.fieldgroup_id == fieldgroup_id)
-
-        conn = dbe.connect()
-        res = conn.execute(req)
-        return res.fetchall()
 
     ## Retrieve list of type of this class
     # @return types [EmType]:
@@ -116,7 +123,7 @@ class EmClass(EmComponent):
     ## Isolate SQL for EmCLass::types
     # @return An array of dict (sqlalchemy fetchall)
     def _types_db(self):
-        dbe = self.__class__.getDbE()
+        dbe = self.__class__.db_engine()
         emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
         req = emtype.select().where(emtype.c.class_id == self.uid)
         conn = dbe.connect()
@@ -134,7 +141,7 @@ class EmClass(EmComponent):
 
     def _link_type_db(self, table_name):
         #Create a new table storing LodelObjects that are linked to this EmClass
-        conn = self.__class__.getDbE().connect()
+        conn = self.__class__.db_engine().connect()
         meta = sql.MetaData()
         emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emlinketable.create(conn)
@@ -143,4 +150,17 @@ class EmClass(EmComponent):
     ## Retrieve list of EmType that are linked to this class
     #  @return types [EmType]:
     def linked_types(self):
-        pass
+        return self._linked_types_db()
+
+    def _linked_types_db(self):
+        dbe = self.__class__.db_engine()
+        meta = sql.MetaData()
+        meta.reflect(dbe)
+
+        linked_types = []
+        for table in meta.tables.values():
+            table_name_elements = table.name.split('_')
+            if len(table_name_elements) == 2:
+                linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
+
+        return linked_types

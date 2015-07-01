@@ -416,6 +416,10 @@ class EmField_integer(EmFieldType):
         return int(value)
 
 
+
+## EmField_boolean (Class)
+#
+# Boolean field type
 class EmField_boolean(EmFieldType):
     def __init__(self, **kwargs):
         self._init(kwargs)
@@ -432,6 +436,9 @@ class EmField_boolean(EmFieldType):
             return super(EmField_boolean, self).to_value(value)
         self.value = bool(value)
 
+## EmField_char (Class)
+#
+# Varchar field type
 class EmField_char(EmFieldType):
     default_length = 76
     def __init__(self, **kwargs):

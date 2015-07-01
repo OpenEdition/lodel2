@@ -13,31 +13,26 @@ from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields_types import Em_Field_Type
+from EditorialModel.test.utils import *
 from EditorialModel.fieldtypes import *
 
-from Database.sqlsetup import SQLSetup
-from Database.sqlwrapper import SqlWrapper
-from Database.sqlquerybuilder import SqlQueryBuilder
 from Database import sqlutils
 
 import sqlalchemy as sqla
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
+TEST_FIELD_DBNAME = 'lodel2_test_field_db.sqlite'
+
 ## SetUpModule
 #
 # This function is called once for this module.
 # It is designed to overwrite the database configurations, and prepare objects for test_case initialization
 def setUpModule():
-    # Overwriting the database parameters to make tests
-    settings.LODEL2SQLWRAPPER['db'] = {
-        'default':{
-            'ENGINE': 'sqlite',
-            'NAME': '/tmp/lodel2_test_db.sqlite'
-        }
-    }
-
+    initTestDb(TEST_FIELD_DBNAME)
+    setDbConf(TEST_FIELD_DBNAME)
     logging.basicConfig(level=logging.CRITICAL)
+
 
 ## FieldTestCase (Class)
 #
@@ -45,15 +40,24 @@ def setUpModule():
 # It defines a SetUp function and some utility functions for EmField tests.
 class FieldTestCase(TestCase):
 
-    def setUp(self):
-        sqls = SQLSetup()
-        sqls.initDb()
+    @classmethod
+    def setUpClass(cls):
+        sqlsetup.init_db()
 
         # Generation of the test data
-        self.testClass = EmClass.create("testclass1",EmClassType.entity)
+        testclass = EmClass.create("testclass1",EmClassType.entity)
+        EmField_integer()
+        EmFieldGroup.create('fieldgrp1',testclass)
+        EmType.create('testtype1',testclass)
+        saveDbState(TEST_FIELD_DBNAME)
+
+
+    def setUp(self):
+        restoreDbState(TEST_FIELD_DBNAME)
+        self.testClass = EmClass("testclass1")
         self.testFieldType = EmField_integer()
-        self.testFieldgroup = EmFieldGroup.create('fieldgrp1',self.testClass)
-        self.testType = EmType.create('testtype1',self.testClass)
+        self.testFieldgroup = EmFieldGroup('fieldgrp1')
+        self.testType = EmType('testtype1')
 
     ## Get_Field_Records (Function)
     #
@@ -71,7 +75,7 @@ class FieldTestCase(TestCase):
     # @param field EmField: EmField object
     # @return Number of found records
     def _get_field_records_Db(self,field):
-        dbe = EmComponent.getDbE()
+        dbe = EmComponent.db_engine()
         fieldtable = sqla.Table(EmField.table, sqlutils.meta(dbe))
         conn = dbe.connect()
         req = fieldtable.select().where(fieldtable.c.uid==field.uid).where(fieldtable.c.name==field.name)
@@ -95,7 +99,7 @@ class FieldTestCase(TestCase):
     # @param table_name str: Name of the table
     # @return list of columns
     def _get_table_columns_Db(self, table_name):
-        table = sqla.Table(table_name, sqlutils.meta(EmComponent.getDbE()))
+        table = sqla.Table(table_name, sqlutils.meta(EmComponent.db_engine()))
         return table.c
 
 ## TestField (Class)
@@ -115,7 +119,7 @@ class TestField(FieldTestCase):
             'rel_to_type_id': self.testType.uid
         }
         '''
-        field = EmField.create(name='testfield1', fieldgroup=self.testFieldgroup, fieldtype=self.testFieldType, rel_to_type_id=self.testType.uid)
+        field = EmField.create(name='testfield1', fieldgroup=self.testFieldgroup, fieldtype=self.testFieldType)
 
         # We check that the field has been added in the em_field table
         field_records = self.get_field_records(field)
@@ -130,3 +134,22 @@ class TestField(FieldTestCase):
         #field_column = sqla.Column(**field_column_args)
         #self.assertIn(field_column.name, field_table_columns)
         pass
+    
+    def test_deletion(self):
+        field_names = ['field1', 'field2']
+        for name in field_names:
+            EmField.create(name=name, fieldgroup=self.testFieldgroup, fieldtype = self.testFieldType)
+
+        for i,name in enumerate(field_names):
+            test_field = EmField(name)
+            self.assertTrue(test_field.delete())
+
+            cols = self.get_table_columns(self.testClass.name)
+            for deleted_name in field_names[:i+1]:
+                self.assertNotIn(deleted_name, cols, "Column is  not deleted")
+            for not_deleted_name in field_names[i+1:]:
+                self.assertIn(not_deleted_name, cols, "A bad column was deleted")
+                
+            with self.assertRaises(EmComponentNotExistError, msg="This field should be deleted"):
+                EmField(name)
+                
