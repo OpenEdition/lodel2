@@ -10,13 +10,14 @@ import logging
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
+
 ## Em_Field_Type (Class)
 #
 # Represents an association between a field and a type
 class Em_Field_Type(object):
 
     table = 'em_field_type'
-    _fields = [('type_id', EmField_integer),('field_id', EmField_integer)]
+    _fields = [('type_id', EmField_integer), ('field_id', EmField_integer)]
 
     ## __init__ (Function)
     #
@@ -40,18 +41,18 @@ class Em_Field_Type(object):
     # @param emField EmField: Object representing the Field
     # @return Em_Field_Type object
     @classmethod
-    def create(cls, emType, emField):
+    def create(cls, em_type, em_field):
         values = {
-                'type_id': emType.uid,
-                'field_id': emField.uid
+            'type_id': em_type.uid,
+            'field_id': em_field.uid
         }
 
-        createdRelation = Em_Field_Type._createDb(**values)
-        return createdRelation
+        created_relation = Em_Field_Type._createDb(**values)
+        return created_relation
 
     @classmethod
     def _createDb(cls, **kwargs):
-        dbe = EmComponent.getDbE()
+        dbe = EmComponent.db_engine()
         conn = dbe.connect()
         table = sqla.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
@@ -68,9 +69,9 @@ class Em_Field_Type(object):
         return self._deleteDb()
 
     def _deleteDb(self):
-        dbe = EmComponent.getDbE()
+        dbe = EmComponent.db_engine()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
-        req = table.delete().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
+        req = table.delete().where(table.c.type_id == self.type_id).where(table.c.field_id == self.field_id)
         conn = dbe.connect()
         try:
             conn.execute(req)
@@ -95,10 +96,10 @@ class Em_Field_Type(object):
     #
     # @return True if success, False if failure
     def _existsDb(self):
-        dbe = EmComponent.getDbE()
+        dbe = EmComponent.db_engine()
         table = sqla.Table(self.table, sqlutils.meta(dbe))
-        req = table.select().where(table.c.type_id==self.type_id).where(table.c.field_id==self.field_id)
+        req = table.select().where(table.c.type_id == self.type_id).where(table.c.field_id == self.field_id)
         conn = dbe.connect()
         res = conn.execute(req).fetchall()
         conn.close()
-        return len(res)>0
+        return len(res) > 0
