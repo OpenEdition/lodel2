@@ -111,14 +111,14 @@ class EmField(EmComponent):
     #
     # @return Name of the table
     def get_class_table(self):
-        return self._get_class_tableDb()
+        return self._get_class_table_db()
 
     ## _get_class_tableDb (Function)
     #
     # Executes a request to the database to get the name of the table in which to add the field
     #
     # @return Name of the table
-    def _get_class_tableDb(self):
+    def _get_class_table_db(self):
         dbe = self.getDbE()
         conn = dbe.connect()
         fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
