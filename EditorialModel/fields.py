@@ -96,7 +96,6 @@ class EmField(EmComponent):
     # @return True in case of success, False if not
     def add_field_column_to_class_table(self):
         field_type = "%s%s" % (get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype == 'integer' else '')
-        field_uid = self.uid
         field_class_table = self.get_class_table()
         return SqlWrapper().addColumn(tname=field_class_table, colname=self.name, coltype=field_type)
 
