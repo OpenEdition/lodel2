@@ -239,7 +239,7 @@ class EmComponent(object):
     #return int
     @classmethod
     def get_max_rank(cls, ranked_in_value):
-        dbe = cls.getDbE()
+        dbe = cls.db_engine()
         component = sql.Table(cls.table, sqlutils.meta(dbe))
         req = sql.sql.select([component.c.rank]).where(getattr(component.c, cls.ranked_in) == ranked_in_value).order_by(component.c.rank.desc())
         c = dbe.connect()
