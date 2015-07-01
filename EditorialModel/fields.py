@@ -19,6 +19,7 @@ import logging
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
+
 ## EmField (Class)
 #
 # Represents one data for a lodel2 document
@@ -55,29 +56,29 @@ class EmField(EmComponent):
     # @see EmComponent::__init__()
     # @staticmethod
     @classmethod
-    def create(c, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
+    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
         try:
             exists = EmField(name)
         except EmComponentNotExistError:
             values = {
-                'name' : name,
-                'fieldgroup_id' : fieldgroup.uid,
-                'fieldtype' : fieldtype.name,
-                'optional' : optional,
-                'internal' : internal,
+                'name': name,
+                'fieldgroup_id': fieldgroup.uid,
+                'fieldtype': fieldtype.name,
+                'optional': optional,
+                'internal': internal,
                 'rel_to_type_id': rel_to_type_id,
                 'rel_field_id': rel_field_id,
                 'icon': icon
             }
 
-            createdField = super(EmField,c).create(**values)
-            if createdField:
+            created_field = super(EmField, cls).create(**values)
+            if created_field:
                 # The field was created, we then add its column in the corresponding class' table
-                is_field_column_added = createdField.addFieldColumnToClassTable()
+                is_field_column_added = created_field.add_field_column_to_class_table()
                 if is_field_column_added:
-                    return createdField
+                    return created_field
 
-            exists = createdField
+            exists = created_field
 
         return exists
     
@@ -92,14 +93,13 @@ class EmField(EmComponent):
         sqlutils.ddl_execute(ddl, self.__class__.getDbE())
         return super(EmField, self).delete()
     
-
-    ## addFieldColumnToClassTable (Function)
+    ## add_field_column_to_class_table (Function)
     #
     # Adds a column representing the field in its class' table
     #
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
-    def addFieldColumnToClassTable(self):
+    def add_field_column_to_class_table(self):
         field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype=='integer' else '')
         field_uid = self.uid
         field_class_table = self.get_class_table()
