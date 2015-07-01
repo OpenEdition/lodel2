@@ -1,20 +1,16 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from EditorialModel.fieldtypes import *
-from EditorialModel.fields_types import Em_Field_Type
+from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, get_field_type
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
-from EditorialModel.types import EmType
 
 from Database import sqlutils
 from Database.sqlwrapper import SqlWrapper
-from Database.sqlquerybuilder import SqlQueryBuilder
 from Database.sqlalter import DropColumn
 
 import sqlalchemy as sql
 
-import EditorialModel
 import logging
 
 logger = logging.getLogger('Lodel2.EditorialModel')
@@ -73,7 +69,6 @@ class EmField(EmComponent):
 
             created_field = super(EmField, cls).create(**values)
             if created_field:
-                # The field was created, we then add its column in the corresponding class' table
                 is_field_column_added = created_field.add_field_column_to_class_table()
                 if is_field_column_added:
                     return created_field
@@ -81,7 +76,7 @@ class EmField(EmComponent):
             exists = created_field
 
         return exists
-    
+
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded
     # @todo Check if unconditionnal deletion is correct
@@ -92,7 +87,7 @@ class EmField(EmComponent):
         ddl = DropColumn(class_table, field_col)
         sqlutils.ddl_execute(ddl, self.__class__.db_engine())
         return super(EmField, self).delete()
-    
+
     ## add_field_column_to_class_table (Function)
     #
     # Adds a column representing the field in its class' table
@@ -100,7 +95,7 @@ class EmField(EmComponent):
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
     def add_field_column_to_class_table(self):
-        field_type = "%s%s" % (EditorialModel.fieldtypes.get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype=='integer' else '')
+        field_type = "%s%s" % (get_field_type(self.fieldtype).sql_column(), " DEFAULT 0" if self.fieldtype == 'integer' else '')
         field_uid = self.uid
         field_class_table = self.get_class_table()
         return SqlWrapper().addColumn(tname=field_class_table, colname=self.name, coltype=field_type)
@@ -121,9 +116,8 @@ class EmField(EmComponent):
     def _get_class_table_db(self):
         dbe = self.db_engine()
         conn = dbe.connect()
-        #fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
-        fieldgrouptable = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
-        request_get_class_id = fieldgrouptable.select().where(fieldgrouptable.c.uid == self.fieldgroup_id)
+        field_group_table = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
+        request_get_class_id = field_group_table.select().where(field_group_table.c.uid == self.fieldgroup_id)
         result_get_class_id = conn.execute(request_get_class_id).fetchall()
         class_id = dict(zip(result_get_class_id[0].keys(), result_get_class_id[0]))['class_id']
 
@@ -133,4 +127,3 @@ class EmField(EmComponent):
         class_table_name = dict(zip(result_get_class_table[0].keys(), result_get_class_table[0]))['name']
 
         return class_table_name
-
