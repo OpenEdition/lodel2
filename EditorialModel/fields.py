@@ -119,18 +119,18 @@ class EmField(EmComponent):
     #
     # @return Name of the table
     def _get_class_table_db(self):
-        dbe = self.getDbE()
+        dbe = self.db_engine()
         conn = dbe.connect()
-        fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
+        #fieldtable = sql.Table(EmField.table, sqlutils.meta(dbe))
         fieldgrouptable = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
-        reqGetClassId = fieldgrouptable.select().where(fieldgrouptable.c.uid == self.fieldgroup_id)
-        resGetClassId = conn.execute(reqGetClassId).fetchall()
-        class_id = dict(zip(resGetClassId[0].keys(), resGetClassId[0]))['class_id']
+        request_get_class_id = fieldgrouptable.select().where(fieldgrouptable.c.uid == self.fieldgroup_id)
+        result_get_class_id = conn.execute(request_get_class_id).fetchall()
+        class_id = dict(zip(result_get_class_id[0].keys(), result_get_class_id[0]))['class_id']
 
-        classtable = sql.Table(EmClass.table, sqlutils.meta(dbe))
-        reqGetClassTable = classtable.select().where(classtable.c.uid == class_id)
-        resGetClassTable = conn.execute(reqGetClassTable).fetchall()
-        classTableName = dict(zip(resGetClassTable[0].keys(), resGetClassTable[0]))['name']
+        class_table = sql.Table(EmClass.table, sqlutils.meta(dbe))
+        request_get_class_table = class_table.select().where(class_table.c.uid == class_id)
+        result_get_class_table = conn.execute(request_get_class_table).fetchall()
+        class_table_name = dict(zip(result_get_class_table[0].keys(), result_get_class_table[0]))['name']
 
-        return classTableName
+        return class_table_name
 
