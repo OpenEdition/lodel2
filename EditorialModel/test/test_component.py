@@ -629,10 +629,6 @@ class TestModifyRank(ComponentTestCase):
             ((0.0, '='), TypeError),
             
             #Bad new_rank
-            ((0,'+'), ValueError),
-            ((0,'-'), ValueError),
-            ((-1, '+'), ValueError),
-            ((-1,'-'), ValueError),
             ((-1, '='), ValueError),
             ((-1,), ValueError),
             
