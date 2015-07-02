@@ -73,16 +73,19 @@ class TypeTestCase(TestCase):
 
 class TestSelectField(TypeTestCase):
     def testSelectField(self):
+        """ Testing optionnal field selection """
         self.emtype.select_field(self.emfield)
         self.assertIsNotNone(Em_Field_Type(self.emtype.uid, self.emfield.uid))
 
     def testUnselectField(self):
+        """ Testing optionnal field unselection """
         self.emtype.unselect_field(self.emfield)
         self.assertFalse(Em_Field_Type(self.emtype.uid, self.emfield.uid).exists())
 
 class TestLinkedTypes(TypeTestCase):
     @unittest.skip("Not yet implemented")
     def testLinkedtypes(self):
+        """ Testing linked types """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.emtype3.add_superior(self.emtype, EmNature.PARENT)
 
@@ -123,6 +126,7 @@ class TestTypeHierarchy(TypeTestCase):
             
 
     def testAddSuperiorParent(self):
+        """ Testing add superior in relation with Parent nature """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.check_add_sup(self.emtype, self.emtype2, EmNature.PARENT)
 
@@ -131,6 +135,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testAddSuperiorTranslation(self):
+        """ Testing add superior in relation with Translation nature """
         self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
         self.check_add_sup(self.emtype, self.emtype, EmNature.TRANSLATION)
 
@@ -139,6 +144,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testAddSuperiorIdentity(self):
+        """ Testing add superior in relation with Identity nature """
         self.emtype6.add_superior(self.emtype6, EmNature.IDENTITY)
         self.check_add_sup(self.emtype6, self.emtype6, EmNature.IDENTITY)
         self.emtype6.add_superior(self.emtype7, EmNature.IDENTITY)
@@ -146,6 +152,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testIllegalSuperior(self):
+        """ Testing invalid add superior """
         illegal_combinations = [
             (self.emtype, self.emtype4, EmNature.PARENT),
             (self.emtype, self.emtype2, EmNature.TRANSLATION),
@@ -163,6 +170,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
     
     def testDelSuperior(self):
+        """ Testing superior deletion """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.emtype.add_superior(self.emtype, EmNature.PARENT)
         self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
@@ -179,12 +187,14 @@ class TestTypeHierarchy(TypeTestCase):
 
 class TestDeleteTypes(TypeTestCase):
     def testDeleteTypes(self):
+        """ Testing EmType deletion """
         type_name = self.emtype.name
         self.assertTrue(self.emtype.delete(), "delete method returns False but should return True")
         with self.assertRaises(EmComponentNotExistError, msg="Type not deleted"):
             EmType(type_name)
 
     def testUndeletableTypes(self):
+        """ Testing invalid non empty EmType deletion """
         type_name = self.emtype.name
         self.emtype2.add_superior(self.emtype, 'parent')
         self.assertFalse(self.emtype.delete(), "delete return True but should return False")

@@ -32,6 +32,11 @@ def setUpModule():
     initTestDb(TEST_FIELD_DBNAME)
     setDbConf(TEST_FIELD_DBNAME)
     logging.basicConfig(level=logging.CRITICAL)
+    pass
+
+def tearDownModule():
+    cleanDb(TEST_FIELD_DBNAME)
+    pass
 
 
 ## FieldTestCase (Class)
@@ -111,6 +116,7 @@ class TestField(FieldTestCase):
     #
     # tests the creation process of a field
     def testCreate(self):
+        """ Testing fields creation process """
         '''
         field_values = {
             'name':'testfield1',
@@ -134,6 +140,7 @@ class TestField(FieldTestCase):
         pass
     
     def test_deletion(self):
+        """ Testing fields deletion process """
         field_names = ['field1', 'field2']
         for name in field_names:
             EmField.create(name=name, fieldgroup=self.testFieldgroup, fieldtype = self.testFieldType)

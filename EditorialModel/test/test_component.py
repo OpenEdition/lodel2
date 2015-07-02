@@ -316,40 +316,40 @@ class TestSave(ComponentTestCase):
         time.sleep(2) # We have to sleep 2 secs here, so the update_date will be at least 2 secs more than newval['date_update']
         
         #name change
-        with self.subTest("Save after name change"):
-            newval['name'] = test_comp.name = 'newname'
-            test_comp.save()
-            self._savecheck(test_comp, newval)
+        newval['name'] = test_comp.name = 'newname'
+        test_comp.save()
+        self._savecheck(test_comp, newval)
+        self.assertTrue(True)
 
         #help change
-        with self.subTest("Save after help change"):
-            newval['help'] = '{"fr": "help fr", "en":"help en", "es":"help es"}'
-            test_comp.help = MlString.load(newval['help'])
-            test_comp.save()
-            self._savecheck(test_comp, newval)
-        
+        newval['help'] = '{"fr": "help fr", "en":"help en", "es":"help es"}'
+        test_comp.help = MlString.load(newval['help'])
+        test_comp.save()
+        self._savecheck(test_comp, newval)
+        self.assertTrue(True)
+    
         #string change
-        with self.subTest("Save after string change"):
-            newval['string'] = '{"fr": "string fr", "en":"string en", "es":"string es"}'
-            test_comp.string = MlString.load(newval['string'])
-            test_comp.save()
-            self._savecheck(test_comp, newval)
+        newval['string'] = '{"fr": "string fr", "en":"string en", "es":"string es"}'
+        test_comp.string = MlString.load(newval['string'])
+        test_comp.save()
+        self._savecheck(test_comp, newval)
+        self.assertTrue(True)
 
         #no change
-        with self.subTest("Save without any change"):
-            test_comp.save()
-            self._savecheck(test_comp, newval)
+        test_comp.save()
+        self._savecheck(test_comp, newval)
+        self.assertTrue(True)
 
         #change all
-        with self.subTest("Save after name, help and string change"):
-            test_comp.name = newval['name'] = test_comp.name = 'newnewname'
-            newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
-            test_comp.help = MlString.load(newval['help'])
-            newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
-            test_comp.string = MlString.load(newval['string'])
+        test_comp.name = newval['name'] = test_comp.name = 'newnewname'
+        newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
+        test_comp.help = MlString.load(newval['help'])
+        newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
+        test_comp.string = MlString.load(newval['string'])
 
-            test_comp.save()
-            self._savecheck(test_comp, newval)
+        test_comp.save()
+        self._savecheck(test_comp, newval)
+        self.assertTrue(True)
 
         pass
 
@@ -360,37 +360,24 @@ class TestSave(ComponentTestCase):
         changes = { 'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,2,22,43), 'rank': 42 }
 
         for prop in changes:
-            with self.subTest("Illegal change of "+prop):
-                test_comp = EmTestComp(val['name'])
-                self.check_equals(val, test_comp, False)
-                
-                with self.assertRaises(TypeError):
-                    setattr(test_comp, prop, changes[prop])
-                test_comp.save()
-    
-                test_comp2 = EmTestComp(val['name'])
-    
-                if prop  == 'date_create':
-                    assertion = self.assertEqualDatetime
-                elif prop == 'date_update':
-                    continue
-                else: #rank
-                    assertion = self.assertEqual
-    
-                assertion(getattr(test_comp,prop), val[prop], "When using setattr the "+prop+" of a component is set : ")
-                assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the "+prop+" of a loaded component is set : ")
-    
-                # The code block commented bellow uses the values argument of the save method.
-                # soon this argument will not being used anymore
-                """
-                test_comp = EmTestComp(val['name'])
-                self.check_equals(val, test_comp)
-                test_comp.save({ prop: changes['prop'] })
-    
-                test_comp2 = EmTestComp(val['name'])
-                self.assertEqualDatetime(test_comp.date_create, val[prop], "The "+prop+" of the component instance has been changed")
-                self.assertEqualDatetime(test_comp2.date_create, val[prop], "When loaded the "+prop+" has been changed")
-                """
+            test_comp = EmTestComp(val['name'])
+            self.check_equals(val, test_comp, False)
+            
+            with self.assertRaises(TypeError):
+                setattr(test_comp, prop, changes[prop])
+            test_comp.save()
+
+            test_comp2 = EmTestComp(val['name'])
+
+            if prop  == 'date_create':
+                assertion = self.assertEqualDatetime
+            elif prop == 'date_update':
+                continue
+            else: #rank
+                assertion = self.assertEqual
+
+            assertion(getattr(test_comp,prop), val[prop], "When using setattr the "+prop+" of a component is set : ")
+            assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the "+prop+" of a loaded component is set : ")
         pass
 
 #====================#
@@ -399,40 +386,35 @@ class TestSave(ComponentTestCase):
 class TestCreate(ComponentTestCase):
     
     def test_create(self):
-        
-        with self.subTest("Create with all infos"):
-            vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
-            tc = EmTestComp.create(**vals)
-            self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
-            tcdb = EmTestComp('created1')
-            self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
-        
+        """Testing EmComponent.create()"""
+        vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
+        tc = EmTestComp.create(**vals)
+        self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
+        tcdb = EmTestComp('created1')
+        self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
+    
         # This test assume that string and help has default values
-        with self.subTest("Create with minimal infos"):
-            vals = { 'name': 'created2', 'rank_fam': 'f' }
-            tc = EmTestComp.create(**vals)
-            self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
-            tcdb = EmTestComp('created1')
-            self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
+        vals = { 'name': 'created2', 'rank_fam': 'f' }
+        tc = EmTestComp.create(**vals)
+        self.check_equals(vals, tc, "The created EmTestComp hasn't the good properties values")
+        tcdb = EmTestComp('created1')
+        self.check_equals(vals, tc, "When fetched from Db the created EmTestComp hasn't the good properties values")
         pass
 
     def test_create_badargs(self):
-        
-        with self.subTest("Create with illegal arguments"):
-            with self.assertRaises(TypeError, msg="But given a function as argument"):
-                tc = EmTestComp.create(print)
-            with self.assertRaises(TypeError, msg="But values contains date_create and date_update"):
-                vals = { 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(**vals)
+        """Testing EmComponent.create() with bad arguments"""
+        with self.assertRaises(TypeError, msg="But given a function as argument"):
+            tc = EmTestComp.create(print)
+        with self.assertRaises(TypeError, msg="But values contains date_create and date_update"):
+            vals = { 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+            tc = EmTestComp.create(**vals)
 
-        with self.subTest("Create without mandatory arguments"):
-            with self.assertRaises(TypeError, msg="But no name was given"):
-                vals = { 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(**vals)
-            with self.assertRaises(TypeError, msg="But no rank_fam was given"):
-                vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
-                tc = EmTestComp.create(**vals)
-
+        with self.assertRaises(TypeError, msg="But no name was given"):
+            vals = { 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+            tc = EmTestComp.create(**vals)
+        with self.assertRaises(TypeError, msg="But no rank_fam was given"):
+            vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
+            tc = EmTestComp.create(**vals)
         pass
 
 #====================#
@@ -476,6 +458,7 @@ class TestDelete(ComponentTestCase):
                     tc = EmTestComp(vals[j]['name'])
                 except EmComponentNotExistError:
                     self.fail('EmComponent should not be deleted')
+        self.assertTrue(True)
         pass
 
 
@@ -559,20 +542,6 @@ class TestModifyRank(ComponentTestCase):
             for j in range(i+1,nmax+1):
                 test_comp = EmTestComp(names[j])
                 self.assertEqual(test_comp.rank, j)
-
-        #Not inverting the list (makes swap but at the end we are in reverse state again)
-        #--------------------------------------------------------------------------------
-        for i in range(nmax,-1,-1):
-            test_comp = EmTestComp(names[i])
-            test_comp.modify_rank(nmax,'=')
-            self.assertEqual(test_comp.rank, nmax)
-            for j in range(i,nmax+1):
-                test_comp = EmTestComp(names[j])
-                self.assertEqual(test_comp.rank, nmax-(j-i), "Excepted rank was '"+str(nmax-(j-i))+"' but got '"+str(test_comp.rank)+"'). Ranks dump : "+self.dump_ranks())
-            for j in range(0,i):
-                test_comp = EmTestComp(names[j])
-                self.assertEqual(test_comp.rank, i-j-1)
-
         pass
 
     def test_modify_rank_relative(self):

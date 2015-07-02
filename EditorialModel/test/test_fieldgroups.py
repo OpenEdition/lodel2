@@ -189,6 +189,7 @@ class TestCreate(FieldGroupTestCase):
 class TestFields(FieldGroupTestCase):
 
     def setUp(self):
+        super(TestFields, self).setUp()
         self.fg1 = EmFieldGroup.create('testfg', EmClass('entity1'))
         self.fg2 = EmFieldGroup.create('testfg2', EmClass('entry1'))
         self.fg3 = EmFieldGroup.create('testfg3', EmClass('entry1'))
@@ -225,17 +226,17 @@ class TestFields(FieldGroupTestCase):
         }
 
         for name in tests:
-            with self.subTest("Testing on "+name+" instanciated EmFieldGroups"):
-                fg = tests[name]
-                flist = fg.fields()
-                res = []
-                for f in flist:
-                    res.append(f.uid)
-                self.assertEqual(set(res), set(excepted1))
-
-        with self.subTest("Testing empty fieldgroup"):
-            fg = self.fg3
+            fg = tests[name]
             flist = fg.fields()
-            self.assertEqual(len(flist), 0)
+            res = []
+            for f in flist:
+                res.append(f.uid)
+            self.assertEqual(set(res), set(excepted1))
+
+    def test_empty_fields(self):
+        """ Testing fields method on an empty fieldgroup """
+        fg = self.fg3
+        flist = fg.fields()
+        self.assertEqual(len(flist), 0)
         pass
 
