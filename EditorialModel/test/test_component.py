@@ -70,7 +70,7 @@ def setUpModule():
 
     sqlsetup.init_db('default', False, tables)   
 
-    dbe = sqlutils.getEngine('default')
+    dbe = sqlutils.get_engine('default')
 
     # Insertion of testings datas
     conn = dbe.connect()
@@ -135,7 +135,7 @@ class ComponentTestCase(TestCase):
         return globals()['tables']
     
     def setUp(self):
-        self.dber = sqlutils.getEngine('default')
+        self.dber = sqlutils.get_engine('default')
         self.test_values = self.__class__.test_values
         #Db RAZ
         #shutil.copyfile(TEST_COMPONENT_DBNAME+'_bck', globals()['component_test_dbfilename'])
