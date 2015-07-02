@@ -62,10 +62,6 @@ def get_engine(ename='default', sqlalogging=None):
     return ret
 
 
-def getEngine(ename='default', sqlalogging=None):
-    return get_engine(ename=ename, sqlalogging=sqlalogging)
-
-
 ## Return a sqlalchemy.MetaData object
 # @param engine sqlalchemy.engine : A sqlalchemy engine
 # @return an sql alechemy MetaData instance bind to engine

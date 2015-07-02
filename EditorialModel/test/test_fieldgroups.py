@@ -67,7 +67,7 @@ class TestInit(FieldGroupTestCase):
 
     def setUp(self):
         super(TestInit, self).setUp()
-        conn = sqlutils.getEngine().connect()
+        conn = sqlutils.get_engine().connect()
 
         ent1 = EmClass('entity1')
         idx1 = EmClass('entry1')
@@ -81,7 +81,7 @@ class TestInit(FieldGroupTestCase):
             { 'uid': EmFieldGroup.new_uid(), 'name': 'fg3', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 2 , 'class_id': idx1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
         ]
 
-        req = sqla.Table('em_fieldgroup', sqlutils.meta(sqlutils.getEngine())).insert(self.tfg)
+        req = sqla.Table('em_fieldgroup', sqlutils.meta(sqlutils.get_engine())).insert(self.tfg)
         conn.execute(req)
         conn.close()
         pass

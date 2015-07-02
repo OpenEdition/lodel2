@@ -54,7 +54,7 @@ class TestEmClassCreation(ClassesTestCase):
     # should be able to select on the created table
     def test_table_em_classes(self):
         """ Testing ability of EmClass to crate its associated table """
-        conn = sqlutils.getEngine().connect()
+        conn = sqlutils.get_engine().connect()
         a = sqlutils.meta(conn)
         try:
             newtable = sqla.Table('testClass', sqlutils.meta(conn))
@@ -97,7 +97,7 @@ class TestEmClassDeletion(ClassesTestCase):
     # test if the table is deleted after a call to delete
     def test_table_delete(self):
         """ Test associated table deletetion on EmClass deletion """
-        dbe = sqlutils.getEngine()
+        dbe = sqlutils.get_engine()
         for i,class_name in enumerate(self.names):
             cur_class = EmClass(class_name)
             self.assertTrue(cur_class.delete(), "delete method didn't return True but the class has no fieldgroups")
@@ -117,7 +117,7 @@ class TestEmClassDeletion(ClassesTestCase):
         test_class = EmClass(self.names[0])
         fieldgroup = EmFieldGroup.create('fooFieldGroup', test_class)
         self.assertFalse(test_class.delete(), "delete method returns True but the class has fieldgroup")
-        dbe = sqlutils.getEngine()
+        dbe = sqlutils.get_engine()
         meta = sqlutils.meta(dbe)
         self.assertIn(self.names[0], meta.tables, "Table has been deleted but the class has fieldgroup")
         try:
@@ -237,7 +237,7 @@ class TestEmClassLinkType(ClassesTestCase):
     # should be able to select on the created table
     def test_table_classes_types(self):
         """ Test if a table 'testEntity_keywords' was created """
-        conn = sqlutils.getEngine().connect()
+        conn = sqlutils.get_engine().connect()
         a = sqlutils.meta(conn)
         try:
             newtable = sqla.Table('testEntity_keywords', sqlutils.meta(conn))

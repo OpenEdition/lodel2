@@ -7,7 +7,7 @@ from Database import sqlutils
 
 def init_db(dbconfname='default', alchemy_logs=None, schema=None):
 
-    dbe = sqlutils.getEngine(dbconfname, alchemy_logs)
+    dbe = sqlutils.get_engine(dbconfname, alchemy_logs)
     meta = sqlutils.meta(dbe)
     meta.reflect()
     meta.drop_all(dbe)
