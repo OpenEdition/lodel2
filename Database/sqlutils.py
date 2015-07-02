@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import re
+#import re
 import logging as logger
 
 import sqlalchemy as sqla
@@ -25,6 +25,19 @@ ENGINES = {'mysql': {
 
 sqlcfg = settings.LODEL2SQLWRAPPER
 
+
+## Returns an engine given dbconf name
+#
+# @param ename str: name of an item in django.conf.settings.LODEL2SQLWRAPPER['db']
+# @param sqlaloggin None|bool: If None leave default value, if true activate sqlalchemy logging
+# @return SqlAlchemy engine
+def get_engine(ename='default',sqlalogging=None):
+    return getEngine(ename=ename, sqlalogging=sqlalogging)
+
+
+
+def db_engine(cls):
+    return sqlutils.getEngine(cls.dbconf)
 ## Return an engine given a dbconf name
 # @param ename str: Its a name of an item in django.conf.settings.LODEL2SQLWRAPPER['db']
 # @param sqlalogging None|bool : If None leave default value, if true activate sqlalchemy logging
