@@ -132,7 +132,7 @@ class EmComponent(object):
     @classmethod
     ## Shortcut that return the sqlAlchemy engine
     def db_engine(cls):
-        return sqlutils.getEngine(cls.dbconf)
+        return sqlutils.get_engine(cls.dbconf)
 
     ## Do the query on the database for EmComponent::populate()
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
