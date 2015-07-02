@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fields_types import Em_Field_Type
 from Database import sqlutils
 import sqlalchemy as sql
 
+import EditorialModel
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classtypes import EmNature, EmClassType
@@ -68,37 +68,82 @@ class EmType(EmComponent):
 
         return [ EmFieldGroup(row['uid']) for row in rows ]
 
-    ## Get the list of associated fields
+    ## Get the list of all Emfield possibly associated with this type
     # @return A list of EmField instance
-    # @todo handle optionnal fields
-    def fields(self):
+    def all_fields(self):
         res = []
-        for fguid in self.field_groups():
-            res += EmFieldGroup(fguid).fields()
+        for fieldgroup in self.field_groups():
+            res += fieldgroup.fields()
         return res
-        pass
+
+    ## Return selected optional field
+    # @return A list of EmField instance
+    def selected_fields(self):
+        dbe = self.db_engine()
+        meta = sqlutils.meta(dbe)
+        conn = dbe.connect()
+
+        table = sql.Table('em_field_type', meta)
+        res = conn.execute(table.select().where(table.c.type_id == self.uid))
+
+        return [ EditorialModel.fields.EmField(row['field_id']) for row in res.fetchall()]
+    
+    ## Return the list of associated fields
+    # @return A list of EmField instance
+    def fields(self):
+        result = list()
+        for field in self.all_fields():
+            if not field.optional:
+                result.append(field)
+        return result+selected_fields
 
     ## Select_field (Function)
     #
     # Indicates that an optional field is used
     #
     # @param field EmField: The optional field to select
-    # @throw ValueError, TypeError
+    # @return True if success False if failed
+    # @throw TypeError
     # @todo change exception type and define return value and raise condition
     def select_field(self, field):
-        Em_Field_Type.create(self, field)
-
+        return self._opt_field_act(field, True)
+        
     ## Unselect_field (Function)
     #
     # Indicates that an optional field will not be used
     #
     # @param field EmField: The optional field to unselect
-    # @throw ValueError, TypeError
-    # @todo change exception type and define return value and raise condition
+    # @return True if success False if fails
+    # @throw TypeError
     def unselect_field(self, field):
-        emFieldType = Em_Field_Type(self.uid, field.uid)
-        emFieldType.delete()
-        del emFieldType
+        return self._opt_field_act(field, False)
+
+    
+    ## @brief Select or unselect an optional field
+    # @param field EmField: The EmField to select or unselect
+    # @param select bool: If True select field, else unselect it
+    # @return True if success False if fails
+    # @throw TypeError if field is not an EmField instance
+    # @throw ValueError if field is not optional or is not associated with this type
+    def _opt_field_act(self, field, select=True):
+        if not field in self.all_fields():
+            raise ValueError("This field is not part of this type")
+        if not field.optional:
+            raise ValueError("This field is not optional")
+
+        dbe = self.db_engine()
+        meta = sqlutils.meta(dbe)
+        conn = dbe.connect()
+
+        table = sql.Table('em_field_type', meta)
+        if select:
+            req = table.insert({'type_id': self.uid, 'field_id': field.uid})
+        else:
+            req = table.delete().where(table.c.type_id == self.uid and table.c.field_id == field.uid)
+
+        res = conn.execute(req)
+        conn.close()
+        return bool(res)
 
     ## Get the list of associated hooks
     # @note Not conceptualized yet

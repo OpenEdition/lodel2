@@ -106,6 +106,16 @@ class EmComponent(object):
             self._fields[name].from_python(value)
         else:
             object.__setattr__(self, name, value)
+    
+    ## @brief Hash function that allows to compare two EmComponent
+    # @return EmComponent+ClassName+uid
+    def __hash__(self):
+        return "EmComponent"+self.__class__.__name__+str(self.uid)
+
+    ## @brief Test if two EmComponent are "equals"
+    # @return True or False
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and self.uid == other.uid
 
     ## Lookup in the database properties of the object to populate the properties
     # @throw EmComponentNotExistError if the instance is not anymore stored in database

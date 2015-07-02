@@ -12,7 +12,6 @@ from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
-from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.test.utils import *
 from EditorialModel.fieldtypes import *
 

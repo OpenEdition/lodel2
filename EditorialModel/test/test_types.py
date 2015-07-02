@@ -12,7 +12,6 @@ from EditorialModel.classtypes import EmClassType, EmNature
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fieldtypes import *
-from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.fields import EmField
 from EditorialModel.test.utils import *
 from Database import sqlutils
@@ -44,8 +43,11 @@ def setUpModule():
     EmType.create(name='type7', em_class=emclass4)
 
     emfieldgroup = EmFieldGroup.create(name='fieldgroup1', em_class=emclass1)
+    emfieldgroup2 = EmFieldGroup.create(name='fieldgroup2', em_class=emclass2)
     emfieldtype = get_field_type('integer')
     EmField.create(name='field1', fieldgroup=emfieldgroup, fieldtype=emfieldtype, rel_to_type_id=emtype.uid)
+    EmField.create(name='field2', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=True)
+    EmField.create(name='field3', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=False)
 
     saveDbState(TEST_TYPE_DBNAME)
 
@@ -69,18 +71,34 @@ class TypeTestCase(TestCase):
         self.emfieldgroup = EmFieldGroup('fieldgroup1')
         self.emfieldtype = get_field_type('integer')
         self.emfield = EmField('field1')
+        self.emfield2 = EmField('field2')
+        self.emfield3 = EmField('field3')
+        pass
+
 
 
 class TestSelectField(TypeTestCase):
     def testSelectField(self):
         """ Testing optionnal field selection """
-        self.emtype.select_field(self.emfield)
-        self.assertIsNotNone(Em_Field_Type(self.emtype.uid, self.emfield.uid))
+        self.emtype.select_field(self.emfield2)
+        #a bit queick and dirty
+        self.assertIn(self.emfield2, self.emtype.selected_fields()) 
+        pass
 
     def testUnselectField(self):
         """ Testing optionnal field unselection """
-        self.emtype.unselect_field(self.emfield)
-        self.assertFalse(Em_Field_Type(self.emtype.uid, self.emfield.uid).exists())
+        self.emtype.select_field(self.emfield2)
+        self.emtype.unselect_field(self.emfield2)
+        self.assertNotIn(self.emfield2, self.emtype.selected_fields())
+        pass
+
+    def testSelectFieldInvalid(self):
+        """ Testing optionnal field selection with invalid fields """
+        with self.assertRaises(ValueError, msg="But the field was not optionnal"):
+            self.emtype.select_field(self.emfield3)
+        with self.assertRaises(ValueError, msg="But the field was not part of this type"):
+            self.emtype.select_field(self.emfield)
+        pass
 
 class TestLinkedTypes(TypeTestCase):
     @unittest.skip("Not yet implemented")
