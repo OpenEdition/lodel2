@@ -39,18 +39,8 @@ def setUpModule():
         
         The goal are to overwrtie Db configs, and prepare objects for test_case initialisation
     """
-    #Overwritting db confs to make tests
+    cleanDb(TEST_COMPONENT_DBNAME)
 
-
-    """
-    settings.LODEL2SQLWRAPPER['db'] = {
-        'default': {
-            'ENGINE': 'sqlite',
-            'NAME': TEST_COMPONENT_DBNAME
-        }
-    }
-    
-    """
     setDbConf(TEST_COMPONENT_DBNAME)
     #Disable logging but CRITICAL
     logging.basicConfig(level=logging.CRITICAL)
@@ -440,7 +430,14 @@ class TestCreate(ComponentTestCase):
             self.fail("create raises but should return the existing EmComponent instance instead")
         self.assertEqual(tc.uid, tc2.uid, "Created twice the same EmComponent")
         pass
-        
+
+    def testGetMaxRank(self):
+        old = EmTestComp.get_max_rank('f')
+        EmTestComp.create(name="foobartest", rank_fam = 'f')
+        n = EmTestComp.get_max_rank('f')
+        self.assertEqual(old+1, n, "Excepted value was "+str(old+1)+" but got "+str(n))
+        self.assertEqual(EmTestComp.get_max_rank('z'), -1)
+        pass
 
 #====================#
 # EmComponent.delete #

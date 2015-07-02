@@ -203,7 +203,7 @@ class EmComponent(object):
         dbe = cls.db_engine()
         conn = dbe.connect()
 
-        kwargs['rank'] = -1 #Warning !!!
+        kwargs['rank'] = cls.get_max_rank( kwargs[cls.ranked_in] )+1
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
@@ -265,7 +265,8 @@ class EmComponent(object):
 
     ## get_max_rank
     # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
-    #return int
+    # @param ranked_in_value mixed: The rank "family"
+    # @param return -1 if no EmComponent found else return an integer >= 0
     @classmethod
     def get_max_rank(cls, ranked_in_value):
         dbe = cls.db_engine()
@@ -275,12 +276,10 @@ class EmComponent(object):
         res = c.execute(req)
         res = res.fetchone()
         c.close()
-        if(res != None):
+        if res != None:
             return res['rank']
         else:
             return -1
-            #logger.error("Bad argument")
-            #raise EmComponentRankingNotExistError('The ranking of the component named : ' + self.name + 'is empty')
 
     ## modify_rank
     #
