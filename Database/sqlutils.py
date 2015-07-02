@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-#import re
 import logging as logger
 
 import sqlalchemy as sqla
