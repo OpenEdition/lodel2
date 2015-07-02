@@ -134,8 +134,6 @@ class TestCreate(FieldGroupTestCase):
         params = {  'EmClass entity instance': EmClass('entity1'),
                     'EmClass entry instance': EmClass('entry1'),
                     'EmClass person instance': EmClass('person1'),
-                    'EmClass id': EmClass('entity1').uid,
-                    'EmClass name': 'entity2',
                 }
 
         for i,param_name in enumerate(params):
@@ -173,8 +171,7 @@ class TestCreate(FieldGroupTestCase):
         #Creating a fieldgroup to test duplicate name
         exfg = EmFieldGroup.create('existingfg', EmClass('entity1'))
 
-        badargs = { 'a duplicate name': ('existingfg', ValueError),
-                    'an integer': (42, TypeError),
+        badargs = { 'an integer': (42, TypeError),
                     'a function': (print, TypeError),
                     'an EmClass': (EmClass('entry1'), TypeError),
                 }
@@ -189,6 +186,7 @@ class TestCreate(FieldGroupTestCase):
 class TestFields(FieldGroupTestCase):
 
     def setUp(self):
+        super(TestFields, self).setUp()
         self.fg1 = EmFieldGroup.create('testfg', EmClass('entity1'))
         self.fg2 = EmFieldGroup.create('testfg2', EmClass('entry1'))
         self.fg3 = EmFieldGroup.create('testfg3', EmClass('entry1'))
@@ -225,17 +223,17 @@ class TestFields(FieldGroupTestCase):
         }
 
         for name in tests:
-            with self.subTest("Testing on "+name+" instanciated EmFieldGroups"):
-                fg = tests[name]
-                flist = fg.fields()
-                res = []
-                for f in flist:
-                    res.append(f.uid)
-                self.assertEqual(set(res), set(excepted1))
-
-        with self.subTest("Testing empty fieldgroup"):
-            fg = self.fg3
+            fg = tests[name]
             flist = fg.fields()
-            self.assertEqual(len(flist), 0)
+            res = []
+            for f in flist:
+                res.append(f.uid)
+            self.assertEqual(set(res), set(excepted1))
+
+    def test_empty_fields(self):
+        """ Testing fields method on an empty fieldgroup """
+        fg = self.fg3
+        flist = fg.fields()
+        self.assertEqual(len(flist), 0)
         pass
 

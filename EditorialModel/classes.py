@@ -5,7 +5,7 @@
 
 import logging as logger
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.components import EmComponent, EmComponentNotExistError, EmComponentExistError
 from Database import sqlutils
 import sqlalchemy as sql
 
@@ -33,24 +33,17 @@ class EmClass(EmComponent):
     # @param name str: name of the new class
     # @param class_type EmClasstype: type of the class
     # @return An EmClass instance
+    # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
+    # @todo Check class_type argument
     @classmethod
     def create(cls, name, class_type):
-        try:
-            res = EmClass(name)
-            logger.info("Trying to create an EmClass that allready exists")
-        except EmComponentNotExistError:
-            res = cls._create_db(name, class_type)
-            logger.debug("EmClass successfully created")
-
-        return res
+        return cls._create_db(name, class_type)
 
     @classmethod
     ## Isolate SQL for EmClass::create
     # @todo Remove hardcoded default value for icon
     # @return An instance of EmClass
     def _create_db(cls, name, class_type):
-        """ Do the db querys for EmClass::create() """
-
         #Create a new entry in the em_class table
         values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
         resclass = super(EmClass, cls).create(**values)
@@ -60,12 +53,17 @@ class EmClass(EmComponent):
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
-        emclasstable = sql.Table(name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
+        emclasstable = sql.Table(resclass.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
 
         return resclass
+
+    @property
+    ## @brief Return the table name used to stores data on this class
+    def class_table_name(self):
+        return self.name
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it

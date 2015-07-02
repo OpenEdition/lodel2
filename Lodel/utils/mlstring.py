@@ -40,9 +40,12 @@ class MlString(object):
             return ""
 
     ## Test if two MlString instance are equivalent
-    # @param other MlString : Another MlString instance
+    # @param other MlString|str : Another MlString instance or a string (json formated)
     # @return True or False
     def __eq__(self, other):
+        if isinstance(other, str):
+            other = MlString.load(other)
+
         if not isinstance(other, MlString):
             return False
         if not set(lng for lng in self.translations) == set( lng for lng in other.translations):

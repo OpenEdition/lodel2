@@ -12,7 +12,6 @@ from EditorialModel.classtypes import EmClassType, EmNature
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fieldtypes import *
-from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.fields import EmField
 from EditorialModel.test.utils import *
 from Database import sqlutils
@@ -44,8 +43,11 @@ def setUpModule():
     EmType.create(name='type7', em_class=emclass4)
 
     emfieldgroup = EmFieldGroup.create(name='fieldgroup1', em_class=emclass1)
+    emfieldgroup2 = EmFieldGroup.create(name='fieldgroup2', em_class=emclass2)
     emfieldtype = EmField_integer()
     EmField.create(name='field1', fieldgroup=emfieldgroup, fieldtype=emfieldtype, rel_to_type_id=emtype.uid)
+    EmField.create(name='field2', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=True)
+    EmField.create(name='field3', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=False)
 
     saveDbState(TEST_TYPE_DBNAME)
 
@@ -69,20 +71,39 @@ class TypeTestCase(TestCase):
         self.emfieldgroup = EmFieldGroup('fieldgroup1')
         self.emfieldtype = EmField_integer()
         self.emfield = EmField('field1')
+        self.emfield2 = EmField('field2')
+        self.emfield3 = EmField('field3')
+        pass
+
 
 
 class TestSelectField(TypeTestCase):
     def testSelectField(self):
-        self.emtype.select_field(self.emfield)
-        self.assertIsNotNone(Em_Field_Type(self.emtype.uid, self.emfield.uid))
+        """ Testing optionnal field selection """
+        self.emtype.select_field(self.emfield2)
+        #a bit queick and dirty
+        self.assertIn(self.emfield2, self.emtype.selected_fields()) 
+        pass
 
     def testUnselectField(self):
-        self.emtype.unselect_field(self.emfield)
-        self.assertFalse(Em_Field_Type(self.emtype.uid, self.emfield.uid).exists())
+        """ Testing optionnal field unselection """
+        self.emtype.select_field(self.emfield2)
+        self.emtype.unselect_field(self.emfield2)
+        self.assertNotIn(self.emfield2, self.emtype.selected_fields())
+        pass
+
+    def testSelectFieldInvalid(self):
+        """ Testing optionnal field selection with invalid fields """
+        with self.assertRaises(ValueError, msg="But the field was not optionnal"):
+            self.emtype.select_field(self.emfield3)
+        with self.assertRaises(ValueError, msg="But the field was not part of this type"):
+            self.emtype.select_field(self.emfield)
+        pass
 
 class TestLinkedTypes(TypeTestCase):
     @unittest.skip("Not yet implemented")
     def testLinkedtypes(self):
+        """ Testing linked types """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.emtype3.add_superior(self.emtype, EmNature.PARENT)
 
@@ -123,6 +144,7 @@ class TestTypeHierarchy(TypeTestCase):
             
 
     def testAddSuperiorParent(self):
+        """ Testing add superior in relation with Parent nature """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.check_add_sup(self.emtype, self.emtype2, EmNature.PARENT)
 
@@ -131,6 +153,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testAddSuperiorTranslation(self):
+        """ Testing add superior in relation with Translation nature """
         self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
         self.check_add_sup(self.emtype, self.emtype, EmNature.TRANSLATION)
 
@@ -139,6 +162,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testAddSuperiorIdentity(self):
+        """ Testing add superior in relation with Identity nature """
         self.emtype6.add_superior(self.emtype6, EmNature.IDENTITY)
         self.check_add_sup(self.emtype6, self.emtype6, EmNature.IDENTITY)
         self.emtype6.add_superior(self.emtype7, EmNature.IDENTITY)
@@ -146,6 +170,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
 
     def testIllegalSuperior(self):
+        """ Testing invalid add superior """
         illegal_combinations = [
             (self.emtype, self.emtype4, EmNature.PARENT),
             (self.emtype, self.emtype2, EmNature.TRANSLATION),
@@ -163,6 +188,7 @@ class TestTypeHierarchy(TypeTestCase):
         pass
     
     def testDelSuperior(self):
+        """ Testing superior deletion """
         self.emtype.add_superior(self.emtype2, EmNature.PARENT)
         self.emtype.add_superior(self.emtype, EmNature.PARENT)
         self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
@@ -179,12 +205,14 @@ class TestTypeHierarchy(TypeTestCase):
 
 class TestDeleteTypes(TypeTestCase):
     def testDeleteTypes(self):
+        """ Testing EmType deletion """
         type_name = self.emtype.name
         self.assertTrue(self.emtype.delete(), "delete method returns False but should return True")
         with self.assertRaises(EmComponentNotExistError, msg="Type not deleted"):
             EmType(type_name)
 
     def testUndeletableTypes(self):
+        """ Testing invalid non empty EmType deletion """
         type_name = self.emtype.name
         self.emtype2.add_superior(self.emtype, 'parent')
         self.assertFalse(self.emtype.delete(), "delete return True but should return False")

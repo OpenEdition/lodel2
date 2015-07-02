@@ -53,6 +53,7 @@ class TestEmClassCreation(ClassesTestCase):
     # test if a table 'testClass' was created
     # should be able to select on the created table
     def test_table_em_classes(self):
+        """ Testing ability of EmClass to crate its associated table """
         conn = sqlutils.getEngine().connect()
         a = sqlutils.meta(conn)
         try:
@@ -67,16 +68,19 @@ class TestEmClassCreation(ClassesTestCase):
 
     # the uid should be 1
     def test_uid(self):
+        """ testing uid """
         cl = EmClass('testClass')
         self.assertEqual(cl.uid, 1)
 
     # the name should be the one given
     def test_classname(self):
+        """ Testing name consistency on instanciation """
         cl = EmClass('testClass')
         self.assertEqual(cl.name, 'testClass')
 
     # the classtype should have the name of the EmClassType
     def test_classtype(self):
+        """ Testing classtype consistency """
         cl = EmClass('testClass')
         self.assertEqual(cl.classtype, EmClassType.entity['name'])
 
@@ -92,6 +96,7 @@ class TestEmClassDeletion(ClassesTestCase):
     
     # test if the table is deleted after a call to delete
     def test_table_delete(self):
+        """ Test associated table deletetion on EmClass deletion """
         dbe = sqlutils.getEngine()
         for i,class_name in enumerate(self.names):
             cur_class = EmClass(class_name)
@@ -108,6 +113,7 @@ class TestEmClassDeletion(ClassesTestCase):
     
     # test if delete refuse to delete if a class had fieldgroups
     def test_table_refuse_delete(self):
+        """ Test delete on an EmClass has fieldgroup """
         test_class = EmClass(self.names[0])
         fieldgroup = EmFieldGroup.create('fooFieldGroup', test_class)
         self.assertFalse(test_class.delete(), "delete method returns True but the class has fieldgroup")
@@ -134,6 +140,7 @@ class TestEmClassFieldgroups(ClassesTestCase):
 
     # test if fieldgroups() return a list of EmFieldGroup
     def test_fieldgroups(self):
+        """ Test if fieldgroups method return the right list of EmFielGroup """
         test_class = EmClass('testClass')
         fg1 = EmFieldGroup.create('fg1', test_class)
         fg2 = EmFieldGroup.create('fg2', test_class)
@@ -145,6 +152,7 @@ class TestEmClassFieldgroups(ClassesTestCase):
 
     # with no fieldgroups fieldgroups() should return an empty list
     def test_no_fieldgroups(self):
+        """ Test fielgroups method on an empty EmClass """
         test_class = EmClass('testClass')
         fieldgroups = test_class.fieldgroups()
         self.assertEqual(fieldgroups, [])
@@ -162,6 +170,7 @@ class TestEmClassTypes(ClassesTestCase):
 
     # test if types() return a list of EmType
     def test_types(self):
+        """ Test if types method return the right list of EmType """
         test_class = EmClass('testClass')
         t1 = EmType.create('t1', test_class)
         t2 = EmType.create('t2', test_class)
@@ -173,6 +182,7 @@ class TestEmClassTypes(ClassesTestCase):
 
     # with no type types() should return an empty list
     def test_no_types(self):
+        """ Test types method on an EmClass with no associated types """
         test_class = EmClass('testClass')
         types = test_class.types()
         self.assertEqual(types, [])
@@ -190,6 +200,7 @@ class TestEmClassFields(ClassesTestCase):
 
     # test if fields() return a list of EmField
     def test_fields(self):
+        """ Testing fields method """
         test_class = EmClass('testClass')
         fg = EmFieldGroup.create('fg', test_class)
         f1 = EmField.create('f1', fg, fieldTypes.EmField_char())
@@ -202,6 +213,7 @@ class TestEmClassFields(ClassesTestCase):
 
     # with no field fields() should return an empty list
     def test_no_fields(self):
+        """ Testing fields method on an EmClass with no associated fields """
         test_class = EmClass('testClass')
         fields = test_class.fields()
         self.assertEqual(fields, [])
@@ -224,6 +236,7 @@ class TestEmClassLinkType(ClassesTestCase):
     # test if a table 'testEntity_keywords' was created
     # should be able to select on the created table
     def test_table_classes_types(self):
+        """ Test if a table 'testEntity_keywords' was created """
         conn = sqlutils.getEngine().connect()
         a = sqlutils.meta(conn)
         try:
@@ -238,6 +251,7 @@ class TestEmClassLinkType(ClassesTestCase):
 
     # test if we can retrieve the linked type
     def test_linked_types(self):
+        """ Test linked_types """
         testEntity = EmClass('testEntity')
         linked_types = testEntity.linked_types()
         self.assertEqual(linked_types[0].name, 'keywords')

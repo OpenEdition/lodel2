@@ -12,7 +12,6 @@ from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
-from EditorialModel.fields_types import Em_Field_Type
 from EditorialModel.test.utils import *
 from EditorialModel.fieldtypes import *
 
@@ -32,6 +31,11 @@ def setUpModule():
     initTestDb(TEST_FIELD_DBNAME)
     setDbConf(TEST_FIELD_DBNAME)
     logging.basicConfig(level=logging.CRITICAL)
+    pass
+
+def tearDownModule():
+    cleanDb(TEST_FIELD_DBNAME)
+    pass
 
 
 ## FieldTestCase (Class)
@@ -111,6 +115,7 @@ class TestField(FieldTestCase):
     #
     # tests the creation process of a field
     def testCreate(self):
+        """ Testing fields creation process """
         '''
         field_values = {
             'name':'testfield1',
@@ -127,7 +132,6 @@ class TestField(FieldTestCase):
 
         # We check that the field has been added as a column in the corresponding table
         field_table_columns = self.get_table_columns(field.get_class_table())
-        print(field_table_columns)
         self.assertIn('testfield1', field_table_columns)
         #field_column_args = self.testFieldType.sqlalchemy_args()
         #field_column_args['name']='testfield1'
@@ -136,6 +140,7 @@ class TestField(FieldTestCase):
         pass
     
     def test_deletion(self):
+        """ Testing fields deletion process """
         field_names = ['field1', 'field2']
         for name in field_names:
             EmField.create(name=name, fieldgroup=self.testFieldgroup, fieldtype = self.testFieldType)

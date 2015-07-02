@@ -415,8 +415,6 @@ class EmField_integer(EmFieldType):
             return super(EmField_integer, self).to_value(value)
         return int(value)
 
-
-
 ## EmField_boolean (Class)
 #
 # Boolean field type
@@ -435,6 +433,7 @@ class EmField_boolean(EmFieldType):
         if value == None:
             return super(EmField_boolean, self).to_value(value)
         self.value = bool(value)
+        return self.value
 
 ## EmField_char (Class)
 #
