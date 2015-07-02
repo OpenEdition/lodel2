@@ -34,31 +34,18 @@ class EmFieldGroup(EmComponent):
     #
     # Save it in database and return an instance*
     # @param name str: The name of the new EmFieldGroup
-    # @param em_class EmClass|str|int : Can be an EditorialModel::classes::EmClass uid, name or instance
-    # @throw ValueError If an EmFieldGroup with this name allready exists
-    # @throw ValueError If the specified EmClass don't exists
+    # @param em_class EmClass : An EditorialModel::classes::EmClass instance
+    # @param **em_component_args : @ref EditorialModel::components::create()
+    # @throw EmComponentExistError If an EmFieldGroup with this name allready exists
     # @throw TypeError If an argument is of an unexepted type
-    def create(cls, name, em_class):
-        if not isinstance(em_class, EmClass):
-            if isinstance(em_class, int) or isinstance(em_class, str):
-                try:
-                    arg = em_class
-                    em_class = EmClass(arg)
-                except EmComponentNotExistError:
-                    raise ValueError("No EmClass found with id or name '" + arg + "'")
-            else:
-                raise TypeError("Excepting an EmClass, an int or a str for 'em_class' argument. Not an " + str(type(em_class)) + ".")
-
+    def create(cls, name, em_class, **em_component_args):
         if not isinstance(name, str):
-            raise TypeError("Excepting a string as first argument, not an " + str(type(name)))
+            raise TypeError("Excepting <class str> as name. But got " + str(type(name)))
+        if not isinstance(em_class, EmClass):
+            raise TypeError("Excepting <class EmClass> as em_class. But got "+str(type(name)))
 
-        try:
-            exists = EmFieldGroup(name)
-            raise ValueError("An EmFieldgroup named " + name + " allready exist")
-        except EmComponentNotExistError:
-            return super(EmFieldGroup, cls).create(name=name, class_id=em_class.uid)  # Check the return value ?
+        return super(EmFieldGroup, cls).create(name=name, class_id=em_class.uid, **em_component_args)
 
-        return exists
 
     ## Get the list of associated fields
     # @return A list of EmField instance

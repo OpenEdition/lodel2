@@ -14,7 +14,7 @@ import unittest
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.components import EmComponent, EmComponentNotExistError, EmComponentExistError
 import EditorialModel.fieldtypes as ftypes
 
 from EditorialModel.test.utils import *
@@ -415,7 +415,32 @@ class TestCreate(ComponentTestCase):
         with self.assertRaises(TypeError, msg="But no rank_fam was given"):
             vals = { 'name': 'created1', 'string': '{"fr":"testcomp"}', 'help': '{"en" :"help test", "fr":"test help"}', 'rank': 6, 'date_create': 0 , 'date_update': 0 }
             tc = EmTestComp.create(**vals)
+        with self.assertRaises(TypeError, msg="But invalid keyword argument given"):
+            vals = {'invalid': 42, 'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
+            tc = EmTestComp.create(**vals)
+            
         pass
+
+    def test_create_existing_failure(self):
+        """ Testing that create fails when trying to create an EmComponent with an existing name but different properties """
+        vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
+        tc = EmTestComp.create(**vals)
+        with self.assertRaises(EmComponentExistError, msg="Should raise because attribute differs for a same name"):
+            vals['rank_fam'] = 'e'
+            EmTestComp.create(**vals)
+        pass
+
+    def test_create_existing(self):
+        """ Testing that create dont fails when trying to create twice the same EmComponent """
+        vals = {'name': 'created1', 'rank_fam': 'f', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}'}
+        tc = EmTestComp.create(**vals)
+        try:
+            tc2 = EmTestComp.create(**vals)
+        except EmComponentExistError as e:
+            self.fail("create raises but should return the existing EmComponent instance instead")
+        self.assertEqual(tc.uid, tc2.uid, "Created twice the same EmComponent")
+        pass
+        
 
 #====================#
 # EmComponent.delete #

@@ -32,19 +32,15 @@ class EmType(EmComponent):
     ## Create a new EmType and instanciate it
     # @param name str: The name of the new type
     # @param em_class EmClass: The class that the new type will specialize
+    # @param **em_component_args : @ref EditorialModel::components::create()
     # @return An EmType instance
-    #
+    # @throw EmComponentExistError if an EmType with this name but different attributes exists
     # @see EmComponent::__init__()
     # 
     # @todo Remove hardcoded default value for icon
     # @todo check that em_class is an EmClass object
-    def create(c, name, em_class):
-        try:
-            exists = EmType(name)
-        except EmComponentNotExistError:
-            return super(EmType, c).create(name=name, class_id=em_class.uid, icon=0)
-
-        return exists
+    def create(c, name, em_class, **em_component_args):
+        return super(EmType, c).create(name=name, class_id=em_class.uid, icon=0, **em_component_args)
     
     ## @brief Delete an EmType
     # The deletion is only possible if a type is not linked by any EmClass

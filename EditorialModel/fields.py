@@ -47,36 +47,30 @@ class EmField(EmComponent):
     # @param rel_to_type_id int: default=0
     # @param rel_field_id int: default=0
     # @param icon int: default=0
-    # @param kwargs dict: Dictionary of the values to insert in the field record
+    # @param **em_component_args : @ref EditorialModel::components::create()
     #
     # @throw TypeError
+    # @throw RuntimeError if the associated column creation fails
+    # @throw EmComponentExistError if an EmField with this name allready exists in this fieldgroup
     # @see EmComponent::__init__()
     # @staticmethod
     @classmethod
-    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0):
-        try:
-            exists = EmField(name)
-        except EmComponentNotExistError:
-            values = {
-                'name': name,
-                'fieldgroup_id': fieldgroup.uid,
-                'fieldtype': fieldtype.name,
-                'optional': optional,
-                'internal': internal,
-                'rel_to_type_id': rel_to_type_id,
-                'rel_field_id': rel_field_id,
-                'icon': icon
-            }
+    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0, **em_component_args):
+        created_field = super(EmField, cls).create(
+            name=name,
+            fieldgroup_id=fieldgroup.uid,
+            fieldtype=fieldtype.name,
+            optional=optional,
+            internal=internal,
+            rel_to_type_id=rel_to_type_id,
+            rel_field_id=rel_field_id,
+            icon=icon,
+            **em_component_args
+        )
+        if not created_field.add_field_column_to_class_table():
+            raise RuntimeError("Unable to create the column for the EmField "+str(created_field))
 
-            created_field = super(EmField, cls).create(**values)
-            if created_field:
-                is_field_column_added = created_field.add_field_column_to_class_table()
-                if is_field_column_added:
-                    return created_field
-
-            exists = created_field
-
-        return exists
+        return created_field
 
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded
@@ -109,24 +103,19 @@ class EmField(EmComponent):
     #
     # @return Name of the table
     def get_class_table(self):
-        return self._get_class_table_db()
-
-    ## _get_class_tableDb (Function)
-    #
-    # Executes a request to the database to get the name of the table in which to add the field
-    #
-    # @return Name of the table
-    def _get_class_table_db(self):
+        #return self._get_class_table_db()
+        return self.get_class().class_table_name
+    
+    ## @brief Get the class that contains this field
+    # @return An EmClass instance
+    def get_class(self):
+        #<SQL>
         dbe = self.db_engine()
         conn = dbe.connect()
-        field_group_table = sql.Table(EmFieldGroup.table, sqlutils.meta(dbe))
-        request_get_class_id = field_group_table.select().where(field_group_table.c.uid == self.fieldgroup_id)
-        result_get_class_id = conn.execute(request_get_class_id).fetchall()
-        class_id = dict(zip(result_get_class_id[0].keys(), result_get_class_id[0]))['class_id']
+        fieldgroup_table = sqlutils.getTable(EmFieldGroup)
+        req = fieldgroup_table.select().where(fieldgroup_table.c.uid == self.fieldgroup_id)
+        res = conn.execute(req)
+        row = res.fetchone()
+        #</SQL>
+        return EmClass(row['class_id'])
 
-        class_table = sql.Table(EmClass.table, sqlutils.meta(dbe))
-        request_get_class_table = class_table.select().where(class_table.c.uid == class_id)
-        result_get_class_table = conn.execute(request_get_class_table).fetchall()
-        class_table_name = dict(zip(result_get_class_table[0].keys(), result_get_class_table[0]))['name']
-
-        return class_table_name

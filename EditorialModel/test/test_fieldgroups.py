@@ -134,8 +134,6 @@ class TestCreate(FieldGroupTestCase):
         params = {  'EmClass entity instance': EmClass('entity1'),
                     'EmClass entry instance': EmClass('entry1'),
                     'EmClass person instance': EmClass('person1'),
-                    'EmClass id': EmClass('entity1').uid,
-                    'EmClass name': 'entity2',
                 }
 
         for i,param_name in enumerate(params):
@@ -173,8 +171,7 @@ class TestCreate(FieldGroupTestCase):
         #Creating a fieldgroup to test duplicate name
         exfg = EmFieldGroup.create('existingfg', EmClass('entity1'))
 
-        badargs = { 'a duplicate name': ('existingfg', ValueError),
-                    'an integer': (42, TypeError),
+        badargs = { 'an integer': (42, TypeError),
                     'a function': (print, TypeError),
                     'an EmClass': (EmClass('entry1'), TypeError),
                 }

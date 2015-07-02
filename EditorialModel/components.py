@@ -153,21 +153,39 @@ class EmComponent(object):
     # @param **kwargs : Names arguments representing object properties
     # @return An instance of the created component
     # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
-    #
+    # @throw RuntimeError if the creation fails at database level
     # @todo Check that the query didn't failed
     # @todo Check that every mandatory _fields are given in args
     # @todo Put a real rank at creation
     # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
     @classmethod
     def create(cls, **kwargs):
+        #Checking for invalid arguments
+        valid_args = [ name for name,_ in (cls._fields + EmComponent._fields)]
+
         for argname in kwargs:
             if argname in ['date_update', 'date_create', 'rank', 'uid']:  # Automatic properties
                 raise TypeError("Invalid argument : " + argname)
+            elif argname not in valid_args:
+                raise TypeError("Unexcepted keyword argument '"+argname+"' for "+cls.__name__+" creation")
+                
+        #Check uniq names constraint
+        try:
+            name = kwargs['name']
+            exist = cls(name)
+            for kname in kwargs:
+                if not (getattr(exist, kname) == kwargs[kname]):
+                    raise EmComponentExistError("An "+cls.__name__+" named "+name+" allready exists with a different "+kname)
+            logger.info("Trying to create an "+cls.__name__+" that allready exist with same attribute. Returning the existing one")
+            return exist
+        except EmComponentNotExistError:
+            pass
 
         #TODO check that every mandatory _fields are here like below for example
         #for name in cls._fields:
         #    if cls._fields[name].notNull and cls._fields[name].default == None:
         #        raise TypeError("Missing argument : "+name)
+
 
         kwargs['uid'] = cls.new_uid()
         kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
@@ -179,7 +197,8 @@ class EmComponent(object):
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
-        conn.execute(req)  # Check ?
+        if not conn.execute(req):
+            raise RuntimeError("Unable to create the "+cls.__class__.__name__+" EmComponent ")
         conn.close()
         return cls(kwargs['name'])  # Maybe no need to check res because this would fail if the query failed
 
@@ -419,6 +438,11 @@ class EmComponent(object):
 class EmComponentNotExistError(Exception):
     pass
 
+## @brief Raised on uniq constraint error at creation
+# This exception class is dedicated to be raised when create() method is called
+# if an EmComponent with this name but different parameters allready exist
+class EmComponentExistError(Exception):
+    pass
 
 ## @brief An exception class to tell that no ranking exist yet for the group of the object
 class EmComponentRankingNotExistError(Exception):
