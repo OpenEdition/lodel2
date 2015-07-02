@@ -32,40 +32,20 @@ sqlcfg = settings.LODEL2SQLWRAPPER
 # @param sqlaloggin None|bool: If None leave default value, if true activate sqlalchemy logging
 # @return SqlAlchemy engine
 def get_engine(ename='default',sqlalogging=None):
-    return getEngine(ename=ename, sqlalogging=sqlalogging)
-
-
-
-def db_engine(cls):
-    return sqlutils.getEngine(cls.dbconf)
-## Return an engine given a dbconf name
-# @param ename str: Its a name of an item in django.conf.settings.LODEL2SQLWRAPPER['db']
-# @param sqlalogging None|bool : If None leave default value, if true activate sqlalchemy logging
-# @return An sqlalchemy engine
-def getEngine(ename = 'default', sqlalogging = None):
-    """ Return a sqlalchemy engine
-        @param read bool: If True return the read engine, else 
-        return the write one
-        @return a sqlachemy engine instance
-
-        @todo Put the check on db config in SqlWrapper.checkConf()
-    """
-    #Loading confs
+    # Loading confs
     cfg = sqlcfg['db'][ename]
 
-    edata = ENGINES[cfg['ENGINE']] #engine infos
+    edata = ENGINES[cfg['ENGINE']] # engine infos
     conn_str = ""
 
-    if cfg['ENGINE'] == 'sqlite':
-        #Sqlite connection string
-        conn_str = '%s+%s:///%s'%( cfg['ENGINE'],
-            edata['driver'],
-            cfg['NAME'])
+    if cfg['ENGINE'] =='sqlite':
+        #SQLite connection string
+        conn_str = '%s+%s:///%s' % (cfg['ENGINE'], edata['driver'], cfg['NAME'])
     else:
-        #Mysql and Postgres connection string
+        #MySQL and PostgreSQL connection string
         user = cfg['USER']
         user += (':'+cfg['PASSWORD'] if 'PASSWORD' in cfg else '')
-        
+
         if 'HOST' not in cfg:
             logger.info('Not HOST in configuration, using localhost')
             host = 'localhost'
@@ -73,16 +53,17 @@ def getEngine(ename = 'default', sqlalogging = None):
             host = cfg['HOST']
 
         host += (':'+cfg['PORT'] if 'PORT' in cfg else '')
-
-        conn_str = '%s+%s://'%(cfg['ENGINE'], edata['driver'])
-        conn_str += '%s@%s/%s'%(user,host,cfg['NAME'])
-
+        conn_str = '%s+%s://' % (cfg['ENGINE'], edata['driver'])
+        conn_str += '%s@%s/%s' % (user, host, cfg['NAME'])
 
     ret = sqla.create_engine(conn_str, encoding=edata['encoding'], echo=sqlalogging)
-
     logger.debug("Getting engine :"+str(ret))
 
     return ret
+
+
+def getEngine(ename='default', sqlalogging=None):
+    return get_engine(ename=ename, sqlalogging=sqlalogging)
 
 ## Return a sqlalchemy.MetaData object
 # @param engine sqlalchemy.engine : A sqlalchemy engine
