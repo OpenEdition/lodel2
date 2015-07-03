@@ -17,6 +17,7 @@ import EditorialModel.classes
 # EmType with special fields called relation_to_type fields
 #
 # @see EditorialModel::components::EmComponent
+# @todo sortcolumn handling
 class EmType(EmComponent):
     table = 'em_type'
     table_hierarchy = 'em_type_hierarchy'
@@ -40,8 +41,8 @@ class EmType(EmComponent):
     # @see EmComponent::__init__()
     # 
     # @todo check that em_class is an EmClass object (fieldtypes can handle it)
-    def create(c, name, em_class, **em_component_args):
-        return super(EmType, c).create(name=name, class_id=em_class.uid, **em_component_args)
+    def create(c, name, em_class, sortcolumn='rank', **em_component_args):
+        return super(EmType, c).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
 
     @property
     ## Return an sqlalchemy table for type hierarchy
@@ -220,11 +221,15 @@ class EmType(EmComponent):
     def _subOrSup(self, sup = True):
         conn = self.db_engine().connect()
         htable = self._table_hierarchy
+        type_table = sqlutils.get_table(self.__class__)
+
         req = htable.select()
         if sup:
-            req = req.where(htable.c.subordinate_id == self.uid)
+            col = htable.c.subordinate_id
         else:
-            req = req.where(htable.c.superior_id == self.uid)
+            col = htable.c.superior_id
+
+        req = req.where(col == self.uid)
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()

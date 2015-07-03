@@ -15,7 +15,8 @@ import EditorialModel
 
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
-#@see EmClass, EmType, EmFieldGroup, EmField
+# @see EmClass, EmType, EmFieldGroup, EmField
+# @todo sortcolumn handling
 class EmClass(EmComponent):
 
     table = 'em_class'
@@ -25,7 +26,7 @@ class EmClass(EmComponent):
     # @see EditorialModel::components::EmComponent::_fields
     _fields = [
         ('classtype', ftypes.EmField_char),
-        ('icon', ftypes.EmField_integer),
+        ('icon', ftypes.EmField_icon),
         ('sortcolumn', ftypes.EmField_char)
     ]
 
@@ -35,17 +36,15 @@ class EmClass(EmComponent):
     # @return An EmClass instance
     # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
     @classmethod
-    def create(cls, name, class_type):
-        return cls._create_db(name, class_type)
+    def create(cls, name, classtype, icon=None, sortcolumn='rank', **em_component_args):
+        return cls._create_db(name=name, classtype=classtype['name'], icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
     @classmethod
     ## Isolate SQL for EmClass::create
-    # @todo Remove hardcoded default value for icon
     # @return An instance of EmClass
-    def _create_db(cls, name, class_type):
+    def _create_db(cls, name, classtype, icon, sortcolumn, **em_component_args):
         #Create a new entry in the em_class table
-        values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
-        result = super(EmClass, cls).create(**values)
+        result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
         dbe = result.db_engine()
         conn = dbe.connect()
@@ -162,3 +161,4 @@ class EmClass(EmComponent):
                 linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
 
         return linked_types
+

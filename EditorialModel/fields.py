@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent, EmComponentNotExistError
-from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, get_field_type
+from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmField_icon, get_field_type
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
 
@@ -30,7 +30,7 @@ class EmField(EmComponent):
         ('rel_field_id', EmField_integer),
         ('optional', EmField_boolean),
         ('internal', EmField_boolean),
-        ('icon', EmField_integer)
+        ('icon', EmField_icon)
     ]
 
     ## Create (Function)
@@ -55,7 +55,7 @@ class EmField(EmComponent):
     # @see EmComponent::__init__()
     # @staticmethod
     @classmethod
-    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0, **em_component_args):
+    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=None, **em_component_args):
         created_field = super(EmField, cls).create(
             name=name,
             fieldgroup_id=fieldgroup.uid,
