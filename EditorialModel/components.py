@@ -164,9 +164,7 @@ class EmComponent(object):
     # @return An instance of the created component
     # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
     # @throw RuntimeError if the creation fails at database level
-    # @todo Check that the query didn't failed
     # @todo Check that every mandatory _fields are given in args
-    # @todo Put a real rank at creation
     # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
     @classmethod
     def create(cls, **kwargs):
@@ -190,8 +188,8 @@ class EmComponent(object):
             return exist
         except EmComponentNotExistError:
             pass
-
-        #TODO check that every mandatory _fields are here like below for example
+        
+        # Mandatory fields check (actual fieldtypes don't allow this check
         #for name in cls._fields:
         #    if cls._fields[name].notNull and cls._fields[name].default == None:
         #        raise TypeError("Missing argument : "+name)
@@ -210,7 +208,7 @@ class EmComponent(object):
         if not conn.execute(req):
             raise RuntimeError("Unable to create the "+cls.__class__.__name__+" EmComponent ")
         conn.close()
-        return cls(kwargs['name'])  # Maybe no need to check res because this would fail if the query failed
+        return cls(kwargs['name'])
 
     ## Write the representation of the component in the database
     # @return bool
@@ -246,7 +244,6 @@ class EmComponent(object):
 
     ## Delete this component data in the database
     # @return bool : True if deleted False if deletion aborded
-    # @todo Use something like __del__ instead (or call it at the end)
     # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
         #<SQL>
@@ -259,8 +256,8 @@ class EmComponent(object):
         if not res:
             raise RuntimeError("Unable to delete the component in the database")
 
-        super(EmComponent, self).__setattr__('deleted', True)
         #</SQL>
+        super(EmComponent, self).__setattr__('deleted', True)
         return True
 
     ## get_max_rank

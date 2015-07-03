@@ -46,19 +46,19 @@ class EmClass(EmComponent):
     def _create_db(cls, name, class_type):
         #Create a new entry in the em_class table
         values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
-        resclass = super(EmClass, cls).create(**values)
+        result = super(EmClass, cls).create(**values)
 
-        dbe = cls.db_engine()
+        dbe = result.db_engine()
         conn = dbe.connect()
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
-        emclasstable = sql.Table(resclass.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
+        emclasstable = sql.Table(result.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
 
-        return resclass
+        return result
 
     @property
     ## @brief Return the table name used to stores data on this class
