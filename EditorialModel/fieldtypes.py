@@ -191,3 +191,24 @@ class EmField_mlstring(EmFieldType):
 
     def sqlalchemy_args(self):
         return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
+
+class EmField_icon(EmFieldType):
+    
+    def __init__(self):
+        super(EmField_icon, self).__init__('icon')
+        pass
+
+    def from_string(self,value):
+        self.value = value
+
+    def to_sql(self, value=None):
+        if value != None:
+            value = str(value)
+        return value
+
+    def sql_column(self):
+        pass
+
+    def sqlalchemy_args(self):
+        return {'type_': INTEGER, 'nullable': True, 'default': None}
+
