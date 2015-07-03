@@ -125,7 +125,6 @@ def get_schema():
     tables.append(objects)
 
     # Table listing all files
-    # TODO Préciser les colonnes à ajouter
     files = {
         "name": "files",
         "columns": [
