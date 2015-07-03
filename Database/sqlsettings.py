@@ -10,7 +10,6 @@ class SQLSettings(object):
             'encoding': 'utf8',
         },
         'mysql': {
-            # TODO à définir
             'driver': 'pymysql',
             'encoding': 'utf8',
         },
@@ -20,8 +19,8 @@ class SQLSettings(object):
         },
     }
 
-    DB_READ_CONNECTION_NAME = 'default'  # TODO A configurer
-    DB_WRITE_CONNECTION_NAME = 'default'  # TODO A configurer
+    DB_READ_CONNECTION_NAME = 'default'
+    DB_WRITE_CONNECTION_NAME = 'default'
     
     querystrings = {
         'add_column': {
