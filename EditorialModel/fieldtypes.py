@@ -145,7 +145,6 @@ class EmField_char(EmFieldType):
 ## EmField_date (Class)
 #
 # Date Field type
-# TODO
 class EmField_date(EmFieldType):
 
     def __init__(self):
