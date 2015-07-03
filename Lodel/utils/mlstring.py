@@ -4,6 +4,7 @@ import json
 
 
 ## Handle string with translations
+# @todo define a default language that will be used in case the wanted language is not available for this string (gettext-like behavior)
 class MlString(object):
 
     ## Instanciate a new string with translation
@@ -16,7 +17,7 @@ class MlString(object):
     # @param lang str: The lang
     # @return An empty string if the wanted lang don't exist
     # @warning Returns an empty string if the wanted translation didn't exists
-    # @todo Raise an exception if not exists ?
+    # @todo if the asked language is not available, use the default one, defined as a class property
     def get(self, lang):
         if not lang in self.translations:
             return ''
@@ -26,6 +27,7 @@ class MlString(object):
     ## Set a translation for this MlString
     # @param lang str: The language
     # @param text str: The translation
+    # @todo check if the default language as a translation
     def set(self, lang, text):
         if not text:
             if lang in self.translations:
@@ -67,4 +69,3 @@ class MlString(object):
         else:
             translations = dict()
         return MlString(translations)
-
