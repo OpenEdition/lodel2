@@ -49,7 +49,6 @@ class EmFieldGroup(EmComponent):
 
     ## Get the list of associated fields
     # @return A list of EmField instance
-    # @todo Implement this method
     def fields(self):
         field_table = sqlutils.getTable(EditorialModel.fields.EmField)
         req = field_table.select(field_table.c.uid).where(field_table.c.fieldgroup_id == self.uid)
