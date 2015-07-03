@@ -2,13 +2,14 @@
 
 import json
 
+
 ## Handle string with translations
 class MlString(object):
 
     ## Instanciate a new string with translation
     #
     # @param translations dict: With key = lang and value the translation
-    def __init__(self, translations = dict()):
+    def __init__(self, translations=dict()):
         self.translations = translations
     
     ## Return a translation
