@@ -87,7 +87,6 @@ class EmField_integer(EmFieldType):
         return "int(11) NOT NULL"
 
     def sqlalchemy_args(self):
-        # TODO Ajouter la prise en charge de la taille max
         return {'type_': INTEGER, 'nullable': False, 'default': 0}
 
 
