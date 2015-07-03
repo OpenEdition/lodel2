@@ -34,7 +34,6 @@ class EmClass(EmComponent):
     # @param class_type EmClasstype: type of the class
     # @return An EmClass instance
     # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
-    # @todo Check class_type argument
     @classmethod
     def create(cls, name, class_type):
         return cls._create_db(name, class_type)
