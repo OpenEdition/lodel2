@@ -41,7 +41,7 @@ class EmType(EmComponent):
     # @see EmComponent::__init__()
     # 
     # @todo check that em_class is an EmClass object (fieldtypes can handle it)
-    def create(c, name, em_class, sortcolumn='rank', **em_component_args):
+    def create(c, name, em_class, sortcolumn='rank', icon=None, **em_component_args):
         return super(EmType, c).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
 
     @property
