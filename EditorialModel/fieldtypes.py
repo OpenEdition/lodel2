@@ -10,11 +10,15 @@ import importlib
 import re
 import copy
 
-## @file fieldtypes.py
-# This file contains classes about SQL column (EmFieldType)
-# and their values (EmFieldValue)
-# For the moment the code is in quick & dirty version and is
-# more like a proof of concept
+## @namespace EditorialModel.fieldtypes
+# @brief This file contains classes about SQL column (EmFieldType) and their values (EmFieldValue)
+# 
+# The underlying concept is to handle two differents objects, one for handling an SQL column definition (EmFieldType)
+# and another one to handle values (EmFieldValue). This organisation allows to have large, flexible and powerfull mains objects and to
+# specialise them by inheritance ( EmFieldType -> EmField_char -> EmField_MlString ) ( EmFieldValue -> EmFieldValue_int )
+#
+# @note For the moment the code is a bit in quick and dirty mode.
+#
 
 ## @brief Handles SQL types
 # This class handles SQL types and their options.
@@ -89,13 +93,23 @@ class EmFieldSQLType(object):
         return cl._names[name]['sql'](**kwargs)
         
         
-
+## @brief Characterise fields for LeObject and EmComponent
+# This class handles values rules for LeObject and EmComponents.
+# 
+# It allows to EmFieldValue classes family to have rules to cast, validate and save values.
+# 
+# There is exposed methods that allows LeObject and EmType to run a save sequence. This methods are :
+# - EmFieldType.to_value() That cast a value to an EmFieldType internal storage
+# - EmFieldType.is_valid() That indicates wether or not a value is valid
+# - EmFieldType.pre_save() That returns weighted SQL request that must be run before any value save @ref EditorialModel::types::EmType.save_values()
+# - EmFieldType.to_sql() That returns a value that can be inserted in database.
+# - EmFieldType.post_save() That returns weighted SQL request that must be run after any value save @ref EditorialModel::types::EmType.save_values()
+#
 class EmFieldType(object):
  
     ## Stores options and default value for EmFieldType
     # options list : 
     # - type (str|None) : if None will make an 'abstract' fieldtype (with no value assignement possible)
-    # - size (int) : The size for this type
     # - nullable (bool) : tell whether or not a fieldType accept NULL value
     # - default (mixed) : The default value for a FieldType
     # - primarykey (bool) : If true the fieldType represent a PK
@@ -105,11 +119,11 @@ class EmFieldType(object):
     # - doc (str) : FieldType documentation
     # - onupdate (callable) : A callback to call on_update
     # - valueobject (EmFieldValue or childs) : An object that represent values for this fieldType
-    # - type_* (mixed) : Use to construct an options dictinnary for a type (exemple : type_length => nnewColumn(lenght= [type_lenght VALUE] ))
+    # - type_* (mixed) : Use to construct an options dictinnary for a type (exemple : type_length => nnewColumn(lenght= [type_lenght VALUE] )) @ref EmFieldSQLType
+    #
     _opt = {
         'name' : None,
         'type' : None,
-        'size': None,
         'nullable': True,
         'default' : None,
         'primarykey': False,
@@ -124,6 +138,7 @@ class EmFieldType(object):
 
     ## Instanciate an EmFieldType
     # For arguments see @ref EmFieldType::_opt
+    # @see EmFieldType::_opt
     def __init__(self, **kwargs):
         self._init(kwargs)
         self.type_options = dict()
@@ -246,6 +261,30 @@ class EmFieldType(object):
             raise NotImplementedError("This EmFieldType is abstract")
         return value
 
+    ## Return wether or not a value is valid for this EmFieldType
+    # @note This function always return True and is here for being overloaded by childs objects
+    # @return A boolean, True if valid else False
+    def is_valid(self, value):
+        if self.abstract:
+            raise NotImplementedError("This EmFieldType is abstract")
+        return True
+
+    ## @brief Return a list of (priority, SqlRequest) tuples designed to be executed before saving values in Db
+    # @note This function return an empty array and is here for being overloaded by childs objects
+    # @return A list of (priority, SqlRequest) tuples
+    def pre_save(self):
+        if self.abstract:
+            raise NotImplementedError("This EmFieldType is abstract")
+        return []
+
+    ## @brief Return a list of (priority, SqlRequest) tuples designed to be executed after values were saved in Db
+    # @note This function return an empty array and is here for being overloaded by childs objects
+    # @return A list of (priority, SqlRequest) tuples
+    def post_save(self):
+        if self.abstract:
+            raise NotImplementedError("This EmFieldType is abstract")
+        return []
+
     @classmethod
     ## Function designed to be called by child class to enforce a type
     # @param args dict: The kwargs argument of __init__
@@ -280,6 +319,9 @@ class EmFieldType(object):
         return args
 
 
+## @brief Handles EmFieldType values
+# This class is designed to be linked with an EmFieldType and to handles values according to the linked EmFieldType rules
+# @see EmFieldType
 class EmFieldValue(object):
 
     ## Instanciate a EmFieldValue
@@ -346,7 +388,7 @@ class EmFieldValue(object):
         return super(EmFieldValue, self).__getattribute__(name)
 
         
-    ## @brief Return an sql valid value
+    ## @brief Return a valid SQL value
     #
     # Can be used to convert any value (giving one positionnal argument) or to return the current value
     # @param *value list: If a positionnal argument is given return it and not the instance value 
@@ -358,7 +400,7 @@ class EmFieldValue(object):
             return self.fieldtype.to_sql(value[0])
         return self.fieldtype.to_sql(self.value)
 
-## @brief Designed to handle values that has common arithmetic operations
+## @brief Represents values with common arithmetic operations
 class EmFieldValue_int(EmFieldValue):
        
     def __int__(self):
@@ -394,16 +436,20 @@ class EmFieldValue_int(EmFieldValue):
     def __idiv__(self, other):
         self.value = int(self.value / other)
         return self
-        
+
+## @brief Handles integer fields
+# @note Enforcing type to be int
+# @note Default name is 'integer' and default 'valueobject' is EmFieldValue_int
 class EmField_integer(EmFieldType):
     def __init__(self, **kwargs):
         self._init(kwargs)
         #Default name
         kwargs = self.__class__._argDefault(kwargs, 'name', 'integer')
+        #Default value object
+        kwargs = self.__class__._argDefault(kwargs, 'valueobject', EmFieldValue_int)
         #Type enforcing
         kwargs = self.__class__._setType(kwargs, 'int')
         super(EmField_integer, self).__init__(**kwargs)
-        self.valueobject = EmFieldValue_int
         pass
     ##
     # @todo catch cast error ?
@@ -415,9 +461,9 @@ class EmField_integer(EmFieldType):
             return super(EmField_integer, self).to_value(value)
         return int(value)
 
-## EmField_boolean (Class)
-#
-# Boolean field type
+## @brief Handles boolean fields
+# @note Enforce type to be 'boolean'
+# @note Default name is 'boolean'
 class EmField_boolean(EmFieldType):
     def __init__(self, **kwargs):
         self._init(kwargs)
@@ -435,9 +481,10 @@ class EmField_boolean(EmFieldType):
         self.value = bool(value)
         return self.value
 
-## EmField_char (Class)
-#
-# Varchar field type
+## @brief Handles string fields
+# @note Enforce type to be (varchar)
+# @note Default 'name' is 'char'
+# @note Default 'type_length' is 76
 class EmField_char(EmFieldType):
     default_length = 76
     def __init__(self, **kwargs):
@@ -449,7 +496,8 @@ class EmField_char(EmFieldType):
         super(EmField_char, self).__init__(**kwargs)
     def to_sql(self, value):
         return str(value)
-##
+## @brief Handles date fields
+# @note Enforce type to be 'datetime'
 # @todo rename to EmField_datetime
 # @todo timezones support
 class EmField_date(EmFieldType):
@@ -472,6 +520,7 @@ class EmField_date(EmFieldType):
         if isinstance(value, datetime.datetime):
             return value
 
+## @brief Handles strings with translations
 class EmField_mlstring(EmField_char):
     
     def __init__(self, **kwargs):
@@ -491,6 +540,7 @@ class EmField_mlstring(EmField_char):
             return value
         raise TypeError("<class str> or <class MlString> excepted. But got "+str(type(value)))
 
+## @brief Handles lodel uid fields
 class EmField_uid(EmField_integer):
     def __init__(self, **kwargs):
         self._init(kwargs)
