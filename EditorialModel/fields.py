@@ -32,7 +32,7 @@ class EmField(EmComponent):
         ('rel_field_id', EmField_integer()),
         ('optional', EmField_boolean(nullable=False, default=False)),
         ('internal', EmField_boolean()),
-        ('icon', EmField_integer())
+        ('icon', EmField_integer(default=None, nullable=True))
     ]
 
     ## Create (Function)
@@ -58,7 +58,7 @@ class EmField(EmComponent):
     # @todo Check raise if add column fails
     # @staticmethod
     @classmethod
-    def create(cls, name, fieldgroup, fieldtype, optional=False, internal=0, rel_to_type_id=0, rel_field_id=0, icon=0, **em_component_args):
+    def create(cls, name, fieldgroup, fieldtype, optional=False, internal=0, rel_to_type_id=0, rel_field_id=0, icon=None, **em_component_args):
         created_field = super(EmField, cls).create(
             name=name,
             fieldgroup_id=fieldgroup.uid,

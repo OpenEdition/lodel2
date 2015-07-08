@@ -221,4 +221,23 @@ class TestDeleteTypes(TypeTestCase):
         except EmComponentNotExistError:
             self.fail("The type was deleted but it has subordinates when deleted")
         pass
+    
+    def testDeleteTypesInHierarchy(self):
+        """ Testing if deletetion deletes properly links with superiors """
+        type_name = self.emtype.name
+        type_uid = self.emtype.uid
+        self.emtype.add_superior(self.emtype2, EmNature.PARENT)
+        self.emtype.delete()
+        try:
+            subs_dict = self.emtype2.subordinates()
+        except EmComponentNotExistError:
+            self.fail("The deleted type is style in the types hierarchu. Trying to retrieve it raises an EmComponentNotFoundError")
+
+        subsuid=[]
+        for _, subs in subs_dict.items():
+            subsuid += subs
+        self.assertNotIn(type_uid, subsuid)
+        pass
+
+
 

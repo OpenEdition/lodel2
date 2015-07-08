@@ -6,6 +6,7 @@ import sqlalchemy as sql
 import EditorialModel
 from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmNature, EmClassType
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
@@ -16,15 +17,17 @@ import EditorialModel.classes
 # EmType with special fields called relation_to_type fields
 #
 # @see EditorialModel::components::EmComponent
+# @todo sortcolumn handling
 class EmType(EmComponent):
     table = 'em_type'
+    table_hierarchy = 'em_type_hierarchy'
     ranked_in = 'class_id'
 
     ## @brief Specific EmClass fields
     # @see EditorialModel::components::EmComponent::_fields
     _fields = [
         ('class_id', ftypes.EmField_integer()),
-        ('icon', ftypes.EmField_integer()),
+        ('icon', ftypes.EmField_integer(nullable=True, default=None)),
         ('sortcolumn', ftypes.EmField_char())
         ]
 
@@ -37,22 +40,37 @@ class EmType(EmComponent):
     # @throw EmComponentExistError if an EmType with this name but different attributes exists
     # @see EmComponent::__init__()
     # 
-    # @todo Remove hardcoded default value for icon
-    # @todo check that em_class is an EmClass object
-    def create(c, name, em_class, **em_component_args):
-        return super(EmType, c).create(name=name, class_id=em_class.uid, icon=0, **em_component_args)
-    
+    # @todo check that em_class is an EmClass object (fieldtypes can handle it)
+    def create(c, name, em_class, sortcolumn='rank', **em_component_args):
+        return super(EmType, c).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
+
+    @property
+    ## Return an sqlalchemy table for type hierarchy
+    # @return sqlalchemy em_type_hierarchy table object
+    # @todo Don't hardcode table name
+    def _table_hierarchy(self):
+        return sql.Table(self.__class__.table_hierarchy, sqlutils.meta(self.db_engine()))
+
+    @property
+    ## Return the EmClassType of the type
+    # @return EditorialModel.classtypes.*
+    def classtype(self):
+        return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
+
     ## @brief Delete an EmType
     # The deletion is only possible if a type is not linked by any EmClass
     # and if it has no subordinates
     # @return True if delete False if not deleted
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
-    # @todo Delete it as subordinates for all its superiors
     def delete(self):
         subs = self.subordinates()
         if sum([len(subs[subnat]) for subnat in subs]) > 0:
             return False
+        #Delete all relation with superiors
+        for nature,sups in self.superiors().items():
+            for sup in sups:
+                self.del_superior(sup, nature)
         return super(EmType, self).delete()
         
 
@@ -103,8 +121,10 @@ class EmType(EmComponent):
     #
     # @param field EmField: The optional field to select
     # @return True if success False if failed
-    # @throw TypeError
-    # @todo change exception type and define return value and raise condition
+    #
+    # @throw TypeError if field is not an EmField instance
+    # @throw ValueError if field is not optional or is not associated with this type
+    # @see EmType::_opt_field_act()
     def select_field(self, field):
         return self._opt_field_act(field, True)
         
@@ -114,7 +134,10 @@ class EmType(EmComponent):
     #
     # @param field EmField: The optional field to unselect
     # @return True if success False if fails
-    # @throw TypeError
+    #
+    # @throw TypeError if field is not an EmField instance
+    # @throw ValueError if field is not optional or is not associated with this type
+    # @see EmType::_opt_field_act()
     def unselect_field(self, field):
         return self._opt_field_act(field, False)
 
@@ -123,9 +146,12 @@ class EmType(EmComponent):
     # @param field EmField: The EmField to select or unselect
     # @param select bool: If True select field, else unselect it
     # @return True if success False if fails
+    #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
     def _opt_field_act(self, field, select=True):
+        if not isinstance(field, EmField):
+            raise TypeError("Excepted <class EmField> as field argument. But got "+str(type(field)))
         if not field in self.all_fields():
             raise ValueError("This field is not part of this type")
         if not field.optional:
@@ -149,7 +175,7 @@ class EmType(EmComponent):
     # @note Not conceptualized yet
     # @todo Conception
     def hooks(self):
-        pass
+        raise NotImplementedError()
 
     ## Add a new hook
     # @param hook EmHook: An EmHook instance
@@ -157,7 +183,7 @@ class EmType(EmComponent):
     # @note Not conceptualized yet
     # @todo Conception
     def add_hook(self, hook):
-        pass
+        raise NotImplementedError()
 
     ## Delete a hook
     # @param hook EmHook: An EmHook instance
@@ -166,22 +192,9 @@ class EmType(EmComponent):
     # @todo Conception
     # @todo Maybe we don't need a EmHook instance but just a hook identifier
     def del_hook(self,hook):
-        pass
+        raise NotImplementedError()
 
-
-    @classmethod
-    ## Return an sqlalchemy table for type hierarchy
-    # @return sqlalchemy em_type_hierarchy table object
-    # @todo Don't hardcode table name
-    def _tableHierarchy(cl):
-        return sql.Table('em_type_hierarchy', sqlutils.meta(cl.db_engine()))
-
-    @property
-    ## Return the EmClassType of the type
-    # @return EditorialModel.classtypes.*
-    def classtype(self):
-        return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
-
+    
     ## @brief Get the list of subordinates EmType
     # Get a list of EmType instance that have this EmType for superior
     # @return Return a dict with relation nature as keys and values as a list of subordinates
@@ -207,12 +220,16 @@ class EmType(EmComponent):
     # @see EmType::subordinates(), EmType::superiors()
     def _subOrSup(self, sup = True):
         conn = self.db_engine().connect()
-        htable = self.__class__._tableHierarchy()
+        htable = self._table_hierarchy
+        type_table = sqlutils.get_table(self.__class__)
+
         req = htable.select()
         if sup:
-            req = req.where(htable.c.subordinate_id == self.uid)
+            col = htable.c.subordinate_id
         else:
-            req = req.where(htable.c.superior_id == self.uid)
+            col = htable.c.superior_id
+
+        req = req.where(col == self.uid)
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()
@@ -255,7 +272,7 @@ class EmType(EmComponent):
             raise ValueError("Not allowed to put a different em_type as superior in a relation of nature '"+relation_nature+"'")
 
         conn = self.db_engine().connect()
-        htable = self.__class__._tableHierarchy()
+        htable = self._table_hierarchy
         values = { 'subordinate_id': self.uid, 'superior_id': em_type.uid, 'nature': relation_nature }
         req = htable.insert(values=values)
 
@@ -280,7 +297,7 @@ class EmType(EmComponent):
             raise ValueError("Invalid nature for add_superior : '"+relation_nature+"'. Allowed relations for this type are "+str(EmClassType.natures(self.classtype['name'])))
 
         conn = self.db_engine().connect()
-        htable = self.__class__._tableHierarchy()
+        htable = self._table_hierarchy
         req = htable.delete(htable.c.superior_id == em_type.uid and htable.c.nature == relation_nature)
         conn.execute(req)
         conn.close()
@@ -296,7 +313,7 @@ class EmType(EmComponent):
     # @return A list of EmType objects
     def _linked_types_Db(self):
         conn = self.db_engine().connect()
-        htable = self.__class__._tableHierarchy()
+        htable = self._table_hierarchy
         req = htable.select(htable.c.superior_id, htable.c.subordinate_id)
         req = req.where(sql.or_(htable.c.subordinate_id == self.uid, htable.c.superior_id == self.uid))
 

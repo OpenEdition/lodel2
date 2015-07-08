@@ -164,9 +164,7 @@ class EmComponent(object):
     # @return An instance of the created component
     # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
     # @throw RuntimeError if the creation fails at database level
-    # @todo Check that the query didn't failed
     # @todo Check that every mandatory _fields are given in args
-    # @todo Put a real rank at creation
     # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
     @classmethod
     def create(cls, **kwargs):
@@ -190,8 +188,8 @@ class EmComponent(object):
             return exist
         except EmComponentNotExistError:
             pass
-
-        #TODO check that every mandatory _fields are here like below for example
+        
+        # Mandatory fields check (actual fieldtypes don't allow this check
         #for name in cls._fields:
         #    if cls._fields[name].notNull and cls._fields[name].default == None:
         #        raise TypeError("Missing argument : "+name)
@@ -210,7 +208,7 @@ class EmComponent(object):
         if not conn.execute(req):
             raise RuntimeError("Unable to create the "+cls.__class__.__name__+" EmComponent ")
         conn.close()
-        return cls(kwargs['name'])  # Maybe no need to check res because this would fail if the query failed
+        return cls(kwargs['name'])
 
     ## Write the representation of the component in the database
     # @return bool
@@ -246,7 +244,6 @@ class EmComponent(object):
 
     ## Delete this component data in the database
     # @return bool : True if deleted False if deletion aborded
-    # @todo Use something like __del__ instead (or call it at the end)
     # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
         #<SQL>
@@ -259,8 +256,8 @@ class EmComponent(object):
         if not res:
             raise RuntimeError("Unable to delete the component in the database")
 
-        super(EmComponent, self).__setattr__('deleted', True)
         #</SQL>
+        super(EmComponent, self).__setattr__('deleted', True)
         return True
 
     ## get_max_rank
@@ -282,6 +279,7 @@ class EmComponent(object):
             return -1
 
     ## Set a new rank for this component
+    # @note This function assume that ranks are properly set from 1 to x with no gap
     # @param new_rank int: The new rank
     # @return True if success False if not
     # @throw TypeError If bad argument type
@@ -291,13 +289,13 @@ class EmComponent(object):
             raise TypeError("Excepted <class int> but got "+str(type(new_rank)))
         if new_rank < 0 or new_rank > self.get_max_rank(getattr(self, self.ranked_in)):
             raise ValueError("Invalid new rank : "+str(new_rank))
-        #more checks to be done here
-        mod = new_rank - self.rank
 
-        if mod == 0:
+        mod = new_rank - self.rank #Allow to know the "direction" of the "move"
+
+        if mod == 0: #No modifications
             return True
 
-        limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ]
+        limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ] #The range of modified ranks
         limits.sort()
 
         dbe = self.db_engine()
@@ -308,13 +306,12 @@ class EmComponent(object):
         req = table.select().where( getattr(table.c, self.ranked_in) == getattr(self, self.ranked_in)).where(table.c.rank >= limits[0]).where(table.c.rank <= limits[1])
 
         res = conn.execute(req)
-        if not res:
+        if not res: #Db error... Maybe false is a bit silent for a failuer
             return False
 
         rows = res.fetchall()
 
         updated_ranks = [{'b_uid': self.uid, 'b_rank': new_rank}]
-
         for row in rows:
             updated_ranks.append({'b_uid': row['uid'], 'b_rank': row['rank'] + (-1 if mod > 0 else 1)})
         req = table.update().where(table.c.uid == sql.bindparam('b_uid')).values(rank=sql.bindparam('b_rank'))
@@ -322,6 +319,7 @@ class EmComponent(object):
         conn.close()
         
         if res:
+            #Instance rank update
             self._fields['rank'].value = new_rank
         return bool(res)
     

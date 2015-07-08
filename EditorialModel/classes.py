@@ -15,7 +15,8 @@ import EditorialModel
 
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
-#@see EmClass, EmType, EmFieldGroup, EmField
+# @see EmClass, EmType, EmFieldGroup, EmField
+# @todo sortcolumn handling
 class EmClass(EmComponent):
 
     table = 'em_class'
@@ -34,31 +35,28 @@ class EmClass(EmComponent):
     # @param class_type EmClasstype: type of the class
     # @return An EmClass instance
     # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
-    # @todo Check class_type argument
     @classmethod
-    def create(cls, name, class_type):
-        return cls._create_db(name, class_type)
+    def create(cls, name, classtype, icon=None, sortcolumn='rank', **em_component_args):
+        return cls._create_db(name=name, classtype=classtype['name'], icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
     @classmethod
     ## Isolate SQL for EmClass::create
-    # @todo Remove hardcoded default value for icon
     # @return An instance of EmClass
-    def _create_db(cls, name, class_type):
+    def _create_db(cls, name, classtype, icon, sortcolumn, **em_component_args):
         #Create a new entry in the em_class table
-        values = {'name': name, 'classtype': class_type['name'], 'icon': 0}
-        resclass = super(EmClass, cls).create(**values)
+        result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
-        dbe = cls.db_engine()
+        dbe = result.db_engine()
         conn = dbe.connect()
 
         #Create a new table storing LodelObjects of this EmClass
         meta = sql.MetaData()
-        emclasstable = sql.Table(resclass.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
+        emclasstable = sql.Table(result.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emclasstable.create(conn)
 
         conn.close()
 
-        return resclass
+        return result
 
     @property
     ## @brief Return the table name used to stores data on this class
@@ -163,3 +161,4 @@ class EmClass(EmComponent):
                 linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
 
         return linked_types
+
