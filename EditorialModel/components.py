@@ -279,6 +279,7 @@ class EmComponent(object):
             return -1
 
     ## Set a new rank for this component
+    # @note This function assume that ranks are properly set from 1 to x with no gap
     # @param new_rank int: The new rank
     # @return True if success False if not
     # @throw TypeError If bad argument type
@@ -288,13 +289,13 @@ class EmComponent(object):
             raise TypeError("Excepted <class int> but got "+str(type(new_rank)))
         if new_rank < 0 or new_rank > self.get_max_rank(getattr(self, self.ranked_in)):
             raise ValueError("Invalid new rank : "+str(new_rank))
-        #more checks to be done here
-        mod = new_rank - self.rank
 
-        if mod == 0:
+        mod = new_rank - self.rank #Allow to know the "direction" of the "move"
+
+        if mod == 0: #No modifications
             return True
 
-        limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ]
+        limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ] #The range of modified ranks
         limits.sort()
 
         dbe = self.db_engine()
@@ -305,13 +306,12 @@ class EmComponent(object):
         req = table.select().where( getattr(table.c, self.ranked_in) == getattr(self, self.ranked_in)).where(table.c.rank >= limits[0]).where(table.c.rank <= limits[1])
 
         res = conn.execute(req)
-        if not res:
+        if not res: #Db error... Maybe false is a bit silent for a failuer
             return False
 
         rows = res.fetchall()
 
         updated_ranks = [{'b_uid': self.uid, 'b_rank': new_rank}]
-
         for row in rows:
             updated_ranks.append({'b_uid': row['uid'], 'b_rank': row['rank'] + (-1 if mod > 0 else 1)})
         req = table.update().where(table.c.uid == sql.bindparam('b_uid')).values(rank=sql.bindparam('b_rank'))
@@ -319,6 +319,7 @@ class EmComponent(object):
         conn.close()
         
         if res:
+            #Instance rank update
             self._fields['rank'].value = new_rank
         return bool(res)
     
