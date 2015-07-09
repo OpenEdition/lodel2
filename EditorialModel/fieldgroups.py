@@ -20,14 +20,7 @@ class EmFieldGroup(EmComponent):
     ranked_in = 'class_id'
 
     ## List of fields
-    # @todo Bad storage, here we want an ordereddict not a tuple list
     _fields = [('class_id', ftypes.EmField_integer)]
-
-    ## Instanciate an EmFieldGroup with data fetched from db
-    # @param id_or_name str|int: Identify the EmFieldGroup by name or by global_id
-    # @throw TypeError
-    # @see EditorialModel::components::EmComponent::__init__()
-    # @throw EditorialModel::components::EmComponentNotExistError
 
     @classmethod
     ## Create a new EmFieldGroup
