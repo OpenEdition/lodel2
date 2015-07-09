@@ -3,9 +3,7 @@
 ## @file classes.py
 # @see EditorialModel::classes::EmClass
 
-import logging as logger
-
-from EditorialModel.components import EmComponent, EmComponentNotExistError, EmComponentExistError
+from EditorialModel.components import EmComponent
 from Database import sqlutils
 import sqlalchemy as sql
 
