@@ -112,7 +112,7 @@ class EmType(EmComponent):
         for field in self.all_fields():
             if not field.optional:
                 result.append(field)
-        return result + selected_fields
+        return result + self.selected_fields()
 
     ## Select_field (Function)
     #
