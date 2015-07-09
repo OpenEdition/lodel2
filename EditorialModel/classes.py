@@ -65,10 +65,8 @@ class EmClass(EmComponent):
     # If a class has no fieldgroups delete it
     # @return bool : True if deleted False if deletion aborded
     def delete(self):
-        do_delete = True
         fieldgroups = self.fieldgroups()
         if len(fieldgroups) > 0:
-            do_delete = False
             return False
 
         dbe = self.__class__.db_engine()
