@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
 
@@ -17,7 +17,7 @@ class EmFieldGroup(EmComponent):
 
     ## The database table name
     table = 'em_fieldgroup'
-    ranked_in='class_id'
+    ranked_in = 'class_id'
 
     ## List of fields
     # @todo Bad storage, here we want an ordereddict not a tuple list
