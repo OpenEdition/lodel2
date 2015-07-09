@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
+from EditorialModel.components import EmComponent
 from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmField_icon, get_field_type
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
@@ -9,11 +9,6 @@ from Database import sqlutils
 from Database.sqlalter import DropColumn, AddColumn
 
 import sqlalchemy as sql
-
-import logging
-import re
-
-logger = logging.getLogger('Lodel2.EditorialModel')
 
 
 ## EmField (Class)
@@ -68,7 +63,7 @@ class EmField(EmComponent):
             **em_component_args
         )
         if not created_field.add_field_column_to_class_table():
-            raise RuntimeError("Unable to create the column for the EmField "+str(created_field))
+            raise RuntimeError("Unable to create the column for the EmField " + str(created_field))
 
         return created_field
 
@@ -92,7 +87,7 @@ class EmField(EmComponent):
     def add_field_column_to_class_table(self):
         dbe = self.db_engine()
         fieldtype = get_field_type(self.fieldtype)
-        new_column = sql.Column(name=self.name, **(fieldtype.sqlalchemy_args()) )
+        new_column = sql.Column(name=self.name, **(fieldtype.sqlalchemy_args()))
         class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
         ddl = AddColumn(class_table, new_column)
         return sqlutils.ddl_execute(ddl, dbe)
@@ -105,7 +100,7 @@ class EmField(EmComponent):
     def get_class_table(self):
         #return self._get_class_table_db()
         return self.get_class().class_table_name
-    
+
     ## @brief Get the class that contains this field
     # @return An EmClass instance
     def get_class(self):
@@ -118,4 +113,3 @@ class EmField(EmComponent):
         row = res.fetchone()
         #</SQL>
         return EmClass(row['class_id'])
-
