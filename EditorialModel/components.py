@@ -53,7 +53,14 @@ class EmComponent(object):
     # @param id_or_name int|str: name or id of the object
     # @throw TypeError if id_or_name is not an integer nor a string
     # @throw NotImplementedError if called with EmComponent
-    def __init__(self, id_or_name):
+    def __init__(self, id_or_name, dbconf = 'default'):
+        
+        self.dbconf = dbconf
+        if self.dbconf:
+            self.db_engine = sqlutils.get_engine(dbconf)
+        else:
+            self.db_engine = False
+
         if type(self) == EmComponent:
             raise NotImplementedError('Abstract class')
 
@@ -129,15 +136,15 @@ class EmComponent(object):
 
         super(EmComponent, self).__setattr__('deleted', False)
 
-    @classmethod
+    #@classmethod
     ## Shortcut that return the sqlAlchemy engine
-    def db_engine(cls):
-        return sqlutils.get_engine(cls.dbconf)
+    #def db_engine(cls):
+    #    return sqlutils.get_engine(cls.dbconf)
 
     ## Do the query on the database for EmComponent::populate()
     # @throw EmComponentNotExistError if the instance is not anymore stored in database
     def _populate_db(self):
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.sql.select([component])
 
@@ -159,7 +166,7 @@ class EmComponent(object):
     ## Insert a new component in the database
     #
     # This function create and assign a new UID and handle the date_create and date_update values
-    #
+    # @warning There is a mandatory argument dbconf that indicate wich database configuration to use
     # @param **kwargs : Names arguments representing object properties
     # @return An instance of the created component
     # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
@@ -194,21 +201,27 @@ class EmComponent(object):
         #    if cls._fields[name].notNull and cls._fields[name].default == None:
         #        raise TypeError("Missing argument : "+name)
 
+        if 'dbconf' in kwargs:
+            if not kwargs['db_engine']:
+                raise NotImplementedError("Its a nonsense to call create with no database")
+            dbconf = kwargs['dbconf']
+        else:
+            dbconf = 'default'
+        dbe = sqlutils.get_engine(dbconf)
 
-        kwargs['uid'] = cls.new_uid()
+        kwargs['uid'] = cls.new_uid(dbe)
         kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
 
-        dbe = cls.db_engine()
         conn = dbe.connect()
 
-        kwargs['rank'] = cls.get_max_rank( kwargs[cls.ranked_in] )+1
+        kwargs['rank'] = cls._get_max_rank( kwargs[cls.ranked_in], dbe )+1
 
         table = sql.Table(cls.table, sqlutils.meta(dbe))
         req = table.insert(kwargs)
         if not conn.execute(req):
             raise RuntimeError("Unable to create the "+cls.__class__.__name__+" EmComponent ")
         conn.close()
-        return cls(kwargs['name'])
+        return cls(kwargs['name'], dbconf)
 
     ## Write the representation of the component in the database
     # @return bool
@@ -232,7 +245,7 @@ class EmComponent(object):
     # @throw RunTimeError if it was unable to do the Db update
     def _save_db(self, values):
         """ Do the query on the db """
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = sql.update(component, values=values).where(component.c.uid == self.uid)
 
@@ -247,7 +260,7 @@ class EmComponent(object):
     # @throw RunTimeError if it was unable to do the deletion
     def delete(self):
         #<SQL>
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         component = sql.Table(self.table, sqlutils.meta(dbe))
         req = component.delete().where(component.c.uid == self.uid)
         conn = dbe.connect()
@@ -260,13 +273,11 @@ class EmComponent(object):
         super(EmComponent, self).__setattr__('deleted', True)
         return True
 
-    ## get_max_rank
-    # Retourne le rank le plus élevé pour le groupe de component au quel apartient l'objet actuelle
+    ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @param ranked_in_value mixed: The rank "family"
-    # @param return -1 if no EmComponent found else return an integer >= 0
+    # @return -1 if no EmComponent found else return an integer >= 0
     @classmethod
-    def get_max_rank(cls, ranked_in_value):
-        dbe = cls.db_engine()
+    def _get_max_rank(cls, ranked_in_value, dbe):
         component = sql.Table(cls.table, sqlutils.meta(dbe))
         req = sql.sql.select([component.c.rank]).where(getattr(component.c, cls.ranked_in) == ranked_in_value).order_by(component.c.rank.desc())
         c = dbe.connect()
@@ -277,6 +288,12 @@ class EmComponent(object):
             return res['rank']
         else:
             return -1
+
+    ## Only make a call to the class method
+    # @return A positive integer or -1 if no components
+    # @see EmComponent::_get_max_rank()
+    def get_max_rank(self, ranked_in_value):
+        return self.__class__._get_max_rank(ranked_in_value, self.db_engine)
 
     ## Set a new rank for this component
     # @note This function assume that ranks are properly set from 1 to x with no gap
@@ -298,9 +315,9 @@ class EmComponent(object):
         limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ] #The range of modified ranks
         limits.sort()
 
-        dbe = self.db_engine()
+        dbe = self.db_engine
         conn = dbe.connect()
-        table = sqlutils.get_table(self.__class__)
+        table = sqlutils.get_table(self)
 
         #Selecting the components that will be modified
         req = table.select().where( getattr(table.c, self.ranked_in) == getattr(self, self.ranked_in)).where(table.c.rank >= limits[0]).where(table.c.rank <= limits[1])
@@ -358,11 +375,11 @@ class EmComponent(object):
     #
     # Use the class property table
     # @return A new uid (an integer)
-    def new_uid(cls):
+    def new_uid(cls, db_engine):
         if cls.table is None:
             raise NotImplementedError("Abstract method")
 
-        dbe = cls.db_engine()
+        dbe = db_engine
 
         uidtable = sql.Table('uids', sqlutils.meta(dbe))
         conn = dbe.connect()

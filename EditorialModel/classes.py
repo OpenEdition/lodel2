@@ -44,7 +44,7 @@ class EmClass(EmComponent):
         #Create a new entry in the em_class table
         result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
-        dbe = result.db_engine()
+        dbe = result.db_engine
         conn = dbe.connect()
 
         #Create a new table storing LodelObjects of this EmClass
@@ -69,7 +69,7 @@ class EmClass(EmComponent):
         if len(fieldgroups) > 0:
             return False
 
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         meta = sqlutils.meta(dbe)
         #Here we have to give a connection
         class_table = sql.Table(self.name, meta)
@@ -88,7 +88,7 @@ class EmClass(EmComponent):
     ## Isolate SQL for EmClass::fieldgroups
     # @return An array of dict (sqlalchemy fetchall)
     def _fieldgroups_db(self):
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
         req = emfg.select().where(emfg.c.class_id == self.uid)
 
@@ -116,7 +116,7 @@ class EmClass(EmComponent):
     ## Isolate SQL for EmCLass::types
     # @return An array of dict (sqlalchemy fetchall)
     def _types_db(self):
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
         req = emtype.select().where(emtype.c.class_id == self.uid)
         conn = dbe.connect()
@@ -134,7 +134,7 @@ class EmClass(EmComponent):
 
     def _link_type_db(self, table_name):
         #  Create a new table storing additionnal fields for the relation between the linked type and this EmClass
-        conn = self.__class__.db_engine().connect()
+        conn = self.db_engine.connect()
         meta = sql.MetaData()
         emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
         emlinketable.create(conn)
@@ -146,7 +146,7 @@ class EmClass(EmComponent):
         return self._linked_types_db()
 
     def _linked_types_db(self):
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         meta = sql.MetaData()
         meta.reflect(dbe)
 
