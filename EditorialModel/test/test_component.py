@@ -240,7 +240,7 @@ class TestUid(ComponentTestCase):
     def test_newuid(self):
         """ Test valid calls for new_uid method """
         for _ in range(10):
-            nuid = EmTestComp.new_uid()
+            nuid = EmTestComp.new_uid(self.dber)
         
             conn = self.dber.connect()
             tuid = sqla.Table('uids', sqlutils.meta(self.dber))
@@ -257,7 +257,7 @@ class TestUid(ComponentTestCase):
     def test_newuid_abstract(self):
         """ Test not valit call for new_uid method """
         with self.assertRaises(NotImplementedError):
-            EmComponent.new_uid()
+            EmComponent.new_uid(self.dber)
         pass
         
 #=======================#
@@ -432,11 +432,11 @@ class TestCreate(ComponentTestCase):
         pass
 
     def testGetMaxRank(self):
-        old = EmTestComp.get_max_rank('f')
+        old = EmTestComp._get_max_rank('f', self.dber)
         EmTestComp.create(name="foobartest", rank_fam = 'f')
-        n = EmTestComp.get_max_rank('f')
+        n = EmTestComp._get_max_rank('f', self.dber)
         self.assertEqual(old+1, n, "Excepted value was "+str(old+1)+" but got "+str(n))
-        self.assertEqual(EmTestComp.get_max_rank('z'), -1)
+        self.assertEqual(EmTestComp._get_max_rank('z', self.dber), -1)
         pass
 
 #====================#

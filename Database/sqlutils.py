@@ -5,6 +5,7 @@ import logging as logger
 import sqlalchemy as sqla
 from django.conf import settings
 
+import EditorialModel
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
@@ -76,17 +77,12 @@ def meta(engine):
 # @param cls : An EmComponent child class
 # @return An sqlalchemy table
 # @throw TypeError if em_instance is an EmComponent  or not an EmComponent child class (or an instance)
-def get_table(cls):
-    from EditorialModel.components import EmComponent  # dirty circula inclusion hack
-    if not issubclass(cls, EmComponent) or cls.table is None:
-        raise TypeError("Excepting an EmComponent child class not an " + str(cls))
-    engine = cls.db_engine()
-    return sqla.Table(cls.table, meta(engine))
-
-
-def getTable(cls):
-    return get_table(cls)
-
+# @todo Move this function as an instance method ?
+def get_table(self):
+    if not issubclass(self.__class__, EditorialModel.components.EmComponent) or self.table is None:
+        raise TypeError("Excepting an EmComponent child class not an " + str(self.__class__))
+    engine = self.db_engine
+    return sqla.Table(self.table, meta(engine))
 
 ## This function is intended to execute ddl defined in sqlalter
 # @warning There is a dirty workaround here, DDL should returns only one query, but DropColumn for sqlite has to return 4 queries (rename, create, insert, drop). There is a split on the compiled SQL to extract and execute one query at a time

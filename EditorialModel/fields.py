@@ -76,11 +76,11 @@ class EmField(EmComponent):
     # @return bool : True if deleted False if deletion aborded
     # @todo Check if unconditionnal deletion is correct
     def delete(self):
-        dbe = self.__class__.db_engine()
+        dbe = self.db_engine
         class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
         field_col = sql.Column(self.name)
         ddl = DropColumn(class_table, field_col)
-        sqlutils.ddl_execute(ddl, self.__class__.db_engine())
+        sqlutils.ddl_execute(ddl, self.db_engine)
         return super(EmField, self).delete()
 
     ## add_field_column_to_class_table (Function)
@@ -90,7 +90,7 @@ class EmField(EmComponent):
     # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
     def add_field_column_to_class_table(self):
-        dbe = self.db_engine()
+        dbe = self.db_engine
         fieldtype = get_field_type(self.fieldtype)
         new_column = sql.Column(name=self.name, **(fieldtype.sqlalchemy_args()) )
         class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
@@ -110,9 +110,10 @@ class EmField(EmComponent):
     # @return An EmClass instance
     def get_class(self):
         #<SQL>
-        dbe = self.db_engine()
+        dbe = self.db_engine
+        meta = sqlutils.meta(dbe)
         conn = dbe.connect()
-        fieldgroup_table = sqlutils.getTable(EmFieldGroup)
+        fieldgroup_table = sql.Table(EmFieldGroup.table, meta)
         req = fieldgroup_table.select().where(fieldgroup_table.c.uid == self.fieldgroup_id)
         res = conn.execute(req)
         row = res.fetchone()

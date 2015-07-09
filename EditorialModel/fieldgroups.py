@@ -5,6 +5,7 @@ from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
 
 from Database import sqlutils
+import sqlalchemy as sql
 
 import EditorialModel
 
@@ -50,9 +51,10 @@ class EmFieldGroup(EmComponent):
     ## Get the list of associated fields
     # @return A list of EmField instance
     def fields(self):
-        field_table = sqlutils.getTable(EditorialModel.fields.EmField)
+        meta = sqlutils.meta(self.db_engine)
+        field_table = sql.Table(EditorialModel.fields.EmField.table, meta)
         req = field_table.select(field_table.c.uid).where(field_table.c.fieldgroup_id == self.uid)
-        conn = self.__class__.db_engine().connect()
+        conn = self.db_engine.connect()
         res = conn.execute(req)
         rows = res.fetchall()
         conn.close()
