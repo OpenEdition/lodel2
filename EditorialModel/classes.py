@@ -137,7 +137,7 @@ class EmClass(EmComponent):
         return True
 
     def _link_type_db(self, table_name):
-        #Create a new table storing LodelObjects that are linked to this EmClass
+        #  Create a new table storing additionnal fields for the relation between the linked type and this EmClass
         conn = self.__class__.db_engine().connect()
         meta = sql.MetaData()
         emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
