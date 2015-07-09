@@ -82,7 +82,6 @@ class EmField(EmComponent):
     #
     # Adds a column representing the field in its class' table
     #
-    # @param emField EmField: the object representing the field
     # @return True in case of success, False if not
     def add_field_column_to_class_table(self):
         dbe = self.db_engine()
@@ -98,7 +97,6 @@ class EmField(EmComponent):
     #
     # @return Name of the table
     def get_class_table(self):
-        #return self._get_class_table_db()
         return self.get_class().class_table_name
 
     ## @brief Get the class that contains this field
