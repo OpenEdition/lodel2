@@ -84,6 +84,7 @@ def get_table(self):
     engine = self.db_engine
     return sqla.Table(self.table, meta(engine))
 
+
 ## This function is intended to execute ddl defined in sqlalter
 # @warning There is a dirty workaround here, DDL should returns only one query, but DropColumn for sqlite has to return 4 queries (rename, create, insert, drop). There is a split on the compiled SQL to extract and execute one query at a time
 # @param ddl DDLElement: Can be an Database.sqlalter.DropColumn Database.sqlalter.AddColumn or Database.sqlalter.AlterColumn
