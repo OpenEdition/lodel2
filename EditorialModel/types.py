@@ -11,6 +11,7 @@ from EditorialModel.classtypes import EmClassType
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
+
 ## Represents type of documents
 # A type is a specialisation of a class, it can select optional field,
 # they have hooks, are organized in hierarchy and linked to other

@@ -40,7 +40,6 @@ class EmFieldGroup(EmComponent):
 
         return super(EmFieldGroup, cls).create(name=name, class_id=em_class.uid, **em_component_args)
 
-
     ## Get the list of associated fields
     # @return A list of EmField instance
     def fields(self):

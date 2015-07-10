@@ -76,7 +76,6 @@ class EmClass(EmComponent):
         meta.drop_all(tables=[class_table], bind=dbe)
         return super(EmClass, self).delete()
 
-
     ## Retrieve list of the field_groups of this class
     # @return A list of fieldgroups instance
     def fieldgroups(self):
