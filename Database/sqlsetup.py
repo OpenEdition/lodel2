@@ -169,8 +169,12 @@ def create_column(**kwargs):
     return col
 
 
+## Converts a string to an sqlAlchemy column type
+#
+# @param strtype str: string describing the type of the column
+# @return SqlAlchemy column type
+# @raise NameError
 def string_to_sqla_type(strtype):
-    """ Convert a string to an sqlAlchemy column type """
     if 'VARCHAR' in strtype:
         return string_to_varchar(strtype)
     else:
@@ -180,8 +184,11 @@ def string_to_sqla_type(strtype):
             raise NameError("Unknown type '" + strtype + "'")
 
 
+## Converts a string like 'VARCHAR(XX)' (with XX an integer) to a SqlAlchemy varchar type
+#
+# @param vstr str: String to convert
+# @return SqlAlchemy.VARCHAR
 def string_to_varchar(vstr):
-    """ Convert a string like 'VARCHAR(XX)' (with XX an integer) to a SqlAlchemy varchar type"""
     check_length = re.search(re.compile('VARCHAR\(([\d]+)\)', re.IGNORECASE), vstr)
     column_length = int(check_length.groups()[0]) if check_length else None
     return sql.VARCHAR(length=column_length)
