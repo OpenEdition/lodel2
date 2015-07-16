@@ -45,7 +45,7 @@ class EmComponent(object):
     # @param id_or_name int|str: name or id of the object
     # @throw TypeError if id_or_name is not an integer nor a string
     # @throw NotImplementedError if called with EmComponent
-    def __init__(self, id_or_name):
+    def __init__(self, data):
         if type(self) == EmComponent:
             raise NotImplementedError('Abstract class')
 
@@ -55,14 +55,10 @@ class EmComponent(object):
         # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
         self._fields = OrderedDict([(name, ftype()) for (name, ftype) in (EmComponent._fields + self.__class__._fields)])
 
-        # populate
-        if isinstance(id_or_name, int):
-            self._fields['uid'].value = id_or_name  # read only propertie set
-        elif isinstance(id_or_name, str):
-            self.name = id_or_name
-        else:
-            raise TypeError('Bad argument: expecting <int> or <str> but got : ' + str(type(id_or_name)))
-        self.populate()
+        for name, value in data.items():
+            if name in self._fields:
+                self._fields[name].from_string(value)
+
 
     ## @brief Access an attribute of an EmComponent
     # This method is overloads the default __getattr__ to search in EmComponents::_fields . If there is an EditorialModel::EmField with a corresponding name in the component

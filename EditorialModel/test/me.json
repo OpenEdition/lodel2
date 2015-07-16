@@ -1,0 +1,8 @@
+{
+  "1" : {
+    "component":"Class", "name":"textes", "string":"{\"fre\":\"Texte\"}", "help":"{}", "rank":"1", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
+  },
+  "2" : {
+    "component":"Class", "name":"publications", "string":"{\"fre\":\"Rubriques\"}", "help":"{}", "rank":"1", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
+  }
+}
