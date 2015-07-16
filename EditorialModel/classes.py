@@ -4,11 +4,7 @@
 # @see EditorialModel::classes::EmClass
 
 from EditorialModel.components import EmComponent
-from Database import sqlutils
-import sqlalchemy as sql
-
 import EditorialModel.fieldtypes as ftypes
-import EditorialModel
 
 
 ## @brief Manipulate Classes of the Editorial Model
