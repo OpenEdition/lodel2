@@ -57,7 +57,8 @@ class EmClass(EmComponent):
     # If a class has no fieldgroups delete it
     # @return bool : True if deleted False if deletion aborded
     def delete(self):
-        pass
+        return super(EmClass, self).delete()
+        
         # fieldgroups = self.fieldgroups()
         # if len(fieldgroups) > 0:
         #     return False
