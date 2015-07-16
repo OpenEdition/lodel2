@@ -4,5 +4,8 @@
   },
   "2" : {
     "component":"Class", "name":"publications", "string":"{\"fre\":\"Rubriques\"}", "help":"{}", "rank":"1", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
+  },
+  "3" : {
+    "component":"FieldGroup", "name":"metadonne", "string":"{\"fre\":\"Rubriques\"}", "help":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"1"
   }
 }

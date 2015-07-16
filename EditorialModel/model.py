@@ -4,12 +4,15 @@
 # Manage instance of an editorial model
 
 from EditorialModel.classes import EmClass
+from EditorialModel.fieldgroups import EmFieldGroup
+
 
 
 ## Manages the Editorial Model
 class Model(object):
 
     componentClass = EmClass
+    componentFieldGroup = EmFieldGroup
 
     ## Constructor
     #
@@ -30,6 +33,7 @@ class Model(object):
             if cls:
                 component['uid'] = uid
                 self.uids[uid] = cls(component)
+                print (self.uids[uid])
 
     ## Saves data using the current backend
     def save(self):
