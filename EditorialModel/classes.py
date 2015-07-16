@@ -31,13 +31,13 @@ class EmClass(EmComponent):
     # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
     @classmethod
     def create(cls, name, classtype, icon=None, sortcolumn='rank', **em_component_args):
-        result = super(Em, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
+        result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
         return result
         # return cls._create_db(name=name, classtype=classtype['name'], icon=icon, sortcolumn=sortcolumn, **em_component_args)
 
     # @classmethod
     # def _create_db(cls, name, classtype, icon, sortcolumn, **em_component_args):
-    #     result = super(Em, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
+    #     result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
     #
     #     dbe = result.db_engine
     #     conn= dbe.connect()
