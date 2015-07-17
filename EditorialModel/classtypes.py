@@ -23,7 +23,7 @@ class EmNature(object):
 #       - 'attach' : what type of superior a type can have
 #            - 'classtype' a type can have superiors of the same classtype
 #            - 'type'      a type can only have superiors of the same type
-#       - automatic : possible superiors 
+#       - automatic : possible superiors
 #            - False : possible superiors must be defined
 #            - True  : possible superiors can not be defined, they will be enforced by the ME automatically
 #       - maxdepth : maximum depth
@@ -86,10 +86,9 @@ class EmClassType(object):
     @staticmethod
     def natures(classtype_name):
         if not isinstance(classtype_name, str):
-            raise TypeError("Excepted <class str> but got "+str(type(classtype_name)))
+            raise TypeError("Excepted <class str> but got %s" % str(type(classtype_name)))
         try:
             classtype = getattr(EmClassType, classtype_name)
         except AttributeError:
-            raise AttributeError("Unknown classtype : '"+classtype_name+"'")
+            raise AttributeError("Unknown classtype : '%s'" % classtype_name)
         return classtype['hierarchy'].keys()
-

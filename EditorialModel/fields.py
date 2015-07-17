@@ -1,14 +1,15 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent
-from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmField_icon, get_field_type
-from EditorialModel.fieldgroups import EmFieldGroup
-from EditorialModel.classes import EmClass
+from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmField_icon  # , get_field_type
+# from EditorialModel.fieldgroups import EmFieldGroup
+# from EditorialModel.classes import EmClass
 
-from Database import sqlutils
-from Database.sqlalter import DropColumn, AddColumn
+# from Database import sqlutils
+# from Database.sqlalter import DropColumn, AddColumn
 
-import sqlalchemy as sql
+# import sqlalchemy as sql
+
 
 ## EmField (Class)
 #
