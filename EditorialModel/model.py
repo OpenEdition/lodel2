@@ -5,6 +5,8 @@
 
 from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
+from EditorialModel.fields import EmField
+from EditorialModel.types import EmType
 
 
 
@@ -13,6 +15,8 @@ class Model(object):
 
     componentClass = EmClass
     componentFieldGroup = EmFieldGroup
+    componentField = EmField
+    componentType = EmType
 
     ## Constructor
     #
