@@ -58,7 +58,7 @@ class EmClass(EmComponent):
     # @return bool : True if deleted False if deletion aborded
     def delete(self):
         return super(EmClass, self).delete()
-        
+
         # fieldgroups = self.fieldgroups()
         # if len(fieldgroups) > 0:
         #     return False
