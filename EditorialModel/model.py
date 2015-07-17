@@ -6,6 +6,7 @@
 from EditorialModel.classes import EmClass
 
 
+## Manages the Editorial Model
 class Model(object):
 
     componentClass = EmClass
