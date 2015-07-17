@@ -28,7 +28,7 @@ class Model(object):
 
     ## Loads the structure of the Editorial Model
     #
-    # Gets all the objects contained in that structure and creates a list indexed by their uids
+    # Gets all the objects contained in that structure and creates a dict indexed by their uids
     def load(self):
         data = self.backend.load()
         for uid, component in data.items():
@@ -38,6 +38,11 @@ class Model(object):
                 component['uid'] = uid
                 self.uids[uid] = cls(component)
                 print (self.uids[uid])
+        # TODO
+        # iterate over classes, link to subordinates types
+        # iterate over types, attach them to classes
+        # iterate over fieldgroups, attach them to classes
+        # iterate over fields, attach them to fieldgroups, link to types, link to relational fields
 
     ## Saves data using the current backend
     def save(self):
@@ -51,5 +56,5 @@ class Model(object):
 
     ## Returns a list of all the EmClass objects of the model
     def classes(self):
-        classes = [component for _, component in self.uids if isinstance(component, EmClass)]
+        classes = [component for component in self.uids.values() if isinstance(component, EmClass)]
         return classes
