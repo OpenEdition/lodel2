@@ -24,6 +24,10 @@ class Model(object):
     def __init__(self, backend):
         self.backend = backend
         self.uids = {}
+        self.Class = {}
+        self.FieldGroup = {}
+        self.Field = {}
+        self.Type = {}
         self.load()
 
     ## Loads the structure of the Editorial Model
@@ -37,7 +41,8 @@ class Model(object):
             if cls:
                 component['uid'] = uid
                 self.uids[uid] = cls(component)
-                print (self.uids[uid])
+                # create a dict for each component
+                getattr(self, component['component'])[uid] = self.uids[uid]
         # TODO
         # iterate over classes, link to subordinates types
         # iterate over types, attach them to classes
@@ -56,5 +61,4 @@ class Model(object):
 
     ## Returns a list of all the EmClass objects of the model
     def classes(self):
-        classes = [component for component in self.uids.values() if isinstance(component, EmClass)]
-        return classes
+        return list(self.Class.values())
