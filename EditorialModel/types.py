@@ -1,11 +1,11 @@
 #-*- coding: utf-8 -*-
 
-from Database import sqlutils
-import sqlalchemy as sql
+# from Database import sqlutils
+# import sqlalchemy as sql
 
 import EditorialModel
 from EditorialModel.components import EmComponent
-from EditorialModel.fieldgroups import EmFieldGroup
+# from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmClassType
 import EditorialModel.fieldtypes as ftypes
@@ -30,7 +30,7 @@ class EmType(EmComponent):
         ('class_id', ftypes.EmField_integer),
         ('icon', ftypes.EmField_icon),
         ('sortcolumn', ftypes.EmField_char)
-        ]
+    ]
 
     @classmethod
     ## Create a new EmType and instanciate it
@@ -51,6 +51,7 @@ class EmType(EmComponent):
     # @todo Don't hardcode table name
     def _table_hierarchy(self):
         # TODO Réimplémenter
+        pass
         #return sql.Table(self.__class__.table_hierarchy, sqlutils.meta(self.db_engine))
 
     @property
@@ -79,7 +80,7 @@ class EmType(EmComponent):
     # @return A list of EmFieldGroup instance
     def field_groups(self):
         # TODO Réimplémenter
-
+        pass
         # meta = sqlutils.meta(self.db_engine)
         # fg_table = sql.Table(EmFieldGroup.table, meta)
         # req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
@@ -102,7 +103,7 @@ class EmType(EmComponent):
     # @return A list of EmField instance
     def selected_fields(self):
         # TODO Réimplémenter
-
+        pass
         # dbe = self.db_engine
         # meta = sqlutils.meta(dbe)
         # conn = dbe.connect()
@@ -154,7 +155,7 @@ class EmType(EmComponent):
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    def _opt_field_act(self, field, select=True):
+    def _opt_field_act(self, field, select=True):  # TODO voir si on conserve l'argument "select"
         if not isinstance(field, EmField):
             raise TypeError("Excepted <class EmField> as field argument. But got " + str(type(field)))
         if not field in self.all_fields():
@@ -226,6 +227,7 @@ class EmType(EmComponent):
     # @see EmType::subordinates(), EmType::superiors()
     def _sub_or_sup(self, sup=True):
         # TODO Réimplémenter
+        pass
         # conn = self.db_engine.connect()
         # htable = self._table_hierarchy
         # type_table = sqlutils.get_table(self)
