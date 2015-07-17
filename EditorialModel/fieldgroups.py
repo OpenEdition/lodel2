@@ -4,10 +4,10 @@ from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
 
-from Database import sqlutils
-import sqlalchemy as sql
+# from Database import sqlutils
+# import sqlalchemy as sql
 
-import EditorialModel
+# import EditorialModel
 
 
 ## Represents groups of EmField associated with an EmClass
@@ -34,9 +34,9 @@ class EmFieldGroup(EmComponent):
     # @throw TypeError If an argument is of an unexepted type
     def create(cls, name, em_class, **em_component_args):
         if not isinstance(name, str):
-            raise TypeError("Excepting <class str> as name. But got " + str(type(name)))
+            raise TypeError("Excepting <class str> as name. But got %s" % str(type(name)))
         if not isinstance(em_class, EmClass):
-            raise TypeError("Excepting <class EmClass> as em_class. But got "+str(type(name)))
+            raise TypeError("Excepting <class EmClass> as em_class. But got %s" % str(type(name)))
 
         return super(EmFieldGroup, cls).create(name=name, class_id=em_class.uid, **em_component_args)
 
