@@ -32,6 +32,12 @@ class EmType(EmComponent):
         ('sortcolumn', ftypes.EmField_char)
     ]
 
+    def __init__(self, data, components):
+        super(EmType, self).__init__(data, components)
+        for link in ['fields', 'subordinates']:
+            if link in data:
+                self._fields[link] = data[link]
+
     @classmethod
     ## Create a new EmType and instanciate it
     # @param name str: The name of the new type
@@ -44,15 +50,6 @@ class EmType(EmComponent):
     # @todo check that em_class is an EmClass object (fieldtypes can handle it)
     def create(cls, name, em_class, sortcolumn='rank', **em_component_args):
         return super(EmType, cls).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
-
-    @property
-    ## Return an sqlalchemy table for type hierarchy
-    # @return sqlalchemy em_type_hierarchy table object
-    # @todo Don't hardcode table name
-    def _table_hierarchy(self):
-        # TODO Réimplémenter
-        pass
-        #return sql.Table(self.__class__.table_hierarchy, sqlutils.meta(self.db_engine))
 
     @property
     ## Return the EmClassType of the type
