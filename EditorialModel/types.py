@@ -37,6 +37,8 @@ class EmType(EmComponent):
         for link in ['fields', 'subordinates']:
             if link in data:
                 self._fields[link] = data[link]
+            else:
+                self._fields[link] = []
 
     @classmethod
     ## Create a new EmType and instanciate it
@@ -99,16 +101,8 @@ class EmType(EmComponent):
     ## Return selected optional field
     # @return A list of EmField instance
     def selected_fields(self):
-        # TODO Réimplémenter
-        pass
-        # dbe = self.db_engine
-        # meta = sqlutils.meta(dbe)
-        # conn = dbe.connect()
-        #
-        # table = sql.Table('em_field_type', meta)
-        # res = conn.execute(table.select().where(table.c.type_id == self.uid))
-        #
-        # return [EditorialModel.fields.EmField(row['field_id']) for row in res.fetchall()]
+        selected = [ self.components['uids'][field_id] for field_id in self._fields['fields'] ]
+        return selected
 
     ## Return the list of associated fields
     # @return A list of EmField instance
