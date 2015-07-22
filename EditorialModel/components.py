@@ -45,7 +45,7 @@ class EmComponent(object):
     # @param id_or_name int|str: name or id of the object
     # @throw TypeError if id_or_name is not an integer nor a string
     # @throw NotImplementedError if called with EmComponent
-    def __init__(self, data):
+    def __init__(self, data, components):
         if type(self) == EmComponent:
             raise NotImplementedError('Abstract class')
 
@@ -54,6 +54,7 @@ class EmComponent(object):
         # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
         # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
         self._fields = OrderedDict([(name, ftype()) for (name, ftype) in (EmComponent._fields + self.__class__._fields)])
+        self.components = components
 
         for name, value in data.items():
             if name in self._fields:

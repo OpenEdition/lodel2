@@ -37,7 +37,7 @@ class Model(object):
             if cls:
                 component['uid'] = uid
                 # create a dict for the component and one indexed by uids, store instanciated component in it
-                self.components[component['component']][uid] = self.components['uids'][uid] = cls(component)
+                self.components[component['component']][uid] = self.components['uids'][uid] = cls(component, self.components)
         # TODO : check integrity
 
     ## Saves data using the current backend
