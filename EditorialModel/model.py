@@ -13,21 +13,17 @@ from EditorialModel.types import EmType
 ## Manages the Editorial Model
 class Model(object):
 
-    componentClass = EmClass
-    componentFieldGroup = EmFieldGroup
-    componentField = EmField
-    componentType = EmType
+    component_class = EmClass
+    component_fieldgroup = EmFieldGroup
+    component_field = EmField
+    component_type = EmType
 
     ## Constructor
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
     def __init__(self, backend):
         self.backend = backend
-        self.uids = {}
-        self.Class = {}
-        self.FieldGroup = {}
-        self.Field = {}
-        self.Type = {}
+        self.components = {'uids':{}, 'class':{}, 'type':{}, 'field':{}, 'fieldgroup':{}}
         self.load()
 
     ## Loads the structure of the Editorial Model
@@ -36,18 +32,13 @@ class Model(object):
     def load(self):
         data = self.backend.load()
         for uid, component in data.items():
-            cls_name = 'component' + component['component']
+            cls_name = 'component_' + component['component']
             cls = getattr(Model, cls_name)
             if cls:
                 component['uid'] = uid
-                self.uids[uid] = cls(component)
-                # create a dict for each component
-                getattr(self, component['component'])[uid] = self.uids[uid]
-        # TODO
-        # iterate over classes, link to subordinates types
-        # iterate over types, attach them to classes
-        # iterate over fieldgroups, attach them to classes
-        # iterate over fields, attach them to fieldgroups, link to types, link to relational fields
+                # create a dict for the component and one indexed by uids, store instanciated component in it
+                self.components[component['component']][uid] = self.components['uids'][uid] = cls(component)
+        # TODO : check integrity
 
     ## Saves data using the current backend
     def save(self):
@@ -61,4 +52,4 @@ class Model(object):
 
     ## Returns a list of all the EmClass objects of the model
     def classes(self):
-        return list(self.Class.values())
+        return list(self.components['class'].values())
