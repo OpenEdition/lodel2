@@ -45,6 +45,16 @@ class EmFieldGroup(EmComponent):
 
         return super(EmFieldGroup, cls).create(**em_component_args)
 
+    ## Deletes a fieldgroup
+    def delete(self):
+        # all the EmField objects contained in this fieldgroup should be deleted first
+        fieldgroup_fields = self.fields()
+        for fieldgroup_field in fieldgroup_fields:
+            fieldgroup_field.delete()
+
+        # then we delete this fieldgroup
+        # TODO Process de suppression du fieldgroup dans le modèle éditorial
+
     ## Get the list of associated fields
     # @return A list of EmField instance
     def fields(self):
