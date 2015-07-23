@@ -3,6 +3,7 @@
 ## @file editorialmodel.py
 # Manage instance of an editorial model
 
+from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
@@ -18,7 +19,8 @@ class Model(object):
     ## Constructor
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
-    def __init__(self, backend):
+    def __init__(self, backend, migration_handler = None):
+        self.migration_handler = DummyMigrationHandler() if migration_handler is None else migration_handler
         self.backend = backend
         self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': [], 'EmFieldGroup': []}
         self.load()
