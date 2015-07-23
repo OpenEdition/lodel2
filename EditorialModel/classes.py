@@ -9,7 +9,7 @@ import EditorialModel
 
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
-# @see EmClass, EmType, EmFieldGroup, EmField
+# @see EmClass, EmType, EditorialModel.fieldgroups.EmFieldGroup, EmField
 # @todo sortcolumn handling
 class EmClass(EmComponent):
 
@@ -24,16 +24,6 @@ class EmClass(EmComponent):
         ('sortcolumn', ftypes.EmField_char)
     ]
 
-    ## Create a new class
-    # @param name str: name of the new class
-    # @param class_type EmClasstype: type of the class
-    # @return an EmClass instance
-    # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
-    @classmethod
-    def create(cls, name, classtype, icon=None, sortcolumn='rank', **em_component_args):
-        result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
-        return result
-
     @property
     ## @brief Return the table name used to stores data on this class
     def class_table_name(self):
@@ -43,19 +33,19 @@ class EmClass(EmComponent):
     # If a class has no fieldgroups delete it
     # @return bool : True if deleted False if deletion aborded
     def delete(self):
-        for uid, emtype in self.components[Model.name_from_emclass(EmType)].items:
+        for emtype in self.model.components(EmType):
             if emtype.class_id == self.uid:
                 return False
-        for uid, fieldgroup in self.components[Model.name_from_emclass(EmFieldGroup)].items():
+        for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
             if fieldgroup.class_id == self.uid:
                 return False
-        return super(EmClass, self).delete()
+        return True
 
     ## Retrieve list of the field_groups of this class
     # @return A list of fieldgroups instance
     def fieldgroups(self):
         ret = []
-        for uid,fieldgroup in self.components[Model.name_from_emclass(EmFieldGroup)].items():
+        for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
             if fieldgroup.class_id == self.uid:
                 ret.append(fieldgroup)
         return ret
@@ -73,7 +63,7 @@ class EmClass(EmComponent):
     # @return types [EmType]:
     def types(self):
         ret = []
-        for uid, emtype in self.components[Model.name_from_emclass(EmType)].items:
+        for emtype in self.components(EmType):
             if emtype.class_id == self.uid:
                 ret.append(emtype)
         return ret
