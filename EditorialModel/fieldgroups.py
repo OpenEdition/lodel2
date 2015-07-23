@@ -49,9 +49,8 @@ class EmFieldGroup(EmComponent):
     def delete(self):
         # all the EmField objects contained in this fieldgroup should be deleted first
         fieldgroup_fields = self.fields()
-        for fieldgroup_field in fieldgroup_fields:
-            fieldgroup_field.delete()
-
+        if len(fieldgroup_fields)>0:
+            raise NotEmptyError("This Fieldgroup still contains fields. It can't be deleted then")
         # then we delete this fieldgroup
         # TODO Process de suppression du fieldgroup dans le modèle éditorial
 
@@ -71,3 +70,6 @@ class EmFieldGroup(EmComponent):
         # rows = res.fetchall()
         # conn.close()
         # return [EditorialModel.fields.EmField(row['uid']) for row in rows]
+
+class NotEmptyError(Exception):
+    pass

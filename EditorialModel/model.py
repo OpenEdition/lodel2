@@ -9,7 +9,6 @@ from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
 import EditorialModel
 
-
 ## Manages the Editorial Model
 class Model(object):
 
