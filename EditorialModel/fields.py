@@ -28,6 +28,21 @@ class EmField(EmComponent):
         ('icon', EmField_icon)
     ]
 
+    def __init__(self, datas, model):
+        super(EmField,self).__init__(datas, model)
+
+    ## @brief Delete a field if it's not linked
+    # @return bool : True if deleted False if deletion aborded
+    # @todo Check if unconditionnal deletion is correct
+    def delete(self):
+        return self.model.delete_component(self.uid)
+        # dbe = self.db_engine
+        # class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
+        # field_col = sql.Column(self.name)
+        # ddl = DropColumn(class_table, field_col)
+        # sqlutils.ddl_execute(ddl, self.db_engine)
+        # return super(EmField, self).delete()
+
     ## Create (Function)
     #
     # Creates a new EmField and instanciates it
@@ -49,34 +64,23 @@ class EmField(EmComponent):
     # @throw EmComponentExistError if an EmField with this name allready exists in this fieldgroup
     # @see EmComponent::__init__()
     # @staticmethod
-    @classmethod
-    def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=None, **em_component_args):
-        created_field = super(EmField, cls).create(
-            name=name,
-            fieldgroup_id=fieldgroup.uid,
-            fieldtype=fieldtype.name,
-            optional=optional,
-            internal=internal,
-            rel_to_type_id=rel_to_type_id,
-            rel_field_id=rel_field_id,
-            icon=icon,
-            **em_component_args
-        )
+    # @classmethod
+    # def create(cls, name, fieldgroup, fieldtype, optional=0, internal=0, rel_to_type_id=0, rel_field_id=0, icon=None, **em_component_args):
+    #     created_field = super(EmField, cls).create(
+    #         name=name,
+    #         fieldgroup_id=fieldgroup.uid,
+    #         fieldtype=fieldtype.name,
+    #         optional=optional,
+    #         internal=internal,
+    #         rel_to_type_id=rel_to_type_id,
+    #         rel_field_id=rel_field_id,
+    #         icon=icon,
+    #         **em_component_args
+    #     )
         # if not created_field.add_field_column_to_class_table():
         #     raise RuntimeError("Unable to create the column for the EmField " + str(created_field))
 
-        return created_field
-
-    ## @brief Delete a field if it's not linked
-    # @return bool : True if deleted False if deletion aborded
-    # @todo Check if unconditionnal deletion is correct
-    def delete(self):
-        # dbe = self.db_engine
-        # class_table = sql.Table(self.get_class_table(), sqlutils.meta(dbe))
-        # field_col = sql.Column(self.name)
-        # ddl = DropColumn(class_table, field_col)
-        # sqlutils.ddl_execute(ddl, self.db_engine)
-        return super(EmField, self).delete()
+        # return created_field
 
     ## add_field_column_to_class_table (Function)
     #
