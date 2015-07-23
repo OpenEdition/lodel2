@@ -4,7 +4,6 @@ from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
 from EditorialModel.fields import EmField
-from EditorialModel.model import Model
 
 #from Database import sqlutils
 #import sqlalchemy as sql

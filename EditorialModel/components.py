@@ -156,20 +156,6 @@ class EmComponent(object):
 
         return cls(kwargs['name'], dbconf)
 
-    ## Delete this component
-    # @return bool : True if deleted False if deletion aborded
-    # @throw RunTimeError if it was unable to do the deletion
-    def delete(self):
-        class_name = name_from_emclass(self.__class__)
-        if class_name is False:
-            return False
-
-        if self.uid in self.components['uid']:
-            del self.components['uid'][self.uid]
-        if self.uid in self.components[class_name]:
-            del self.components[class_name][self.uid]
-        return True
-
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @param ranked_in_value mixed: The rank "family"
     # @return -1 if no EmComponent found else return an integer >= 0
