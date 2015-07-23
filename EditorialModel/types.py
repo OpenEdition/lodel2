@@ -57,7 +57,8 @@ class EmType(EmComponent):
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
     def classtype(self):
-        return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
+        my_class = self.components['uids'][self.class_id]
+        return getattr(EmClassType, my_class.classtype)
 
     ## @brief Delete an EmType
     # The deletion is only possible if a type is not linked by any EmClass
