@@ -30,9 +30,7 @@ class EmFieldGroup(EmComponent):
     ## Create a new EmFieldGroup
     #
     # Save it in database and return an instance*
-    # @param name str: The name of the new EmFieldGroup
-    # @param em_class EmClass : An EditorialModel::classes::EmClass instance
-    # @param **em_component_args : @ref EditorialModel::components::create()
+    # @param **em_component_args : @ref EditorialModel::components::create(), must contain fields "name" (str) and "class" (EmClass)
     # @throw EmComponentExistError If an EmFieldGroup with this name allready exists
     # @throw TypeError If an argument is of an unexepted type
     def create(cls, **em_component_args):
