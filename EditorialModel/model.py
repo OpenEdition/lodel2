@@ -9,17 +9,18 @@ from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
 import EditorialModel
 
+
 ## Manages the Editorial Model
 class Model(object):
 
-    components_class = [ EmClass, EmField, EmFieldGroup, EmType ]
+    components_class = [EmClass, EmField, EmFieldGroup, EmType]
 
     ## Constructor
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
     def __init__(self, backend):
         self.backend = backend
-        self._components = {'uids':{}, 'EmClass':[], 'EmType':[], 'EmField':[], 'EmFieldGroup':[]}
+        self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': [], 'EmFieldGroup': []}
         self.load()
 
     @staticmethod
@@ -36,10 +37,10 @@ class Model(object):
     ## Given a python class return a name
     # @param cls : The python class we want the name
     # @return A class name as string or False if cls is not an EmComponent child class
-    def name_from_emclass(cls):
-        if cls not in Model.components_class:
+    def name_from_emclass(em_class):
+        if em_class not in Model.components_class:
             return False
-        return cls.__name__
+        return em_class.__name__
 
     ## Loads the structure of the Editorial Model
     #
@@ -55,7 +56,7 @@ class Model(object):
                 self._components['uids'][uid] = cls(component, self)
                 self._components[cls_name].append(self._components['uids'][uid])
             else:
-                raise ValueError("Unknow EmComponent class : '"+cls_name+"'")
+                raise ValueError("Unknow EmComponent class : '" + cls_name + "'")
 
         for emclass in Model.components_class:
             comp_list = self.components(emclass)
@@ -79,12 +80,12 @@ class Model(object):
     # @return The corresponding instance or False if uid don't exists
     def component(self, uid):
         return False if uid not in self._components['uids'] else self._components['uids'][uid]
-        
+
     ## Return a new uid
     # @return a new uid
     def new_uid(self):
         used_uid = self._components.keys()
-        return sorted(new_uid)[-1] + 1 if len(used_uid) > 0 else 1
+        return sorted(used_uid)[-1] + 1 if len(used_uid) > 0 else 1
 
     ## Create a component from a component type and datas
     #
@@ -95,7 +96,7 @@ class Model(object):
         em_component = self.emclass_from_name(component_type)(datas, self)
 
         self._components['uids'][em_component.uid] = em_component
-        self._components[name_from_emclass(em_component.__class__)].append(em_component)
+        self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
         return em_component
 
     ## Delete a component
@@ -107,7 +108,7 @@ class Model(object):
             raise EditorialModel.components.EmComponentNotExistError()
         em_component = self._components[uid]
         if em_component.delete_p():
-            self._components[name_from_emclass(em_component.__class__)].remove(em_component)
+            self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
             del self._components['uids'][uid]
         return True
 
@@ -119,4 +120,4 @@ class Model(object):
 
     ## Returns a list of all the EmClass objects of the model
     def classes(self):
-        return list(self._components[Model.name_from_emclass(EmClass)])
+        return list(self._components[self.name_from_emclass(EmClass)])
