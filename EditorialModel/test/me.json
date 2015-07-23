@@ -33,7 +33,7 @@
     "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":"1", "internal":"", "icon":"0"
   },
   "12" : {
-    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help":"{}", "rank":"4", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"17", "rel_to_type_id":"", "rel_field_id":"11", "optional":"1", "internal":"", "icon":"0"
+    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help":"{}", "rank":"4", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"17", "rel_to_type_id":"", "rel_field_id":"11", "optional":"0", "internal":"", "icon":"0"
   },
   "13" : {
     "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"

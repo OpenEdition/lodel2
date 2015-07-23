@@ -27,10 +27,27 @@ class EmFieldGroup(EmComponent):
         return self.model.delete_component(self.uid)
 
     ## Get the list of associated fields
+    # if type_id, the fields will be filtered to represent selected fields of this EmType
     # @return A list of EmField instance
-    def fields(self):
-        fields = [field for field in self.model.components(EmField) if field.fieldgroup_id == self.uid]
+    def fields(self, type_id=0):
+        if not type_id:
+            fields = [field for field in self.model.components(EmField) if field.fieldgroup_id == self.uid]
+        else:
+            # for an EmType, fileds have to be filtered
+            em_type = self.model.component(type_id)
+            fields = []
+            for field in self.model.components(EmField):
+                if field.fieldgroup_id != self.uid or (field.optional and field.uid not in em_type._fields['fields']):
+                    continue
+                # don't include relational field if parent should not be included
+                if field.rel_field_id:
+                    parent = self.model.component(field.rel_field_id)
+                    if parent.optional and parent.uid not in em_type._fields['fields']:
+                        continue
+                fields.append(field)
+
         return fields
+
 
 class NotEmptyError(Exception):
     pass
