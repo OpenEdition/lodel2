@@ -32,8 +32,8 @@ class EmType(EmComponent):
         ('sortcolumn', ftypes.EmField_char)
     ]
 
-    def __init__(self, data, components):
-        super(EmType, self).__init__(data, components)
+    def __init__(self, data, model):
+        super(EmType, self).__init__(data, model)
         for link in ['fields', 'subordinates']:
             if link in data:
                 self._fields[link] = data[link]
@@ -57,8 +57,13 @@ class EmType(EmComponent):
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
     def classtype(self):
-        my_class = self.components['uids'][self.class_id]
-        return getattr(EmClassType, my_class.classtype)
+        return getattr(EmClassType, self.em_class.classtype)
+
+    @property
+    ## Return an instance of the class this type belongs to
+    # @return EditorialModel.EmClass
+    def em_class(self):
+        return self.model.component(self.class_id)
 
     ## @brief Delete an EmType
     # The deletion is only possible if a type is not linked by any EmClass
@@ -76,33 +81,29 @@ class EmType(EmComponent):
                 self.del_superior(sup, nature)
         return super(EmType, self).delete()
 
-    ## Get the list of associated fieldgroups
+    ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance
-    def field_groups(self):
-        # TODO Réimplémenter
-        pass
-        # meta = sqlutils.meta(self.db_engine)
-        # fg_table = sql.Table(EmFieldGroup.table, meta)
-        # req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
-        # conn = self.db_engine.connect()
-        # res = conn.execute(req)
-        # rows = res.fetchall()
-        # conn.close()
-        #
-        # return [EmFieldGroup(row['uid']) for row in rows]
+    def fieldgroups(self):
+        fieldgroups = []
+        for fieldgroup in self.em_class.fieldgroups():
+            for field in fieldgroup.fields():
+                if not field.optional or field.uid in self._fields['fields']:
+                    fieldgroups.append(fieldgroup)
+                    break
+        return fieldgroups
 
     ## Get the list of all Emfield possibly associated with this type
     # @return A list of EmField instance
     def all_fields(self):
         res = []
-        for fieldgroup in self.field_groups():
+        for fieldgroup in self.fieldgroups():
             res += fieldgroup.fields()
         return res
 
     ## Return selected optional field
     # @return A list of EmField instance
     def selected_fields(self):
-        selected = [ self.components['uids'][field_id] for field_id in self._fields['fields'] ]
+        selected = [ self.model.component(field_id) for field_id in self._fields['fields'] ]
         return selected
 
     ## Return the list of associated fields

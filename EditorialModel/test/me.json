@@ -30,10 +30,10 @@
     "component":"EmField", "name":"prenom", "string":"{\"fre\":\"Preom\"}", "help":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"8", "rel_to_type_id":"", "rel_field_id":"", "optional":"1", "internal":"", "icon":"0"
   },
   "11" : {
-    "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"3", "rel_to_type_id":"6", "rel_field_id":"", "optional":"1", "internal":"", "icon":"0"
+    "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":"1", "internal":"", "icon":"0"
   },
   "12" : {
-    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help":"{}", "rank":"4", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"3", "rel_to_type_id":"", "rel_field_id":"11", "optional":"1", "internal":"", "icon":"0"
+    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help":"{}", "rank":"4", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"17", "rel_to_type_id":"", "rel_field_id":"11", "optional":"1", "internal":"", "icon":"0"
   },
   "13" : {
     "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
@@ -46,5 +46,8 @@
   },
   "16" : {
     "component":"EmField", "name":"titre", "string":"{\"fre\":\"Titre\"}", "help":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"", "fieldgroup_id":"15", "rel_to_type_id":"", "rel_field_id":"", "optional":"0", "internal":"", "icon":"0"
+  },
+  "17" : {
+    "component":"EmFieldGroup", "name":"gens", "string":"{\"fre\":\"Gens\"}", "help":"{}", "rank":"2", "date_update":"", "date_create":"", "class_id":"1"
   }
 }
