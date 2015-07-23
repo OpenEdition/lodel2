@@ -92,7 +92,8 @@ class Model(object):
     # @param component_type str : a component type ( component_class, component_fieldgroup, component_field or component_type )
     # @param datas dict : the options needed by the component creation
     def create_component(self, component_type, datas):
-        em_component = self.emclass_from_name(component_type).create(datas)
+        datas['uid'] = self.new_uid
+        em_component = self.emclass_from_name(component_type)(datas, self)
 
         self._components['uids'][em_component.uid] = em_component
         self._components[name_from_emclass(em_component.__class__)].append(em_component)
