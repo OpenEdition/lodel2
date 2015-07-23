@@ -78,7 +78,7 @@ class Model(object):
     # @param uid int : An EmComponent uid
     # @return The corresponding instance or False if uid don't exists
     def component(self, uid):
-        return False if uid not in self._components else self._components['uids'][uid]
+        return False if uid not in self._components['uids'] else self._components['uids'][uid]
         
     ## Return a new uid
     # @return a new uid
