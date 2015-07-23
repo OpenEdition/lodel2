@@ -24,8 +24,8 @@ class EmFieldGroup(EmComponent):
     ## List of fields
     _fields = [('class_id', ftypes.EmField_integer)]
 
-    def __init__(self, data, components):
-        super(EmFieldGroup, self).__init__(data, components)
+    def __init__(self, data, model):
+        super(EmFieldGroup, self).__init__(data, model)
 
     @classmethod
     ## Create a new EmFieldGroup
@@ -46,19 +46,21 @@ class EmFieldGroup(EmComponent):
         return super(EmFieldGroup, cls).create(**em_component_args)
 
     ## Deletes a fieldgroup
+    #
+    # @return True if the deletion is a success, False if not
     def delete(self):
         # all the EmField objects contained in this fieldgroup should be deleted first
         fieldgroup_fields = self.fields()
         if len(fieldgroup_fields)>0:
             raise NotEmptyError("This Fieldgroup still contains fields. It can't be deleted then")
         # then we delete this fieldgroup
-        # TODO Process de suppression du fieldgroup dans le modèle éditorial
+        return self.model.delete_component(self.uid)
 
     ## Get the list of associated fields
     # @return A list of EmField instance
     def fields(self):
         result = []
-        for _, field in self.components[Model.name_from_emclass(EmField)]:
+        for _, field in self.model.components(EmField):
             if field.fieldgroup_id == self.uid:
                 result.append(field)
         return result
