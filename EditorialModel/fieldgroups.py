@@ -24,7 +24,7 @@ class EmFieldGroup(EmComponent):
     _fields = [('class_id', ftypes.EmField_integer)]
 
     def __init__(self, data, components):
-        super(EmFieldgroup, self).__init__(data, components)
+        super(EmFieldGroup, self).__init__(data, components)
 
     @classmethod
     ## Create a new EmFieldGroup
