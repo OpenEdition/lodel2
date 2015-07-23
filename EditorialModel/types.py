@@ -84,26 +84,13 @@ class EmType(EmComponent):
     ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance
     def fieldgroups(self):
-        fieldgroups = []
-        for fieldgroup in self.em_class.fieldgroups():
-            for field in fieldgroup.fields():
-                if not field.optional or field.uid in self._fields['fields']:
-                    fieldgroups.append(fieldgroup)
-                    break
+        fieldgroups = [fieldgroup for fieldgroup in self.em_class.fieldgroups() if len(fieldgroup.fields(self.uid))]
         return fieldgroups
-
-    ## Get the list of all Emfield possibly associated with this type
-    # @return A list of EmField instance
-    def all_fields(self):
-        res = []
-        for fieldgroup in self.fieldgroups():
-            res += fieldgroup.fields()
-        return res
 
     ## Return selected optional field
     # @return A list of EmField instance
     def selected_fields(self):
-        selected = [ self.model.component(field_id) for field_id in self._fields['fields'] ]
+        selected = [self.model.component(field_id) for field_id in self._fields['fields']]
         return selected
 
     ## Return the list of associated fields
