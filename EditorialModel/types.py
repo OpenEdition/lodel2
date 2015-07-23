@@ -34,7 +34,7 @@ class EmType(EmComponent):
 
     def __init__(self, data, model):
         super(EmType, self).__init__(data, model)
-        for link in ['fields', 'subordinates']:
+        for link in ['selected_fields', 'subordinates']:
             if link in data:
                 self._fields[link] = data[link]
             else:
@@ -89,18 +89,15 @@ class EmType(EmComponent):
 
     ## Return selected optional field
     # @return A list of EmField instance
-    def selected_fields(self):
-        selected = [self.model.component(field_id) for field_id in self._fields['fields']]
-        return selected
+    #def selected_fields(self):
+        #selected = [self.model.component(field_id) for field_id in self._fields['selected_fields']]
+        #return selected
 
     ## Return the list of associated fields
     # @return A list of EmField instance
     def fields(self):
-        result = list()
-        for field in self.all_fields():
-            if not field.optional:
-                result.append(field)
-        return result + self.selected_fields()
+        fields = [field for fieldgroup in self.fieldgroups() for field in fieldgroup.fields(self.uid)]
+        return fields
 
     ## Select_field (Function)
     #
