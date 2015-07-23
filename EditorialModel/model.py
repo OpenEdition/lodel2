@@ -47,6 +47,8 @@ class Model(object):
     ## Loads the structure of the Editorial Model
     #
     # Gets all the objects contained in that structure and creates a dict indexed by their uids
+    # @todo Change the thrown exception when a components check fails
+    # @throw ValueError When a component class don't exists
     def load(self):
         data = self.backend.load()
         for uid, component in data.items():
@@ -64,7 +66,10 @@ class Model(object):
         for component_class in Model.components_class:
             self.sort_components(component_class)
 
-        # TODO : check integrity
+        #Check integrity
+        for uid, component in self._components['uids'].items():
+            if not component.check():
+                raise RuntimeError("EmComponent with uid '"+str(uid)+"' is not valid !!!")
 
     ## Saves data using the current backend
     def save(self):

@@ -13,7 +13,6 @@ import EditorialModel
 # @todo sortcolumn handling
 class EmClass(EmComponent):
 
-    table = 'em_class'
     ranked_in = 'classtype'
 
     ## @brief Specific EmClass fields
@@ -23,11 +22,13 @@ class EmClass(EmComponent):
         ('icon', ftypes.EmField_icon),
         ('sortcolumn', ftypes.EmField_char)
     ]
-
-    @property
-    ## @brief Return the table name used to stores data on this class
-    def class_table_name(self):
-        return self.name
+    
+    ## Check if the EmComponent is valid
+    # @return True if valid False if not
+    def check(self):
+        super(EmClass, self).check()
+        return True
+        
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it

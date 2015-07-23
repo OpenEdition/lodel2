@@ -116,52 +116,18 @@ class EmComponent(object):
 
         super(EmComponent, self).__setattr__('deleted', False)
 
-    ## Insert a new component
-    #
-    # This function create and assign a new UID and handle the date_create and date_update values
-    # @warning There is a mandatory argument dbconf that indicate wich database configuration to use
-    # @param **kwargs : Names arguments representing object properties
-    # @return An instance of the created component
-    # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
-    # @throw RuntimeError if the creation fails at database level
-    # @todo Check that every mandatory _fields are given in args
-    # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
-    @classmethod
-    def create(cls, **kwargs):
-        #Checking for invalid arguments
-        valid_args = [ name for name,_ in (cls._fields + EmComponent._fields)]
-
-        for argname in kwargs:
-            if argname in ['date_update', 'date_create', 'rank', 'uid']:  # Automatic properties
-                raise TypeError("Invalid argument : " + argname)
-            elif argname not in valid_args:
-                raise TypeError("Unexcepted keyword argument '" + argname + "' for " + cls.__name__ + " creation")
-
-        #Check uniq names constraint
-        try:
-            name = kwargs['name']
-            exist = cls(name)
-            for kname in kwargs:
-                if not (getattr(exist, kname) == kwargs[kname]):
-                    raise EmComponentExistError("An " + cls.__name__ + " named " + name + " allready exists with a different " + kname)
-            logger.info("Trying to create an " + cls.__name__ + " that allready exist with same attribute. Returning the existing one")
-            return exist
-        except EmComponentNotExistError:
-            pass
-
-        kwargs['uid'] = cls.new_uid()
-        kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
-
-        kwargs['rank'] = cls._get_max_rank( kwargs[cls.ranked_in], dbe )+1
-
-        return cls(kwargs['name'], dbconf)
-
-    ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
-    # @param ranked_in_value mixed: The rank "family"
-    # @return -1 if no EmComponent found else return an integer >= 0
-    @classmethod
-    def _get_max_rank(cls, ranked_in_value):
-        pass
+    ## Check if the EmComponent is valid
+    # This function has to check that rank are correct and continuous other checks are made in childs classes
+    # @warning Hardcoded minimum rank
+    # @warning Rank modified by _fields['rank'].value
+    # @return True
+    def check(self):
+        if self.get_max_rank() > len(self.same_rank_group()):
+            #Non continuous ranks
+            for i, component in enumerate(self.same_rank_group()):
+                component._fields['rank'].value = i + 1
+        # No need to sort again here
+        return True
 
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @return A positive integer or -1 if no components
@@ -178,7 +144,12 @@ class EmComponent(object):
 
     ## Set a new rank for this component
     # @note This function assume that ranks are properly set from 1 to x with no gap
+    #
+    # @warning Hardcoded minimum rank
+    # @warning Rank modified by _fields['rank'].value
+    #
     # @param new_rank int: The new rank
+    #
     # @throw TypeError If bad argument type
     # @throw ValueError if out of bound value
     def set_rank(self, new_rank):
