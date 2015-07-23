@@ -4,11 +4,12 @@ from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
 from EditorialModel.fields import EmField
+from EditorialModel.model import Model
 
-# from Database import sqlutils
-# import sqlalchemy as sql
+#from Database import sqlutils
+#import sqlalchemy as sql
 
-# import EditorialModel
+#import EditorialModel
 
 
 ## Represents groups of EmField associated with an EmClass
@@ -38,9 +39,9 @@ class EmFieldGroup(EmComponent):
         fieldgroup_name = em_component_args['name']
         fieldgroup_class = em_component_args['class']
 
-        if not isinstance(name, str):
-            raise TypeError("Excepting <class str> as name. But got %s" % str(type(fielgroup_name)))
-        if not isinstance(em_class, EmClass):
+        if not isinstance(fieldgroup_name, str):
+            raise TypeError("Excepting <class str> as name. But got %s" % str(type(fieldgroup_name)))
+        if not isinstance(fieldgroup_class, EmClass):
             raise TypeError("Excepting <class EmClass> as em_class. But got %s" % str(type(fieldgroup_class)))
 
         return super(EmFieldGroup, cls).create(**em_component_args)
@@ -49,8 +50,8 @@ class EmFieldGroup(EmComponent):
     # @return A list of EmField instance
     def fields(self):
         result = []
-        for _,field in self.components[Model.name_from_emclass(EmField)]:
-            if field.fieldgroup_id==self.uid:
+        for _, field in self.components[Model.name_from_emclass(EmField)]:
+            if field.fieldgroup_id == self.uid:
                 result.append(field)
         return result
         # meta = sqlutils.meta(self.db_engine)
