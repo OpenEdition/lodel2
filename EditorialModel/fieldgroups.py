@@ -3,6 +3,7 @@
 from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 import EditorialModel.fieldtypes as ftypes
+from EditorialModel.fields import EmField
 
 # from Database import sqlutils
 # import sqlalchemy as sql
@@ -48,7 +49,7 @@ class EmFieldGroup(EmComponent):
     # @return A list of EmField instance
     def fields(self):
         result = []
-        for _,field in self.components['field']:
+        for _,field in self.components[Model.name_from_emclass(EmField)]:
             if field.fieldgroup_id==self.uid:
                 result.append(field)
         return result
