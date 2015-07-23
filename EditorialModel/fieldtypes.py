@@ -95,7 +95,7 @@ class EmField_boolean(EmFieldType):
         super(EmField_boolean, self).__init__('boolean')
 
     def from_string(self, value):
-        if value:
+        if value and value != "0":
             self.value = True
         else:
             self.value = False
