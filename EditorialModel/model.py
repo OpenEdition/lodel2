@@ -58,9 +58,9 @@ class Model(object):
             else:
                 raise ValueError("Unknow EmComponent class : '" + cls_name + "'")
 
-        for emclass in Model.components_class:
-            comp_list = self.components(emclass)
-            self._components[self.name_from_emclass] = sorted(comp_list, key=lambda cur_comp: cur_comp.rank)
+        #Sorting by rank
+        for component_class in Model.components_class:
+            self.sort_components(component_class)
 
         # TODO : check integrity
 
@@ -80,6 +80,15 @@ class Model(object):
     # @return The corresponding instance or False if uid don't exists
     def component(self, uid):
         return False if uid not in self._components['uids'] else self._components['uids'][uid]
+
+    ## Sort components by rank in Model::_components
+    # @param emclass pythonClass : The type of components to sort
+    # @throw AttributeError if emclass is not valid
+    def sort_components(self, component_class):
+        if component_class not in self.components_class:
+            raise AttributeError("Bad argument emclass : '"+emclass+"', excpeting one of "+str(self.components_class))
+
+        self._components[self.name_from_emclass(component_class)] = sorted(self.components(component_class), key=lambda comp: comp.rank)
 
     ## Return a new uid
     # @return a new uid

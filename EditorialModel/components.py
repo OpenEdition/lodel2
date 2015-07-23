@@ -163,78 +163,58 @@ class EmComponent(object):
     def _get_max_rank(cls, ranked_in_value):
         pass
 
-    ## Only make a call to the class method
+    ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @return A positive integer or -1 if no components
-    # @see EmComponent::_get_max_rank()
-    def get_max_rank(self, ranked_in_value):
-        return self.__class__._get_max_rank(ranked_in_value)
+    def get_max_rank(self):
+        components = self.same_rank_group()
+        return -1 if len(components) == 0 else components[-1].rank
+
+    ## Return an array of instances that are concerned by the same rank
+    # @return An array of instances that are concerned by the same rank
+    def same_rank_group(self):
+        components = self.model.components(self.__class__)
+        ranked_in = self.__class__.ranked_in
+        return [ c for c in components if getattr(c, ranked_in) == getattr(self, ranked_in) ]
 
     ## Set a new rank for this component
     # @note This function assume that ranks are properly set from 1 to x with no gap
     # @param new_rank int: The new rank
-    # @return True if success False if not
     # @throw TypeError If bad argument type
     # @throw ValueError if out of bound value
     def set_rank(self, new_rank):
         if not isinstance(new_rank, int):
             raise TypeError("Excepted <class int> but got "+str(type(new_rank)))
-        if new_rank < 0 or new_rank > self.get_max_rank(getattr(self, self.ranked_in)):
+        if new_rank <= 0 or new_rank > self.get_max_rank():
             raise ValueError("Invalid new rank : "+str(new_rank))
 
-        mod = new_rank - self.rank #Allow to know the "direction" of the "move"
+        mod = new_rank - self.rank #Indicates the "direction" of the "move"
 
-        if mod == 0: #No modifications
+        if mod == 0:
             return True
 
         limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ] #The range of modified ranks
         limits.sort()
 
-        dbe = self.db_engine
-        conn = dbe.connect()
-        table = sqlutils.get_table(self)
+        for component in [ c for c in self.same_rank_group() if c.rank >= limits[0] and c.rank <= limits[1] ] :
+            component._fields['rank'].value = component.rank + ( -1 if mod > 0 else 1 )
 
-        #Selecting the components that will be modified
-        req = table.select().where( getattr(table.c, self.ranked_in) == getattr(self, self.ranked_in)).where(table.c.rank >= limits[0]).where(table.c.rank <= limits[1])
+        self._fields['rank'].value = new_rank
 
-        res = conn.execute(req)
-        if not res: #Db error... Maybe false is a bit silent for a failuer
-            return False
+        self.model.sort_components(self.__class__)
 
-        rows = res.fetchall()
+        pass
 
-        updated_ranks = [{'b_uid': self.uid, 'b_rank': new_rank}]
-        for row in rows:
-            updated_ranks.append({'b_uid': row['uid'], 'b_rank': row['rank'] + (-1 if mod > 0 else 1)})
-        req = table.update().where(table.c.uid == sql.bindparam('b_uid')).values(rank=sql.bindparam('b_rank'))
-        res = conn.execute(req, updated_ranks)
-        conn.close()
-
-        if res:
-            #Instance rank update
-            self._fields['rank'].value = new_rank
-        return bool(res)
-
-    ## @brief Modify a rank given a sign and a new_rank
-    # - If sign is '=' set the rank to new_rank
-    # - If sign is '-' set the rank to cur_rank - new_rank
-    # - If sign is '+' set the rank to cur_rank + new_rank
-    # @param new_rank int: The new_rank or rank modifier
-    # @param sign str: Can be one of '=', '+', '-'
-    # @return True if success False if fails
-    # @throw TypeError If bad argument type
-    # @throw ValueError if out of bound value
-    def modify_rank(self,new_rank, sign='='):
-        if not isinstance(new_rank, int) or not isinstance(sign, str):
-            raise TypeError("Excepted <class int>, <class str>. But got "+str(type(new_rank))+", "+str(type(sign)))
-
-        if sign == '+':
-            return self.set_rank(self.rank + new_rank)
-        elif sign == '-':
-            return self.set_rank(self.rank - new_rank)
-        elif sign == '=':
-            return self.set_rank(new_rank)
-        else:
-            raise ValueError("Excepted one of '=', '+', '-' for sign argument, but got "+sign)
+    ## Modify a rank given an integer modifier
+    # @param rank_mod int : can be a negative positive or zero integer
+    # @throw TypeError if rank_mod is not an integer
+    # @throw ValueError if rank_mod is out of bound
+    def modify_rank(self, rank_mod):
+        if not isinstance(rank_mod, int):
+            raise TypeError("Excepted <class int>, <class str>. But got "+str(type(rank_mod))+", "+str(type(sign)))
+        try:
+            self.set_rank(self.rank + rank_mod)
+        except ValueError:
+            raise ValueError("The rank modifier '"+str(rank_mod)+"' is out of bounds")
 
     ## @brief Return a string representation of the component
     # @return A string representation of the component
