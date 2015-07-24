@@ -153,7 +153,6 @@ class Model(object):
             #Revert the creation
             self.components(em_component.__class__).remove(em_component)
             del self._components['uids'][em_component.uid]
-            print(self._components)
             raise e
 
         self.migration_handler.register_model_state(hash(self))
