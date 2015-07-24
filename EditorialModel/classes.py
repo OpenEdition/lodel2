@@ -42,18 +42,14 @@ class EmClass(EmComponent):
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it
     # @return bool : True if deleted False if deletion aborded
-    def delete(self):
+    def delete_check(self):
         for emtype in self.model.components(EmType):
             if emtype.class_id == self.uid:
                 return False
         for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
             if fieldgroup.class_id == self.uid:
                 return False
-
-        if self.model.delete_component(self.uid):
-            return self.check()
-        else:
-            return False
+        return True
 
     ## Retrieve list of the field_groups of this class
     # @return A list of fieldgroups instance

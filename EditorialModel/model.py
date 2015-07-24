@@ -153,11 +153,11 @@ class Model(object):
     def delete_component(self, uid):
         #register the deletion in migration handler
         self.migration_handler.register_change(uid, self.component(uid).attr_dump, None)
-
-        if uid not in self._components[uid]:
+        
+        em_component = self.component(uid)
+        if not em_component:
             raise EditorialModel.components.EmComponentNotExistError()
-        em_component = self._components[uid]
-        if em_component.delete_p():
+        if em_component.delete_check():
             self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
             del self._components['uids'][uid]
         return True

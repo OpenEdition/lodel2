@@ -31,17 +31,13 @@ class EmFieldGroup(EmComponent):
             raise EmComponentCheckError("class_id cointains an uid from a component that is not an EmClass but an "+type(em_class))
 
     ## Deletes a fieldgroup
-    # @return True if the deletion is a success, False if not
-    def delete(self):
+    # @return True if the deletion is possible, False if not
+    def delete_check(self):
         # all the EmField objects contained in this fieldgroup should be deleted first
         fieldgroup_fields = self.fields()
         if len(fieldgroup_fields) > 0:
             raise NotEmptyError("This Fieldgroup still contains fields. It can't be deleted then")
-        # then we delete this fieldgroup
-        if self.model.delete_component(self.uid):
-            return self.check()
-        else:
-            return False
+        return True
 
     ## Get the list of associated fields
     # if type_id, the fields will be filtered to represent selected fields of this EmType

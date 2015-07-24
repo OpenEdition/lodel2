@@ -79,17 +79,14 @@ class EmType(EmComponent):
     # @return True if delete False if not deleted
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
-    def delete(self):
+    def delete_check(self):
         if sum(self.subordinates_list) > 0:
             return False
         #Delete all relation with superiors
         for nature, sups in self.superiors().items():
             for sup in sups:
                 self.del_superior(sup, nature)
-        if super(EmType, self).delete():
-            return self.check()
-        else:
-            return False
+        return True
 
     ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance

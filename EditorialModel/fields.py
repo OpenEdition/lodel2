@@ -43,8 +43,5 @@ class EmField(EmComponent):
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded
     # @todo Check if unconditionnal deletion is correct
-    def delete(self):
-        if self.model.delete_component(self.uid):
-            return self.check()
-        else:
-            return False
+    def delete_check(self):
+        return True

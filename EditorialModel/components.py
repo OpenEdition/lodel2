@@ -99,6 +99,11 @@ class EmComponent(object):
                 component.rank = i + 1
         # No need to sort again here
 
+    ## @brief Delete predicate. Indicates if a component can be deleted
+    # @return True if deletion OK else return False
+    def delete_check(self):
+        raise NotImplementedError("Virtual method")
+
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @return A positive integer or -1 if no components
     def get_max_rank(self):
