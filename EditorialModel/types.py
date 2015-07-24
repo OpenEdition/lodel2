@@ -6,7 +6,7 @@
 import EditorialModel
 from EditorialModel.components import EmComponent
 from EditorialModel.fields import EmField
-from EditorialModel.classtypes import EmClassType
+from EditorialModel.classtypes import EmClassType, EmNature
 from EditorialModel.exceptions import *
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
@@ -35,12 +35,13 @@ class EmType(EmComponent):
                 raise AttributeError("Excepted fields_list to be a list of integers, but found a +"+str(type(l_uid))+" in it")
 
         self.subordinates_list = subordinates_list
-        print(subordinates_list)
         self.check_type('subordinates_list', dict)
         for nature, uids in self.subordinates_list.items():
+            if nature not in [EmNature.PARENT, EmNature.TRANSLATION, EmNature.IDENTITY]:
+                raise AttributeError("Nature '%s' of subordinates is not allowed !" % nature)
             for uid in uids:
                 if not isinstance(uid, int):
-                    raise AttributeError("Excepted subordinates of nature %s to be a list int !" % nature)
+                    raise AttributeError("Excepted subordinates of nature '%s' to be a list int !" % nature)
 
         self.icon = icon
         self.sortcolumn = sortcolumn
