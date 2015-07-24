@@ -45,8 +45,25 @@ class EmComponent(object):
 
         #Handling specials ranks for component creation
         self.rank = rank
-
         pass
+
+    @property
+    ## @brief Return a dict with attributes name as key and attributes value as value
+    # @note Used at creation and deletion to call the migration handler
+    def attr_dump(self):
+        return { fname : fval for fname, fval in self.__dict__.items() if not fname.startswith('__') }
+        
+    ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
+    # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
+    def init_ended(self):
+        self._inited = True
+
+    ## @brief Reimplementation for calling the migration handler to register the change
+    def __setattr__(self, attr_name, value):
+        if '_inited' in self.__dict__:
+            # if fails raise MigrationHandlerChangeError
+            self.model.migration_handler.register_change(self.uid, {attr_name: getattr(self, attr_name) }, {attr_name: value} )
+        super(EmComponent, self).__setattr__(attr_name, value)
 
     ## Check the type of attribute named var_name
     # @param var_name str : the attribute name

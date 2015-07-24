@@ -75,6 +75,8 @@ class Model(object):
                 component.check()
             except EmComponentCheckError as e:
                 raise EmComponentCheckError("The component with uid %d is not valid. Check returns the following error : \"%s\"" % (uid, str(e)))
+            #Everything is done. Indicating that the component initialisation is over
+            component.init_ended()
 
     ## Saves data using the current backend
     def save(self):
@@ -115,6 +117,7 @@ class Model(object):
     # @param component_type str : a component type ( component_class, component_fieldgroup, component_field or component_type )
     # @param datas dict : the options needed by the component creation
     # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
+    # @todo Handle a raise from the migration handler
     def create_component(self, component_type, datas):
         
         em_obj = self.emclass_from_name(component_type)
@@ -134,13 +137,23 @@ class Model(object):
         if rank != 'last':
             em_component.set_rank( 1 if rank == 'first' else rank)
 
+        #everything done, indicating that initialisation is over
+        em_component.init_ended()
+
+        #register the creation in migration handler
+        self.migration_handler.register_change(em_component.uid, None, em_component.attr_dump)
+
         return em_component
 
     ## Delete a component
     # @param uid int : Component identifier
     # @throw EditorialModel.components.EmComponentNotExistError
     # @todo unable uid check
+    # @todo Handle a raise from the migration handler
     def delete_component(self, uid):
+        #register the deletion in migration handler
+        self.migration_handler.register_change(uid, self.component(uid).attr_dump, None)
+
         if uid not in self._components[uid]:
             raise EditorialModel.components.EmComponentNotExistError()
         em_component = self._components[uid]

@@ -17,3 +17,6 @@ class EmComponentRankingNotExistError(Exception):
 ## @brief An exception class to return a failure reason for EmComponent.check() method
 class EmComponentCheckError(Exception):
     pass
+
+class MigrationHandlerChangeError(Exception):
+    pass
