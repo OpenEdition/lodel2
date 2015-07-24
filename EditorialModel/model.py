@@ -27,7 +27,7 @@ class Model(object):
         self.load()
 
     def __hash__(self):
-        return hashlib.md5(str({uid: component.__hash__ for uid, component in self._components.items()}).encode('utf-8')).hexdigest()
+        return int(hashlib.md5(str({uid: component.__hash__ for uid, component in self._components.items()}).encode('utf-8')).hexdigest(),16)
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
