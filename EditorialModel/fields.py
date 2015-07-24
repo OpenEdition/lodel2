@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent
-from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_integer, EmField_icon  # , get_field_type
 
 
 ## EmField (Class)
@@ -13,7 +12,7 @@ class EmField(EmComponent):
 
     ## Instanciate a new EmField
     # @todo define and test type for icon and fieldtype
-    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional = False, internal = False, rel_to_type_id = None, rel_field_id = None, icon = '0', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_to_type_id=None, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None):
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
