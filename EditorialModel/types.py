@@ -196,7 +196,15 @@ class EmType(EmComponent):
     # @see EmType::_sub_or_sup()
     # @todo reimplementation needed
     def superiors(self):
-        pass
+        superiors = {}
+        for em_type in self.model.components(EmType):
+            for nature, field_uids in em_type.subordinates_list.items():
+                if self.uid in field_uids:
+                    if nature in superiors:
+                        superiors[nature].append(em_type)
+                    else:
+                        superiors[nature] = [em_type]
+        return superiors
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
