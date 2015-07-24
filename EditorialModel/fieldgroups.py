@@ -16,6 +16,12 @@ class EmFieldGroup(EmComponent):
     ## List of fields
     _fields = [('class_id', ftypes.EmField_integer)]
 
+    ## Check if the EmFieldGroup is valid
+    # @return True if valid False if not
+    def check(self):
+        super(EmFieldGroup, self).check()
+        return True
+
     ## Deletes a fieldgroup
     # @return True if the deletion is a success, False if not
     def delete(self):
@@ -24,7 +30,10 @@ class EmFieldGroup(EmComponent):
         if len(fieldgroup_fields) > 0:
             raise NotEmptyError("This Fieldgroup still contains fields. It can't be deleted then")
         # then we delete this fieldgroup
-        return self.model.delete_component(self.uid)
+        if self.model.delete_component(self.uid):
+            return self.check()
+        else:
+            return False
 
     ## Get the list of associated fields
     # if type_id, the fields will be filtered to represent selected fields of this EmType

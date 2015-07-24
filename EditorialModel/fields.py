@@ -24,8 +24,17 @@ class EmField(EmComponent):
     def __init__(self, datas, model):
         super(EmField, self).__init__(datas, model)
 
+    ## Check if the EmField is valid
+    # @return True if valid False if not
+    def check(self):
+        super(EmField, self).check()
+        return True
+
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded
     # @todo Check if unconditionnal deletion is correct
     def delete(self):
-        return self.model.delete_component(self.uid)
+        if self.model.delete_component(self.uid):
+            return self.check()
+        else:
+            return False
