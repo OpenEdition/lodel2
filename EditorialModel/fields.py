@@ -9,20 +9,17 @@ from EditorialModel.fieldtypes import EmField_boolean, EmField_char, EmField_int
 # Represents one data for a lodel2 document
 class EmField(EmComponent):
 
-    table = 'em_field'
     ranked_in = 'fieldgroup_id'
-    _fields = [
-        ('fieldtype', EmField_char),
-        ('fieldgroup_id', EmField_integer),
-        ('rel_to_type_id', EmField_integer),
-        ('rel_field_id', EmField_integer),
-        ('optional', EmField_boolean),
-        ('internal', EmField_boolean),
-        ('icon', EmField_icon)
-    ]
 
-    def __init__(self, datas, model):
-        super(EmField, self).__init__(datas, model)
+    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional = False, internal = False, rel_to_type_id = None, rel_field_id = None, icon = '0', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        self.fieldgroup_id = fieldgroup_id
+        self.fieldtype = fieldtype
+        self.optional = optional
+        self.internal = internal
+        self.rel_to_type_id = rel_to_type_id
+        self.rel_field_id = rel_field_id
+        self.icon = icon
+        super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     ## Check if the EmField is valid
     # @return True if valid False if not

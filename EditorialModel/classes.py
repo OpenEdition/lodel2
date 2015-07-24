@@ -23,7 +23,16 @@ class EmClass(EmComponent):
         ('icon', ftypes.EmField_icon),
         ('sortcolumn', ftypes.EmField_char)
     ]
+
+    ## EmClass instanciation
+    def __init__(self, model, uid, name, classtype, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        self.classtype = classtype
+        self.icon = icon
+        self.sortcolumn = 'rank'
+        super(EmClass, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
+        pass
     
+
     ## Check if the EmComponent is valid
     # @return True if valid False if not
     def check(self):

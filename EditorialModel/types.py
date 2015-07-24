@@ -20,25 +20,16 @@ import EditorialModel.classes
 # @see EditorialModel::components::EmComponent
 # @todo sortcolumn handling
 class EmType(EmComponent):
-    table = 'em_type'
-    table_hierarchy = 'em_type_hierarchy'
     ranked_in = 'class_id'
 
-    ## @brief Specific EmClass fields
-    # @see EditorialModel::components::EmComponent::_fields
-    _fields = [
-        ('class_id', ftypes.EmField_integer),
-        ('icon', ftypes.EmField_icon),
-        ('sortcolumn', ftypes.EmField_char)
-    ]
-
-    def __init__(self, data, model):
-        super(EmType, self).__init__(data, model)
-        for link in ['selected_fields', 'subordinates']:
-            if link in data:
-                self._fields[link] = data[link]
-            else:
-                self._fields[link] = []
+    def __init__(self, model, uid, name, class_id, selected_fields = [], subordinates = [], icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        self.class_id = class_id
+        self.selected_fields = selected_fields
+        self.subordinates = subordinates
+        self.icon = icon
+        self.sortcolumn = sortcolumn
+        super(EmType, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
+        pass
 
     @classmethod
     ## Create a new EmType and instanciate it

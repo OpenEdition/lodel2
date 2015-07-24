@@ -50,14 +50,16 @@ class Model(object):
     # @todo Change the thrown exception when a components check fails
     # @throw ValueError When a component class don't exists
     def load(self):
-        data = self.backend.load()
-        for uid, component in data.items():
-            cls_name = component['component']
+        datas = self.backend.load()
+        for uid, kwargs in datas.items():
+            #Store and delete the EmComponent class name from datas
+            cls_name = kwargs['component']
+            del kwargs['component']
             cls = self.emclass_from_name(cls_name)
             if cls:
-                component['uid'] = uid
+                kwargs['uid'] = uid
                 # create a dict for the component and one indexed by uids, store instanciated component in it
-                self._components['uids'][uid] = cls(component, self)
+                self._components['uids'][uid] = cls(self, **kwargs)
                 self._components[cls_name].append(self._components['uids'][uid])
             else:
                 raise ValueError("Unknow EmComponent class : '" + cls_name + "'")
@@ -114,36 +116,20 @@ class Model(object):
         
         em_obj = self.emclass_from_name(component_type)
 
-        datas['uid'] = self.new_uid()
-        em_component = em_obj(datas, self)
-
-        rank = None
+        rank = 'last'
         if 'rank' in datas:
             rank = datas['rank']
-        datas['rank'] = None
+            del datas['rank']
 
+        datas['uid'] = self.new_uid()
+        em_component = em_obj(self, **datas)
 
         self._components['uids'][em_component.uid] = em_component
         self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
 
-
-        create_fails = None
-
-        if rank is None or rank == 'last':
-            em_component.rank = em_component.get_max_rank()
-        elif datas['rank'] == 'first':
-            em_component.set_rank(1)
-        elif isinstance(rank, int):
-            em_component.set_rank(rank)
-        else:
-            create_fails = ValueError("Invalid rank : '"+str(datas['rank'])+"'")
-            self.delete(em_component.uid)
-
-        if not em_component.check():
-            create_fails = RuntimeError("After creation the component self check fails")
-        
-        if not create_fails is None:
-            raise create_fails
+        em_component.rank = em_component.get_max_rank()
+        if rank != 'last':
+            em_component.set_rank( 1 if rank == 'first' else rank)
 
         return em_component
 

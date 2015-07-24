@@ -9,6 +9,13 @@ import json
 ## Manages a Json file based backend structure
 class EmBackendJson(object):
 
+    cast_methods = {
+        'uid' : int,
+        'rank' : int,
+        'class_id' : int,
+        'fieldgroup_id' : int
+    }
+
     ## Constructor
     #
     # @param json_file str: path to the json_file used as data source
@@ -22,5 +29,11 @@ class EmBackendJson(object):
     def load(self):
         data = {}
         for index, component in self.data.items():
-            data[int(index)] = component
+            attributes = {}
+            for attr_name, attr_value in component.items():
+                if attr_name in EmBackendJson.cast_methods:
+                    attributes[attr_name] = EmBackendJson.cast_methods[attr_name](attr_value)
+                else:
+                    attributes[attr_name] = attr_value
+            data[int(index)] = attributes
         return data

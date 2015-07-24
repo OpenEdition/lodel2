@@ -7,6 +7,7 @@ import datetime
 
 import logging
 import EditorialModel.fieldtypes as ftypes
+from Lodel.utils.mlstring import MlString
 from collections import OrderedDict
 
 logger = logging.getLogger('Lodel2.EditorialModel')
@@ -22,79 +23,22 @@ class EmComponent(object):
     ## Used by EmComponent::modify_rank
     ranked_in = None
 
-    ## Read only properties
-    _ro_properties = ['date_update', 'date_create', 'uid', 'rank', 'deleted']
-
-    ## @brief List fields name and fieldtype
-    #
-    # This is a list that describe database fields common for each EmComponent child classes.
-    # A database field is defined here by a tuple(name, type) with name a string and type an EditorialModel.fieldtypes.EmFieldType
-    # @warning The EmFieldType in second position in the tuples must be a class type and not a class instance !!!
-    # @see EditorialModel::classes::EmClass::_fields EditorialModel::fieldgroups::EmFieldGroup::_fields EditorialModel::types::EmType::_fields EditorialModel::fields::EmField::_fields
-    _fields = [
-        ('uid', ftypes.EmField_integer),
-        ('name', ftypes.EmField_char),
-        ('rank', ftypes.EmField_integer),
-        ('date_update', ftypes.EmField_date),
-        ('date_create', ftypes.EmField_date),
-        ('string', ftypes.EmField_mlstring),
-        ('help', ftypes.EmField_mlstring)
-    ]
-
-    ## Instaciate an EmComponent
-    # @param id_or_name int|str: name or id of the object
-    # @throw TypeError if id_or_name is not an integer nor a string
-    # @throw NotImplementedError if called with EmComponent
-    def __init__(self, data, model):
+    def __init__(self, model, uid, name, string = None, help_text = None, date_update = None, date_create = None, rank = None):
         if type(self) == EmComponent:
-            raise NotImplementedError('Abstract class')
-
-        ## @brief An OrderedDict storing fields name and values
-        # Values are handled by EditorialModel::fieldtypes::EmFieldType
-        # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
-        # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
-        self._fields = OrderedDict([(name, ftype()) for (name, ftype) in (EmComponent._fields + self.__class__._fields)])
+           raise NotImplementedError('Abstract class')
+ 
         self.model = model
+        self.uid = uid
+        self.name = name
+        self.string = MlString() if string is None else string
+        self.help_text = MlString() if help_text is None else help_text
+        self.date_update = datetime.datetime.now() if date_update is None else date_update #WARNING timezone !
+        self.date_create = datetime.datetime.now() if date_create is None else date_create #WARNING timezone !
 
-        for name, value in data.items():
-            if name in self._fields:
-                self._fields[name].from_string(value)
+        #Handling specials ranks for component creation
+        self.rank = rank
+        pass
 
-
-    ## @brief Access an attribute of an EmComponent
-    # This method is overloads the default __getattr__ to search in EmComponents::_fields . If there is an EditorialModel::EmField with a corresponding name in the component
-    # it returns its value.
-    # @param name str: The attribute name
-    # @throw AttributeError if attribute don't exists
-    # @see EditorialModel::EmField::value
-    def __getattr__(self, name):
-        if name != '_fields' and name in self._fields:
-            return self._fields[name].value
-        else:
-            return super(EmComponent, self).__getattribute__(name)
-
-    ## @brief Access an EmComponent attribute
-    # This function overload the default __getattribute__ in order to check if the EmComponent was deleted.
-    # @param name str: The attribute name
-    # @throw EmComponentNotExistError if the component was deleted
-    def __getattribute__(self, name):
-        if super(EmComponent, self).__getattribute__('deleted'):
-            raise EmComponentNotExistError("This " + super(EmComponent, self).__getattribute__('__class__').__name__ + " has been deleted")
-        res = super(EmComponent, self).__getattribute(name)
-        return res
-
-    ## Set the value of an EmComponent attribute
-    # @param name str: The propertie name
-    # @param value *: The value
-    def __setattr__(self, name, value):
-        if name in self.__class__._ro_properties:
-            raise TypeError("Propertie '" + name + "' is readonly")
-
-        if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
-            self._fields[name].from_python(value)
-        else:
-            object.__setattr__(self, name, value)
-    
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
@@ -105,17 +49,6 @@ class EmComponent(object):
     def __eq__(self, other):
         return self.__class__ == other.__class__ and self.uid == other.uid
 
-    ## Set all fields
-    def populate(self):
-        records = []  # TODO
-
-        for record in records:
-            for keys in self._fields.keys():
-                if keys in record:
-                    self._fields[keys].from_string(record[keys])
-
-        super(EmComponent, self).__setattr__('deleted', False)
-
     ## Check if the EmComponent is valid
     # This function has to check that rank are correct and continuous other checks are made in childs classes
     # @warning Hardcoded minimum rank
@@ -125,7 +58,7 @@ class EmComponent(object):
         if self.get_max_rank() > len(self.same_rank_group()):
             #Non continuous ranks
             for i, component in enumerate(self.same_rank_group()):
-                component._fields['rank'].value = i + 1
+                component.rank = i + 1
         # No need to sort again here
         return True
 
@@ -133,7 +66,7 @@ class EmComponent(object):
     # @return A positive integer or -1 if no components
     def get_max_rank(self):
         components = self.same_rank_group()
-        return -1 if len(components) == 0 else components[-1].rank
+        return 1 if len(components) == 0 else components[-1].rank
 
     ## Return an array of instances that are concerned by the same rank
     # @return An array of instances that are concerned by the same rank
@@ -167,9 +100,9 @@ class EmComponent(object):
         limits.sort()
 
         for component in [ c for c in self.same_rank_group() if c.rank >= limits[0] and c.rank <= limits[1] ] :
-            component._fields['rank'].value = component.rank + ( -1 if mod > 0 else 1 )
+            component.rank = component.rank + ( -1 if mod > 0 else 1 )
 
-        self._fields['rank'].value = new_rank
+        self.rank = new_rank
 
         self.model.sort_components(self.__class__)
 
