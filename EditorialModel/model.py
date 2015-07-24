@@ -117,21 +117,27 @@ class Model(object):
         datas['uid'] = self.new_uid()
         em_component = em_obj(datas, self)
 
+        rank = None
+        if 'rank' in datas:
+            rank = datas['rank']
+        datas['rank'] = None
+
+
         self._components['uids'][em_component.uid] = em_component
         self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
 
-        em_component.rank = em_component.get_max_rank()
 
         create_fails = None
 
-        if 'rank' not in datas:
-            if isinstance(datas['rank'], int) or datas['rank'] == 'last':
-                em_component.set_rank(datas['rank'])
-            elif datas['rank'] == 'first':
-                em_component.set_rank(1)
-            else:
-                create_fails = ValueError("Invalid rank : '"+str(datas['rank'])+"'")
-                self.delete(em_component.uid)
+        if rank is None or rank == 'last':
+            em_component.rank = em_component.get_max_rank()
+        elif datas['rank'] == 'first':
+            em_component.set_rank(1)
+        elif isinstance(rank, int):
+            em_component.set_rank(rank)
+        else:
+            create_fails = ValueError("Invalid rank : '"+str(datas['rank'])+"'")
+            self.delete(em_component.uid)
 
         if not em_component.check():
             create_fails = RuntimeError("After creation the component self check fails")
