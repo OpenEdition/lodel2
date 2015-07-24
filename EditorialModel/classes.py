@@ -18,14 +18,6 @@ class EmClass(EmComponent):
 
     ranked_in = 'classtype'
 
-    ## @brief Specific EmClass fields
-    # @see EditorialModel::components::EmComponent::_fields
-    _fields = [
-        ('classtype', ftypes.EmField_char),
-        ('icon', ftypes.EmField_icon),
-        ('sortcolumn', ftypes.EmField_char)
-    ]
-
     ## EmClass instanciation
     # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
     # @todo defines types check for icon and sortcolumn
