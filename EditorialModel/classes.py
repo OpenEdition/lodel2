@@ -7,6 +7,7 @@ from EditorialModel.components import EmComponent
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
+
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
 # @see EmClass, EmType, EditorialModel.fieldgroups.EmFieldGroup, EmField
@@ -28,7 +29,6 @@ class EmClass(EmComponent):
     def check(self):
         super(EmClass, self).check()
         return True
-        
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it
@@ -40,7 +40,11 @@ class EmClass(EmComponent):
         for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
             if fieldgroup.class_id == self.uid:
                 return False
-        return True
+
+        if self.model.delete_component(self.uid):
+            return self.check()
+        else:
+            return False
 
     ## Retrieve list of the field_groups of this class
     # @return A list of fieldgroups instance
