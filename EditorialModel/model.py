@@ -27,7 +27,13 @@ class Model(object):
         self.load()
 
     def __hash__(self):
-        return int(hashlib.md5(str({uid: component.__hash__ for uid, component in self._components.items()}).encode('utf-8')).hexdigest(),16)
+        components_dump = ""
+        for _, comp in self._components['uids'].items():
+            components_dump += str(hash(comp))
+        h = hashlib.new('sha512')
+        h.update(components_dump.encode('utf-8'))
+        return int(h.hexdigest(), 16)
+
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
