@@ -46,7 +46,6 @@ class EmType(EmComponent):
         self.icon = icon
         self.sortcolumn = sortcolumn
         super(EmType, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
-        pass
 
     @classmethod
     ## Create a new EmType and instanciate it
@@ -117,7 +116,9 @@ class EmType(EmComponent):
     # @throw ValueError if field is not optional or is not associated with this type
     # @see EmType::_opt_field_act()
     def select_field(self, field):
-        return self._opt_field_act(field, True)
+        if field.uid in self.fields_list:
+            return True
+        return self._change_field_list(field, True)
 
     ## Unselect_field (Function)
     #
@@ -130,7 +131,9 @@ class EmType(EmComponent):
     # @throw ValueError if field is not optional or is not associated with this type
     # @see EmType::_opt_field_act()
     def unselect_field(self, field):
-        return self._opt_field_act(field, False)
+        if field.uid not in self.fields_list:
+            return True
+        return self._change_field_list(field, False)
 
     ## @brief Select or unselect an optional field
     # @param field EmField: The EmField to select or unselect
@@ -139,29 +142,20 @@ class EmType(EmComponent):
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    def _opt_field_act(self, field, select=True):  # TODO voir si on conserve l'argument "select"
+    def _change_field_list(self, field, add=True):  # TODO voir si on conserve l'argument "select"
         if not isinstance(field, EmField):
             raise TypeError("Excepted <class EmField> as field argument. But got " + str(type(field)))
-        if not field in self.all_fields():
+        if not field in self.em_class.fields():
             raise ValueError("This field is not part of this type")
         if not field.optional:
             raise ValueError("This field is not optional")
 
-        # TODO Réimplémenter
+        if add:
+            self.fields_list.append(field.uid)
+        else:
+            self.fields_list.remove(field.uid)
 
-        # dbe = self.db_engine
-        # meta = sqlutils.meta(dbe)
-        # conn = dbe.connect()
-        #
-        # table = sql.Table('em_field_type', meta)
-        # if select:
-        #     req = table.insert({'type_id': self.uid, 'field_id': field.uid})
-        # else:
-        #     req = table.delete().where(table.c.type_id == self.uid and table.c.field_id == field.uid)
-        #
-        # res = conn.execute(req)
-        # conn.close()
-        # return bool(res)
+        return True
 
     ## Get the list of associated hooks
     # @note Not conceptualized yet

@@ -46,7 +46,7 @@ class EmFieldGroup(EmComponent):
         if not type_id:
             fields = [field for field in self.model.components(EmField) if field.fieldgroup_id == self.uid]
         else:
-            # for an EmType, fileds have to be filtered
+            # for an EmType, fields have to be filtered
             em_type = self.model.component(type_id)
             fields = []
             for field in self.model.components(EmField):
