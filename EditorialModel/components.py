@@ -79,7 +79,8 @@ class EmComponent(object):
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
-        return "EmComponent"+self.__class__.__name__+str(self.uid)
+        return hash(str(self.attr_dump))
+        # return "EmComponent"+self.__class__.__name__+str(self.uid)
 
     ## @brief Test if two EmComponent are "equals"
     # @return True or False
