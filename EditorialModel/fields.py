@@ -11,13 +11,21 @@ class EmField(EmComponent):
 
     ranked_in = 'fieldgroup_id'
 
+    ## Instanciate a new EmField
+    # @todo define and test type for icon and fieldtype
     def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional = False, internal = False, rel_to_type_id = None, rel_field_id = None, icon = '0', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+
         self.fieldgroup_id = fieldgroup_id
+        self.check_type('fieldgroup_id', int)
         self.fieldtype = fieldtype
         self.optional = optional
+        self.check_type('optional', bool)
         self.internal = internal
+        self.check_type('internal', bool)
         self.rel_to_type_id = rel_to_type_id
+        self.check_type('rel_to_type_id', (int, type(None)))
         self.rel_field_id = rel_field_id
+        self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 

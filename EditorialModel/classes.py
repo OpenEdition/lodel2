@@ -4,6 +4,7 @@
 # @see EditorialModel::classes::EmClass
 
 from EditorialModel.components import EmComponent
+from EditorialModel.classtypes import EmClassType
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
@@ -25,7 +26,15 @@ class EmClass(EmComponent):
     ]
 
     ## EmClass instanciation
+    # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
+    # @todo defines types check for icon and sortcolumn
     def __init__(self, model, uid, name, classtype, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        
+        try:
+            getattr(EmClassType, classtype)
+        except AttributeError:
+            raise AttributeError("Unknown classtype '%s'" %classtype)
+
         self.classtype = classtype
         self.icon = icon
         self.sortcolumn = 'rank'

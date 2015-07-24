@@ -27,16 +27,35 @@ class EmComponent(object):
         if type(self) == EmComponent:
            raise NotImplementedError('Abstract class')
  
-        self.model = model
+        self.model = model # AHAH cannot check type without importing Model ? 
+
         self.uid = uid
+        self.check_type('uid', int)
         self.name = name
+        self.check_type('name', str)
         self.string = MlString() if string is None else string
+        self.check_type('string', MlString)
         self.help_text = MlString() if help_text is None else help_text
+        self.check_type('help_text', MlString)
         self.date_update = datetime.datetime.now() if date_update is None else date_update #WARNING timezone !
+        self.check_type('date_update', datetime.datetime)
         self.date_create = datetime.datetime.now() if date_create is None else date_create #WARNING timezone !
+        self.check_type('date_create', datetime.datetime)
 
         #Handling specials ranks for component creation
         self.rank = rank
+
+        pass
+
+    ## Check the type of attribute named var_name
+    # @param var_name str : the attribute name
+    # @param excepted_type tuple|type : Tuple of type or a type 
+    # @throw AttributeError if wrong type detected
+    def check_type(self, var_name, excepted_type):
+        var = getattr(self, var_name)
+        
+        if not isinstance(var, excepted_type):
+            raise AttributeError("Excepted %s to be an %s but got %s instead" % (var_name, str(excepted_type), str(type(var))) )
         pass
 
     ## @brief Hash function that allows to compare two EmComponent

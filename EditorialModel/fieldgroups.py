@@ -15,7 +15,9 @@ class EmFieldGroup(EmComponent):
 
     ## EmFieldGroup instanciation
     def __init__(self, model, uid, name, class_id, string = None, help_text = None, date_update = None, date_create = None, rank = None):
+
         self.class_id = class_id
+        self.check_type('class_id', int)
         super(EmFieldGroup, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
         pass
 

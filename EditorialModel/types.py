@@ -22,10 +22,24 @@ import EditorialModel.classes
 class EmType(EmComponent):
     ranked_in = 'class_id'
 
+    ## Instanciate a new EmType
+    # @todo define and check types for icon and sortcolumn
+    # @todo better check self.subordinates
     def __init__(self, model, uid, name, class_id, selected_fields = [], subordinates = [], icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
         self.class_id = class_id
+        self.check_type('class_id', int)
         self.selected_fields = selected_fields
+        self.check_type('selected_fields', list)
+        for l_uid in self.selected_fields:
+            if not isinstance(l_uid, int):
+                raise AttributeError("Excepted selected_fields to be a list of integers, but found a +"+str(type(l_uid))+" in it")
+
         self.subordinates = subordinates
+        self.check_type('subordinates', list)
+        for l_uid in self.subordinates:
+            if not isinstance(l_uid[0], str) or not isinstance(l_uid[1], int):
+                raise AttributeError("Excepted selected_fields to be a list of nature,int !")
+
         self.icon = icon
         self.sortcolumn = sortcolumn
         super(EmType, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)

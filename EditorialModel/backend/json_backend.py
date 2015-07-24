@@ -4,7 +4,20 @@
 # Load representation of an EditorialModel from a json file
 
 import json
+import datetime
+from Lodel.utils.mlstring import MlString
 
+def date_cast(date):
+    if len(date):
+        return datetime.datetime(date)
+    else:
+        return None
+
+def int_or_none(i):
+    if len(i):
+        return int(i)
+    else:
+        return None
 
 ## Manages a Json file based backend structure
 class EmBackendJson(object):
@@ -13,8 +26,18 @@ class EmBackendJson(object):
         'uid' : int,
         'rank' : int,
         'class_id' : int,
-        'fieldgroup_id' : int
+        'fieldgroup_id' : int,
+        'rel_to_type_id' : int_or_none,
+        'rel_field_id' : int_or_none,
+        'optional' : bool,
+        'internal': bool,
+        'string' : MlString.load,
+        'help_text' : MlString.load,
+        'date_create' : date_cast,
+        'date_update' : date_cast,
     }
+
+        
 
     ## Constructor
     #
