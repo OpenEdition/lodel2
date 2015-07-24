@@ -5,6 +5,7 @@
 
 from EditorialModel.components import EmComponent
 from EditorialModel.classtypes import EmClassType
+from EditorialModel.types import EmType
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
@@ -28,19 +29,17 @@ class EmClass(EmComponent):
     ## EmClass instanciation
     # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
     # @todo defines types check for icon and sortcolumn
-    def __init__(self, model, uid, name, classtype, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
-        
+    def __init__(self, model, uid, name, classtype, icon='0', sortcolumn='rank', string=None, help_text=None, date_update=None, date_create=None, rank=None):
+
         try:
             getattr(EmClassType, classtype)
         except AttributeError:
-            raise AttributeError("Unknown classtype '%s'" %classtype)
+            raise AttributeError("Unknown classtype '%s'" % classtype)
 
         self.classtype = classtype
         self.icon = icon
-        self.sortcolumn = 'rank'
+        self.sortcolumn = sortcolumn  # 'rank'
         super(EmClass, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
-        pass
-    
 
     ## Check if the EmComponent is valid
     # @return True if valid False if not
@@ -86,7 +85,7 @@ class EmClass(EmComponent):
     # @return types [EmType]:
     def types(self):
         ret = []
-        for emtype in self.components(EmType):
+        for emtype in self.model.components(EmType):
             if emtype.class_id == self.uid:
                 ret.append(emtype)
         return ret
@@ -101,4 +100,3 @@ class EmClass(EmComponent):
     #  @return types [EmType]:
     def linked_types(self):
         pass
-
