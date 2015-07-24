@@ -6,6 +6,7 @@
 from EditorialModel.components import EmComponent
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
+from EditorialModel.exceptions import *
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
@@ -34,10 +35,9 @@ class EmClass(EmComponent):
         super(EmClass, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     ## Check if the EmComponent is valid
-    # @return True if valid False if not
+    # @throw EmComponentCheckError if fails
     def check(self):
         super(EmClass, self).check()
-        return True
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it

@@ -5,9 +5,9 @@
 
 import EditorialModel
 from EditorialModel.components import EmComponent
-# from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmClassType
+from EditorialModel.exceptions import *
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
@@ -59,12 +59,6 @@ class EmType(EmComponent):
     # @todo check that em_class is an EmClass object (fieldtypes can handle it)
     def create(cls, name, em_class, sortcolumn='rank', **em_component_args):
         return super(EmType, cls).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
-
-    ## Checks if the EmType is valid
-    # @return Bool : True if valid, False if not
-    def check(self):
-        super(EmType, self).check()
-        return True
 
     @property
     ## Return the EmClassType of the type
@@ -200,7 +194,7 @@ class EmType(EmComponent):
     # EmType instance
     # @throw RuntimeError if a nature fetched from db is not valid
     def subordinates(self):
-        return self._sub_or_sup(False)
+        return { nature: [ self.model.component(tuid) for tuid in self.subordinates_list[nature] ] for nature in self.subordinates_list }
 
     ## @brief Get the list of subordinates EmType
     # Get a list of EmType instance that have this EmType for superior
@@ -208,45 +202,9 @@ class EmType(EmComponent):
     # EmType instance
     # @throw RuntimeError if a nature fetched from db is not valid
     # @see EmType::_sub_or_sup()
+    # @todo reimplementation needed
     def superiors(self):
-        return self._sub_or_sup(True)
-
-    ## @brief Return the list of subordinates or superiors for an EmType
-    # This is the logic function that implements EmType::subordinates() and EmType::superiors()
-    # @param sup bool: If True returns superiors, if False returns..... subordinates
-    # @return A dict with relation nature as keys and list of subordinates/superiors as values
-    # @throw RunTimeError if a nature fetched from db is not valid
-    # @see EmType::subordinates(), EmType::superiors()
-    def _sub_or_sup(self, sup=True):
-        # TODO Réimplémenter
         pass
-        # conn = self.db_engine.connect()
-        # htable = self._table_hierarchy
-        # type_table = sqlutils.get_table(self)
-        #
-        # req = htable.select()
-        # if sup:
-        #     col = htable.c.subordinate_id
-        # else:
-        #     col = htable.c.superior_id
-        #
-        # req = req.where(col == self.uid)
-        # res = conn.execute(req)
-        # rows = res.fetchall()
-        # conn.close()
-        #
-        # result = dict()
-        # for nature in EmClassType.natures(self.classtype['name']):
-        #     result[nature] = []
-        #
-        # for row in rows:
-        #     if row['nature'] not in result:
-                # Maybe security issue ?
-                # raise RuntimeError("Unreconized nature from database : "+row['nature'])
-            #
-            # to_fetch = 'superior_id' if sup else 'subordinate_id'
-            # result[row['nature']].append(EmType(row[to_fetch]))
-        # return result
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
@@ -328,3 +286,62 @@ class EmType(EmComponent):
     #         result.append(EmType(row['subordinate_id'] if row['superior_id'] == self.uid else row['superior_id']))
     #
     #     return result
+    
+    ## Checks if the EmType is valid
+    # @throw EmComponentCheckError if check fails
+    def check(self):
+        super(EmType, self).check()
+        em_class = self.model.component(self.class_id)
+        if not em_class:
+            raise EmComponentCheckError("class_id contains an uid that does not exists '%d'" % self.class_id)
+        if not isinstance(em_class, EditorialModel.classes.EmClass):
+            raise EmComponentCheckError("class_id contains an uid from a component that is not an EmClass but a %s" % str(type(emc_class)))
+        
+        for i,fuid in enumerate(self.fields_list):
+            field = self.model.component(fuid)
+            if not field:
+                raise EmComponentCheckError("The element %d of selected_field is a non existing uid '%d'"%(i, fuid))
+            if not isinstance(field, EmField):
+                raise EmComponentCheckError("The element %d of selected_field is not an EmField but a %s" % (i, str(type(field)) ))
+            if not field.optional:
+                raise EmComponentCheckError("The element %d of selected_field is an EmField not optional"  % i )
+            if field.fieldgroup_id not in [ fg.uid for fg in self.fieldgroups() ]:
+                raise EmComponentCheckErrro("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
+        for nature in self.subordinates_list:
+            for i, tuid in enumerate(self.subordinates_list[nature]):
+                em_type = self.model.component(tuid)
+                if not em_type:
+                    raise EmComponentCheckError("The element %d of subordinates contains a non existing uid '%d'" % (i, tuid))
+                if not isinstance(em_type, EmType):
+                    raise EmComponentCheckError("The element %d of subordinates contains a component that is not an EmType but a %s" % (i, str(type(em_type))))
+                if nature not in EmClassType.natures(self.em_class.classtype):
+                    raise EmComponentCheckError("The relation nature '%s' of the element %d of subordinates is not valid for this EmType classtype '%s'", (nature, i, self.classtype) )
+    
+                nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
+    
+                if nat_spec['attach'] == 'classtype':
+                    if self.classtype != em_type.classtype:
+                        raise EmComponentCheckError("The element %d of subordinates is of '%s' classtype. But the current type is of '%s' classtype, and relation nature '%s' require two EmType of same classtype" % (i, em_type.classtype, self.classtype, nature) )
+                elif nat_spec['attach'] == 'type':
+                    if self.uid != em_type.uid:
+                        raise EmComponentCheckError("The element %d of subordinates is a different EmType. But the relation nature '%s' require the same EmType" % (i, nature))
+                else:
+                    raise NotImplementedError("The nature['attach'] '%s' is not implemented in this check !" % nat_spec['attach'])
+    
+                if 'max_depth' in nat_spec and nat_spec['max_depth'] > 0:
+                    depth = 1
+                    cur_type = em_type
+                    while depth >= nat_spec['max_depth']:
+                        depth +=1
+                        if len(cur_type.subordinates()[nature]) == 0:
+                            break
+                    else:
+                        raise EmComponentCheckError("The relation with the element %d of subordinates has a depth superior than the maximum depth ( %d ) allowed by the relation's nature ( '%s' )" %( i, nat_spec['max_depth'], nature) )
+        
+        for nature in self.subordinates():
+            nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
+            if 'max_child' in nat_spec and nat_spec['max_child'] > 0:
+                if len(self.subordinates()[nature]) > nat_spec['max_child']:
+                    raise EmComponentCheckError("The EmType has more child than allowed in the relation's nature : %d > %d" (len(self.subordinates()[nature], nat_spec['max_child'])))
+        #pass
+

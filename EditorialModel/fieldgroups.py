@@ -2,6 +2,8 @@
 
 from EditorialModel.components import EmComponent
 from EditorialModel.fields import EmField
+from EditorialModel.classes import EmClass
+from EditorialModel.exceptions import *
 
 
 ## Represents groups of EmField associated with an EmClass
@@ -19,10 +21,14 @@ class EmFieldGroup(EmComponent):
         super(EmFieldGroup, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     ## Check if the EmFieldGroup is valid
-    # @return True if valid False if not
+    # @throw EmComponentCheckError if fails
     def check(self):
         super(EmFieldGroup, self).check()
-        return True
+        em_class = self.model.component(self.class_id)
+        if not em_class:
+            raise EmComponentCheckError("class_id contains a non existing uid '"+str(self.class_id)+"'")
+        if not isinstance(em_class, EmClass):
+            raise EmComponentCheckError("class_id cointains an uid from a component that is not an EmClass but an "+type(em_class))
 
     ## Deletes a fieldgroup
     # @return True if the deletion is a success, False if not

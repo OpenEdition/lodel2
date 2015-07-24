@@ -4,11 +4,12 @@
 # Defines the EditorialModel::components::EmComponent class and the EditorialModel::components::ComponentNotExistError exception class
 
 import datetime
-
 import logging
-import EditorialModel.fieldtypes as ftypes
-from Lodel.utils.mlstring import MlString
 from collections import OrderedDict
+
+import EditorialModel.fieldtypes as ftypes
+from EditorialModel.exceptions import *
+from Lodel.utils.mlstring import MlString
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
@@ -73,13 +74,13 @@ class EmComponent(object):
     # @warning Hardcoded minimum rank
     # @warning Rank modified by _fields['rank'].value
     # @return True
+    # @throw EmComponentCheckError if fails
     def check(self):
         if self.get_max_rank() > len(self.same_rank_group()):
             #Non continuous ranks
             for i, component in enumerate(self.same_rank_group()):
                 component.rank = i + 1
         # No need to sort again here
-        return True
 
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @return A positive integer or -1 if no components
@@ -170,19 +171,3 @@ class EmComponent(object):
 
         return uid
 
-
-## @brief An exception class to tell that a component don't exist
-class EmComponentNotExistError(Exception):
-    pass
-
-
-## @brief Raised on uniq constraint error at creation
-# This exception class is dedicated to be raised when create() method is called
-# if an EmComponent with this name but different parameters allready exist
-class EmComponentExistError(Exception):
-    pass
-
-
-## @brief An exception class to tell that no ranking exist yet for the group of the object
-class EmComponentRankingNotExistError(Exception):
-    pass

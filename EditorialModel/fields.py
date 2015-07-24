@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent
+from EditorialModel.exceptions import *
+import EditorialModel
 
 
 ## EmField (Class)
@@ -32,7 +34,11 @@ class EmField(EmComponent):
     # @return True if valid False if not
     def check(self):
         super(EmField, self).check()
-        return True
+        em_fieldgroup = self.model.component(self.fieldgroup_id)
+        if not em_fieldgroup:
+            raise EmComponentCheckError("fieldgroup_id contains a non existing uid : '%d'" % self.fieldgroup_id)
+        if not isinstance(em_fieldgroup, EditorialModel.fieldgroups.EmFieldGroup):
+            raise EmComponentCheckError("fieldgroup_id contains an uid from a component that is not an EmFieldGroup but a %s" % str(type(em_fieldgroup)))
 
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded

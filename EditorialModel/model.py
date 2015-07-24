@@ -8,6 +8,7 @@ from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
+from EditorialModel.exceptions import *
 import EditorialModel
 
 
@@ -70,8 +71,10 @@ class Model(object):
 
         #Check integrity
         for uid, component in self._components['uids'].items():
-            if not component.check():
-                raise RuntimeError("EmComponent with uid '"+str(uid)+"' is not valid !!!")
+            try:
+                component.check()
+            except EmComponentCheckError as e:
+                raise EmComponentCheckError("The component with uid %d is not valid. Check returns the following error : \"%s\"" % (uid, str(e)))
 
     ## Saves data using the current backend
     def save(self):
