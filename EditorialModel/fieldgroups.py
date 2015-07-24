@@ -49,12 +49,12 @@ class EmFieldGroup(EmComponent):
             em_type = self.model.component(type_id)
             fields = []
             for field in self.model.components(EmField):
-                if field.fieldgroup_id != self.uid or (field.optional and field.uid not in em_type._fields['selected_fields']):
+                if field.fieldgroup_id != self.uid or (field.optional and field.uid not in em_type.selected_fields):
                     continue
                 # don't include relational field if parent should not be included
                 if field.rel_field_id:
                     parent = self.model.component(field.rel_field_id)
-                    if parent.optional and parent.uid not in em_type._fields['selected_fields']:
+                    if parent.optional and parent.uid not in em_type.selected_fields:
                         continue
                 fields.append(field)
 
