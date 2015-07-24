@@ -53,6 +53,12 @@ class EmType(EmComponent):
     def create(cls, name, em_class, sortcolumn='rank', **em_component_args):
         return super(EmType, cls).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
 
+    ## Checks if the EmType is valid
+    # @return Bool : True if valid, False if not
+    def check(self):
+        super(EmType, self).check()
+        return True
+
     @property
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
@@ -79,7 +85,10 @@ class EmType(EmComponent):
         for nature, sups in self.superiors().items():
             for sup in sups:
                 self.del_superior(sup, nature)
-        return super(EmType, self).delete()
+        if super(EmType, self).delete():
+            return self.check()
+        else:
+            return False
 
     ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance
