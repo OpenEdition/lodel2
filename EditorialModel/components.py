@@ -6,6 +6,7 @@
 import datetime
 import logging
 from collections import OrderedDict
+import hashlib
 
 import EditorialModel.fieldtypes as ftypes
 from EditorialModel.exceptions import *
@@ -79,8 +80,7 @@ class EmComponent(object):
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
-        return hash(str(self.attr_dump))
-        # return "EmComponent"+self.__class__.__name__+str(self.uid)
+        return hashlib.md5(str(self.attr_dump).encode('utf-8')).hexdigest()
 
     ## @brief Test if two EmComponent are "equals"
     # @return True or False
