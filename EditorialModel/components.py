@@ -61,10 +61,13 @@ class EmComponent(object):
 
     ## @brief Reimplementation for calling the migration handler to register the change
     def __setattr__(self, attr_name, value):
-        if '_inited' in self.__dict__:
+        inited = '_inited' in self.__dict__
+        if inited:
             # if fails raise MigrationHandlerChangeError
             self.model.migration_handler.register_change(self.uid, {attr_name: getattr(self, attr_name) }, {attr_name: value} )
         super(EmComponent, self).__setattr__(attr_name, value)
+        if inited:
+            self.model.migration_handler.register_model_state(hash(self.model))
 
     ## Check the type of attribute named var_name
     # @param var_name str : the attribute name

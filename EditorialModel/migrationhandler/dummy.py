@@ -36,4 +36,8 @@ class DummyMigrationHandler(object):
                     print(str_chg)
             print("##############\n")
         pass
-        
+    
+    def register_model_state(self, state_hash):
+        if self.debug:
+            print("New EditorialModel sate registered : '%s'"%state_hash)
+

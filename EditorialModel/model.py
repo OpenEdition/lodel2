@@ -147,7 +147,16 @@ class Model(object):
         em_component.init_ended()
 
         #register the creation in migration handler
-        self.migration_handler.register_change(em_component.uid, None, em_component.attr_dump)
+        try:
+            self.migration_handler.register_change(em_component.uid, None, em_component.attr_dump)
+        except MigrationHandlerChangeError as e:
+            #Revert the creation
+            self.components(em_component.__class__).remove(em_component)
+            del self._components['uids'][em_component.uid]
+            print(self._components)
+            raise e
+
+        self.migration_handler.register_model_state(hash(self))
 
         return em_component
 
@@ -166,6 +175,8 @@ class Model(object):
         if em_component.delete_check():
             self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
             del self._components['uids'][uid]
+        #Register the new EM state
+        self.migration_handler.register_model_state(hash(self))
         return True
 
     ## Changes the current backend
