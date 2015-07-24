@@ -25,20 +25,22 @@ class EmType(EmComponent):
     ## Instanciate a new EmType
     # @todo define and check types for icon and sortcolumn
     # @todo better check self.subordinates
-    def __init__(self, model, uid, name, class_id, selected_fields = [], subordinates = [], icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+    def __init__(self, model, uid, name, class_id, fields_list = [], subordinates_list = {}, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
         self.class_id = class_id
         self.check_type('class_id', int)
-        self.selected_fields = selected_fields
-        self.check_type('selected_fields', list)
-        for l_uid in self.selected_fields:
+        self.fields_list = fields_list
+        self.check_type('fields_list', list)
+        for l_uid in self.fields_list:
             if not isinstance(l_uid, int):
-                raise AttributeError("Excepted selected_fields to be a list of integers, but found a +"+str(type(l_uid))+" in it")
+                raise AttributeError("Excepted fields_list to be a list of integers, but found a +"+str(type(l_uid))+" in it")
 
-        self.subordinates = subordinates
-        self.check_type('subordinates', list)
-        for l_uid in self.subordinates:
-            if not isinstance(l_uid[0], str) or not isinstance(l_uid[1], int):
-                raise AttributeError("Excepted selected_fields to be a list of nature,int !")
+        self.subordinates_list = subordinates_list
+        print(subordinates_list)
+        self.check_type('subordinates_list', dict)
+        for nature, uids in self.subordinates_list.items():
+            for uid in uids:
+                if not isinstance(uid, int):
+                    raise AttributeError("Excepted subordinates of nature %s to be a list int !" % nature)
 
         self.icon = icon
         self.sortcolumn = sortcolumn
@@ -83,8 +85,7 @@ class EmType(EmComponent):
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
     def delete(self):
-        subs = self.subordinates()
-        if sum([len(subs[subnat]) for subnat in subs]) > 0:
+        if sum(self.subordinates_list) > 0:
             return False
         #Delete all relation with superiors
         for nature, sups in self.superiors().items():
@@ -103,9 +104,9 @@ class EmType(EmComponent):
 
     ## Return selected optional field
     # @return A list of EmField instance
-    #def selected_fields(self):
-        #selected = [self.model.component(field_id) for field_id in self._fields['selected_fields']]
-        #return selected
+    def selected_fields(self):
+        selected = [self.model.component(field_id) for field_id in self.fields_list]
+        return selected
 
     ## Return the list of associated fields
     # @return A list of EmField instance
