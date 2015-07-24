@@ -29,8 +29,8 @@ class Model(object):
     def __hash__(self):
         return hashlib.md5(str({uid: component.__hash__ for uid, component in self._components.items()}).encode('utf-8')).hexdigest()
 
-    # def __eq__(self, other):
-    #     return self.__hash__() == other.__hash__()
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
 
     @staticmethod
     ## Given a name return an EmComponent child class
