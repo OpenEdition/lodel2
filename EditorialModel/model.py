@@ -100,19 +100,45 @@ class Model(object):
     ## Return a new uid
     # @return a new uid
     def new_uid(self):
-        used_uid = self._components.keys()
+        used_uid = [ int(uid) for uid in self._components['uids'].keys()]
         return sorted(used_uid)[-1] + 1 if len(used_uid) > 0 else 1
 
     ## Create a component from a component type and datas
     #
+    # @note if datas does not contains a rank the new component will be added last
+    # @note datas['rank'] can be an integer or two specials strings 'last' or 'first'
     # @param component_type str : a component type ( component_class, component_fieldgroup, component_field or component_type )
     # @param datas dict : the options needed by the component creation
+    # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
     def create_component(self, component_type, datas):
-        datas['uid'] = self.new_uid
-        em_component = self.emclass_from_name(component_type)(datas, self)
+        
+        em_obj = self.emclass_from_name(component_type)
+
+        datas['uid'] = self.new_uid()
+        em_component = em_obj(datas, self)
 
         self._components['uids'][em_component.uid] = em_component
         self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
+
+        em_component.rank = em_component.get_max_rank()
+
+        create_fails = None
+
+        if 'rank' not in datas:
+            if isinstance(datas['rank'], int) or datas['rank'] == 'last':
+                em_component.set_rank(datas['rank'])
+            elif datas['rank'] == 'first':
+                em_component.set_rank(1)
+            else:
+                create_fails = ValueError("Invalid rank : '"+str(datas['rank'])+"'")
+                self.delete(em_component.uid)
+
+        if not em_component.check():
+            create_fails = RuntimeError("After creation the component self check fails")
+        
+        if not create_fails is None:
+            raise create_fails
+
         return em_component
 
     ## Delete a component
