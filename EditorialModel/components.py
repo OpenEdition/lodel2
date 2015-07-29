@@ -52,7 +52,7 @@ class EmComponent(object):
     ## @brief Return a dict with attributes name as key and attributes value as value
     # @note Used at creation and deletion to call the migration handler
     def attr_dump(self):
-        return { fname : fval for fname, fval in self.__dict__.items() if not fname.startswith('__') }
+        return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('__') or (fname == 'uid'))}
         
     ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
     # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
