@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent
-from EditorialModel.exceptions import *
+from EditorialModel.exceptions import EmComponentCheckError
 import EditorialModel
 
 
