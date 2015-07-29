@@ -6,8 +6,8 @@
 from EditorialModel.components import EmComponent
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.types import EmType
-from EditorialModel.exceptions import *
-import EditorialModel.fieldtypes as ftypes
+#from EditorialModel.exceptions import *
+#import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
 
