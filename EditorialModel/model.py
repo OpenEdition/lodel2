@@ -8,9 +8,9 @@ from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
-from EditorialModel.exceptions import *
-import EditorialModel
+from EditorialModel.exceptions import EmComponentCheckError, EmComponentNotExistError, MigrationHandlerChangeError
 import hashlib
+
 
 ## Manages the Editorial Model
 class Model(object):
@@ -20,7 +20,7 @@ class Model(object):
     ## Constructor
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
-    def __init__(self, backend, migration_handler = None):
+    def __init__(self, backend, migration_handler=None):
         self.migration_handler = DummyMigrationHandler() if migration_handler is None else migration_handler
         self.backend = backend
         self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': [], 'EmFieldGroup': []}
@@ -30,10 +30,9 @@ class Model(object):
         components_dump = ""
         for _, comp in self._components['uids'].items():
             components_dump += str(hash(comp))
-        h = hashlib.new('sha512')
-        h.update(components_dump.encode('utf-8'))
-        return int(h.hexdigest(), 16)
-
+        hashstring = hashlib.new('sha512')
+        hashstring.update(components_dump.encode('utf-8'))
+        return int(hashstring.hexdigest(), 16)
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
@@ -85,8 +84,8 @@ class Model(object):
         for uid, component in self._components['uids'].items():
             try:
                 component.check()
-            except EmComponentCheckError as e:
-                raise EmComponentCheckError("The component with uid %d is not valid. Check returns the following error : \"%s\"" % (uid, str(e)))
+            except EmComponentCheckError as exception_object:
+                raise EmComponentCheckError("The component with uid %d is not valid. Check returns the following error : \"%s\"" % (uid, str(exception_object)))
             #Everything is done. Indicating that the component initialisation is over
             component.init_ended()
 
@@ -112,14 +111,14 @@ class Model(object):
     # @throw AttributeError if emclass is not valid
     def sort_components(self, component_class):
         if component_class not in self.components_class:
-            raise AttributeError("Bad argument emclass : '"+emclass+"', excpeting one of "+str(self.components_class))
+            raise AttributeError("Bad argument emclass : '" + component_class + "', excpeting one of " + str(self.components_class))
 
         self._components[self.name_from_emclass(component_class)] = sorted(self.components(component_class), key=lambda comp: comp.rank)
 
     ## Return a new uid
     # @return a new uid
     def new_uid(self):
-        used_uid = [ int(uid) for uid in self._components['uids'].keys()]
+        used_uid = [int(uid) for uid in self._components['uids'].keys()]
         return sorted(used_uid)[-1] + 1 if len(used_uid) > 0 else 1
 
     ## Create a component from a component type and datas
@@ -131,7 +130,7 @@ class Model(object):
     # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
     # @todo Handle a raise from the migration handler
     def create_component(self, component_type, datas):
-        
+
         em_obj = self.emclass_from_name(component_type)
 
         rank = 'last'
@@ -147,7 +146,7 @@ class Model(object):
 
         em_component.rank = em_component.get_max_rank()
         if rank != 'last':
-            em_component.set_rank( 1 if rank == 'first' else rank)
+            em_component.set_rank(1 if rank == 'first' else rank)
 
         #everything done, indicating that initialisation is over
         em_component.init_ended()
@@ -155,11 +154,11 @@ class Model(object):
         #register the creation in migration handler
         try:
             self.migration_handler.register_change(em_component.uid, None, em_component.attr_dump)
-        except MigrationHandlerChangeError as e:
+        except MigrationHandlerChangeError as exception_object:
             #Revert the creation
             self.components(em_component.__class__).remove(em_component)
             del self._components['uids'][em_component.uid]
-            raise e
+            raise exception_object
 
         self.migration_handler.register_model_state(hash(self))
 
@@ -167,16 +166,16 @@ class Model(object):
 
     ## Delete a component
     # @param uid int : Component identifier
-    # @throw EditorialModel.components.EmComponentNotExistError
+    # @throw EmComponentNotExistError
     # @todo unable uid check
     # @todo Handle a raise from the migration handler
     def delete_component(self, uid):
         #register the deletion in migration handler
         self.migration_handler.register_change(uid, self.component(uid).attr_dump, None)
-        
+
         em_component = self.component(uid)
         if not em_component:
-            raise EditorialModel.components.EmComponentNotExistError()
+            raise EmComponentNotExistError()
         if em_component.delete_check():
             self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
             del self._components['uids'][uid]
