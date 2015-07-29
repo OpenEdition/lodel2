@@ -3,7 +3,7 @@
 from EditorialModel.components import EmComponent
 from EditorialModel.fields import EmField
 from EditorialModel.classes import EmClass
-from EditorialModel.exceptions import *
+from EditorialModel.exceptions import EmComponentCheckError
 
 
 ## Represents groups of EmField associated with an EmClass
@@ -26,9 +26,9 @@ class EmFieldGroup(EmComponent):
         super(EmFieldGroup, self).check()
         em_class = self.model.component(self.class_id)
         if not em_class:
-            raise EmComponentCheckError("class_id contains a non existing uid '"+str(self.class_id)+"'")
+            raise EmComponentCheckError("class_id contains a non existing uid '%s'" % str(self.class_id))
         if not isinstance(em_class, EmClass):
-            raise EmComponentCheckError("class_id cointains an uid from a component that is not an EmClass but an "+type(em_class))
+            raise EmComponentCheckError("class_id cointains an uid from a component that is not an EmClass but an %s" % type(em_class))
 
     ## Deletes a fieldgroup
     # @return True if the deletion is possible, False if not
