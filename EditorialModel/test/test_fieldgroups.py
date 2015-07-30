@@ -44,7 +44,7 @@ def setUpModule():
 
     #initTestDb(TEST_FIELDGROUP_DBNAME)
     #setDbConf(TEST_FIELDGROUP_DBNAME)
-    
+
     #Classes creation
     #EmClass.create("entity1", EmClassType.entity)
     #EmClass.create("entity2", EmClassType.entity)
@@ -64,7 +64,7 @@ def tearDownModule():
 
 
 class FieldGroupTestCase(TestCase):
-    
+
     def setUp(self):
         #restoreDbState(TEST_FIELDGROUP_DBNAME)
         pass
@@ -115,7 +115,7 @@ class TestInit(FieldGroupTestCase):
             for attr in tfg:
                 if attr != 'uid':
                     v = tfg[attr]
-                    self.assertEqual(getattr(fieldgroup, attr), v, "The '"+attr+"' property fetched from backend doesn't match the excepted value")
+                    self.assertEqual(getattr(fieldgroup, attr), v, "The '" + attr + "' property fetched from backend doesn't match the excepted value")
 
     def test_init_badargs(self):
         """ Tests that EmFieldGroup init fails when bad arguments are given"""
@@ -149,8 +149,8 @@ class TestCreate(FieldGroupTestCase):
             else:
                 cl = EM_TEST_OBJECT.component(arg)
 
-            fieldgroup_name = 'new_fg'+str(i)
-            fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__,{'name': fieldgroup_name, 'class_id': arg.uid})
+            fieldgroup_name = 'new_fg' + str(i)
+            fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': fieldgroup_name, 'class_id': arg.uid})
             self.assertEqual(fieldgroup.name, fieldgroup_name, "Model.create_component() doesn't instanciate name correctly")
             self.assertEqual(fieldgroup.class_id, cl.uid, "Model.create_component() doesn't instanciate class_id correctly")
 
@@ -165,7 +165,7 @@ class TestCreate(FieldGroupTestCase):
         badargs = {
             'EmClass type (not an instance)': EmClass,
             'Non Existing id': 9000,
-            'Another component instance': EM_TEST_OBJECT.create_component(EmType.__name__,{'name': 'fooType', 'class_id': EM_TEST_OBJECT.component(1).uid}),
+            'Another component instance': EM_TEST_OBJECT.create_component(EmType.__name__, {'name': 'fooType', 'class_id': EM_TEST_OBJECT.component(1).uid}),
             'A function': print
         }
 
@@ -185,7 +185,6 @@ class TestCreate(FieldGroupTestCase):
             with self.assertRaises(expt, msg="Should raise because trying to give " + badarg_name + " as first argument"):
                 fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': badarg, 'class_id': EM_TEST_OBJECT.component(1).uid})
 
-'''
 
 #=====================#
 # EmFieldgroup.fields #
@@ -194,54 +193,49 @@ class TestFields(FieldGroupTestCase):
 
     def setUp(self):
         super(TestFields, self).setUp()
-        self.fg1 = EmFieldGroup.create('testfg', EmClass('entity1'))
-        self.fg2 = EmFieldGroup.create('testfg2', EmClass('entry1'))
-        self.fg3 = EmFieldGroup.create('testfg3', EmClass('entry1'))
-
+        self.fg1 = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testfg1', 'class_id': EM_TEST_OBJECT.component(1).uid})
+        self.fg2 = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testfg2', 'class_id': EM_TEST_OBJECT.component(2).uid})
+        self.fg3 = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testfg3', 'class_id': EM_TEST_OBJECT.component(1).uid})
 
     def test_fields(self):
         """ Does it returns actually associated fields ? """
-
-        #Creating fields
+        # Creating fields
         test_fields1 = [
-            { 'name': 'field1', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
-            { 'name': 'field2', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
-            { 'name': 'field4', 'fieldgroup': self.fg1, 'fieldtype': EmField_integer() },
+            {'name': 'field1', 'fieldgroup_id': self.fg1.uid, 'fieldtype': 'integer'},
+            {'name': 'field2', 'fieldgroup_id': self.fg1.uid, 'fieldtype': 'integer'},
+            {'name': 'field4', 'fieldgroup_id': self.fg1.uid, 'fieldtype': 'integer'}
         ]
 
-        test_fields2 = [ 
-            { 'name': 'field3', 'fieldgroup': self.fg2, 'fieldtype': EmField_integer() },
+        test_fields2 = [
+            {'name': 'field3', 'fieldgroup_id': self.fg2.uid, 'fieldtype': 'integer'}
         ]
 
-        excepted1 = []
+        expected1 = []
 
         for finfo in test_fields1:
-            f = EmField.create(**finfo)
-            excepted1.append(f.uid)
+            field = EM_TEST_OBJECT.create_component(EmField.__name__, finfo)
+            expected1.append(field.uid)
 
         for finfo in test_fields2:
-            f = EmField.create(**finfo)
+            field = EM_TEST_OBJECT.create_component(EmField.__name__, finfo)
 
-        excepted1 = set(excepted1)
+        expected1 = set(expected1)
 
         tests = {
-            'newly': EmFieldGroup('testfg'),
-            'old' : self.fg1
+            'newly': EM_TEST_OBJECT.component(self.fg1.uid),
+            'old': self.fg1
         }
 
         for name in tests:
-            fg = tests[name]
-            flist = fg.fields()
+            fieldgroup = tests[name]
+            flist = fieldgroup.fields()
             res = []
-            for f in flist:
-                res.append(f.uid)
-            self.assertEqual(set(res), set(excepted1))
+            for field in flist:
+                res.append(field.uid)
+            self.assertEqual(set(res), set(expected1))
 
     def test_empty_fields(self):
         """ Testing fields method on an empty fieldgroup """
-        fg = self.fg3
-        flist = fg.fields()
-        self.assertEqual(len(flist), 0)
-        pass
-
-'''
+        fieldgroup = self.fg3
+        fields_list = fieldgroup.fields()
+        self.assertEqual(len(fields_list), 0)
