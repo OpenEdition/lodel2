@@ -44,8 +44,8 @@ class EmBackendJson(object):
     #
     # @param json_file str: path to the json_file used as data source
     def __init__(self, json_file):
-        with open(json_file).read() as json_data:
-            self.data = json.loads(json_data)
+        with open(json_file) as json_data:
+            self.data = json.loads(json_data.read())
 
     ## Loads the data in the data source json file
     #
