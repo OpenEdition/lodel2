@@ -126,8 +126,9 @@ class TestInit(FieldGroupTestCase):
         # TODO Voir si on garde le return False de Model.component() ou si on utilise plutôt une exception EmComponentNotExistError en modifiant le reste du code source pour gérer ce cas
         self.assertFalse(EM_TEST_OBJECT.component(baduid), msg="Should be False because fieldgroup with id " + str(baduid) + " should not exist")
         self.assertFalse(EM_TEST_OBJECT.component(badname), msg="Should be False because fieldgroup with id " + str(badname) + " should not exist")
-        self.assertFalse(EM_TEST_OBJECT.component(print), msg="Should be False when crazy arguments are given")
-        self.assertFalse(EM_TEST_OBJECT.component(['hello', 'world']), msg="Should be False when crazy arguments are given")
+        self.assertFalse(EM_TEST_OBJECT.component(print), msg="Should be False when a function name is given as argument")
+        with self.assertRaises(TypeError, msg="Should raise when crazy arguments are given"):
+            fieldgroup = EM_TEST_OBJECT.component(['hello', 'world'])
 
 
 '''
