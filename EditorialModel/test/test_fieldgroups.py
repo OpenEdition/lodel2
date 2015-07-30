@@ -16,13 +16,15 @@ from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldtypes import *
 
-from EditorialModel.test.utils import *
-
+#from EditorialModel.test.utils import *
+from Lodel.utils.mlstring import MlString
 from Database import sqlutils
 
 import sqlalchemy as sqla
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
+from EditorialModel.model import Model
+from EditorialModel.backend.json_backend import EmBackendJson
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 #=###########=#
 # TESTS SETUP #
@@ -30,33 +32,41 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 TEST_FIELDGROUP_DBNAME = 'test_em_fieldgroup_db.sqlite'
 
+EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
+EM_TEST_OBJECT = None
+
+
 def setUpModule():
+    global EM_TEST_OBJECT
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))
 
     logging.basicConfig(level=logging.CRITICAL)
 
-    initTestDb(TEST_FIELDGROUP_DBNAME)
-    setDbConf(TEST_FIELDGROUP_DBNAME)
+    #initTestDb(TEST_FIELDGROUP_DBNAME)
+    #setDbConf(TEST_FIELDGROUP_DBNAME)
     
     #Classes creation
-    EmClass.create("entity1", EmClassType.entity)
-    EmClass.create("entity2", EmClassType.entity)
-    EmClass.create("entry1", EmClassType.entry)
-    EmClass.create("entry2", EmClassType.entry)
-    EmClass.create("person1", EmClassType.person)
-    EmClass.create("person2", EmClassType.person)
+    #EmClass.create("entity1", EmClassType.entity)
+    #EmClass.create("entity2", EmClassType.entity)
+    #EmClass.create("entry1", EmClassType.entry)
+    #EmClass.create("entry2", EmClassType.entry)
+    #EmClass.create("person1", EmClassType.person)
+    #EmClass.create("person2", EmClassType.person)
 
-    saveDbState(TEST_FIELDGROUP_DBNAME)
+    #saveDbState(TEST_FIELDGROUP_DBNAME)
 
     #shutil.copyfile(TEST_FIELDGROUP_DBNAME, globals()['fieldgroup_test_dbfilename']+'_bck')
 
+
 def tearDownModule():
-    cleanDb(TEST_FIELDGROUP_DBNAME)
+    #cleanDb(TEST_FIELDGROUP_DBNAME)
     pass
+
 
 class FieldGroupTestCase(TestCase):
     
     def setUp(self):
-        restoreDbState(TEST_FIELDGROUP_DBNAME)
+        #restoreDbState(TEST_FIELDGROUP_DBNAME)
         pass
 
 
@@ -64,7 +74,7 @@ class FieldGroupTestCase(TestCase):
 # EmFielgroup.__init__ #
 #======================#
 class TestInit(FieldGroupTestCase):
-
+    '''
     def setUp(self):
         super(TestInit, self).setUp()
         dbe = sqlutils.get_engine()
@@ -86,44 +96,41 @@ class TestInit(FieldGroupTestCase):
         conn.execute(req)
         conn.close()
         pass
+    '''
+
+    def setUp(self):
+        super(TestInit, self).setUp()
+        self.tfgs = [
+            {"name": "testfg1", "string": MlString({"fre": "Gens"}), "help_text": MlString({}), "class_id": 1},
+            {"name": "testfg2", "string": MlString({"fre": "Gens"}), "help_text": MlString({}), "class_id": 1},
+            {"name": "testfg3", "string": MlString({"fre": "Civilité"}), "help_text": MlString({}), "class_id": 2}
+        ]
+        for tfg in self.tfgs:
+            fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, tfg)
 
     def test_init(self):
         """ Test that EmFieldgroup are correctly instanciated compare to self.tfg """
-        for tfg in self.tfg:
-            fg = EmFieldGroup(tfg['name'])
+        for tfg in self.tfgs:
+            fieldgroup = EM_TEST_OBJECT.component(tfg['uid'])
             for attr in tfg:
-                if attr in ['string', 'help']:
-                    v = MlString.load(tfg[attr])
-                else:
+                if attr != 'uid':
                     v = tfg[attr]
-                self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
+                    self.assertEqual(getattr(fieldgroup, attr), v, "The '"+attr+"' property fetched from backend doesn't match the excepted value")
 
-        for tfg in self.tfg:
-            fg = EmFieldGroup(tfg['uid'])
-            for attr in tfg:
-                if attr in ['string', 'help']:
-                    v = MlString.load(tfg[attr])
-                else:
-                    v = tfg[attr]
-                self.assertEqual(getattr(fg, attr), v, "The propertie '"+attr+"' fetched from Db don't match excepted value")
-
-        pass
 
     def test_init_badargs(self):
-        """ Test that EmFieldgroup fail when bad arguments are given """
-        baduid = self.tfg[2]['uid'] + 4096
+        """ Tests that EmFieldGroup init fails when bad arguments are given"""
+        baduid = self.tfgs[2]['uid'] + 4096
         badname = 'NonExistingName'
 
-        with self.assertRaises(EmComponentNotExistError, msg="Should raise because fieldgroup with id "+str(baduid)+" should not exist"):
-            fg = EmFieldGroup(baduid)
-        with self.assertRaises(EmComponentNotExistError, msg="Should raise because fieldgroup named "+badname+" should not exist"):
-            fg = EmFieldGroup(badname)
-        with self.assertRaises(TypeError, msg="Should raise a TypeError when crazy arguments are given"):
-            fg = EmFieldGroup(print)
-        with self.assertRaises(TypeError, msg="Should raise a TypeError when crazy arguments are given"):
-            fg = EmFieldGroup(['hello', 'world'])
-        pass
+        # TODO Voir si on garde le return False de Model.component() ou si on utilise plutôt une exception EmComponentNotExistError en modifiant le reste du code source pour gérer ce cas
+        self.assertFalse(EM_TEST_OBJECT.component(baduid), msg="Should be False because fieldgroup with id " + str(baduid) + " should not exist")
+        self.assertFalse(EM_TEST_OBJECT.component(badname), msg="Should be False because fieldgroup with id " + str(badname) + " should not exist")
+        self.assertFalse(EM_TEST_OBJECT.component(print), msg="Should be False when crazy arguments are given")
+        self.assertFalse(EM_TEST_OBJECT.component(['hello', 'world']), msg="Should be False when crazy arguments are given")
 
+
+'''
 #=====================#
 # EmFieldgroup.create #
 #=====================#
@@ -238,3 +245,4 @@ class TestFields(FieldGroupTestCase):
         self.assertEqual(len(flist), 0)
         pass
 
+'''

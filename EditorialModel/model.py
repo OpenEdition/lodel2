@@ -104,6 +104,8 @@ class Model(object):
     # @param uid int : An EmComponent uid
     # @return The corresponding instance or False if uid don't exists
     def component(self, uid):
+        if not isinstance(uid, int) or not isinstance(uid, str):
+            raise TypeError
         return False if uid not in self._components['uids'] else self._components['uids'][uid]
 
     ## Sort components by rank in Model::_components
