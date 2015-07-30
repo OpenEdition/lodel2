@@ -3,6 +3,7 @@
 """
 
 import os
+import logging
 
 from unittest import TestCase
 import unittest
@@ -15,24 +16,32 @@ from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
 import EditorialModel.fieldtypes  as fieldTypes
+from EditorialModel.model import Model
+from EditorialModel.backend.json_backend import EmBackendJson
 
-from Database import sqlutils, sqlsetup
-import sqlalchemy as sqla
+#from Database import sqlutils, sqlsetup
+#import sqlalchemy as sqla
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
+EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
+EM_TEST_OBJECT = None
 
 ## run once for this module
 # define the Database for this module (an sqlite database)
 def setUpModule():
-    settings.LODEL2SQLWRAPPER['db']['default'] = {'ENGINE':'sqlite', 'NAME':'/tmp/testdb.sqlite'}
+    global EM_TEST_OBJECT
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))
+    logging.basicConfig(level=logging.CRITICAL)
+    #settings.LODEL2SQLWRAPPER['db']['default'] = {'ENGINE':'sqlite', 'NAME':'/tmp/testdb.sqlite'}
 
 class ClassesTestCase(TestCase):
 
     # run before every instanciation of the class
     @classmethod
     def setUpClass(cls):
-        sqlsetup.init_db()
+        pass
+        #sqlsetup.init_db()
 
     # run before every function of the class
     def setUp(self):
@@ -45,44 +54,25 @@ class ClassesTestCase(TestCase):
 class TestEmClassCreation(ClassesTestCase):
 
     # create a new EmClass, then test on it
-    @classmethod
-    def setUpClass(cls):
+    def test_create(self):
         ClassesTestCase.setUpClass()
-        EmClass.create('testClass', EmClassType.entity)
+        testClass = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testclass1', 'classtype': EmClassType.entity['name']})
 
-    # test if a table 'testClass' was created
-    # should be able to select on the created table
-    def test_table_em_classes(self):
-        """ Testing ability of EmClass to crate its associated table """
-        conn = sqlutils.get_engine().connect()
-        a = sqlutils.meta(conn)
-        try:
-            newtable = sqla.Table('testClass', sqlutils.meta(conn))
-            req = sqla.sql.select([newtable])
-            res = conn.execute(req)
-            res = res.fetchall()
-            conn.close()
-        except:
-            self.fail("unable to select table testClass")
-        self.assertEqual(res, [])
+        #We check the uid
+        self.assertEqual(testClass.uid, 18)
 
-    # the uid should be 1
-    def test_uid(self):
-        """ testing uid """
-        cl = EmClass('testClass')
-        self.assertEqual(cl.uid, 1)
+        # We check that the class has been added in the right list in the model object
+        class_components_records = EM_TEST_OBJECT.components(EmClass)
+        self.assertIn(testClass, class_components_records)
 
-    # the name should be the one given
-    def test_classname(self):
-        """ Testing name consistency on instanciation """
-        cl = EmClass('testClass')
-        self.assertEqual(cl.name, 'testClass')
+        # the name should be the one given
+        testClass = EM_TEST_OBJECT.component(testClass.uid)
+        self.assertEqual(testClass.name, 'testclass1')
 
-    # the classtype should have the name of the EmClassType
-    def test_classtype(self):
-        """ Testing classtype consistency """
-        cl = EmClass('testClass')
-        self.assertEqual(cl.classtype, EmClassType.entity['name'])
+        # the classtype should have the name of the EmClassType
+        testClass = EM_TEST_OBJECT.component(testClass.uid)
+        self.assertEqual(testClass.classtype, EmClassType.entity['name'])
+
 
 # Testing class deletion (and associated table drop)
 class TestEmClassDeletion(ClassesTestCase):
