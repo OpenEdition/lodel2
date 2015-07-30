@@ -117,7 +117,6 @@ class TestInit(FieldGroupTestCase):
                     v = tfg[attr]
                     self.assertEqual(getattr(fieldgroup, attr), v, "The '"+attr+"' property fetched from backend doesn't match the excepted value")
 
-
     def test_init_badargs(self):
         """ Tests that EmFieldGroup init fails when bad arguments are given"""
         baduid = self.tfgs[2]['uid'] + 4096
@@ -131,63 +130,62 @@ class TestInit(FieldGroupTestCase):
             fieldgroup = EM_TEST_OBJECT.component(['hello', 'world'])
 
 
-'''
 #=====================#
 # EmFieldgroup.create #
 #=====================#
 class TestCreate(FieldGroupTestCase):
 
     def test_create(self):
-        """ Does create actually create a fieldgroup ? """
+        """Does create actually create a fieldgroup ?"""
+        params = {
+            'EmClass entity instance': EM_TEST_OBJECT.component(1),
+            'EmClass entry instance': EM_TEST_OBJECT.component(2)
+        }
 
-        params = {  'EmClass entity instance': EmClass('entity1'),
-                    'EmClass entry instance': EmClass('entry1'),
-                    'EmClass person instance': EmClass('person1'),
-                }
-
-        for i,param_name in enumerate(params):
+        for i, param_name in enumerate(params):
             arg = params[param_name]
             if isinstance(arg, EmClass):
                 cl = arg
             else:
-                cl = EmClass(arg)
+                cl = EM_TEST_OBJECT.component(arg)
 
-            fgname = 'new_fg'+str(i)
-            fg = EmFieldGroup.create(fgname, arg)
-            self.assertEqual(fg.name, fgname, "EmFieldGroup.create() dont instanciate name correctly")
-            self.assertEqual(fg.class_id, cl.uid, "EmFieldGroup.create() dont instanciate class_id correctly")
+            fieldgroup_name = 'new_fg'+str(i)
+            fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__,{'name': fieldgroup_name, 'class_id': arg.uid})
+            self.assertEqual(fieldgroup.name, fieldgroup_name, "Model.create_component() doesn't instanciate name correctly")
+            self.assertEqual(fieldgroup.class_id, cl.uid, "Model.create_component() doesn't instanciate class_id correctly")
 
-            nfg = EmFieldGroup(fgname)
+            nfg = EM_TEST_OBJECT.component(fieldgroup.uid)
 
-            #Checking object property
-            for fname in fg._fields:
-                self.assertEqual(getattr(nfg,fname), getattr(fg,fname), "Msg inconsistency when a created fieldgroup is fecthed from Db (in "+fname+" property)")
-        pass
+            # Checking object property
+            for fname in fieldgroup.__dict__:
+                self.assertEqual(getattr(nfg, fname), getattr(fieldgroup, fname), "Msg inconsistency when a created fieldgroup is fetched from the backend (in " + fname + " property)")
 
     def test_create_badargs(self):
         """ Does create fails when badargs given ? """
+        badargs = {
+            'EmClass type (not an instance)': EmClass,
+            'Non Existing id': 9000,
+            'Another component instance': EM_TEST_OBJECT.create_component(EmType.__name__,{'name': 'fooType', 'class_id': EM_TEST_OBJECT.component(1).uid}),
+            'A function': print
+        }
 
-        badargs = { 'EmClass type (not an instance)': EmClass,
-                    'Non Existing name': 'fooClassThatDontExist',
-                    'Non Existing Id': 4042, #Hope that it didnt exist ;)
-                    'Another component instance': EmType.create('fooType', EmClass('entity1')),
-                    'A function': print
-                }
-        for i,badarg_name in enumerate(badargs):
-            with self.assertRaises(TypeError, msg="Should raise because trying to give "+badarg_name+" as em_class"):
-                fg = EmFieldGroup.create('new_fg'+i, badargs[badarg_name])
+        for i, badarg_name in enumerate(badargs):
+            with self.assertRaises(TypeError, msg="Should raise because trying to give " + badarg_name + " an em_class object as value"):
+                fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'new_fg' + i, 'class_id': badargs[badarg_name].uid})
 
-        #Creating a fieldgroup to test duplicate name
-        exfg = EmFieldGroup.create('existingfg', EmClass('entity1'))
-
-        badargs = { 'an integer': (42, TypeError),
-                    'a function': (print, TypeError),
-                    'an EmClass': (EmClass('entry1'), TypeError),
-                }
+        # Creating a fieldgroup to test duplicate name
+        exfg = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'existingfg', 'class_id': EM_TEST_OBJECT.component(1).uid})
+        badargs = {
+            'an integer': (42, AttributeError),
+            'a function': (print, AttributeError),
+            'an EmClass': (EM_TEST_OBJECT.component(2), AttributeError)
+        }
         for badarg_name in badargs:
-            (badarg,expt) = badargs[badarg_name]
-            with self.assertRaises(expt, msg="Should raise because trying to give "+badarg_name+" as first argument"):
-                fg = EmFieldGroup.create(badarg, EmClass('entity1'))
+            (badarg, expt) = badargs[badarg_name]
+            with self.assertRaises(expt, msg="Should raise because trying to give " + badarg_name + " as first argument"):
+                fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': badarg, 'class_id': EM_TEST_OBJECT.component(1).uid})
+
+'''
 
 #=====================#
 # EmFieldgroup.fields #
