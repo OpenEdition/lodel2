@@ -1,30 +1,15 @@
 import os
 import logging
-import datetime
-import shutil
-
-from django.conf import settings
 
 from unittest import TestCase
-import unittest
 
-from EditorialModel.components import EmComponent, EmComponentNotExistError
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.classes import EmClass
 from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
-from EditorialModel.classtypes import EmClassType
-from EditorialModel.fieldtypes import *
-
-#from EditorialModel.test.utils import *
 from Lodel.utils.mlstring import MlString
-from Database import sqlutils
-
-import sqlalchemy as sqla
-
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-#os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 
 #=###########=#
 # TESTS SETUP #
@@ -42,31 +27,14 @@ def setUpModule():
 
     logging.basicConfig(level=logging.CRITICAL)
 
-    #initTestDb(TEST_FIELDGROUP_DBNAME)
-    #setDbConf(TEST_FIELDGROUP_DBNAME)
-
-    #Classes creation
-    #EmClass.create("entity1", EmClassType.entity)
-    #EmClass.create("entity2", EmClassType.entity)
-    #EmClass.create("entry1", EmClassType.entry)
-    #EmClass.create("entry2", EmClassType.entry)
-    #EmClass.create("person1", EmClassType.person)
-    #EmClass.create("person2", EmClassType.person)
-
-    #saveDbState(TEST_FIELDGROUP_DBNAME)
-
-    #shutil.copyfile(TEST_FIELDGROUP_DBNAME, globals()['fieldgroup_test_dbfilename']+'_bck')
-
 
 def tearDownModule():
-    #cleanDb(TEST_FIELDGROUP_DBNAME)
     pass
 
 
 class FieldGroupTestCase(TestCase):
 
     def setUp(self):
-        #restoreDbState(TEST_FIELDGROUP_DBNAME)
         pass
 
 
@@ -74,29 +42,6 @@ class FieldGroupTestCase(TestCase):
 # EmFielgroup.__init__ #
 #======================#
 class TestInit(FieldGroupTestCase):
-    '''
-    def setUp(self):
-        super(TestInit, self).setUp()
-        dbe = sqlutils.get_engine()
-        conn = sqlutils.get_engine().connect()
-
-        ent1 = EmClass('entity1')
-        idx1 = EmClass('entry1')
-
-
-        self.creadate = datetime.datetime.utcnow()
-        #Test fieldgroup
-        self.tfg = [
-            { 'uid': EmFieldGroup.new_uid(dbe), 'name': 'fg1', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 0 , 'class_id': ent1.uid, 'date_create' : self.creadate, 'date_update': self.creadate},
-            { 'uid': EmFieldGroup.new_uid(dbe), 'name': 'fg2', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 1 , 'class_id': ent1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
-            { 'uid': EmFieldGroup.new_uid(dbe), 'name': 'fg3', 'string': '{"fr":"Super Fieldgroup"}', 'help': '{"en":"help"}', 'rank': 2 , 'class_id': idx1.uid, 'date_create': self.creadate, 'date_update': self.creadate},
-        ]
-
-        req = sqla.Table('em_fieldgroup', sqlutils.meta(sqlutils.get_engine())).insert(self.tfg)
-        conn.execute(req)
-        conn.close()
-        pass
-    '''
 
     def setUp(self):
         super(TestInit, self).setUp()
