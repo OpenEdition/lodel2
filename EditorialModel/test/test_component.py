@@ -242,14 +242,16 @@ class TestInit(ComponentTestCase):
             else:
                 self.assertFalse(EM_TEST_OBJECT.component(badarg))
 
-'''
+
 #=======================#
 #   EmComponent.new_uid  #
 #=======================#
+# TODO A réimplémenter
+'''
 class TestUid(ComponentTestCase):
 
 
-    def test_newuid(self):
+   def test_newuid(self):
         """ Test valid calls for new_uid method """
         for _ in range(10):
             nuid = EmTestComp.new_uid(self.dber)
@@ -271,7 +273,8 @@ class TestUid(ComponentTestCase):
         with self.assertRaises(NotImplementedError):
             EmComponent.new_uid(self.dber)
         pass
-
+'''
+'''
 #=======================#
 #   EmComponent.save    #
 #=======================#
