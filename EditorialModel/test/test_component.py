@@ -134,47 +134,41 @@ class ComponentTestCase(TestCase):
 
     test_values = []
 
-    # test_values = [
-    #     {'uid': 1, 'name': 'test', 'string': '{"fr":"testcomp"}', 'help': '{"en":"help test", "fr":"test help"}', 'rank': 0},
-    #     {'uid': 2, 'name': 'test-em_comp', 'string': '{"fr":"Super test comp"}', 'help': '{}', 'rank': 1},
-    #     {'uid': 3, 'name': 'test2', 'string': '{}', 'help': '{}', 'rank': 2},
-    #     {'uid': 42, 'name': 'foo', 'string': '{"foo":"bar"}', 'help': '{"foo":"foobar"}', 'rank': 3},
-    #     {'uid': 84, 'name': '123', 'string': '{"num":"456"}', 'help': '{"num":"4242"}', 'rank': 4},
-    #     {'uid': 1025, 'name': 'name', 'string': '{}', 'help': '{}', 'rank': 5},
-    # ]
+    test_values = [
+         {'classtype': 'entity', 'name': 'foo', 'string': MlString({"foo":"bar"}), 'help_text': MlString({"foo":"foobar"})},
+         {'classtype': 'entity', 'name': '123', 'string': MlString({"num":"456"}), 'help_text': MlString({"num":"4242"})},
+         {'classtype':'entity', 'name': 'name', 'string': MlString({}), 'help_text': MlString({})}
+    ]
 
     # @property
     # def tables(self):
     #     return globals()['tables']
-
     def setUp(self):
-        self.test_values.append(EM_TEST_OBJECT.create_component(EmClass.__name__,{'name': 'testclass1', 'classtype': 'entity'}))
-        self.test_values.append(EM_TEST_OBJECT.create_component(EmClass.__name__,{'name': 'testclass2', 'classtype': 'entry'}))
-        self.test_values.append(EM_TEST_OBJECT.create_component(EmClass.__name__,{'name': 'testclass3', 'classtype': 'person'}))
 
         # self.dber = sqlutils.get_engine('default')
         # self.test_values = self.__class__.test_values
         #Db RAZ
         #shutil.copyfile(TEST_COMPONENT_DBNAME+'_bck', globals()['component_test_dbfilename'])
         # restoreDbState(TEST_COMPONENT_DBNAME)
+        pass
 
     def check_equals(self, component_class, expected_val, test_comp, check_date=True, msg=''):
         """ This function checks that a EmTestComp has expected_val for values"""
         val = expected_val
         self.assertIsInstance(test_comp, component_class, msg)
-        for vname in val.__dict__:
+        for vname in val:
             if vname in ['string', 'help']:  # Special test for mlstrings
                 # MlString comparison
-                vml = MlString(getattr(val, vname))
-                for vn in vml.__dict__:
-                    self.assertEqual(getattr(vml,vn), getattr(test_comp, vname).get(vn), msg)
+                vml = json.loads(val[vname])
+                for vn in vml:
+                    self.assertEqual(vml[vn], getattr(test_comp, vname).get(vn), msg)
             elif vname in ['date_create', 'date_update']:
                 # Datetime comparison
                 if check_date:
-                    self.assertEqualDatetime(getattr(val,vname),getattr(test_comp, vname), vname + " assertion error : " + msg)
+                    self.assertEqualDatetime(val[vname], getattr(test_comp, vname), vname + " assertion error : " + msg)
             else:
                 prop = vname
-                self.assertEqual(getattr(test_comp, prop), getattr(val,vname), msg + " Inconsistecy for " + prop + " property")
+                self.assertEqual(getattr(test_comp, prop), val[vname], msg + " Inconsistecy for " + prop + " property")
 
     '''
     def check_equals(self, excepted_val, test_comp, check_date=True, msg=''):
@@ -249,9 +243,9 @@ class TestInit(ComponentTestCase):
         """ Test __init__ with numerical ID """
 
         for val in self.test_values:
-            test_comp = EM_TEST_OBJECT.component(val.uid)
+            test_comp = EM_TEST_OBJECT.create_component(EmClass.__name__, val)
             self.assertIsInstance(test_comp, EmClass)
-            self.assertEqual(test_comp.uid, val.uid)
+            self.assertEqual(test_comp.uid, val['uid'])
 
     def test_component_init_badargs(self):
         for badarg in [ print, json, [], [1,2,3,4,5,6], {'hello': 'world'} ]:
@@ -330,10 +324,10 @@ class TestSave(ComponentTestCase):
     def test_component_save_setattr(self):
         """ Checking save method after different changes using setattr """
         val = self.test_values[0] # The component we will update
-        test_comp = EM_TEST_OBJECT.component(val.uid)
+        test_comp = EM_TEST_OBJECT.component(val['uid'])
         self.check_equals(EmClass, val, test_comp)
 
-        newval = copy.copy(val)
+        newval = copy.copy(test_comp)
         time.sleep(2)  # We have to sleep 2 secs here, so the update_date will be at least 2 secs more than newval.date_update
 
         # name change
@@ -379,7 +373,7 @@ class TestSave(ComponentTestCase):
         changes = {'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,22,13,43), 'rank': 42}
 
         for prop in changes:
-            test_comp = EM_TEST_OBJECT.component(val.uid)
+            test_comp = EM_TEST_OBJECT.component(val['uid'])
             self.check_equals(EmClass, val, test_comp, False)
 
             # TODO La commande ne lève pas d'exception
@@ -389,7 +383,7 @@ class TestSave(ComponentTestCase):
 
             EM_TEST_OBJECT.save()
 
-            test_comp2 = EM_TEST_OBJECT.component(val.uid)
+            test_comp2 = EM_TEST_OBJECT.component(val['uid'])
 
             if prop  == 'date_create':
                 assertion = self.assertEqualDatetime
@@ -398,9 +392,23 @@ class TestSave(ComponentTestCase):
             else: #rank
                 assertion = self.assertEqual
 
-            assertion(getattr(test_comp, prop), getattr(val, prop), "When using setattr the " + prop + " of a component is set : ")
-            assertion(getattr(test_comp2, prop), getattr(val, prop), "When using setattr and save the " + prop + " of a loaded component is set : ")
+            assertion(getattr(test_comp, prop), val[prop], "When using setattr the " + prop + " of a component is set : ")
+            assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the " + prop + " of a loaded component is set : ")
 
+
+#====================#
+# EmComponent.create #
+#====================#
+class TestCreate(ComponentTestCase):
+
+    def test_create(self):
+        """ Testing EmComponent.create() """
+        newuid = EM_TEST_OBJECT.new_uid()
+        vals = {'name': 'created1', 'classtype': 'entity', 'string': MlString({"fr": "testcomp"}), 'help_text': MlString({"en": "help test", "fr": "test help"})}
+        tc = EM_TEST_OBJECT.create_component(EmClass.__name__, vals)
+        self.check_equals(EmClass, vals, tc, "The created EmTestComp hasn't the good property values")
+
+    pass
 '''
 #====================#
 # EmComponent.create #
