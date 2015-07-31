@@ -159,7 +159,10 @@ class ComponentTestCase(TestCase):
         for vname in val:
             if vname in ['string', 'help']:  # Special test for mlstrings
                 # MlString comparison
-                vml = json.loads(val[vname])
+                if isinstance(val[vname], MlString):
+                    vml = val[vname].translations
+                else:
+                    vml = json.loads(val[vname])
                 for vn in vml:
                     self.assertEqual(vml[vn], getattr(test_comp, vname).get(vn), msg)
             elif vname in ['date_create', 'date_update']:
@@ -408,7 +411,6 @@ class TestCreate(ComponentTestCase):
         tc = EM_TEST_OBJECT.create_component(EmClass.__name__, vals)
         self.check_equals(EmClass, vals, tc, "The created EmTestComp hasn't the good property values")
 
-    pass
 '''
 #====================#
 # EmComponent.create #
