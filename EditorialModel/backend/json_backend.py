@@ -61,3 +61,10 @@ class EmBackendJson(object):
                     attributes[attr_name] = attr_value
             data[int(index)] = attributes
         return data
+
+    ## Saves the data in the data source json file
+    #
+    # @return bool
+    # @todo à implémenter
+    def save(self):
+        return True

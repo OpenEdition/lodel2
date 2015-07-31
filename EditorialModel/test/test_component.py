@@ -25,6 +25,7 @@ from Database import sqlutils
 from Database import sqlsetup
 import sqlalchemy as sqla
 
+import copy
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
 
@@ -157,6 +158,24 @@ class ComponentTestCase(TestCase):
         #shutil.copyfile(TEST_COMPONENT_DBNAME+'_bck', globals()['component_test_dbfilename'])
         # restoreDbState(TEST_COMPONENT_DBNAME)
 
+    def check_equals(self, component_class, expected_val, test_comp, check_date=True, msg=''):
+        """ This function checks that a EmTestComp has expected_val for values"""
+        val = expected_val
+        self.assertIsInstance(test_comp, component_class, msg)
+        for vname in val.__dict__:
+            if vname in ['string', 'help']:  # Special test for mlstrings
+                # MlString comparison
+                vml = MlString(getattr(val, vname))
+                for vn in vml.__dict__:
+                    self.assertEqual(getattr(vml,vn), getattr(test_comp, vname).get(vn), msg)
+            elif vname in ['date_create', 'date_update']:
+                # Datetime comparison
+                if check_date:
+                    self.assertEqualDatetime(getattr(val,vname),getattr(test_comp, vname), vname + " assertion error : " + msg)
+            else:
+                prop = vname
+                self.assertEqual(getattr(test_comp, prop), getattr(val,vname), msg + " Inconsistecy for " + prop + " property")
+
     '''
     def check_equals(self, excepted_val, test_comp, check_date=True, msg=''):
         """ This function check that a EmTestComp has excepted_val for values """
@@ -274,25 +293,25 @@ class TestUid(ComponentTestCase):
             EmComponent.new_uid(self.dber)
         pass
 '''
-'''
+
+
 #=======================#
 #   EmComponent.save    #
 #=======================#
 class TestSave(ComponentTestCase):
 
-
     def _savecheck(self, test_comp, newval):
         """ Utility function for test_component_save_namechange """
-        test_comp2 = EmTestComp(newval['name'])
+        test_comp2 = EM_TEST_OBJECT.component(newval.uid)
 
-        #Check if properties other than date are equals in the instance fetched from Db
-        self.check_equals(newval, test_comp2, check_date=False)
+        # Check if properties other than date are equals in the instance fetched from the backend
+        self.check_equals(EmClass, newval, test_comp2, check_date=False)
 
         #Check if the date_update has been updated
-        self.assertTrue(newval['date_update'] < test_comp2.date_update, "The updated date_update is more in past than its previous value : old date : '"+str(newval['date_update'])+"' new date '"+str(test_comp2.date_update)+"'")
+        self.assertTrue(newval.date_update < test_comp2.date_update, "The updated date_update is more in past than its previous value : old date : '"+str(newval.date_update)+"' new date '"+str(test_comp2.date_update)+"'")
 
         #Check if the date_create didn't change
-        self.assertEqualDatetime(newval['date_create'], test_comp2.date_create)
+        self.assertEqualDatetime(newval.date_create, test_comp2.date_create)
 
         #Check if the instance fecthed from Db and the one used to call save have the same properties
         for prop in ['name', 'help', 'string', 'date_update', 'date_create', 'rank' ]:
@@ -305,74 +324,72 @@ class TestSave(ComponentTestCase):
             else:
                 assertion = self.assertEqual
 
-            assertion(getattr(test_comp, prop), getattr(test_comp2, prop), "Save don't propagate modification properly. The '"+prop+"' property hasn't the exepted value in instance fetched from Db : ")
-        pass
+            assertion(getattr(test_comp, prop), getattr(test_comp2, prop), "Save don't propagate modification properly. The '" + prop + "' property hasn't the exepted value in instance fetched from Backend : ")
 
+    @unittest.skip("Not implemented yet")
     def test_component_save_setattr(self):
         """ Checking save method after different changes using setattr """
+        val = self.test_values[0] # The component we will update
+        test_comp = EM_TEST_OBJECT.component(val.uid)
+        self.check_equals(EmClass, val, test_comp)
 
-        val = self.test_values[0] #The row we will modify
+        newval = copy.copy(val)
+        time.sleep(2)  # We have to sleep 2 secs here, so the update_date will be at least 2 secs more than newval.date_update
 
-        test_comp = EmTestComp(val['name'])
-        self.check_equals(val, test_comp)
-
-        newval = val.copy()
-
-        time.sleep(2) # We have to sleep 2 secs here, so the update_date will be at least 2 secs more than newval['date_update']
-
-        #name change
-        newval['name'] = test_comp.name = 'newname'
-        test_comp.save()
+        # name change
+        newval.name = test_comp.name = 'newname'
+        EM_TEST_OBJECT.save()
         self._savecheck(test_comp, newval)
         self.assertTrue(True)
 
         #help change
-        newval['help'] = '{"fr": "help fr", "en":"help en", "es":"help es"}'
-        test_comp.help = MlString.load(newval['help'])
-        test_comp.save()
+        newval.help = '{"fr": "help fr", "en":"help en", "es":"help es"}'
+        test_comp.help = MlString.load(newval.help)
+        EM_TEST_OBJECT.save()
         self._savecheck(test_comp, newval)
         self.assertTrue(True)
 
-        #string change
-        newval['string'] = '{"fr": "string fr", "en":"string en", "es":"string es"}'
-        test_comp.string = MlString.load(newval['string'])
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        # string change
+        newval.string = '{"fr": "string fr", "en":"string en", "es":"string es"}'
+        test_comp.string = MlString.load(newval.string)
+        EM_TEST_OBJECT.save()
+        self._savecheck(EmClass, test_comp, newval)
         self.assertTrue(True)
 
         #no change
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        EM_TEST_OBJECT.save()
+        self._savecheck(EmClass, test_comp, newval)
         self.assertTrue(True)
 
         #change all
-        test_comp.name = newval['name'] = test_comp.name = 'newnewname'
-        newval['help'] = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
-        test_comp.help = MlString.load(newval['help'])
-        newval['string'] = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
-        test_comp.string = MlString.load(newval['string'])
+        test_comp.name = newval.name = test_comp.name = 'newnewname'
+        newval.help = '{"fr": "help fra", "en":"help eng", "es":"help esp"}'
+        test_comp.help = MlString.load(newval.help)
+        newval.string = '{"fr": "string FR", "en":"string EN", "es":"string ES", "foolang":"foofoobar"}'
+        test_comp.string = MlString.load(newval.string)
 
-        test_comp.save()
-        self._savecheck(test_comp, newval)
+        EM_TEST_OBJECT.save()
+        self._savecheck(EmClass, test_comp, newval)
         self.assertTrue(True)
 
-        pass
-
+    @unittest.skip("Not implemented yet")
     def test_component_save_illegalchanges(self):
         """ checking that the save method forbids some changes """
         val = self.test_values[1]
-
-        changes = { 'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,2,22,43), 'rank': 42 }
+        changes = {'date_create': datetime.datetime(1982,4,2,13,37), 'date_update': datetime.datetime(1982,4,22,13,43), 'rank': 42}
 
         for prop in changes:
-            test_comp = EmTestComp(val['name'])
-            self.check_equals(val, test_comp, False)
+            test_comp = EM_TEST_OBJECT.component(val.uid)
+            self.check_equals(EmClass, val, test_comp, False)
 
-            with self.assertRaises(TypeError):
-                setattr(test_comp, prop, changes[prop])
-            test_comp.save()
+            # TODO La commande ne lève pas d'exception
+            #with self.assertRaises(TypeError):
+            setattr(test_comp, prop, changes[prop])
 
-            test_comp2 = EmTestComp(val['name'])
+
+            EM_TEST_OBJECT.save()
+
+            test_comp2 = EM_TEST_OBJECT.component(val.uid)
 
             if prop  == 'date_create':
                 assertion = self.assertEqualDatetime
@@ -381,10 +398,10 @@ class TestSave(ComponentTestCase):
             else: #rank
                 assertion = self.assertEqual
 
-            assertion(getattr(test_comp,prop), val[prop], "When using setattr the "+prop+" of a component is set : ")
-            assertion(getattr(test_comp2, prop), val[prop], "When using setattr and save the "+prop+" of a loaded component is set : ")
-        pass
+            assertion(getattr(test_comp, prop), getattr(val, prop), "When using setattr the " + prop + " of a component is set : ")
+            assertion(getattr(test_comp2, prop), getattr(val, prop), "When using setattr and save the " + prop + " of a loaded component is set : ")
 
+'''
 #====================#
 # EmComponent.create #
 #====================#
