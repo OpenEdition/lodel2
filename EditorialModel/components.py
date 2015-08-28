@@ -28,8 +28,10 @@ class EmComponent(object):
     def __init__(self, model, uid, name, string = None, help_text = None, date_update = None, date_create = None, rank = None):
         if type(self) == EmComponent:
            raise NotImplementedError('Abstract class')
- 
-        self.model = model # AHAH cannot check type without importing Model ? 
+        if model.__class__.__name__ != 'Model':
+            raise TypeError("Excepted type for 'model' arg is <class 'Model'> but got {} instead".format(type(model)))
+
+        self.model = model
 
         self.uid = uid
         self.check_type('uid', int)
