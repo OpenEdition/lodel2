@@ -96,10 +96,10 @@ class EmComponent(object):
     # This function has to check that rank are correct and continuous other checks are made in childs classes
     # @warning Hardcoded minimum rank
     # @warning Rank modified by _fields['rank'].value
-    # @return True
     # @throw EmComponentCheckError if fails
     def check(self):
-        if self.get_max_rank() > len(self.same_rank_group()):
+        self.model.sort_components(self.__class__)
+        if self.get_max_rank() > len(self.same_rank_group()) or self.rank <= 0:
             #Non continuous ranks
             for i, component in enumerate(self.same_rank_group()):
                 component.rank = i + 1
