@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
-## @file components.py
-# Defines the EditorialModel::components::EmComponent class and the EditorialModel::components::ComponentNotExistError exception class
+## @package EditorialModel.components
+# @brief Base objects for all EditorialModel components
+# 
+# Defines the EditorialModel::components::EmComponent class
 
 import datetime
-
 import logging
-import sqlalchemy as sql
-from Database import sqlutils
-import EditorialModel.fieldtypes as ftypes
 from collections import OrderedDict
+import hashlib
+
+import EditorialModel.fieldtypes as ftypes
+from EditorialModel.exceptions import *
+from Lodel.utils.mlstring import MlString
 
 logger = logging.getLogger('Lodel2.EditorialModel')
 
@@ -21,346 +24,151 @@ logger = logging.getLogger('Lodel2.EditorialModel')
 # @pure
 class EmComponent(object):
 
-    ## The name of the engine configuration
-    # @todo Not a good idea to store it here
-    dbconf = 'default'
-    ## The table in wich we store data for this object
-    # None for EmComponent
-    table = None
     ## Used by EmComponent::modify_rank
     ranked_in = None
 
-    ## Read only properties
-    _ro_properties = ['date_update', 'date_create', 'uid', 'rank', 'deleted']
-
-    ## @brief List fields name and fieldtype
-    #
-    # This is a list that describe database fields common for each EmComponent child classes.
-    # A database field is defined here by a tuple(name, type) with name a string and type an EditorialModel.fieldtypes.EmFieldType
-    # @warning The EmFieldType in second position in the tuples must be a class type and not a class instance !!!
-    # @see EditorialModel::classes::EmClass::_fields EditorialModel::fieldgroups::EmFieldGroup::_fields EditorialModel::types::EmType::_fields EditorialModel::fields::EmField::_fields
-    _fields = [
-        ('uid', ftypes.EmField_integer),
-        ('name', ftypes.EmField_char),
-        ('rank', ftypes.EmField_integer),
-        ('date_update', ftypes.EmField_date),
-        ('date_create', ftypes.EmField_date),
-        ('string', ftypes.EmField_mlstring),
-        ('help', ftypes.EmField_mlstring)
-    ]
-
-    ## Instaciate an EmComponent
-    # @param id_or_name int|str: name or id of the object
-    # @throw TypeError if id_or_name is not an integer nor a string
-    # @throw NotImplementedError if called with EmComponent
-    def __init__(self, id_or_name, dbconf = 'default'):
-        
-        self.dbconf = dbconf
-        if self.dbconf:
-            self.db_engine = sqlutils.get_engine(dbconf)
-        else:
-            self.db_engine = False
-
+    def __init__(self, model, uid, name, string = None, help_text = None, date_update = None, date_create = None, rank = None):
         if type(self) == EmComponent:
-            raise NotImplementedError('Abstract class')
+           raise NotImplementedError('Abstract class')
+        if model.__class__.__name__ != 'Model':
+            raise TypeError("Excepted type for 'model' arg is <class 'Model'> but got {} instead".format(type(model)))
 
-        ## @brief An OrderedDict storing fields name and values
-        # Values are handled by EditorialModel::fieldtypes::EmFieldType
-        # @warning \ref _fields instance property is not the same than EmComponent::_fields class property. In the instance property the EditorialModel::fieldtypes::EmFieldType are instanciated to be able to handle datas
-        # @see EmComponent::_fields EditorialModel::fieldtypes::EmFieldType
-        self._fields = OrderedDict([(name, ftype()) for (name, ftype) in (EmComponent._fields + self.__class__._fields)])
+        self.model = model
 
-        # populate
-        if isinstance(id_or_name, int):
-            self._fields['uid'].value = id_or_name  # read only propertie set
-        elif isinstance(id_or_name, str):
-            self.name = id_or_name
-        else:
-            raise TypeError('Bad argument: expecting <int> or <str> but got : ' + str(type(id_or_name)))
-        self.table = self.__class__.table
-        self.populate()
+        self.uid = uid
+        self.check_type('uid', int)
+        self.name = name
+        self.check_type('name', str)
+        self.string = MlString() if string is None else string
+        self.check_type('string', MlString)
+        self.help_text = MlString() if help_text is None else help_text
+        self.check_type('help_text', MlString)
+        self.date_update = datetime.datetime.now() if date_update is None else date_update #WARNING timezone !
+        self.check_type('date_update', datetime.datetime)
+        self.date_create = datetime.datetime.now() if date_create is None else date_create #WARNING timezone !
+        self.check_type('date_create', datetime.datetime)
 
-    ## @brief Access an attribute of an EmComponent
-    # This method is overloads the default __getattr__ to search in EmComponents::_fields . If there is an EditorialModel::EmField with a corresponding name in the component
-    # it returns its value.
-    # @param name str: The attribute name
-    # @throw AttributeError if attribute don't exists
-    # @see EditorialModel::EmField::value
-    def __getattr__(self, name):
-        if name != '_fields' and name in self._fields:
-            return self._fields[name].value
-        else:
-            return super(EmComponent, self).__getattribute__(name)
+        #Handling specials ranks for component creation
+        self.rank = rank
+        pass
 
-    ## @brief Access an EmComponent attribute
-    # This function overload the default __getattribute__ in order to check if the EmComponent was deleted.
-    # @param name str: The attribute name
-    # @throw EmComponentNotExistError if the component was deleted
-    def __getattribute__(self, name):
-        if super(EmComponent, self).__getattribute__('deleted'):
-            raise EmComponentNotExistError("This " + super(EmComponent, self).__getattribute__('__class__').__name__ + " has been deleted")
-        res = super(EmComponent, self).__getattribute(name)
-        return res
+    @property
+    ## @brief Return a dict with attributes name as key and attributes value as value
+    # @note Used at creation and deletion to call the migration handler
+    def attr_dump(self):
+        return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('__') or (fname == 'uid'))}
+        
+    ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
+    # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
+    def init_ended(self):
+        self._inited = True
 
-    ## Set the value of an EmComponent attribute
-    # @param name str: The propertie name
-    # @param value *: The value
-    def __setattr__(self, name, value):
-        if name in self.__class__._ro_properties:
-            raise TypeError("Propertie '" + name + "' is readonly")
+    ## @brief Reimplementation for calling the migration handler to register the change
+    def __setattr__(self, attr_name, value):
+        inited = '_inited' in self.__dict__
+        if inited:
+            # if fails raise MigrationHandlerChangeError
+            self.model.migration_handler.register_change(self.uid, {attr_name: getattr(self, attr_name) }, {attr_name: value} )
+        super(EmComponent, self).__setattr__(attr_name, value)
+        if inited:
+            self.model.migration_handler.register_model_state(hash(self.model))
 
-        if name != '_fields' and hasattr(self, '_fields') and name in object.__getattribute__(self, '_fields'):
-            self._fields[name].from_python(value)
-        else:
-            object.__setattr__(self, name, value)
-    
+    ## Check the type of attribute named var_name
+    # @param var_name str : the attribute name
+    # @param excepted_type tuple|type : Tuple of type or a type 
+    # @throw AttributeError if wrong type detected
+    def check_type(self, var_name, excepted_type):
+        var = getattr(self, var_name)
+        
+        if not isinstance(var, excepted_type):
+            raise AttributeError("Excepted %s to be an %s but got %s instead" % (var_name, str(excepted_type), str(type(var))) )
+        pass
+
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
-        return "EmComponent"+self.__class__.__name__+str(self.uid)
+        return int(hashlib.md5(str(self.attr_dump).encode('utf-8')).hexdigest(),16)
 
     ## @brief Test if two EmComponent are "equals"
     # @return True or False
     def __eq__(self, other):
         return self.__class__ == other.__class__ and self.uid == other.uid
 
-    ## Lookup in the database properties of the object to populate the properties
-    # @throw EmComponentNotExistError if the instance is not anymore stored in database
-    def populate(self):
-        records = self._populate_db()  # Db query
+    ## Check if the EmComponent is valid
+    # This function has to check that rank are correct and continuous other checks are made in childs classes
+    # @warning Hardcoded minimum rank
+    # @warning Rank modified by _fields['rank'].value
+    # @throw EmComponentCheckError if fails
+    def check(self):
+        self.model.sort_components(self.__class__)
+        if self.get_max_rank() > len(self.same_rank_group()) or self.rank <= 0:
+            #Non continuous ranks
+            for i, component in enumerate(self.same_rank_group()):
+                component.rank = i + 1
+        # No need to sort again here
 
-        for record in records:
-            for keys in self._fields.keys():
-                if keys in record:
-                    self._fields[keys].from_string(record[keys])
-
-        super(EmComponent, self).__setattr__('deleted', False)
-
-    #@classmethod
-    ## Shortcut that return the sqlAlchemy engine
-    #def db_engine(cls):
-    #    return sqlutils.get_engine(cls.dbconf)
-
-    ## Do the query on the database for EmComponent::populate()
-    # @throw EmComponentNotExistError if the instance is not anymore stored in database
-    def _populate_db(self):
-        dbe = self.db_engine
-        component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.sql.select([component])
-
-        if self.uid is None:
-            req = req.where(component.c.name == self.name)
-        else:
-            req = req.where(component.c.uid == self.uid)
-        conn = dbe.connect()
-        res = conn.execute(req)
-
-        res = res.fetchall()
-        conn.close()
-
-        if not res or len(res) == 0:
-            raise EmComponentNotExistError("No " + self.__class__.__name__ + " found with " + ('name ' + self.name if self.uid is None else 'uid ' + str(self.uid)))
-
-        return res
-
-    ## Insert a new component in the database
-    #
-    # This function create and assign a new UID and handle the date_create and date_update values
-    # @warning There is a mandatory argument dbconf that indicate wich database configuration to use
-    # @param **kwargs : Names arguments representing object properties
-    # @return An instance of the created component
-    # @throw TypeError if an element of kwargs isn't a valid object propertie or if a mandatory argument is missing
-    # @throw RuntimeError if the creation fails at database level
-    # @todo Check that every mandatory _fields are given in args
-    # @todo Stop using datetime.datetime.utcnow() for date_update and date_create init
-    @classmethod
-    def create(cls, **kwargs):
-        #Checking for invalid arguments
-        valid_args = [ name for name,_ in (cls._fields + EmComponent._fields)]
-
-        for argname in kwargs:
-            if argname in ['date_update', 'date_create', 'rank', 'uid']:  # Automatic properties
-                raise TypeError("Invalid argument : " + argname)
-            elif argname not in valid_args:
-                raise TypeError("Unexcepted keyword argument '"+argname+"' for "+cls.__name__+" creation")
-                
-        #Check uniq names constraint
-        try:
-            name = kwargs['name']
-            exist = cls(name)
-            for kname in kwargs:
-                if not (getattr(exist, kname) == kwargs[kname]):
-                    raise EmComponentExistError("An "+cls.__name__+" named "+name+" allready exists with a different "+kname)
-            logger.info("Trying to create an "+cls.__name__+" that allready exist with same attribute. Returning the existing one")
-            return exist
-        except EmComponentNotExistError:
-            pass
-        
-        # Mandatory fields check (actual fieldtypes don't allow this check
-        #for name in cls._fields:
-        #    if cls._fields[name].notNull and cls._fields[name].default == None:
-        #        raise TypeError("Missing argument : "+name)
-
-        if 'dbconf' in kwargs:
-            if not kwargs['db_engine']:
-                raise NotImplementedError("Its a nonsense to call create with no database")
-            dbconf = kwargs['dbconf']
-        else:
-            dbconf = 'default'
-        dbe = sqlutils.get_engine(dbconf)
-
-        kwargs['uid'] = cls.new_uid(dbe)
-        kwargs['date_update'] = kwargs['date_create'] = datetime.datetime.utcnow()
-
-        conn = dbe.connect()
-
-        kwargs['rank'] = cls._get_max_rank( kwargs[cls.ranked_in], dbe )+1
-
-        table = sql.Table(cls.table, sqlutils.meta(dbe))
-        req = table.insert(kwargs)
-        if not conn.execute(req):
-            raise RuntimeError("Unable to create the "+cls.__class__.__name__+" EmComponent ")
-        conn.close()
-        return cls(kwargs['name'], dbconf)
-
-    ## Write the representation of the component in the database
-    # @return bool
-    # @todo stop using datetime.datetime.utcnow() for date_update update
-    def save(self):
-        values = {}
-        for name, field in self._fields.items():
-            values[name] = field.to_sql()
-
-        # Don't allow creation date overwritting
-        #if 'date_create' in values:
-            #del values['date_create']
-            #logger.warning("date_create supplied for save, but overwritting of date_create not allowed, the date will not be changed")
-
-        values['date_update'] = datetime.datetime.utcnow()
-
-        self._save_db(values)
-
-    ## Do the query in the datbase for EmComponent::save()
-    # @param values dict: A dictionnary of the values to insert
-    # @throw RunTimeError if it was unable to do the Db update
-    def _save_db(self, values):
-        """ Do the query on the db """
-        dbe = self.db_engine
-        component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = sql.update(component, values=values).where(component.c.uid == self.uid)
-
-        conn = dbe.connect()
-        res = conn.execute(req)
-        conn.close()
-        if not res:
-            raise RuntimeError("Unable to save the component in the database")
-
-    ## Delete this component data in the database
-    # @return bool : True if deleted False if deletion aborded
-    # @throw RunTimeError if it was unable to do the deletion
-    def delete(self):
-        #<SQL>
-        dbe = self.db_engine
-        component = sql.Table(self.table, sqlutils.meta(dbe))
-        req = component.delete().where(component.c.uid == self.uid)
-        conn = dbe.connect()
-        res = conn.execute(req)
-        conn.close()
-        if not res:
-            raise RuntimeError("Unable to delete the component in the database")
-
-        #</SQL>
-        super(EmComponent, self).__setattr__('deleted', True)
-        return True
+    ## @brief Delete predicate. Indicates if a component can be deleted
+    # @return True if deletion OK else return False
+    def delete_check(self):
+        raise NotImplementedError("Virtual method")
 
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
-    # @param ranked_in_value mixed: The rank "family"
-    # @return -1 if no EmComponent found else return an integer >= 0
-    @classmethod
-    def _get_max_rank(cls, ranked_in_value, dbe):
-        component = sql.Table(cls.table, sqlutils.meta(dbe))
-        req = sql.sql.select([component.c.rank]).where(getattr(component.c, cls.ranked_in) == ranked_in_value).order_by(component.c.rank.desc())
-        c = dbe.connect()
-        res = c.execute(req)
-        res = res.fetchone()
-        c.close()
-        if res != None:
-            return res['rank']
-        else:
-            return -1
-
-    ## Only make a call to the class method
     # @return A positive integer or -1 if no components
-    # @see EmComponent::_get_max_rank()
-    def get_max_rank(self, ranked_in_value):
-        return self.__class__._get_max_rank(ranked_in_value, self.db_engine)
+    def get_max_rank(self):
+        components = self.same_rank_group()
+        return 1 if len(components) == 0 else components[-1].rank
+
+    ## Return an array of instances that are concerned by the same rank
+    # @return An array of instances that are concerned by the same rank
+    def same_rank_group(self):
+        components = self.model.components(self.__class__)
+        ranked_in = self.__class__.ranked_in
+        return [ c for c in components if getattr(c, ranked_in) == getattr(self, ranked_in) ]
 
     ## Set a new rank for this component
     # @note This function assume that ranks are properly set from 1 to x with no gap
+    #
+    # @warning Hardcoded minimum rank
+    # @warning Rank modified by _fields['rank'].value
+    #
     # @param new_rank int: The new rank
-    # @return True if success False if not
+    #
     # @throw TypeError If bad argument type
     # @throw ValueError if out of bound value
     def set_rank(self, new_rank):
         if not isinstance(new_rank, int):
             raise TypeError("Excepted <class int> but got "+str(type(new_rank)))
-        if new_rank < 0 or new_rank > self.get_max_rank(getattr(self, self.ranked_in)):
+        if new_rank <= 0 or new_rank > self.get_max_rank():
             raise ValueError("Invalid new rank : "+str(new_rank))
 
-        mod = new_rank - self.rank #Allow to know the "direction" of the "move"
+        mod = new_rank - self.rank #Indicates the "direction" of the "move"
 
-        if mod == 0: #No modifications
+        if mod == 0:
             return True
 
         limits = [ self.rank + ( 1 if mod > 0 else -1), new_rank ] #The range of modified ranks
         limits.sort()
 
-        dbe = self.db_engine
-        conn = dbe.connect()
-        table = sqlutils.get_table(self)
+        for component in [ c for c in self.same_rank_group() if c.rank >= limits[0] and c.rank <= limits[1] ] :
+            component.rank = component.rank + ( -1 if mod > 0 else 1 )
 
-        #Selecting the components that will be modified
-        req = table.select().where( getattr(table.c, self.ranked_in) == getattr(self, self.ranked_in)).where(table.c.rank >= limits[0]).where(table.c.rank <= limits[1])
+        self.rank = new_rank
 
-        res = conn.execute(req)
-        if not res: #Db error... Maybe false is a bit silent for a failuer
-            return False
+        self.model.sort_components(self.__class__)
 
-        rows = res.fetchall()
+        pass
 
-        updated_ranks = [{'b_uid': self.uid, 'b_rank': new_rank}]
-        for row in rows:
-            updated_ranks.append({'b_uid': row['uid'], 'b_rank': row['rank'] + (-1 if mod > 0 else 1)})
-        req = table.update().where(table.c.uid == sql.bindparam('b_uid')).values(rank=sql.bindparam('b_rank'))
-        res = conn.execute(req, updated_ranks)
-        conn.close()
-        
-        if res:
-            #Instance rank update
-            self._fields['rank'].value = new_rank
-        return bool(res)
-    
-    ## @brief Modify a rank given a sign and a new_rank
-    # - If sign is '=' set the rank to new_rank
-    # - If sign is '-' set the rank to cur_rank - new_rank
-    # - If sign is '+' set the rank to cur_rank + new_rank
-    # @param new_rank int: The new_rank or rank modifier
-    # @param sign str: Can be one of '=', '+', '-'
-    # @return True if success False if fails
-    # @throw TypeError If bad argument type
-    # @throw ValueError if out of bound value
-    def modify_rank(self,new_rank, sign='='):
-        if not isinstance(new_rank, int) or not isinstance(sign, str):
-            raise TypeError("Excepted <class int>, <class str>. But got "+str(type(new_rank))+", "+str(type(sign)))
-
-        if sign == '+':
-            return self.set_rank(self.rank + new_rank)
-        elif sign == '-':
-            return self.set_rank(self.rank - new_rank)
-        elif sign == '=':
-            return self.set_rank(new_rank)
-        else:
-            raise ValueError("Excepted one of '=', '+', '-' for sign argument, but got "+sign)
+    ## Modify a rank given an integer modifier
+    # @param rank_mod int : can be a negative positive or zero integer
+    # @throw TypeError if rank_mod is not an integer
+    # @throw ValueError if rank_mod is out of bound
+    def modify_rank(self, rank_mod):
+        if not isinstance(rank_mod, int):
+            raise TypeError("Excepted <class int>, <class str>. But got "+str(type(rank_mod))+", "+str(type(sign)))
+        try:
+            self.set_rank(self.rank + rank_mod)
+        except ValueError:
+            raise ValueError("The rank modifier '"+str(rank_mod)+"' is out of bounds")
 
     ## @brief Return a string representation of the component
     # @return A string representation of the component
@@ -393,19 +201,3 @@ class EmComponent(object):
 
         return uid
 
-
-## @brief An exception class to tell that a component don't exist
-class EmComponentNotExistError(Exception):
-    pass
-
-
-## @brief Raised on uniq constraint error at creation
-# This exception class is dedicated to be raised when create() method is called
-# if an EmComponent with this name but different parameters allready exist
-class EmComponentExistError(Exception):
-    pass
-
-
-## @brief An exception class to tell that no ranking exist yet for the group of the object
-class EmComponentRankingNotExistError(Exception):
-    pass

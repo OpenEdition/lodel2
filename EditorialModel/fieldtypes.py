@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
 from Lodel.utils.mlstring import MlString
-from sqlalchemy import Column, INTEGER, BOOLEAN, VARCHAR
 import datetime
 
 ## get_field_type (Function)
@@ -86,9 +85,6 @@ class EmField_integer(EmFieldType):
     def sql_column(self):
         return "int(11) NOT NULL"
 
-    def sqlalchemy_args(self):
-        return {'type_': INTEGER, 'nullable': False, 'default': 0}
-
 
 ## EmField_boolean (Class)
 #
@@ -99,7 +95,7 @@ class EmField_boolean(EmFieldType):
         super(EmField_boolean, self).__init__('boolean')
 
     def from_string(self, value):
-        if value:
+        if value and value != "0":
             self.value = True
         else:
             self.value = False
@@ -111,9 +107,6 @@ class EmField_boolean(EmFieldType):
 
     def sql_column(self):
         return "tinyint(1) DEFAULT NULL"
-
-    def sqlalchemy_args(self):
-        return {'type_': BOOLEAN, 'nullable': True, 'default': None}
 
 
 ## EmField_char (Class)
@@ -137,9 +130,6 @@ class EmField_char(EmFieldType):
 
     def sql_column(self):
         return "varchar(250) DEFAULT NULL"
-
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
 
 
 ## EmField_date (Class)
@@ -166,9 +156,6 @@ class EmField_date(EmFieldType):
     def sql_column(self):
         return "varchar(250) DEFAULT NULL"
 
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
-
 
 ## EmField_mlstring (Class)
 #
@@ -189,8 +176,6 @@ class EmField_mlstring(EmFieldType):
     def sql_column(self):
         return "varchar(250) DEFAULT NULL"
 
-    def sqlalchemy_args(self):
-        return {'type_': VARCHAR(250), 'nullable': True, 'default': None}
 
 class EmField_icon(EmFieldType):
     
@@ -209,6 +194,4 @@ class EmField_icon(EmFieldType):
     def sql_column(self):
         pass
 
-    def sqlalchemy_args(self):
-        return {'type_': INTEGER, 'nullable': True, 'default': None}
 

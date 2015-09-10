@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 
-from Database import sqlutils
-import sqlalchemy as sql
+# from Database import sqlutils
+# import sqlalchemy as sql
 
 import EditorialModel
 from EditorialModel.components import EmComponent
-from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
-from EditorialModel.classtypes import EmClassType
+from EditorialModel.classtypes import EmClassType, EmNature
+from EditorialModel.exceptions import *
 import EditorialModel.fieldtypes as ftypes
 import EditorialModel.classes
 
@@ -20,17 +20,32 @@ import EditorialModel.classes
 # @see EditorialModel::components::EmComponent
 # @todo sortcolumn handling
 class EmType(EmComponent):
-    table = 'em_type'
-    table_hierarchy = 'em_type_hierarchy'
     ranked_in = 'class_id'
 
-    ## @brief Specific EmClass fields
-    # @see EditorialModel::components::EmComponent::_fields
-    _fields = [
-        ('class_id', ftypes.EmField_integer),
-        ('icon', ftypes.EmField_icon),
-        ('sortcolumn', ftypes.EmField_char)
-        ]
+    ## Instanciate a new EmType
+    # @todo define and check types for icon and sortcolumn
+    # @todo better check self.subordinates
+    def __init__(self, model, uid, name, class_id, fields_list = [], subordinates_list = {}, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        self.class_id = class_id
+        self.check_type('class_id', int)
+        self.fields_list = fields_list
+        self.check_type('fields_list', list)
+        for l_uid in self.fields_list:
+            if not isinstance(l_uid, int):
+                raise AttributeError("Excepted fields_list to be a list of integers, but found a +"+str(type(l_uid))+" in it")
+
+        self.subordinates_list = subordinates_list
+        self.check_type('subordinates_list', dict)
+        for nature, uids in self.subordinates_list.items():
+            if nature not in [EmNature.PARENT, EmNature.TRANSLATION, EmNature.IDENTITY]:
+                raise AttributeError("Nature '%s' of subordinates is not allowed !" % nature)
+            for uid in uids:
+                if not isinstance(uid, int):
+                    raise AttributeError("Excepted subordinates of nature '%s' to be a list int !" % nature)
+
+        self.icon = icon
+        self.sortcolumn = sortcolumn
+        super(EmType, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     @classmethod
     ## Create a new EmType and instanciate it
@@ -46,17 +61,16 @@ class EmType(EmComponent):
         return super(EmType, cls).create(name=name, class_id=em_class.uid, sortcolumn=sortcolumn, **em_component_args)
 
     @property
-    ## Return an sqlalchemy table for type hierarchy
-    # @return sqlalchemy em_type_hierarchy table object
-    # @todo Don't hardcode table name
-    def _table_hierarchy(self):
-        return sql.Table(self.__class__.table_hierarchy, sqlutils.meta(self.db_engine))
-
-    @property
     ## Return the EmClassType of the type
     # @return EditorialModel.classtypes.*
     def classtype(self):
-        return getattr(EmClassType, EditorialModel.classes.EmClass(self.class_id).classtype)
+        return getattr(EmClassType, self.em_class.classtype)
+
+    @property
+    ## Return an instance of the class this type belongs to
+    # @return EditorialModel.EmClass
+    def em_class(self):
+        return self.model.component(self.class_id)
 
     ## @brief Delete an EmType
     # The deletion is only possible if a type is not linked by any EmClass
@@ -64,57 +78,32 @@ class EmType(EmComponent):
     # @return True if delete False if not deleted
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
-    def delete(self):
-        subs = self.subordinates()
-        if sum([len(subs[subnat]) for subnat in subs]) > 0:
+    def delete_check(self):
+        if sum(self.subordinates_list) > 0:
             return False
         #Delete all relation with superiors
         for nature, sups in self.superiors().items():
             for sup in sups:
                 self.del_superior(sup, nature)
-        return super(EmType, self).delete()
+        return True
 
-    ## Get the list of associated fieldgroups
+    ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance
-    def field_groups(self):
-        meta = sqlutils.meta(self.db_engine)
-        fg_table = sql.Table(EmFieldGroup.table, meta)
-        req = fg_table.select(fg_table.c.uid).where(fg_table.c.class_id == self.class_id)
-        conn = self.db_engine.connect()
-        res = conn.execute(req)
-        rows = res.fetchall()
-        conn.close()
-
-        return [EmFieldGroup(row['uid']) for row in rows]
-
-    ## Get the list of all Emfield possibly associated with this type
-    # @return A list of EmField instance
-    def all_fields(self):
-        res = []
-        for fieldgroup in self.field_groups():
-            res += fieldgroup.fields()
-        return res
+    def fieldgroups(self):
+        fieldgroups = [fieldgroup for fieldgroup in self.em_class.fieldgroups() if len(fieldgroup.fields(self.uid))]
+        return fieldgroups
 
     ## Return selected optional field
     # @return A list of EmField instance
     def selected_fields(self):
-        dbe = self.db_engine
-        meta = sqlutils.meta(dbe)
-        conn = dbe.connect()
-
-        table = sql.Table('em_field_type', meta)
-        res = conn.execute(table.select().where(table.c.type_id == self.uid))
-
-        return [EditorialModel.fields.EmField(row['field_id']) for row in res.fetchall()]
+        selected = [self.model.component(field_id) for field_id in self.fields_list]
+        return selected
 
     ## Return the list of associated fields
     # @return A list of EmField instance
     def fields(self):
-        result = list()
-        for field in self.all_fields():
-            if not field.optional:
-                result.append(field)
-        return result + self.selected_fields()
+        fields = [field for fieldgroup in self.fieldgroups() for field in fieldgroup.fields(self.uid)]
+        return fields
 
     ## Select_field (Function)
     #
@@ -127,7 +116,9 @@ class EmType(EmComponent):
     # @throw ValueError if field is not optional or is not associated with this type
     # @see EmType::_opt_field_act()
     def select_field(self, field):
-        return self._opt_field_act(field, True)
+        if field.uid in self.fields_list:
+            return True
+        return self._change_field_list(field, True)
 
     ## Unselect_field (Function)
     #
@@ -140,7 +131,9 @@ class EmType(EmComponent):
     # @throw ValueError if field is not optional or is not associated with this type
     # @see EmType::_opt_field_act()
     def unselect_field(self, field):
-        return self._opt_field_act(field, False)
+        if field.uid not in self.fields_list:
+            return True
+        return self._change_field_list(field, False)
 
     ## @brief Select or unselect an optional field
     # @param field EmField: The EmField to select or unselect
@@ -149,27 +142,20 @@ class EmType(EmComponent):
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    def _opt_field_act(self, field, select=True):
+    def _change_field_list(self, field, add=True):  # TODO voir si on conserve l'argument "select"
         if not isinstance(field, EmField):
             raise TypeError("Excepted <class EmField> as field argument. But got " + str(type(field)))
-        if not field in self.all_fields():
+        if not field in self.em_class.fields():
             raise ValueError("This field is not part of this type")
         if not field.optional:
             raise ValueError("This field is not optional")
 
-        dbe = self.db_engine
-        meta = sqlutils.meta(dbe)
-        conn = dbe.connect()
-
-        table = sql.Table('em_field_type', meta)
-        if select:
-            req = table.insert({'type_id': self.uid, 'field_id': field.uid})
+        if add:
+            self.fields_list.append(field.uid)
         else:
-            req = table.delete().where(table.c.type_id == self.uid and table.c.field_id == field.uid)
+            self.fields_list.remove(field.uid)
 
-        res = conn.execute(req)
-        conn.close()
-        return bool(res)
+        return True
 
     ## Get the list of associated hooks
     # @note Not conceptualized yet
@@ -200,7 +186,7 @@ class EmType(EmComponent):
     # EmType instance
     # @throw RuntimeError if a nature fetched from db is not valid
     def subordinates(self):
-        return self._sub_or_sup(False)
+        return { nature: [ self.model.component(tuid) for tuid in self.subordinates_list[nature] ] for nature in self.subordinates_list }
 
     ## @brief Get the list of subordinates EmType
     # Get a list of EmType instance that have this EmType for superior
@@ -208,43 +194,17 @@ class EmType(EmComponent):
     # EmType instance
     # @throw RuntimeError if a nature fetched from db is not valid
     # @see EmType::_sub_or_sup()
+    # @todo reimplementation needed
     def superiors(self):
-        return self._sub_or_sup(True)
-
-    ## @brief Return the list of subordinates or superiors for an EmType
-    # This is the logic function that implements EmType::subordinates() and EmType::superiors()
-    # @param sup bool: If True returns superiors, if False returns..... subordinates
-    # @return A dict with relation nature as keys and list of subordinates/superiors as values
-    # @throw RunTimeError if a nature fetched from db is not valid
-    # @see EmType::subordinates(), EmType::superiors()
-    def _sub_or_sup(self, sup=True):
-        conn = self.db_engine.connect()
-        htable = self._table_hierarchy
-        type_table = sqlutils.get_table(self)
-
-        req = htable.select()
-        if sup:
-            col = htable.c.subordinate_id
-        else:
-            col = htable.c.superior_id
-
-        req = req.where(col == self.uid)
-        res = conn.execute(req)
-        rows = res.fetchall()
-        conn.close()
-
-        result = dict()
-        for nature in EmClassType.natures(self.classtype['name']):
-            result[nature] = []
-
-        for row in rows:
-            if row['nature'] not in result:
-                #Maybe security issue ?
-                raise RuntimeError("Unreconized nature from database : "+row['nature'])
-
-            to_fetch = 'superior_id' if sup else 'subordinate_id'
-            result[row['nature']].append(EmType(row[to_fetch]))
-        return result
+        superiors = {}
+        for em_type in self.model.components(EmType):
+            for nature, field_uids in em_type.subordinates_list.items():
+                if self.uid in field_uids:
+                    if nature in superiors:
+                        superiors[nature].append(em_type)
+                    else:
+                        superiors[nature] = [em_type]
+        return superiors
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
@@ -268,21 +228,22 @@ class EmType(EmComponent):
         elif self.name != em_type.name:
             raise ValueError("Not allowed to put a different em_type as superior in a relation of nature '" + relation_nature + "'")
 
-        conn = self.db_engine.connect()
-        htable = self._table_hierarchy
-        values = {'subordinate_id': self.uid, 'superior_id': em_type.uid, 'nature': relation_nature}
-        req = htable.insert(values=values)
-
-        try:
-            conn.execute(req)
-        except sql.exc.IntegrityError:
-            ret = False
-        else:
-            ret = True
-        finally:
-            conn.close()
-
-        return ret
+        # TODO Réimplémenter
+        # conn = self.db_engine.connect()
+        # htable = self._table_hierarchy
+        # values = {'subordinate_id': self.uid, 'superior_id': em_type.uid, 'nature': relation_nature}
+        # req = htable.insert(values=values)
+        #
+        # try:
+        #     conn.execute(req)
+        # except sql.exc.IntegrityError:
+        #     ret = False
+        # else:
+        #     ret = True
+        # finally:
+        #     conn.close()
+        #
+        # return ret
 
     ## Delete a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
@@ -293,34 +254,94 @@ class EmType(EmComponent):
         if relation_nature not in EmClassType.natures(self.classtype['name']):
             raise ValueError("Invalid nature for add_superior : '" + relation_nature + "'. Allowed relations for this type are " + str(EmClassType.natures(self.classtype['name'])))
 
-        conn = self.db_engine.connect()
-        htable = self._table_hierarchy
-        req = htable.delete(htable.c.superior_id == em_type.uid and htable.c.nature == relation_nature)
-        conn.execute(req)
-        conn.close()
+        # TODO Réimplémenter
+        # conn = self.db_engine.connect()
+        # htable = self._table_hierarchy
+        # req = htable.delete(htable.c.superior_id == em_type.uid and htable.c.nature == relation_nature)
+        # conn.execute(req)
+        # conn.close()
 
     ## @brief Get the list of linked type
     # Types are linked with special fields called relation_to_type fields
     # @return a list of EmType
     # @see EmFields
     def linked_types(self):
-        return self._linked_types_db()
+        return self._linked_types_db()  # TODO changer l'appel
 
     ## @brief Return the list of all the types linked to this type, should they be superiors or subordinates
     # @return A list of EmType objects
-    def _linked_types_db(self):
-        conn = self.db_engine.connect()
-        htable = self._table_hierarchy
-        req = htable.select(htable.c.superior_id, htable.c.subordinate_id)
-        req = req.where(sql.or_(htable.c.subordinate_id == self.uid, htable.c.superior_id == self.uid))
+    # def _linked_types_db(self):
+    #     conn = self.db_engine.connect()
+    #     htable = self._table_hierarchy
+    #     req = htable.select(htable.c.superior_id, htable.c.subordinate_id)
+    #     req = req.where(sql.or_(htable.c.subordinate_id == self.uid, htable.c.superior_id == self.uid))
+    #
+    #     res = conn.execute(req)
+    #     rows = res.fetchall()
+    #     conn.close()
+    #
+    #     rows = dict(zip(rows.keys(), rows))
+    #     result = []
+    #     for row in rows:
+    #         result.append(EmType(row['subordinate_id'] if row['superior_id'] == self.uid else row['superior_id']))
+    #
+    #     return result
+    
+    ## Checks if the EmType is valid
+    # @throw EmComponentCheckError if check fails
+    def check(self):
+        super(EmType, self).check()
+        em_class = self.model.component(self.class_id)
+        if not em_class:
+            raise EmComponentCheckError("class_id contains an uid that does not exists '%d'" % self.class_id)
+        if not isinstance(em_class, EditorialModel.classes.EmClass):
+            raise EmComponentCheckError("class_id contains an uid from a component that is not an EmClass but a %s" % str(type(emc_class)))
+        
+        for i,fuid in enumerate(self.fields_list):
+            field = self.model.component(fuid)
+            if not field:
+                raise EmComponentCheckError("The element %d of selected_field is a non existing uid '%d'"%(i, fuid))
+            if not isinstance(field, EmField):
+                raise EmComponentCheckError("The element %d of selected_field is not an EmField but a %s" % (i, str(type(field)) ))
+            if not field.optional:
+                raise EmComponentCheckError("The element %d of selected_field is an EmField not optional"  % i )
+            if field.fieldgroup_id not in [ fg.uid for fg in self.fieldgroups() ]:
+                raise EmComponentCheckErrro("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
+        for nature in self.subordinates_list:
+            for i, tuid in enumerate(self.subordinates_list[nature]):
+                em_type = self.model.component(tuid)
+                if not em_type:
+                    raise EmComponentCheckError("The element %d of subordinates contains a non existing uid '%d'" % (i, tuid))
+                if not isinstance(em_type, EmType):
+                    raise EmComponentCheckError("The element %d of subordinates contains a component that is not an EmType but a %s" % (i, str(type(em_type))))
+                if nature not in EmClassType.natures(self.em_class.classtype):
+                    raise EmComponentCheckError("The relation nature '%s' of the element %d of subordinates is not valid for this EmType classtype '%s'", (nature, i, self.classtype) )
+    
+                nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
+    
+                if nat_spec['attach'] == 'classtype':
+                    if self.classtype != em_type.classtype:
+                        raise EmComponentCheckError("The element %d of subordinates is of '%s' classtype. But the current type is of '%s' classtype, and relation nature '%s' require two EmType of same classtype" % (i, em_type.classtype, self.classtype, nature) )
+                elif nat_spec['attach'] == 'type':
+                    if self.uid != em_type.uid:
+                        raise EmComponentCheckError("The element %d of subordinates is a different EmType. But the relation nature '%s' require the same EmType" % (i, nature))
+                else:
+                    raise NotImplementedError("The nature['attach'] '%s' is not implemented in this check !" % nat_spec['attach'])
+    
+                if 'max_depth' in nat_spec and nat_spec['max_depth'] > 0:
+                    depth = 1
+                    cur_type = em_type
+                    while depth >= nat_spec['max_depth']:
+                        depth +=1
+                        if len(cur_type.subordinates()[nature]) == 0:
+                            break
+                    else:
+                        raise EmComponentCheckError("The relation with the element %d of subordinates has a depth superior than the maximum depth ( %d ) allowed by the relation's nature ( '%s' )" %( i, nat_spec['max_depth'], nature) )
+        
+        for nature in self.subordinates():
+            nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
+            if 'max_child' in nat_spec and nat_spec['max_child'] > 0:
+                if len(self.subordinates()[nature]) > nat_spec['max_child']:
+                    raise EmComponentCheckError("The EmType has more child than allowed in the relation's nature : %d > %d" (len(self.subordinates()[nature], nat_spec['max_child'])))
+        #pass
 
-        res = conn.execute(req)
-        rows = res.fetchall()
-        conn.close()
-
-        rows = dict(zip(rows.keys(), rows))
-        result = []
-        for row in rows:
-            result.append(EmType(row['subordinate_id'] if row['superior_id'] == self.uid else row['superior_id']))
-
-        return result

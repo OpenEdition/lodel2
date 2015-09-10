@@ -4,96 +4,61 @@
 # @see EditorialModel::classes::EmClass
 
 from EditorialModel.components import EmComponent
-from Database import sqlutils
-import sqlalchemy as sql
-
-import EditorialModel.fieldtypes as ftypes
+from EditorialModel.classtypes import EmClassType
+from EditorialModel.types import EmType
+#from EditorialModel.exceptions import *
+#import EditorialModel.fieldtypes as ftypes
 import EditorialModel
 
 
 ## @brief Manipulate Classes of the Editorial Model
 # Create classes of object.
-# @see EmClass, EmType, EmFieldGroup, EmField
+# @see EmClass, EmType, EditorialModel.fieldgroups.EmFieldGroup, EmField
 # @todo sortcolumn handling
 class EmClass(EmComponent):
 
-    table = 'em_class'
     ranked_in = 'classtype'
 
-    ## @brief Specific EmClass fields
-    # @see EditorialModel::components::EmComponent::_fields
-    _fields = [
-        ('classtype', ftypes.EmField_char),
-        ('icon', ftypes.EmField_icon),
-        ('sortcolumn', ftypes.EmField_char)
-    ]
+    ## EmClass instanciation
+    # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
+    # @todo defines types check for icon and sortcolumn
+    def __init__(self, model, uid, name, classtype, icon='0', sortcolumn='rank', string=None, help_text=None, date_update=None, date_create=None, rank=None):
 
-    ## Create a new class
-    # @param name str: name of the new class
-    # @param class_type EmClasstype: type of the class
-    # @return An EmClass instance
-    # @throw EmComponentExistError if an EmClass with this name and a different classtype exists
-    @classmethod
-    def create(cls, name, classtype, icon=None, sortcolumn='rank', **em_component_args):
-        return cls._create_db(name=name, classtype=classtype['name'], icon=icon, sortcolumn=sortcolumn, **em_component_args)
+        try:
+            getattr(EmClassType, classtype)
+        except AttributeError:
+            raise AttributeError("Unknown classtype '%s'" % classtype)
 
-    @classmethod
-    ## Isolate SQL for EmClass::create
-    # @return An instance of EmClass
-    def _create_db(cls, name, classtype, icon, sortcolumn, **em_component_args):
-        #Create a new entry in the em_class table
-        result = super(EmClass, cls).create(name=name, classtype=classtype, icon=icon, sortcolumn=sortcolumn, **em_component_args)
+        self.classtype = classtype
+        self.icon = icon
+        self.sortcolumn = sortcolumn  # 'rank'
+        super(EmClass, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
-        dbe = result.db_engine
-        conn = dbe.connect()
-
-        #Create a new table storing LodelObjects of this EmClass
-        meta = sql.MetaData()
-        emclasstable = sql.Table(result.class_table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
-        emclasstable.create(conn)
-
-        conn.close()
-
-        return result
-
-    @property
-    ## @brief Return the table name used to stores data on this class
-    def class_table_name(self):
-        return self.name
+    ## Check if the EmComponent is valid
+    # @throw EmComponentCheckError if fails
+    def check(self):
+        super(EmClass, self).check()
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it
     # @return bool : True if deleted False if deletion aborded
-    def delete(self):
-        fieldgroups = self.fieldgroups()
-        if len(fieldgroups) > 0:
-            return False
-
-        dbe = self.db_engine
-        meta = sqlutils.meta(dbe)
-        #Here we have to give a connection
-        class_table = sql.Table(self.name, meta)
-        meta.drop_all(tables=[class_table], bind=dbe)
-        return super(EmClass, self).delete()
+    def delete_check(self):
+        for emtype in self.model.components(EmType):
+            if emtype.class_id == self.uid:
+                return False
+        for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
+            if fieldgroup.class_id == self.uid:
+                return False
+        return True
 
     ## Retrieve list of the field_groups of this class
     # @return A list of fieldgroups instance
     def fieldgroups(self):
-        records = self._fieldgroups_db()
-        fieldgroups = [EditorialModel.fieldgroups.EmFieldGroup(int(record.uid)) for record in records]
-
-        return fieldgroups
-
-    ## Isolate SQL for EmClass::fieldgroups
-    # @return An array of dict (sqlalchemy fetchall)
-    def _fieldgroups_db(self):
-        dbe = self.db_engine
-        emfg = sql.Table(EditorialModel.fieldgroups.EmFieldGroup.table, sqlutils.meta(dbe))
-        req = emfg.select().where(emfg.c.class_id == self.uid)
-
-        conn = dbe.connect()
-        res = conn.execute(req)
-        return res.fetchall()
+        ret = []
+        for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
+            if fieldgroup.class_id == self.uid:
+                ret.append(fieldgroup)
+        return ret
 
     ## Retrieve list of fields
     # @return fields [EmField]:
@@ -107,53 +72,19 @@ class EmClass(EmComponent):
     ## Retrieve list of type of this class
     # @return types [EmType]:
     def types(self):
-        records = self._types_db()
-        types = [EditorialModel.types.EmType(int(record.uid)) for record in records]
-
-        return types
-
-    ## Isolate SQL for EmCLass::types
-    # @return An array of dict (sqlalchemy fetchall)
-    def _types_db(self):
-        dbe = self.db_engine
-        emtype = sql.Table(EditorialModel.types.EmType.table, sqlutils.meta(dbe))
-        req = emtype.select().where(emtype.c.class_id == self.uid)
-        conn = dbe.connect()
-        res = conn.execute(req)
-        return res.fetchall()
+        ret = []
+        for emtype in self.model.components(EmType):
+            if emtype.class_id == self.uid:
+                ret.append(emtype)
+        return ret
 
     ## Add a new EmType that can ben linked to this class
     # @param  em_type EmType: type to link
     # @return success bool: done or not
     def link_type(self, em_type):
-        table_name = self.name + '_' + em_type.name
-        self._link_type_db(table_name)
-
-        return True
-
-    def _link_type_db(self, table_name):
-        #  Create a new table storing additionnal fields for the relation between the linked type and this EmClass
-        conn = self.db_engine.connect()
-        meta = sql.MetaData()
-        emlinketable = sql.Table(table_name, meta, sql.Column('uid', sql.VARCHAR(50), primary_key=True))
-        emlinketable.create(conn)
-        conn.close()
+        pass
 
     ## Retrieve list of EmType that are linked to this class
     #  @return types [EmType]:
     def linked_types(self):
-        return self._linked_types_db()
-
-    def _linked_types_db(self):
-        dbe = self.db_engine
-        meta = sql.MetaData()
-        meta.reflect(dbe)
-
-        linked_types = []
-        for table in meta.tables.values():
-            table_name_elements = table.name.split('_')
-            if len(table_name_elements) == 2:
-                linked_types.append(EditorialModel.types.EmType(table_name_elements[1]))
-
-        return linked_types
-
+        pass

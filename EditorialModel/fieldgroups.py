@@ -1,13 +1,9 @@
 #-*- coding: utf-8 -*-
 
 from EditorialModel.components import EmComponent
+from EditorialModel.fields import EmField
 from EditorialModel.classes import EmClass
-import EditorialModel.fieldtypes as ftypes
-
-from Database import sqlutils
-import sqlalchemy as sql
-
-import EditorialModel
+from EditorialModel.exceptions import EmComponentCheckError
 
 
 ## Represents groups of EmField associated with an EmClass
@@ -16,38 +12,55 @@ import EditorialModel
 # @see EditorialModel::fields::EmField EditorialModel::classes::EmClass
 class EmFieldGroup(EmComponent):
 
-    ## The database table name
-    table = 'em_fieldgroup'
     ranked_in = 'class_id'
 
-    ## List of fields
-    _fields = [('class_id', ftypes.EmField_integer)]
+    ## EmFieldGroup instanciation
+    def __init__(self, model, uid, name, class_id, string=None, help_text=None, date_update=None, date_create=None, rank=None):
+        self.class_id = class_id
+        self.check_type('class_id', int)
+        super(EmFieldGroup, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
-    @classmethod
-    ## Create a new EmFieldGroup
-    #
-    # Save it in database and return an instance*
-    # @param name str: The name of the new EmFieldGroup
-    # @param em_class EmClass : An EditorialModel::classes::EmClass instance
-    # @param **em_component_args : @ref EditorialModel::components::create()
-    # @throw EmComponentExistError If an EmFieldGroup with this name allready exists
-    # @throw TypeError If an argument is of an unexepted type
-    def create(cls, name, em_class, **em_component_args):
-        if not isinstance(name, str):
-            raise TypeError("Excepting <class str> as name. But got " + str(type(name)))
+    ## Check if the EmFieldGroup is valid
+    # @throw EmComponentCheckError if fails
+    def check(self):
+        super(EmFieldGroup, self).check()
+        em_class = self.model.component(self.class_id)
+        if not em_class:
+            raise EmComponentCheckError("class_id contains a non existing uid '%s'" % str(self.class_id))
         if not isinstance(em_class, EmClass):
-            raise TypeError("Excepting <class EmClass> as em_class. But got "+str(type(name)))
+            raise EmComponentCheckError("class_id cointains an uid from a component that is not an EmClass but an %s" % type(em_class))
 
-        return super(EmFieldGroup, cls).create(name=name, class_id=em_class.uid, **em_component_args)
+    ## Deletes a fieldgroup
+    # @return True if the deletion is possible, False if not
+    def delete_check(self):
+        # all the EmField objects contained in this fieldgroup should be deleted first
+        fieldgroup_fields = self.fields()
+        if len(fieldgroup_fields) > 0:
+            raise NotEmptyError("This Fieldgroup still contains fields. It can't be deleted then")
+        return True
 
     ## Get the list of associated fields
+    # if type_id, the fields will be filtered to represent selected fields of this EmType
     # @return A list of EmField instance
-    def fields(self):
-        meta = sqlutils.meta(self.db_engine)
-        field_table = sql.Table(EditorialModel.fields.EmField.table, meta)
-        req = field_table.select(field_table.c.uid).where(field_table.c.fieldgroup_id == self.uid)
-        conn = self.db_engine.connect()
-        res = conn.execute(req)
-        rows = res.fetchall()
-        conn.close()
-        return [EditorialModel.fields.EmField(row['uid']) for row in rows]
+    def fields(self, type_id=0):
+        if not type_id:
+            fields = [field for field in self.model.components(EmField) if field.fieldgroup_id == self.uid]
+        else:
+            # for an EmType, fields have to be filtered
+            em_type = self.model.component(type_id)
+            fields = []
+            for field in self.model.components(EmField):
+                if field.fieldgroup_id != self.uid or (field.optional and field.uid not in em_type.fields_list):
+                    continue
+                # don't include relational field if parent should not be included
+                if field.rel_field_id:
+                    parent = self.model.component(field.rel_field_id)
+                    if parent.optional and parent.uid not in em_type.fields_list:
+                        continue
+                fields.append(field)
+
+        return fields
+
+
+class NotEmptyError(Exception):
+    pass
