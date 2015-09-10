@@ -2,196 +2,189 @@
 
 from Lodel.utils.mlstring import MlString
 import datetime
+from django.db import models
 
-## get_field_type (Function)
+
+##
 #
-# returns an instance of the corresponding EmFieldType child class for a given name
+# returns an instance of the corresponding EmFieldType class for a given name
 #
 # @param name str: name of the field type
+# @param kwargs dict: options of the field type
 # @return EmFieldType
 def get_field_type(name):
-    class_name = 'EmField_' + name
+    class_name = 'EmField_'+name
     constructor = globals()[class_name]
     instance = constructor()
     return instance
 
 
-## EmFieldType (Class)
+##
 #
-# Generic field type
+# Generic Field type
 class EmFieldType():
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, **kwargs):
+        self.name = kwargs['name'] #TODO gérer le cas où le name n'est pas passé
         self.value = None
+        self.options = kwargs
 
     def from_python(self, value):
         self.value = value
 
 
-## EmField_integer (Class)
+##
 #
 # Integer field type
 class EmField_integer(EmFieldType):
 
-    def __init__(self):
-        super(EmField_integer, self).__init__('integer')
+    def __init__(self, **kwargs):
+        super(EmField_integer, self).__init__(**kwargs)
 
-    def from_string(self, value):
-        if value == '':
-            self.value = 0
-        else:
-            self.value = int(value)
-
-    def to_sql(self, value=None):
-        if value is None:
-            value = self.value
-        return value
-
-    def __int__(self):
-        return self.value
-
-    def __add__(self, other):
-        return self.value + other
-
-    def __sub__(self, other):
-        return self.value - other
-
-    def __mul__(self, other):
-        return self.value * other
-
-    def __div__(self, other):
-        return self.value / other
-
-    def __mod__(self, other):
-        return self.value % other
-
-    def __iadd__(self, other):
-        self.value = int(self.value + other)
-        return self
-
-    def __isub__(self, other):
-        self.value = int(self.value - other)
-        return self
-
-    def __imul__(self, other):
-        self.value = int(self.value * other)
-        return self
-
-    def __idiv__(self, other):
-        self.value = int(self.value / other)
-        return self
-
-    def sql_column(self):
-        return "int(11) NOT NULL"
+    def to_django(self):
+        return models.IntegerField(**self.options)
 
 
-## EmField_boolean (Class)
+##
 #
 # Boolean field type
 class EmField_boolean(EmFieldType):
 
     def __init__(self):
-        super(EmField_boolean, self).__init__('boolean')
+        super(EmField_boolean, self).__init__(**kwargs)
 
-    def from_string(self, value):
-        if value and value != "0":
-            self.value = True
+    def to_django(self):
+        if 'nullable' in self.options and self.options['nullable'] == 'true':
+            return models.NullBooleanField(**self.options)
         else:
-            self.value = False
+            return models.BooleanField(**self.options)
 
-    def to_sql(self, value=None):
-        if value is None:
-            value = self.value
-        return 1 if value else 0
-
-    def sql_column(self):
-        return "tinyint(1) DEFAULT NULL"
-
-
-## EmField_char (Class)
+##
 #
 # Varchar field type
 class EmField_char(EmFieldType):
 
-    def __init__(self):
-        super(EmField_char, self).__init__('char')
+    def __init__(self, **kwargs):
+        super(EmField_char, self).__init__(**kwargs)
 
-    def from_string(self, value):
-        if value:
-            self.value = value
-        else:
-            self.value = ''
-
-    def to_sql(self, value=None):
-        if value is None:
-            value = self.value
-        return value
-
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
+    def to_django(self):
+        return models.CharField(**self.options)
 
 
-## EmField_date (Class)
+##
 #
-# Date Field type
+# Date field type
 class EmField_date(EmFieldType):
 
-    def __init__(self):
-        super(EmField_date, self).__init__('date')
+    def __init__(self, **kwargs):
+        super(EmField_date, self).__init__(**kwargs)
 
-    def from_string(self, value):
-        if value:
-            self.value = value
-        else:
-            self.value = ''
-
-    def to_sql(self, value=None):
-        if value is None:
-            value = self.value
-        if not value:
-            return datetime.datetime.now()
-        return value
-
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
+    def to_django(self):
+        return models.DateField(**self.options)
 
 
-## EmField_mlstring (Class)
+##
 #
-# mlstring Field type
-class EmField_mlstring(EmFieldType):
+# Text field type
+class EmField_text(EmFieldType):
+    def __init__(self, **kwargs):
+        super(EmField_text, self).__init__(**kwargs)
 
-    def __init__(self):
-        super(EmField_mlstring, self).__init__('mlstring')
-
-    def from_string(self, value):
-        self.value = MlString.load(value)
-
-    def to_sql(self, value=None):
-        if value is None:
-            value = self.value
-        return str(value)
-
-    def sql_column(self):
-        return "varchar(250) DEFAULT NULL"
+    def to_django(self):
+        return models.TextField(**self.options)
 
 
-class EmField_icon(EmFieldType):
-    
-    def __init__(self):
-        super(EmField_icon, self).__init__('icon')
-        pass
+##
+#
+# Image field type
+class EmField_image(EmFieldType):
 
-    def from_string(self,value):
-        self.value = value
+    def __init__(self, **kwargs):
+        super(EmField_image, self).__init__(**kwargs)
 
-    def to_sql(self, value=None):
-        if value != None:
-            value = str(value)
-        return value
-
-    def sql_column(self):
-        pass
+    def to_django(self):
+        return models.ImageField(**self.options)
 
 
+##
+#
+# File field type
+class EmField_file(EmFieldType):
+
+    def __init__(self, **kwargs):
+        super(EmField_file, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.FileField(**self.options)
+
+
+##
+#
+# URL field type
+class EmField_url(EmFieldType):
+
+    def __init__(self, **kwargs):
+        super(EmField_url, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.URLField(**self.options)
+
+
+##
+#
+# Email field type
+class EmField_email(EmFieldType):
+
+    def __init__(self, **kwargs):
+        super(EmField_email, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.EmailField(**self.options)
+
+
+##
+#
+# Datetime field type
+class EmField_datetime(EmFieldType):
+
+    def __init__(self, **kwargs):
+        super(EmField_datetime, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.DateTimeField(**self.options)
+
+
+##
+#
+# Time field type
+class EmField_time(EmFieldType):
+
+    def __init__(self, **kwargs):
+        super(EmField_datetime, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.TimeField(**self.options)
+
+
+##
+#
+# mlstring field type
+class EmField_mlstring(EmField_char):
+
+    def __init__(self, **kwargs):
+        super(EmField_mlstring, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.CharField(**self.options)
+
+
+##
+#
+# Icon field type
+class EmField_icon(EmField_char):
+
+    def __init__(self, **kwargs):
+        super(EmField_icon, self).__init__(**kwargs)
+
+    def to_django(self):
+        return models.CharField(**self.options)
