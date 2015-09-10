@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-## @file json_backend.py
-# Load representation of an EditorialModel from a json file
+## @package EditorialModel.backend.json_backend
+# @brief Handle json files
+# 
+# Allows an editorial model to be loaded/saved in
+# json format
 
 import json
 import datetime

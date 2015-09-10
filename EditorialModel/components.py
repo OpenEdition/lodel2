@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-## @file components.py
-# Defines the EditorialModel::components::EmComponent class and the EditorialModel::components::ComponentNotExistError exception class
+## @package EditorialModel.components
+# @brief Base objects for all EditorialModel components
+# 
+# Defines the EditorialModel::components::EmComponent class
 
 import datetime
 import logging

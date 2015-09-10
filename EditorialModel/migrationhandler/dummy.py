@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+## @package EditorialModel.migrationhandler.dummy
+# @brief A dummy migration handler
+#
+# According to it every modifications are possible
+#
 
 ## Manage Model changes
 class DummyMigrationHandler(object):
