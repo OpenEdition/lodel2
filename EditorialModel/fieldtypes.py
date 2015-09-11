@@ -388,8 +388,8 @@ class EmField_integer(EmFieldType):
 
     ##
     # @todo catch cast error ?
-    def to_sql(self, value):
-        return value
+    #def to_sql(self, value):
+    #    return value
 
     def to_value(self, value):
         if value == None:
@@ -408,10 +408,9 @@ class EmField_boolean(EmFieldType):
         #Type enforcing
         kwargs = self.__class__._setType(kwargs, 'boolean')
         super(EmField_boolean, self).__init__(**kwargs)
-        pass
 
-    def to_sql(self, value):
-        return 1 if super(EmField_boolean, self).to_sql(value) else 0
+    #def to_sql(self, value):
+    #    return 1 if super(EmField_boolean, self).to_sql(value) else 0
 
     def to_value(self, value):
         if value == None:
@@ -425,7 +424,9 @@ class EmField_boolean(EmFieldType):
 # @note Default 'name' is 'char'
 # @note Default 'type_length' is 76
 class EmField_char(EmFieldType):
+
     default_length = 76
+
     def __init__(self, **kwargs):
         self._init(kwargs)
         kwargs = self.__class__._argDefault(kwargs, 'type_length', self.__class__.default_length)
@@ -433,8 +434,9 @@ class EmField_char(EmFieldType):
         #Type enforcing
         kwargs = self.__class__._setType(kwargs, 'varchar')
         super(EmField_char, self).__init__(**kwargs)
-    def to_sql(self, value):
-        return str(value)
+
+    #def to_sql(self, value):
+    #    return str(value)
 
 
 ## @brief Handles date fields
@@ -449,8 +451,8 @@ class EmField_date(EmFieldType):
         kwargs = self.__class__._setType(kwargs, 'datetime')
         super(EmField_date, self).__init__(**kwargs)
 
-    def to_sql(self, value):
-        return value #thanks to sqlalchemy
+    #def to_sql(self, value):
+    #    return value #thanks to sqlalchemy
 
     def to_value(self, value):
         if value == None:
@@ -470,8 +472,8 @@ class EmField_mlstring(EmField_char):
         kwargs = self.__class__._argDefault(kwargs, 'name', 'mlstr')
         super(EmField_mlstring, self).__init__(**kwargs)
 
-    def to_sql(self, value):
-        return value.__str__()
+    #def to_sql(self, value):
+    #    return value.__str__()
 
     def to_value(self, value):
         if value == None:
@@ -485,9 +487,8 @@ class EmField_mlstring(EmField_char):
 
 ## @brief Handles lodel uid fields
 class EmField_uid(EmField_integer):
+
     def __init__(self, **kwargs):
         self._init(kwargs)
         kwargs = self.__class__._argEnforce(kwargs, 'primarykey', True)
         super(EmField_uid, self).__init__(**kwargs)
-        pass
-
