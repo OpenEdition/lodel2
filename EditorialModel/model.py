@@ -141,10 +141,11 @@ class Model(object):
         datas['uid'] = self.new_uid()
         em_component = em_obj(self, **datas)
 
+        em_component.rank = em_component.get_max_rank()
+
         self._components['uids'][em_component.uid] = em_component
         self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
 
-        em_component.rank = em_component.get_max_rank()
         if rank != 'last':
             em_component.set_rank(1 if rank == 'first' else rank)
 

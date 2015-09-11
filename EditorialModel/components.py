@@ -116,7 +116,7 @@ class EmComponent(object):
     # @return A positive integer or -1 if no components
     def get_max_rank(self):
         components = self.same_rank_group()
-        return 1 if len(components) == 0 else components[-1].rank
+        return len(components) + 1
 
     ## Return an array of instances that are concerned by the same rank
     # @return An array of instances that are concerned by the same rank
