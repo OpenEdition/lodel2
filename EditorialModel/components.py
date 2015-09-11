@@ -113,7 +113,7 @@ class EmComponent(object):
     # @throw EmComponentCheckError if fails
     def check(self):
         self.model.sort_components(self.__class__)
-        if self.get_max_rank() > len(self.same_rank_group()) or self.rank <= 0:
+        if self.get_max_rank() != len(self.same_rank_group()) or self.rank <= 0:
             #Non continuous ranks
             for i, component in enumerate(self.same_rank_group()):
                 component.rank = i + 1
@@ -127,8 +127,7 @@ class EmComponent(object):
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
     # @return A positive integer or -1 if no components
     def get_max_rank(self):
-        components = self.same_rank_group()
-        return len(components) + 1
+        return len(self.same_rank_group())
 
     ## Return an array of instances that are concerned by the same rank
     # @return An array of instances that are concerned by the same rank
