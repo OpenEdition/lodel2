@@ -115,32 +115,32 @@ class DjangoMigrationHandler(object):
         #Creating the EmClasses models with document inheritance
         for emclass in classes:
             emclass_fields = {
-                'save' : self.get_save_fun(emclass.name, 'class', { 'classtype':emclass.classtype, 'class_name':emclass.name})
+                'save' : self.get_save_fun(emclass.uniq_name, 'class', { 'classtype':emclass.classtype, 'class_name':emclass.uniq_name})
             }
 
             #Addding non optionnal fields
             for emfield in emclass.fields():
                 if not emfield.optional:
                     # !!! Replace with fieldtype 2 django converter
-                    emclass_fields[emfield.name] = models.CharField(max_length=56, default=emfield.name)
-            print("Model for class %s created with fields : "%emclass.name, emclass_fields)
-            django_models['classes'][emclass.name] = create_model(emclass.name, emclass_fields, app_label, module_name, parent_class=django_models['doc'])
+                    emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
+            print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
+            django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, app_label, module_name, parent_class=django_models['doc'])
             
             #Creating the EmTypes models with EmClass inherithance
             for emtype in emclass.types():
                 emtype_fields = {
-                    'save': self.get_save_fun(emtype.name, 'type', { 'type_name':emtype.name }),
+                    'save': self.get_save_fun(emtype.uniq_name, 'type', { 'type_name':emtype.uniq_name }),
 
                 }
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
-                    emtype_fields[emfield.name] = models.CharField(max_length=56, default=emfield.name)
+                    emtype_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
                 #Adding superiors foreign key
                 for nature, superior in emtype.superiors().items():
-                    emtype_fields[nature] = models.ForeignKey(superior.name, related_name=emtype.name, null=True)
+                    emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
 
-                print("Model for type %s created with fields : "%emtype.name, emtype_fields)
-                django_models['types'][emtype.name] = create_model(emtype.name, emtype_fields, app_label, module_name, parent_class=django_models['classes'][emclass.name])
+                print("Model for type %s created with fields : "%emtype.uniq_name, emtype_fields)
+                django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, app_label, module_name, parent_class=django_models['classes'][emclass.uniq_name])
 
         return django_models
 
