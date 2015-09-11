@@ -4,6 +4,7 @@
 # Manage instance of an editorial model
 
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
@@ -15,7 +16,7 @@ import hashlib
 ## Manages the Editorial Model
 class Model(object):
 
-    components_class = [EmClass, EmField, EmFieldGroup, EmType]
+    components_class = [EmClass, EmType, EmFieldGroup, EmField]
 
     ## Constructor
     #
@@ -141,10 +142,10 @@ class Model(object):
         datas['uid'] = uid if uid else self.new_uid()
         em_component = em_obj(self, **datas)
 
-        em_component.rank = em_component.get_max_rank() + 1 #Inserting last by default
+        em_component.rank = em_component.get_max_rank() + 1 #  Inserting last by default
 
         self._components['uids'][em_component.uid] = em_component
-        self._components[self.name_from_emclass(em_component.__class__)].append(em_component)
+        self._components[component_type].append(em_component)
 
         if rank != 'last':
             em_component.set_rank(1 if rank == 'first' else rank)
@@ -193,3 +194,38 @@ class Model(object):
     ## Returns a list of all the EmClass objects of the model
     def classes(self):
         return list(self._components[self.name_from_emclass(EmClass)])
+
+    ## Use a new migration handler, re-apply all the ME to this handler
+    #
+    # @param new_mh MigrationHandler: A migration_handler object
+    # @warning : if a relational-attribute field (with 'rel_field_id') comes before it's relational field (with 'rel_to_type_id'), this will blow up
+    def migrate_handler(self, new_mh):
+        new_me = Model(EmBackendDummy(), new_mh)
+        relations = {'fields_list': [], 'subordinates_list': []}
+
+        # re-create component one by one, in components_class[] order
+        for cls in self.components_class:
+            for component in self.components(cls):
+                component_type = self.name_from_emclass(cls)
+                component_dump = component.attr_dump
+                del component_dump['model'], component_dump['_inited']
+                # Save relations between component to apply them later
+                for relation in relations.keys():
+                    if relation in component_dump and component_dump[relation]:
+                        relations[relation].append((component.uid, component_dump[relation]))
+                        del component_dump[relation]
+                new_me.create_component(component_type, component_dump, component.uid)
+
+        # apply selected field  to types
+        for fields_list in relations['fields_list']:
+            uid, fields = fields_list
+            for field_id in fields:
+                new_me.component(uid).select_field(new_me.component(field_id))
+        # add superiors to types
+        for subordinates_list in relations['subordinates_list']:
+            uid, sub_list = subordinates_list
+            for nature, subordinates in sub_list.items():
+                for subordinate_id in subordinates:
+                    new_me.component(subordinate_id).add_superior(new_me.component(uid), nature)
+
+        self.migration_handler = new_mh
