@@ -129,7 +129,7 @@ class Model(object):
     # @param datas dict : the options needed by the component creation
     # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
     # @todo Handle a raise from the migration handler
-    def create_component(self, component_type, datas):
+    def create_component(self, component_type, datas, uid=None):
 
         em_obj = self.emclass_from_name(component_type)
 
@@ -138,7 +138,7 @@ class Model(object):
             rank = datas['rank']
             del datas['rank']
 
-        datas['uid'] = self.new_uid()
+        datas['uid'] = uid if uid else self.new_uid()
         em_component = em_obj(self, **datas)
 
         em_component.rank = em_component.get_max_rank() + 1 #Inserting last by default
