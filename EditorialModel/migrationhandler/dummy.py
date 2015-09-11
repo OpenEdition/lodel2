@@ -14,6 +14,7 @@ class DummyMigrationHandler(object):
 
     ## @brief Record a change in the EditorialModel and indicate wether or not it is possible to make it
     # @note The states ( initial_state and new_state ) contains only fields that changes
+    # @param context model : The EditorialModel.model object to provide the global context
     # @param uid int : The uid of the change EmComponent
     # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
     # @param new_state dict | None : dict with field name as key and field value as value. Representing the new state. None mean component deletion
