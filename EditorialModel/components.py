@@ -57,6 +57,18 @@ class EmComponent(object):
     # @note Used at creation and deletion to call the migration handler
     def attr_dump(self):
         return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('__') or (fname == 'uid'))}
+
+    @property
+    ## @brief Provide a uniq name
+    #
+    # Identify a component with his type and name
+    def uniq_name(self):
+        uname = self.__class__.__name__
+        try:
+            uname += '_'+self.em_class.name
+        except AttributeError: pass
+        uname += '_'+self.name
+        return uname
         
     ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
     # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
