@@ -30,10 +30,10 @@
     "component":"EmField", "name":"prenom", "string":"{\"fre\":\"Preom\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"8", "rel_to_type_id":"", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
   },
   "11" : {
-    "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help_text":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
+    "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
   },
   "12" : {
-    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help_text":"{}", "rank":"4", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"17", "rel_to_type_id":"", "rel_field_id":"11", "optional":0, "internal":"", "icon":"0"
+    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"17", "rel_to_type_id":"", "rel_field_id":"11", "optional":0, "internal":"", "icon":"0"
   },
   "13" : {
     "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
