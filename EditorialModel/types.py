@@ -188,22 +188,19 @@ class EmType(EmComponent):
     def subordinates(self):
         return { nature: [ self.model.component(tuid) for tuid in self.subordinates_list[nature] ] for nature in self.subordinates_list }
 
-    ## @brief Get the list of subordinates EmType
-    # Get a list of EmType instance that have this EmType for superior
-    # @return Return a dict with relation nature as keys and values as a list of subordinates
-    # EmType instance
-    # @throw RuntimeError if a nature fetched from db is not valid
-    # @see EmType::_sub_or_sup()
-    # @todo reimplementation needed
+    ## @brief Get the list of superiors by relation's nature
+    # Get a list of EmType that are superiors of this type
+    # @return Return a dict with relation nature as keys and an EmType as value
+    # @throw RuntimeError if a nature has multiple superiors
     def superiors(self):
         superiors = {}
         for em_type in self.model.components(EmType):
-            for nature, field_uids in em_type.subordinates_list.items():
-                if self.uid in field_uids:
+            for nature, sub_uids in em_type.subordinates_list.items():
+                if self.uid in sub_uids:
                     if nature in superiors:
-                        superiors[nature].append(em_type)
+                        raise RuntimeError("Multiple superiors found for relation of nature '%s' for EmType %d"%(nature, self.uid))
                     else:
-                        superiors[nature] = [em_type]
+                        superiors[nature] = em_type
         return superiors
 
     ## Add a superior in the type hierarchy
