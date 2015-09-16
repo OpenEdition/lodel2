@@ -3,7 +3,7 @@
 from EditorialModel.components import EmComponent
 from EditorialModel.exceptions import EmComponentCheckError
 import EditorialModel
-
+from django.db import models
 
 ## EmField (Class)
 #
@@ -12,9 +12,25 @@ class EmField(EmComponent):
 
     ranked_in = 'fieldgroup_id'
 
+    fieldtypes = {
+        'int': models.IntegerField,
+        'integer': models.IntegerField,
+        'bigint': models.BigIntegerField,
+        'smallint': models.SmallIntegerField,
+        'boolean': models.BooleanField,
+        'bool': models.BooleanField,
+        'float': models.FloatField,
+        'char': models.CharField,
+        'varchar': models.CharField,
+        'text': models.TextField,
+        'time': models.TimeField,
+        'date': models.DateField,
+        'datetime': models.DateTimeField,
+    }
+
     ## Instanciate a new EmField
     # @todo define and test type for icon and fieldtype
-    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_to_type_id=None, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None):
+    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_to_type_id=None, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, **kwargs):
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
@@ -28,6 +44,8 @@ class EmField(EmComponent):
         self.rel_field_id = rel_field_id
         self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon
+        self.options = kwargs
+
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     ## Check if the EmField is valid
@@ -45,3 +63,9 @@ class EmField(EmComponent):
     # @todo Check if unconditionnal deletion is correct
     def delete_check(self):
         return True
+
+    def to_django(self):
+        if self.fieldtype == 'boolean' and ('nullable' in self.options and self.options['nullable'] == 1):
+            return models.NullBooleanField(**self.options)
+        
+        return self.fieldtypes[self.fieldtype](**self.options)
