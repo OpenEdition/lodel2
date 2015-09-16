@@ -246,7 +246,8 @@ class DjangoMigrationHandler(object):
             for emfield in emclass.fields():
                 if not emfield.optional:
                     # !!! Replace with fieldtype 2 django converter
-                    emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
+                    #emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
+                    emclass_fields[emfield.uniq_name] = emfield.to_django()
             #print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
             print("Model for class %s created"%emclass.uniq_name)
             django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
@@ -258,7 +259,8 @@ class DjangoMigrationHandler(object):
                 }
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
-                    emtype_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
+                    #emtype_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
+                    emtype_fields[emfield.uniq_name] = emfield.to_django()
                 #Adding superiors foreign key
                 for nature, superior in emtype.superiors().items():
                     emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
