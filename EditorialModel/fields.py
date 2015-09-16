@@ -65,6 +65,15 @@ class EmField(EmComponent):
         return True
 
     def to_django(self):
+        if self.fieldtype in ('varchar', 'char'):
+            max_length = None if 'max_length' not in self.options else self.options['max_length']
+            return self.fieldtypes[self.fieldtype](max_length=max_length, **self.options)
+
+        if self.fieldtype in ('time', 'datetime', 'date'):
+            auto_now = False if 'auto_now' not in self.options else self.options['auto_now']
+            auto_now_add = False if 'auto_now_add' not in self.options else self.options['auto_now_add']
+            return self.fieldtypes[self.fieldtype](auto_now=auto_now, auto_now_add=auto_now_add, **self.options)
+
         if self.fieldtype == 'boolean' and ('nullable' in self.options and self.options['nullable'] == 1):
             return models.NullBooleanField(**self.options)
 
