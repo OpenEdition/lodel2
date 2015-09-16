@@ -9,8 +9,8 @@ from EditorialModel.backend.json_backend import EmBackendJson
 
 if not settings.LODEL_MIGRATION_HANDLER_TESTS:
     me = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler = DummyMigrationHandler(True))
-    dmh = DjangoMigrationHandler()
-    models = dmh.me_to_models(me,'LodelTestInstance', 'LodelTestInstance.models')
+    dmh = DjangoMigrationHandler('LodelTestInstance', settings.DEBUG)
+    models = dmh.em_to_models(me)
 elif settings.DEBUG:
     print("Making migrations tests, don't generate the models in the models.py file but within the migrations handler check process")
 

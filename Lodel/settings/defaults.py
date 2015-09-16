@@ -118,4 +118,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Lodel configurations
-LODEL_MIGRATION_HANDLER_TESTS = True
+LODEL_MIGRATION_HANDLER_TESTS = False

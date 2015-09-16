@@ -77,6 +77,9 @@ class DjangoMigrationHandler(object):
 
     ## @brief Record a change in the EditorialModel and indicate wether or not it is possible to make it
     # @note The states ( initial_state and new_state ) contains only fields that changes
+    #
+    # @note Migration is not applied by this method. This method only checks if the new em is valid
+    #
     # @param em model : The EditorialModel.model object to provide the global context
     # @param uid int : The uid of the change EmComponent
     # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
@@ -98,7 +101,8 @@ class DjangoMigrationHandler(object):
         self.em_to_models(em)
         try:
             #Calling makemigrations to see if the migration is valid
-            django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, merge=True, noinput=True)
+            #django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, merge=True, noinput=True)
+            django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, noinput=True)
         except django.core.management.base.CommandError as e:
             raise MigrationHandlerChangeError(str(e))
     
@@ -131,6 +135,7 @@ class DjangoMigrationHandler(object):
         pass
     
     ## @brief Not usefull ?
+    # @note Maybe we can (have to?) use it to actually do migrations
     def register_model_state(self, em, state_hash):
         print('OHOHOH !!! i\'ve been called')
         pass
