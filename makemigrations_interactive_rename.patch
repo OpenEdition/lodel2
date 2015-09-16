@@ -5,7 +5,7 @@
              return self.handle_merge(loader, conflicts)
  
 +        questionner_kwargs = {
-+            'specified_apps': app_label,
++            'specified_apps': app_labels,
 +            'dry_run': self.dry_run
 +        }
 +        if self.interactive:

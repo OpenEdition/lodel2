@@ -70,10 +70,11 @@ class DjangoMigrationHandler(object):
     ##
     # @param app_name str : The django application name for models generation
     # @param debug bool : Set to True to be in debug mode
-    def __init__(self, app_name, debug=False):
+    def __init__(self, app_name, debug=False, dryrun=False):
         self.models = {}
         self.debug = debug
         self.app_name = app_name
+        self.dryrun = dryrun
 
     ## @brief Record a change in the EditorialModel and indicate wether or not it is possible to make it
     # @note The states ( initial_state and new_state ) contains only fields that changes
@@ -143,6 +144,8 @@ class DjangoMigrationHandler(object):
     # @param state_hash str : Note usefull (for the moment ?)
     # @todo Rename this method in something like "model_migrate"
     def register_model_state(self, em, state_hash):
+        if self.dryrun:
+            return
         if self.debug:
             print("Applying editorial model change")
 
@@ -236,7 +239,7 @@ class DjangoMigrationHandler(object):
         #Creating the EmClasses models with document inheritance
         for emclass in classes:
             emclass_fields = {
-                'save' : self.get_save_fun(emclass.uniq_name, 'class', { 'classtype':emclass.classtype, 'class_name':emclass.uniq_name})
+                'save' : self.get_save_fun(emclass.uniq_name, 'class', { 'classtype':emclass.classtype, 'class_name':emclass.uniq_name}),
             }
 
             #Addding non optionnal fields
@@ -252,7 +255,6 @@ class DjangoMigrationHandler(object):
             for emtype in emclass.types():
                 emtype_fields = {
                     'save': self.get_save_fun(emtype.uniq_name, 'type', { 'type_name':emtype.uniq_name }),
-
                 }
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
