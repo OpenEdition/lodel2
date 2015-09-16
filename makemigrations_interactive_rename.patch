@@ -1,0 +1,24 @@
+--- orig/django/core/management/commands/makemigrations.py	2015-09-16 11:52:59.456895569 +0200
++++ new/django/core/management/commands/makemigrations.py	2015-09-16 11:51:34.344896348 +0200
+@@ -84,11 +84,20 @@ class Command(BaseCommand):
+         if self.merge and conflicts:
+             return self.handle_merge(loader, conflicts)
+ 
++        questionner_kwargs = {
++            'specified_apps': app_label,
++            'dry_run': self.dry_run
++        }
++        if self.interactive:
++            questionner = InteractiveMigrationQuestioner(**questionner_kwargs)
++        else:
++            questionner = MigrationQuestioner(**questionner_kwargs)
++
+         # Set up autodetector
+         autodetector = MigrationAutodetector(
+             loader.project_state(),
+             ProjectState.from_apps(apps),
+-            InteractiveMigrationQuestioner(specified_apps=app_labels, dry_run=self.dry_run),
++            questionner
+         )
+ 
+         # If they want to make an empty migration, make one for each app

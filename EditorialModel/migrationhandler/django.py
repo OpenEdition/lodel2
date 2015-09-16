@@ -85,6 +85,10 @@ class DjangoMigrationHandler(object):
     # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
     # @param new_state dict | None : dict with field name as key and field value as value. Representing the new state. None mean component deletion
     # @throw EditorialModel.exceptions.MigrationHandlerChangeError if the change was refused
+    # @todo Some tests about strating django in this method
+    # @todo Rename in something like "validate_change"
+    #
+    # @warning broken because of : https://code.djangoproject.com/ticket/24735 you have to patch django/core/management/commands/makemigrations.py w/django/core/management/commands/makemigrations.py
     def register_change(self, em, uid, initial_state, new_state):
         
         #Starting django
@@ -101,8 +105,8 @@ class DjangoMigrationHandler(object):
         self.em_to_models(em)
         try:
             #Calling makemigrations to see if the migration is valid
-            #django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, merge=True, noinput=True)
-            django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, noinput=True)
+            #django_cmd('makemigrations', self.app_name, dry_run=True, interactive=False, merge=True)
+            django_cmd('makemigrations', self.app_name, dry_run=True, interactive=False)
         except django.core.management.base.CommandError as e:
             raise MigrationHandlerChangeError(str(e))
     
@@ -134,10 +138,35 @@ class DjangoMigrationHandler(object):
             print("##############\n")
         pass
     
-    ## @brief Not usefull ?
-    # @note Maybe we can (have to?) use it to actually do migrations
+    ## @brief Register a new model state and update the data representation given the new state
+    # @param em model : The EditorialModel to migrate
+    # @param state_hash str : Note usefull (for the moment ?)
+    # @todo Rename this method in something like "model_migrate"
     def register_model_state(self, em, state_hash):
-        print('OHOHOH !!! i\'ve been called')
+        if self.debug:
+            print("Applying editorial model change")
+
+        #Starting django
+        os.environ['LODEL_MIGRATION_HANDLER_TESTS'] = 'YES'
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
+        django.setup()
+        from django.contrib import admin
+        from django.core.management import call_command as django_cmd
+
+        #Generation django models
+        self.em_to_models(em)
+        try:
+            #Calling makemigrations
+            django_cmd('makemigrations', self.app_name, interactive=False)
+        except django.core.management.base.CommandError as e:
+            raise MigrationHandlerChangeError(str(e))
+
+        try:
+            #Calling migrate to update the database schema
+            django_cmd('migrate', self.app_name, interactive=False, noinput=True)
+        except django.core.management.base.CommandError as e:
+            raise MigrationHandlerChangeError("Unable to migrate to new model state : %s"%e)
+
         pass
 
     ## @brief Return the models save method
