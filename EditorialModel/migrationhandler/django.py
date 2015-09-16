@@ -12,12 +12,16 @@ from EditorialModel.exceptions import *
 
 #django.conf.settings.configure(DEBUG=True)
 
-## @package EditorialModel.migrationhandler.django
-# @brief A migration handler for django ORM
-#
-# Create django models according to the editorial model
 
-##
+## @brief Create a django model
+# @param name str : The django model name
+# @param fields dict : A dict that contains fields name and type ( str => DjangoField )
+# @param app_label str : The name of the applications that will have those models
+# @param module str : The module name this model will belong to
+# @param options dict : Dict of options (name => value)
+# @param admin_opts dict : Dict of options for admin part of this model
+# @param parent_class str : Parent class name
+# @return A dynamically created django model
 # @source https://code.djangoproject.com/wiki/DynamicModels
 #
 def create_model(name, fields=None, app_label='', module='', options=None, admin_opts=None, parent_class=None):
@@ -56,10 +60,12 @@ def create_model(name, fields=None, app_label='', module='', options=None, admin
     return model
 
 
+## @package EditorialModel.migrationhandler.django
+# @brief A migration handler for django ORM
+#
+# Create django models according to the editorial model
 
 class DjangoMigrationHandler(object):
-
-    app_label = 'lodel'
 
     ##
     # @param app_name str : The django application name for models generation
@@ -68,6 +74,7 @@ class DjangoMigrationHandler(object):
         self.models = {}
         self.debug = debug
         self.app_name = app_name
+
     ## @brief Record a change in the EditorialModel and indicate wether or not it is possible to make it
     # @note The states ( initial_state and new_state ) contains only fields that changes
     # @param em model : The EditorialModel.model object to provide the global context
@@ -76,14 +83,29 @@ class DjangoMigrationHandler(object):
     # @param new_state dict | None : dict with field name as key and field value as value. Representing the new state. None mean component deletion
     # @throw EditorialModel.exceptions.MigrationHandlerChangeError if the change was refused
     def register_change(self, em, uid, initial_state, new_state):
-
+        
+        #Starting django
+        os.environ['LODEL_MIGRATION_HANDLER_TESTS'] = 'YES'
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
         django.setup()
         from django.contrib import admin
         from django.core.management import call_command as django_cmd
 
+        if self.debug:
+            self.dump_migration(uid, initial_state, new_state)
 
+        #Generation django models
+        self.em_to_models(em)
+        try:
+            #Calling makemigrations to see if the migration is valid
+            django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, merge=True, noinput=True)
+        except django.core.management.base.CommandError as e:
+            raise MigrationHandlerChangeError(str(e))
+    
+        return True
 
+    ## @brief Print a debug message representing a migration
+    def dump_migration(self, uid, initial_state, new_state):
         if self.debug:
             print("\n##############")
             print("DummyMigrationHandler debug. Changes for component with uid %d :" % uid)
@@ -106,21 +128,11 @@ class DjangoMigrationHandler(object):
                         str_chg += " deletion "
                     print(str_chg)
             print("##############\n")
-
-        self.em_to_models(em,self.app_name, self.app_name+'models')
-        try:
-            #ret = django_cmd('makemigrations', self.app_name, interactive=False, noinput=True, dryrun=True, traceback=True)
-            #django_cmd('makemigrations', self.app_name, dry-run=True, intercative=True, noinput=True)
-            django_cmd('makemigrations', self.app_name, dry_run=True, intercative=True, merge=True, noinput=True)
-        except django.core.management.base.CommandError as e:
-            raise MigrationHandlerChangeError(str(e))
-    
-        return True
         pass
-
+    
+    ## @brief Not usefull ?
     def register_model_state(self, em, state_hash):
         print('OHOHOH !!! i\'ve been called')
-        #ret = django_cmd('makemigrations', '--noinput', '--traceback', self.app_name)
         pass
 
     ## @brief Return the models save method
@@ -145,22 +157,24 @@ class DjangoMigrationHandler(object):
                 super(classname, self).save(*args, **kwargs)
 
         return save
-
+    
     ## @brief Create django models from an EditorialModel.model object
-    # @param me EditorialModel.model.Model : The editorial model instance
+    # @param edMod EditorialModel.model.Model : The editorial model instance
     # @return a dict with all the models
     # @todo Handle fieldgroups
     # @todo write and use a function to forge models name from EmClasses and EmTypes names
     # @note There is a problem with the related_name for superiors fk : The related name cannot be subordinates, it has to be the subordinates em_type name
-    def em_to_models(self, me, app_label, module_name):
+    def em_to_models(self, edMod):
         
-        #Purging django models cache
-        if app_label in django_cache.all_models:
-            for modname in django_cache.all_models[app_label]:
-                del(django_cache.all_models[app_label][modname])
-            #del(django_cache.all_models[app_label])
+        module_name = self.app_name+'models'
 
-        #django_cache.clear_cache()
+        #Purging django models cache
+        if self.app_name in django_cache.all_models:
+            for modname in django_cache.all_models[self.app_name]:
+                del(django_cache.all_models[self.app_name][modname])
+            #del(django_cache.all_models[self.app_name])
+
+        #This cache at instance level seems to be useless...
         del(self.models)
         self.models = {}
 
@@ -179,11 +193,11 @@ class DjangoMigrationHandler(object):
         }
 
         #Creating the base model document
-        document_model = create_model('document', document_attrs, app_label, module_name)
+        document_model = create_model('document', document_attrs, self.app_name, module_name)
 
         django_models = {'doc' : document_model, 'classes':{}, 'types':{} }
 
-        classes = me.classes()
+        classes = edMod.classes()
 
         #Creating the EmClasses models with document inheritance
         for emclass in classes:
@@ -198,7 +212,7 @@ class DjangoMigrationHandler(object):
                     emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
             #print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
             print("Model for class %s created"%emclass.uniq_name)
-            django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, app_label, module_name, parent_class=django_models['doc'])
+            django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
             
             #Creating the EmTypes models with EmClass inherithance
             for emtype in emclass.types():
@@ -213,12 +227,11 @@ class DjangoMigrationHandler(object):
                 for nature, superior in emtype.superiors().items():
                     emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
 
-                #print("Model for type %s created with fields : "%emtype.uniq_name, emtype_fields)
-                print("Model for type %s created"%emtype.uniq_name)
-                django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, app_label, module_name, parent_class=django_models['classes'][emclass.uniq_name])
+                if self.debug:
+                    print("Model for type %s created"%emtype.uniq_name)
+                django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, self.app_name, module_name, parent_class=django_models['classes'][emclass.uniq_name])
 
         self.models=django_models
         pass
-
 
 
