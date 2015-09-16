@@ -67,5 +67,5 @@ class EmField(EmComponent):
     def to_django(self):
         if self.fieldtype == 'boolean' and ('nullable' in self.options and self.options['nullable'] == 1):
             return models.NullBooleanField(**self.options)
-        
+
         return self.fieldtypes[self.fieldtype](**self.options)
