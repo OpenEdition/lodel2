@@ -110,39 +110,39 @@ class EmType(EmComponent):
     # Indicates that an optional field is used
     #
     # @param field EmField: The optional field to select
-    # @return True if success False if failed
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    # @see EmType::_opt_field_act()
+    # @throw MigrationHandlerChangeError if migration handler is not happy with the change
+    # @see EmType::_change_field_list()
     def select_field(self, field):
         if field.uid in self.fields_list:
             return True
-        return self._change_field_list(field, True)
+        self._change_field_list(field, True)
 
     ## Unselect_field (Function)
     #
     # Indicates that an optional field will not be used
     #
     # @param field EmField: The optional field to unselect
-    # @return True if success False if fails
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    # @see EmType::_opt_field_act()
+    # @throw MigrationHandlerChangeError if migration handler is not happy with the change
+    # @see EmType::_change_field_list()
     def unselect_field(self, field):
         if field.uid not in self.fields_list:
             return True
-        return self._change_field_list(field, False)
+        self._change_field_list(field, False)
 
     ## @brief Select or unselect an optional field
     # @param field EmField: The EmField to select or unselect
     # @param select bool: If True select field, else unselect it
-    # @return True if success False if fails
     #
     # @throw TypeError if field is not an EmField instance
     # @throw ValueError if field is not optional or is not associated with this type
-    def _change_field_list(self, field, add=True):  # TODO voir si on conserve l'argument "select"
+    # @throw MigrationHandlerChangeError if migration handler is not happy with the change
+    def _change_field_list(self, field, select=True):
         if not isinstance(field, EmField):
             raise TypeError("Excepted <class EmField> as field argument. But got " + str(type(field)))
         if not field in self.em_class.fields():
@@ -150,12 +150,21 @@ class EmType(EmComponent):
         if not field.optional:
             raise ValueError("This field is not optional")
 
-        if add:
-            self.fields_list.append(field.uid)
-        else:
-            self.fields_list.remove(field.uid)
+        try:
+            if select:
+                self.fields_list.append(field.uid)
+                self.model.migration_handler.register_change(self.model, self.uid, None, {'fields_list': field.uid})
+            else:
+                self.fields_list.remove(field.uid)
+                self.model.migration_handler.register_change(self.model, self.uid, {'fields_list': field.uid}, None)
+        except MigrationHandlerChangeError as exception_object:
+            if select:
+                self.fields_list.remove(field.uid)
+            else:
+                self.fields_list.append(field.uid)
+            raise exception_object
 
-        return True
+        self.model.migration_handler.register_model_state(self.model, hash(self.model))
 
     ## Get the list of associated hooks
     # @note Not conceptualized yet
