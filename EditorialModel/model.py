@@ -3,6 +3,7 @@
 ## @file editorialmodel.py
 # Manage instance of an editorial model
 
+import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
@@ -53,6 +54,9 @@ class Model(object):
     # @return A class name as string or False if cls is not an EmComponent child class
     def name_from_emclass(em_class):
         if em_class not in Model.components_class:
+            spl = em_class.__module__.split('.')
+            if spl[1] == 'fieldtypes':
+                return 'EmField'
             return False
         return em_class.__name__
 
@@ -67,11 +71,20 @@ class Model(object):
             #Store and delete the EmComponent class name from datas
             cls_name = kwargs['component']
             del kwargs['component']
-            cls = self.emclass_from_name(cls_name)
+            
+            if cls_name == 'EmField':
+                if not 'type' in kwargs:
+                    raise AttributeError("Missing 'type' from EmField instanciation")
+
+                cls = EditorialModel.fields.EmField.get_field_class(kwargs['type'])
+                del(kwargs['type'])
+            else:
+                cls = self.emclass_from_name(cls_name)
+
             if cls:
                 kwargs['uid'] = uid
                 # create a dict for the component and one indexed by uids, store instanciated component in it
-                self._components['uids'][uid] = cls(self, **kwargs)
+                self._components['uids'][uid] = cls(model=self, **kwargs)
                 self._components[cls_name].append(self._components['uids'][uid])
             else:
                 raise ValueError("Unknow EmComponent class : '" + cls_name + "'")
@@ -109,9 +122,10 @@ class Model(object):
     ## Sort components by rank in Model::_components
     # @param emclass pythonClass : The type of components to sort
     # @throw AttributeError if emclass is not valid
+    # @warning disabled the test on component_class because of EmField new way of working
     def sort_components(self, component_class):
-        if component_class not in self.components_class:
-            raise AttributeError("Bad argument emclass : '" + component_class + "', excpeting one of " + str(self.components_class))
+        #if component_class not in self.components_class:
+        #    raise AttributeError("Bad argument emclass : '" + str(component_class) + "', excpeting one of " + str(self.components_class))
 
         self._components[self.name_from_emclass(component_class)] = sorted(self.components(component_class), key=lambda comp: comp.rank)
 
@@ -129,9 +143,16 @@ class Model(object):
     # @param datas dict : the options needed by the component creation
     # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
     # @todo Handle a raise from the migration handler
+    # @todo Transform the datas arg in **datas ?
     def create_component(self, component_type, datas):
-
-        em_obj = self.emclass_from_name(component_type)
+        
+        if component_type == 'EmField':
+            if not 'type' in datas:
+                raise AttributeError("Missing 'type' from EmField instanciation")
+            em_obj = EditorialModel.fields.EmField.get_field_class(datas['type'])
+            del(datas['type'])
+        else:
+            em_obj = self.emclass_from_name(component_type)
 
         rank = 'last'
         if 'rank' in datas:
