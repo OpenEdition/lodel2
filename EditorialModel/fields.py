@@ -48,6 +48,14 @@ class EmField(EmComponent):
 
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
+    ## @brief Return the list of relation fields for a rel_to_type
+    # @return None if the field is not a rel_to_type else return a list of EmField
+    def rel_to_type_fields(self):
+        if not self.rel_to_type_id:
+            return None
+        
+        return [ f for f in self.model.components(EmField) if f.rel_field_id == self.uid ]
+
     ## Check if the EmField is valid
     # @return True if valid False if not
     def check(self):

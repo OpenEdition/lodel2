@@ -69,5 +69,5 @@ class EmBackendJson(object):
     #
     # @return bool
     # @todo à implémenter
-    def save(self):
+    def save(self, em):
         return True

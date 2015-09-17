@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 
 ## @file editorialmodel.py
 # Manage instance of an editorial model
@@ -91,7 +91,7 @@ class Model(object):
 
     ## Saves data using the current backend
     def save(self):
-        return self.backend.save()
+        return self.backend.save(self)
 
     ## Given a EmComponent child class return a list of instances
     # @param cls EmComponent : A python class

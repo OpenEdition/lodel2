@@ -20,6 +20,10 @@ class EmFieldGroup(EmComponent):
         self.check_type('class_id', int)
         super(EmFieldGroup, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
+    @property
+    def em_class(self):
+        return self.model.component(self.class_id)
+
     ## Check if the EmFieldGroup is valid
     # @throw EmComponentCheckError if fails
     def check(self):
