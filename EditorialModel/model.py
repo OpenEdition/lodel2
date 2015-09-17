@@ -73,9 +73,9 @@ class Model(object):
             del kwargs['component']
             
             if cls_name == 'EmField':
+                #Special EmField process because of fieldtypes
                 if not 'type' in kwargs:
                     raise AttributeError("Missing 'type' from EmField instanciation")
-
                 cls = EditorialModel.fields.EmField.get_field_class(kwargs['type'])
                 del(kwargs['type'])
             else:
@@ -147,6 +147,7 @@ class Model(object):
     def create_component(self, component_type, datas):
         
         if component_type == 'EmField':
+            #special process for EmField
             if not 'type' in datas:
                 raise AttributeError("Missing 'type' from EmField instanciation")
             em_obj = EditorialModel.fields.EmField.get_field_class(datas['type'])

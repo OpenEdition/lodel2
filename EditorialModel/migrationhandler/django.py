@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#from django.conf import settings
-#settings.configure(DEBUG=True)
 import os
 import sys
 
@@ -12,7 +10,6 @@ from django.core.exceptions import ValidationError
 
 from EditorialModel.exceptions import *
 
-#django.conf.settings.configure(DEBUG=True)
 
 
 ## @brief Create a django model
@@ -24,7 +21,7 @@ from EditorialModel.exceptions import *
 # @param admin_opts dict : Dict of options for admin part of this model
 # @param parent_class str : Parent class name
 # @return A dynamically created django model
-# @source https://code.djangoproject.com/wiki/DynamicModels
+# @note Source : https://code.djangoproject.com/wiki/DynamicModels
 #
 def create_model(name, fields=None, app_label='', module='', options=None, admin_opts=None, parent_class=None):
     class Meta:
@@ -337,7 +334,7 @@ class DjangoMigrationHandler(object):
                 kwargs['through'] = through_model_name
             
             return models.ManyToManyField(f.get_related_type().uniq_name, **kwargs)
-        else:
+        else: #Unknow data type
             raise NotImplemented("The conversion to django fields is not yet implemented for %s field type"%f.ftype)
 
 

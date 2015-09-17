@@ -13,10 +13,12 @@ class Command(BaseCommand):
     help = 'List all the possible field types'
 
     def handle(self, *args, **options):
+        ftl = EmField.fieldtypes_list()
+        ftl.sort()
         if options['silent']:
-            for ftype in EmField.fieldtypes_list():
-                self.stdout.write("\t%s\n"%ftype)
+            for ftype in ftl:
+                self.stdout.write("%s\n"%ftype)
         else:
             self.stdout.write("Field types list : ")
-            for ftype in EmField.fieldtypes_list():
+            for ftype in ftl:
                 self.stdout.write("\t{0:15} {1}".format(ftype, EmField.get_field_class(ftype).help))
