@@ -4,10 +4,12 @@
 #settings.configure(DEBUG=True)
 import os
 import sys
-from django.db import models
-import django
 
+import django
+from django.db import models
 from django.db.models.loading import cache as django_cache
+from django.core.exceptions import ValidationError
+
 from EditorialModel.exceptions import *
 
 #django.conf.settings.configure(DEBUG=True)
@@ -70,6 +72,7 @@ class DjangoMigrationHandler(object):
     ##
     # @param app_name str : The django application name for models generation
     # @param debug bool : Set to True to be in debug mode
+    # @warning DONT use self.models it does not contains all the models (none of the through models for rel2type)
     def __init__(self, app_name, debug=False, dryrun=False):
         self.models = {}
         self.debug = debug
@@ -247,7 +250,7 @@ class DjangoMigrationHandler(object):
                 if not emfield.optional:
                     # !!! Replace with fieldtype 2 django converter
                     #emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
-                    emclass_fields[emfield.uniq_name] = emfield.to_django()
+                    emclass_fields[emfield.uniq_name] = self.field_to_django(emfield, emclass)
             #print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
             print("Model for class %s created"%emclass.uniq_name)
             django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
@@ -260,7 +263,7 @@ class DjangoMigrationHandler(object):
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
                     #emtype_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
-                    emtype_fields[emfield.uniq_name] = emfield.to_django()
+                    emtype_fields[emfield.uniq_name] = self.field_to_django(emfield, emtype)
                 #Adding superiors foreign key
                 for nature, superior in emtype.superiors().items():
                     emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
@@ -272,4 +275,55 @@ class DjangoMigrationHandler(object):
         self.models=django_models
         pass
 
+    ## @brief Return a good django field type given a field
+    # @param f EmField : an EmField object
+    # @param assoc_comp EmComponent : The associated component (type or class)
+    def field_to_django(self, f, assoc_comp):
+
+        args = dict()
+        args['null'] = f.nullable
+        if not (f.default is None):
+            args['default'] = f.default
+        v_fun = f.validation_function(raise_e = ValidationError)
+        if v_fun:
+            args['validators'] = [v_fun]
+
+        if f.ftype == 'char':
+            args['max_length'] = f.max_length
+            return models.CharField(**args)
+        elif f.ftype == 'int':
+            return models.IntegerField(**args)
+        elif f.ftype == 'rel2type':
+
+            if assoc_comp == None:
+                raise RuntimeError("Rel2type field in a rel2type table is not allowed")
+            #create first a throught model if there is data field associated with the relation
+            kwargs = dict()
+
+            relf_l = f.get_related_fields()
+            if len(relf_l) > 0:
+                through_fields = {}
+                
+                #The two FK of the through model
+                through_fields[assoc_comp.name] = models.ForeignKey(assoc_comp.uniq_name)
+                rtype = f.get_related_type()
+                through_fields[rtype.name] = models.ForeignKey(rtype.uniq_name)
+
+                for relf in relf_l:
+                    through_fields[relf.name] = self.field_to_django(relf, None)
+
+                #through_model_name = f.uniq_name+assoc_comp.uniq_name+'to'+rtype.uniq_name
+                through_model_name = f.name+assoc_comp.name+'to'+rtype.name
+                module_name = self.app_name+'models'
+                #model created
+                through_model = create_model(through_model_name, through_fields, self.app_name, module_name)
+                kwargs['through'] = through_model_name
+            
+            print('WOW !')
+            return models.ManyToManyField(f.get_related_type().uniq_name, **kwargs)
+        else:
+            raise NotImplemented("The conversion to django fields is not yet implemented for %s field type"%f.ftype)
+
+
+        
 
