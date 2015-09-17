@@ -2,14 +2,14 @@
 
 from EditorialModel.fields import EmField
 
-class EmFieldChar(EmField):
+class EmFieldFile(EmField):
     
-    ftype = 'char'
+    ftype = 'file'
     
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
-    def __init__(self, max_length=64, **kwargs):
-        self.max_length = max_length
+    def __init__(self, upload_path = None,**kwargs):
+        self.upload_path = upload_path
         super(EmFieldChar, self).__init__(**kwargs)
 
-fclass = EmFieldChar
+fclass=EmFieldFile

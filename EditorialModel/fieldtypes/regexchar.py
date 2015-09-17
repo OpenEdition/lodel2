@@ -5,6 +5,9 @@ from EditorialModel.fieldtypes import EmFieldChar
 
 class EmFieldCharRegex(EmFieldChar):
     
+    ## @brief A char field validated with a regex
+    # @param regex str : a regex string (passed as argument to re.compile() )
+    # @param max_length int : the maximum length for this field
     def __init__(self, regex = '', **kwargs):
         self.regex = regex
         v_re = re.compile(regex) #trigger an error if invalid regex

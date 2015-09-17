@@ -278,8 +278,11 @@ class DjangoMigrationHandler(object):
     ## @brief Return a good django field type given a field
     # @param f EmField : an EmField object
     # @param assoc_comp EmComponent : The associated component (type or class)
+    # @return A django field instance
+    # @note The manytomany fields created with the rel2type field has no related_name associated to it
     def field_to_django(self, f, assoc_comp):
 
+        #Building the args dictionnary for django field instanciation
         args = dict()
         args['null'] = f.nullable
         if not (f.default is None):
@@ -287,13 +290,22 @@ class DjangoMigrationHandler(object):
         v_fun = f.validation_function(raise_e = ValidationError)
         if v_fun:
             args['validators'] = [v_fun]
-
-        if f.ftype == 'char':
+        if f.uniq:
+            args['unique'] = True
+        
+        # Field instanciation
+        if f.ftype == 'char': #varchar field
             args['max_length'] = f.max_length
             return models.CharField(**args)
-        elif f.ftype == 'int':
+        elif f.ftype == 'int': #integer field
             return models.IntegerField(**args)
-        elif f.ftype == 'rel2type':
+        elif f.ftype == 'text': #text field
+            return models.TextField(**args)
+        elif f.ftype == 'datetime': #Datetime field
+            args['auto_now'] = f.now_on_update
+            args['auto_now_add'] = f.now_on_create
+            return models.DateTimeField(**args)
+        elif f.ftype == 'rel2type': #Relation to type
 
             if assoc_comp == None:
                 raise RuntimeError("Rel2type field in a rel2type table is not allowed")

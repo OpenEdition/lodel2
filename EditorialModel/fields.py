@@ -35,7 +35,7 @@ class EmField(EmComponent):
     ## Instanciate a new EmField
     # @todo define and test type for icon and fieldtype
     # @warning nullable == True by default
-    def __init__(self, model, uid, name, fieldgroup_id, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable = True, default = None, **kwargs):
+    def __init__(self, model, uid, name, fieldgroup_id, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable = True, default = None, uniq = False, **kwargs):
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
@@ -47,8 +47,10 @@ class EmField(EmComponent):
         self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon
 
+        #Field type elements
         self.nullable = nullable
         self.default = default
+        self.uniq = uniq
 
         self.options = kwargs
 
