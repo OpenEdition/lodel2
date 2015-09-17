@@ -5,6 +5,7 @@ import importlib
 from EditorialModel.components import EmComponent
 from EditorialModel.exceptions import EmComponentCheckError
 import EditorialModel
+import EditorialModel.fieldtypes
 from django.db import models
 
 ## EmField (Class)
@@ -15,27 +16,15 @@ class EmField(EmComponent):
     ranked_in = 'fieldgroup_id'
 
     ftype = None
-
-    fieldtypes = {
-        'int': models.IntegerField,
-        'integer': models.IntegerField,
-        'bigint': models.BigIntegerField,
-        'smallint': models.SmallIntegerField,
-        'boolean': models.BooleanField,
-        'bool': models.BooleanField,
-        'float': models.FloatField,
-        'char': models.CharField,
-        'varchar': models.CharField,
-        'text': models.TextField,
-        'time': models.TimeField,
-        'date': models.DateField,
-        'datetime': models.DateTimeField,
-    }
+    help = 'Default help text'
 
     ## Instanciate a new EmField
     # @todo define and test type for icon and fieldtype
     # @warning nullable == True by default
     def __init__(self, model, uid, name, fieldgroup_id, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable = True, default = None, uniq = False, **kwargs):
+
+        if self.ftype == None:
+            raise NotImplementedError("Trying to instanciate an EmField and not one of the fieldtypes child classes")
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
@@ -57,9 +46,18 @@ class EmField(EmComponent):
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     @staticmethod
+    ## @brief Return an EmField subclass given a wanted field type
+    # @return An EmField subclass
+    # @throw When not found
+    # @see EmField::fieldtypes()
     def get_field_class(ftype, **kwargs):
         ftype_module = importlib.import_module('EditorialModel.fieldtypes.%s'%ftype)
         return ftype_module.fclass
+
+    @staticmethod
+    ## @brief Return the list of allowed field type
+    def fieldtypes_list():
+        return [ f for f in EditorialModel.fieldtypes.__all__ if f != '__init__' ]
 
     ## @brief Abstract method that should return a validation function
     # @param raise_e Exception : if not valid raise this exception
@@ -98,19 +96,3 @@ class EmField(EmComponent):
     def delete_check(self):
         return True
 
-    """
-    def to_django(self):
-        if self.fieldtype in ('varchar', 'char'):
-            max_length = None if 'max_length' not in self.options else self.options['max_length']
-            return self.fieldtypes[self.fieldtype](max_length=max_length, **self.options)
-
-        if self.fieldtype in ('time', 'datetime', 'date'):
-            auto_now = False if 'auto_now' not in self.options else self.options['auto_now']
-            auto_now_add = False if 'auto_now_add' not in self.options else self.options['auto_now_add']
-            return self.fieldtypes[self.fieldtype](auto_now=auto_now, auto_now_add=auto_now_add, **self.options)
-
-        if self.fieldtype == 'boolean' and ('nullable' in self.options and self.options['nullable'] == 1):
-            return models.NullBooleanField(**self.options)
-
-        return self.fieldtypes[self.fieldtype](**self.options)
-    """

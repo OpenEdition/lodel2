@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'LodelTestInstance',
+    'Lodel',
 )
 
 MIDDLEWARE_CLASSES = (

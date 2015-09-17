@@ -6,6 +6,8 @@ class EmFieldRel2Type(EmField):
 
     ftype= 'rel2type'
 
+    help = 'Relationnal field (relation2type). Take rel_to_type_id as option (an EmType uid)'
+
     def __init__(self, rel_to_type_id, **kwargs):
         self.rel_to_type_id = rel_to_type_id
         super(EmFieldRel2Type, self).__init__(**kwargs)

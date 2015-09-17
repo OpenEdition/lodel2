@@ -5,6 +5,7 @@ from EditorialModel.fields import EmField
 class EmFieldFile(EmField):
     
     ftype = 'file'
+    help = 'A file field. With one options upload_path'
     
     ## @brief A char field
     # @brief max_length int : The maximum length of this field

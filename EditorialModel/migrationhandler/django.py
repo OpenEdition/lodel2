@@ -305,6 +305,11 @@ class DjangoMigrationHandler(object):
             args['auto_now'] = f.now_on_update
             args['auto_now_add'] = f.now_on_create
             return models.DateTimeField(**args)
+        elif f.ftype == 'bool': #Boolean field
+            if args['null']:
+                return models.NullBooleanField(**args)
+            del(args['null'])
+            return models.BooleanField(**args)
         elif f.ftype == 'rel2type': #Relation to type
 
             if assoc_comp == None:
@@ -331,7 +336,6 @@ class DjangoMigrationHandler(object):
                 through_model = create_model(through_model_name, through_fields, self.app_name, module_name)
                 kwargs['through'] = through_model_name
             
-            print('WOW !')
             return models.ManyToManyField(f.get_related_type().uniq_name, **kwargs)
         else:
             raise NotImplemented("The conversion to django fields is not yet implemented for %s field type"%f.ftype)

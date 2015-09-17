@@ -1,9 +1,11 @@
 #-*- coding: utf-8 -*-
 
 import re
-from EditorialModel.fieldtypes import EmFieldChar
+from EditorialModel.fieldtypes.char import EmFieldChar
 
 class EmFieldCharRegex(EmFieldChar):
+
+    help = 'String field validated with a regex. Take two optionss : max_length and regex'
     
     ## @brief A char field validated with a regex
     # @param regex str : a regex string (passed as argument to re.compile() )
