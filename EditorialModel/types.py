@@ -25,7 +25,7 @@ class EmType(EmComponent):
     ## Instanciate a new EmType
     # @todo define and check types for icon and sortcolumn
     # @todo better check self.subordinates
-    def __init__(self, model, uid, name, class_id, fields_list = [], subordinates_list = {}, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+    def __init__(self, model, uid, name, class_id, fields_list = [], superiors_list = {}, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
         self.class_id = class_id
         self.check_type('class_id', int)
         self.fields_list = fields_list
@@ -34,14 +34,13 @@ class EmType(EmComponent):
             if not isinstance(l_uid, int):
                 raise AttributeError("Excepted fields_list to be a list of integers, but found a +"+str(type(l_uid))+" in it")
 
-        self.subordinates_list = subordinates_list
-        self.check_type('subordinates_list', dict)
-        for nature, uids in self.subordinates_list.items():
+        self.superiors_list = superiors_list
+        self.check_type('superiors_list', dict)
+        for nature, sup_uid in self.superiors_list.items():
             if nature not in [EmNature.PARENT, EmNature.TRANSLATION, EmNature.IDENTITY]:
                 raise AttributeError("Nature '%s' of subordinates is not allowed !" % nature)
-            for uid in uids:
-                if not isinstance(uid, int):
-                    raise AttributeError("Excepted subordinates of nature '%s' to be a list int !" % nature)
+            if not isinstance(sup_uid, int):
+                raise AttributeError("Excepted subordinates of nature '%s' to be an int !" % nature)
 
         self.icon = icon
         self.sortcolumn = sortcolumn
@@ -79,7 +78,7 @@ class EmType(EmComponent):
     # @todo Check if the type is not linked by any EmClass
     # @todo Check if there is no other ''non-deletion'' conditions
     def delete_check(self):
-        if sum(self.subordinates_list) > 0:
+        if len(self.subordinates()) > 0:
             return False
         #Delete all relation with superiors
         for nature, sups in self.superiors().items():
@@ -146,7 +145,7 @@ class EmType(EmComponent):
         if not isinstance(field, EmField):
             raise TypeError("Excepted <class EmField> as field argument. But got " + str(type(field)))
         if not field in self.em_class.fields():
-            raise ValueError("This field is not part of this type")
+            raise ValueError("This field " + str(field) + "is not part of the type " + str(self))
         if not field.optional:
             raise ValueError("This field is not optional")
 
@@ -195,22 +194,22 @@ class EmType(EmComponent):
     # EmType instance
     # @throw RuntimeError if a nature fetched from db is not valid
     def subordinates(self):
-        return { nature: [ self.model.component(tuid) for tuid in self.subordinates_list[nature] ] for nature in self.subordinates_list }
+        subordinates = {}
+        for em_type in self.model.components(EmType):
+            for nature, superior_uid in em_type.superiors_list.items():
+                if self.uid == superior_uid:
+                    if nature in subordinates:
+                        subordinates[nature].append(em_type)
+                    else:
+                        subordinates[nature] = [em_type]
+        return subordinates
 
     ## @brief Get the list of superiors by relation's nature
     # Get a list of EmType that are superiors of this type
     # @return Return a dict with relation nature as keys and an EmType as value
     # @throw RuntimeError if a nature has multiple superiors
     def superiors(self):
-        superiors = {}
-        for em_type in self.model.components(EmType):
-            for nature, sub_uids in em_type.subordinates_list.items():
-                if self.uid in sub_uids:
-                    if nature in superiors:
-                        raise RuntimeError("Multiple superiors found for relation of nature '%s' for EmType %d"%(nature, self.uid))
-                    else:
-                        superiors[nature] = em_type
-        return superiors
+        return { nature:self.model.component(superior_uid) for nature, superior_uid in self.superiors_list.items() }
 
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
@@ -292,7 +291,7 @@ class EmType(EmComponent):
     #         result.append(EmType(row['subordinate_id'] if row['superior_id'] == self.uid else row['superior_id']))
     #
     #     return result
-    
+
     ## Checks if the EmType is valid
     # @throw EmComponentCheckError if check fails
     def check(self):
@@ -302,52 +301,50 @@ class EmType(EmComponent):
             raise EmComponentCheckError("class_id contains an uid that does not exists '%d'" % self.class_id)
         if not isinstance(em_class, EditorialModel.classes.EmClass):
             raise EmComponentCheckError("class_id contains an uid from a component that is not an EmClass but a %s" % str(type(emc_class)))
-        
-        for i,fuid in enumerate(self.fields_list):
-            field = self.model.component(fuid)
+
+        for i,f_uid in enumerate(self.fields_list):
+            field = self.model.component(f_uid)
             if not field:
-                raise EmComponentCheckError("The element %d of selected_field is a non existing uid '%d'"%(i, fuid))
+                raise EmComponentCheckError("The element %d of selected_field is a non existing uid '%d'"%(i, f_uid))
             if not isinstance(field, EmField):
                 raise EmComponentCheckError("The element %d of selected_field is not an EmField but a %s" % (i, str(type(field)) ))
             if not field.optional:
                 raise EmComponentCheckError("The element %d of selected_field is an EmField not optional"  % i )
             if field.fieldgroup_id not in [ fg.uid for fg in self.fieldgroups() ]:
                 raise EmComponentCheckErrro("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
-        for nature in self.subordinates_list:
-            for i, tuid in enumerate(self.subordinates_list[nature]):
-                em_type = self.model.component(tuid)
-                if not em_type:
-                    raise EmComponentCheckError("The element %d of subordinates contains a non existing uid '%d'" % (i, tuid))
-                if not isinstance(em_type, EmType):
-                    raise EmComponentCheckError("The element %d of subordinates contains a component that is not an EmType but a %s" % (i, str(type(em_type))))
-                if nature not in EmClassType.natures(self.em_class.classtype):
-                    raise EmComponentCheckError("The relation nature '%s' of the element %d of subordinates is not valid for this EmType classtype '%s'", (nature, i, self.classtype) )
-    
-                nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
-    
-                if nat_spec['attach'] == 'classtype':
-                    if self.classtype != em_type.classtype:
-                        raise EmComponentCheckError("The element %d of subordinates is of '%s' classtype. But the current type is of '%s' classtype, and relation nature '%s' require two EmType of same classtype" % (i, em_type.classtype, self.classtype, nature) )
-                elif nat_spec['attach'] == 'type':
-                    if self.uid != em_type.uid:
-                        raise EmComponentCheckError("The element %d of subordinates is a different EmType. But the relation nature '%s' require the same EmType" % (i, nature))
+
+        for nature, sup_uid in self.superiors_list.items():
+            em_type = self.model.component(sup_uid)
+            if not em_type:
+                raise EmComponentCheckError("The superior is a non existing uid '%d'" % (sup_uid))
+            if not isinstance(em_type, EmType):
+                raise EmComponentCheckError("The superior is a component that is not an EmType but a %s" % (str(type(em_type))))
+            if nature not in EmClassType.natures(self.em_class.classtype):
+                raise EmComponentCheckError("The relation nature '%s' of the superior is not valid for this EmType classtype '%s'", (nature, self.classtype) )
+
+            nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
+
+            if nat_spec['attach'] == 'classtype':
+                if self.classtype != em_type.classtype:
+                    raise EmComponentCheckError("The superior is of '%s' classtype. But the current type is of '%s' classtype, and relation nature '%s' require two EmType of same classtype" % (em_type.classtype, self.classtype, nature) )
+            elif nat_spec['attach'] == 'type':
+                if self.uid != em_type.uid:
+                    raise EmComponentCheckError("The superior is a different EmType. But the relation nature '%s' require the same EmType" % (nature))
+            else:
+                raise NotImplementedError("The nature['attach'] '%s' is not implemented in this check !" % nat_spec['attach'])
+
+            if 'max_depth' in nat_spec and nat_spec['max_depth'] > 0:
+                depth = 1
+                cur_type = em_type
+                while depth >= nat_spec['max_depth']:
+                    depth +=1
+                    if len(cur_type.subordinates()[nature]) == 0:
+                        break
                 else:
-                    raise NotImplementedError("The nature['attach'] '%s' is not implemented in this check !" % nat_spec['attach'])
-    
-                if 'max_depth' in nat_spec and nat_spec['max_depth'] > 0:
-                    depth = 1
-                    cur_type = em_type
-                    while depth >= nat_spec['max_depth']:
-                        depth +=1
-                        if len(cur_type.subordinates()[nature]) == 0:
-                            break
-                    else:
-                        raise EmComponentCheckError("The relation with the element %d of subordinates has a depth superior than the maximum depth ( %d ) allowed by the relation's nature ( '%s' )" %( i, nat_spec['max_depth'], nature) )
-        
+                    raise EmComponentCheckError("The relation with the element %d of subordinates has a depth superior than the maximum depth ( %d ) allowed by the relation's nature ( '%s' )" %( i, nat_spec['max_depth'], nature) )
+
         for nature in self.subordinates():
             nat_spec = getattr(EmClassType, self.em_class.classtype)['hierarchy'][nature]
             if 'max_child' in nat_spec and nat_spec['max_child'] > 0:
                 if len(self.subordinates()[nature]) > nat_spec['max_child']:
                     raise EmComponentCheckError("The EmType has more child than allowed in the relation's nature : %d > %d" (len(self.subordinates()[nature], nat_spec['max_child'])))
-        #pass
-

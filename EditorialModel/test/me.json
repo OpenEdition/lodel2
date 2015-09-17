@@ -12,7 +12,7 @@
     "component":"EmField", "name":"titre", "string":"{\"fre\":\"Titre\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"varchar", "fieldgroup_id":"3", "rel_to_type_id":"", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
   },
   "5" : {
-    "component":"EmType", "name":"article", "string":"{\"fre\":\"Article\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"1", "icon":"0", "sortcolumn":"rank", "fields_list":[7]
+    "component":"EmType", "name":"article", "string":"{\"fre\":\"Article\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"1", "icon":"0", "sortcolumn":"rank", "fields_list":[7], "superiors_list":{"parent":14}
   },
   "6" : {
     "component":"EmType", "name":"personne", "string":"{\"fre\":\"Personne\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"2", "icon":"0", "sortcolumn":"rank", "fields_list":[10]
@@ -39,7 +39,7 @@
     "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
   },
   "14" : {
-    "component":"EmType", "name":"rubrique", "string":"{\"fre\":\"Rubrique\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank", "subordinates_list":{"parent":[5,14]}
+    "component":"EmType", "name":"rubrique", "string":"{\"fre\":\"Rubrique\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank", "superiors_list":{"parent":14}
   },
   "15" : {
     "component":"EmFieldGroup", "name":"info", "string":"{\"fre\":\"Info\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13"

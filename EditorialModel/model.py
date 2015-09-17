@@ -201,7 +201,7 @@ class Model(object):
     # @warning : if a relational-attribute field (with 'rel_field_id') comes before it's relational field (with 'rel_to_type_id'), this will blow up
     def migrate_handler(self, new_mh):
         new_me = Model(EmBackendDummy(), new_mh)
-        relations = {'fields_list': [], 'subordinates_list': []}
+        relations = {'fields_list': [], 'superiors_list': []}
 
         # re-create component one by one, in components_class[] order
         for cls in self.components_class:
@@ -222,10 +222,9 @@ class Model(object):
             for field_id in fields:
                 new_me.component(uid).select_field(new_me.component(field_id))
         # add superiors to types
-        for subordinates_list in relations['subordinates_list']:
-            uid, sub_list = subordinates_list
-            for nature, subordinates in sub_list.items():
-                for subordinate_id in subordinates:
-                    new_me.component(subordinate_id).add_superior(new_me.component(uid), nature)
+        for superiors_list in relations['superiors_list']:
+            uid, sup_list = superiors_list
+            for nature, superior_uid in sup_list.items():
+                new_me.component(uid).add_superior(new_me.component(superior_uid), nature)
 
         self.migration_handler = new_mh
