@@ -83,7 +83,6 @@ class EmComponent(object):
                 attr[attr_f] = attr[attr_f].__str__()
         if isinstance(self, EditorialModel.fields.EmField):
             attr['component'] = 'EmField'
-            attr['type'] = self.fieldtype
         else:
             attr['component'] = self.__class__.__name__
         return attr

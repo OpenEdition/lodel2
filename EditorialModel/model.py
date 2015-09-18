@@ -53,6 +53,7 @@ class Model(object):
     ## Given a python class return a name
     # @param cls : The python class we want the name
     # @return A class name as string or False if cls is not an EmComponent child class
+    # @todo réécrire le split, c'est pas bô
     def name_from_emclass(em_class):
         if em_class not in Model.components_class:
             spl = em_class.__module__.split('.')
@@ -72,14 +73,12 @@ class Model(object):
             #Store and delete the EmComponent class name from datas
             cls_name = kwargs['component']
             del kwargs['component']
-            
+
             if cls_name == 'EmField':
                 #Special EmField process because of fieldtypes
-                if not 'type' in kwargs:
-                    raise AttributeError("Missing 'type' from EmField instanciation")
-                cls = EditorialModel.fields.EmField.get_field_class(kwargs['type'])
-                kwargs['fieldtype'] = kwargs['type']
-                del(kwargs['type'])
+                if not 'fieldtype' in kwargs:
+                    raise AttributeError("Missing 'fieldtype' from EmField instanciation")
+                cls = EditorialModel.fields.EmField.get_field_class(kwargs['fieldtype'])
             else:
                 cls = self.emclass_from_name(cls_name)
 
@@ -150,13 +149,11 @@ class Model(object):
     # @todo Handle a raise from the migration handler
     # @todo Transform the datas arg in **datas ?
     def create_component(self, component_type, datas, uid=None):
-        
         if component_type == 'EmField':
             #special process for EmField
-            if not 'type' in datas:
-                raise AttributeError("Missing 'type' from EmField instanciation")
-            em_obj = EditorialModel.fields.EmField.get_field_class(datas['type'])
-            del(datas['type'])
+            if not 'fieldtype' in datas:
+                raise AttributeError("Missing 'fieldtype' from EmField instanciation")
+            em_obj = EditorialModel.fields.EmField.get_field_class(datas['fieldtype'])
         else:
             em_obj = self.emclass_from_name(component_type)
 
