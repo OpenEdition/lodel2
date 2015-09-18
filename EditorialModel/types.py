@@ -266,32 +266,6 @@ class EmType(EmComponent):
         # conn.execute(req)
         # conn.close()
 
-    ## @brief Get the list of linked type
-    # Types are linked with special fields called relation_to_type fields
-    # @return a list of EmType
-    # @see EmFields
-    def linked_types(self):
-        return self._linked_types_db()  # TODO changer l'appel
-
-    ## @brief Return the list of all the types linked to this type, should they be superiors or subordinates
-    # @return A list of EmType objects
-    # def _linked_types_db(self):
-    #     conn = self.db_engine.connect()
-    #     htable = self._table_hierarchy
-    #     req = htable.select(htable.c.superior_id, htable.c.subordinate_id)
-    #     req = req.where(sql.or_(htable.c.subordinate_id == self.uid, htable.c.superior_id == self.uid))
-    #
-    #     res = conn.execute(req)
-    #     rows = res.fetchall()
-    #     conn.close()
-    #
-    #     rows = dict(zip(rows.keys(), rows))
-    #     result = []
-    #     for row in rows:
-    #         result.append(EmType(row['subordinate_id'] if row['superior_id'] == self.uid else row['superior_id']))
-    #
-    #     return result
-
     ## Checks if the EmType is valid
     # @throw EmComponentCheckError if check fails
     def check(self):
