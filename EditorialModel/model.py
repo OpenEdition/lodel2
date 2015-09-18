@@ -77,6 +77,7 @@ class Model(object):
                 if not 'type' in kwargs:
                     raise AttributeError("Missing 'type' from EmField instanciation")
                 cls = EditorialModel.fields.EmField.get_field_class(kwargs['type'])
+                kwargs['fieldtype'] = kwargs['type']
                 del(kwargs['type'])
             else:
                 cls = self.emclass_from_name(cls_name)
@@ -103,13 +104,16 @@ class Model(object):
             component.init_ended()
 
     ## Saves data using the current backend
-    def save(self):
-        return self.backend.save(self)
+    # @param filename str | None : if None use the current backend file (provided at backend instanciation)
+    def save(self, filename = None):
+        return self.backend.save(self, filename)
 
     ## Given a EmComponent child class return a list of instances
     # @param cls EmComponent : A python class
     # @return a list of instances or False if the class is not an EmComponent child
-    def components(self, cls):
+    def components(self, cls=None):
+        if cls is None:
+            return [ self.component(uid) for uid in self._components['uids'] ]
         key_name = self.name_from_emclass(cls)
         return False if key_name is False else self._components[key_name]
 

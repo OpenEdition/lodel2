@@ -22,7 +22,7 @@ class EmField(EmComponent):
     ## Instanciate a new EmField
     # @todo define and test type for icon and fieldtype
     # @warning nullable == True by default
-    def __init__(self, model, uid, name, fieldgroup_id, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable = True, default = None, uniq = False, **kwargs):
+    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable = True, default = None, uniq = False, **kwargs):
 
         if self.ftype == None:
             raise NotImplementedError("Trying to instanciate an EmField and not one of the fieldtypes child classes")
@@ -37,7 +37,9 @@ class EmField(EmComponent):
         self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon
 
+
         #Field type elements
+        self.fieldtype = fieldtype
         self.nullable = nullable
         self.default = default
         self.uniq = uniq
