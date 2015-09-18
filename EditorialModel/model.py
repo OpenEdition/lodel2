@@ -231,7 +231,6 @@ class Model(object):
             for component in self.components(cls):
                 component_type = self.name_from_emclass(cls)
                 component_dump = component.attr_dump
-                del component_dump['model']
                 # Save relations between component to apply them later
                 for relation in relations.keys():
                     if relation in component_dump and component_dump[relation]:
