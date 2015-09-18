@@ -163,7 +163,7 @@ class Model(object):
             del datas['rank']
 
         datas['uid'] = uid if uid else self.new_uid()
-        em_component = em_obj(self, **datas)
+        em_component = em_obj(model=self, **datas)
 
         em_component.rank = em_component.get_max_rank() + 1 #  Inserting last by default
 
