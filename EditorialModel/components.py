@@ -207,26 +207,3 @@ class EmComponent(object):
         else:
             return "<%s #%s, '%s'>" % (type(self).__name__, self.uid, self.name)
 
-    @classmethod
-    ## Register a new component in UID table
-    #
-    # Use the class property table
-    # @return A new uid (an integer)
-    def new_uid(cls, db_engine):
-        if cls.table is None:
-            raise NotImplementedError("Abstract method")
-
-        dbe = db_engine
-
-        uidtable = sql.Table('uids', sqlutils.meta(dbe))
-        conn = dbe.connect()
-        req = uidtable.insert(values={'table': cls.table})
-        res = conn.execute(req)
-
-        uid = res.inserted_primary_key[0]
-        logger.debug("Registering a new UID '" + str(uid) + "' for '" + cls.table + "' component")
-
-        conn.close()
-
-        return uid
-
