@@ -66,12 +66,11 @@ def create_model(name, fields=None, app_label='', module='', options=None, admin
 
 class DjangoMigrationHandler(object):
 
-    ##
+    ## @brief Instanciate a new DjangoMigrationHandler
     # @param app_name str : The django application name for models generation
     # @param debug bool : Set to True to be in debug mode
-    # @warning DONT use self.models it does not contains all the models (none of the through models for rel2type)
+    # @param dryrun bool : If true don't do any migration, only simulate them
     def __init__(self, app_name, debug=False, dryrun=False):
-        self.models = {}
         self.debug = debug
         self.app_name = app_name
         self.dryrun = dryrun
@@ -114,6 +113,9 @@ class DjangoMigrationHandler(object):
         return True
 
     ## @brief Print a debug message representing a migration
+    # @param uid int : The EmComponent uid
+    # @param initial_state dict | None : dict representing the fields that are changing
+    # @param new_state dict | None : dict represnting the new fields states
     def dump_migration(self, uid, initial_state, new_state):
         if self.debug:
             print("\n##############")
@@ -203,7 +205,7 @@ class DjangoMigrationHandler(object):
     # @note There is a problem with the related_name for superiors fk : The related name cannot be subordinates, it has to be the subordinates em_type name
     def em_to_models(self, edMod):
         
-        module_name = self.app_name+'models'
+        module_name = self.app_name+'.models'
 
         #Purging django models cache
         if self.app_name in django_cache.all_models:
@@ -211,9 +213,6 @@ class DjangoMigrationHandler(object):
                 del(django_cache.all_models[self.app_name][modname])
             #del(django_cache.all_models[self.app_name])
 
-        #This cache at instance level seems to be useless...
-        del(self.models)
-        self.models = {}
 
         app_name = self.app_name
         #Creating the document model
@@ -249,7 +248,8 @@ class DjangoMigrationHandler(object):
                     #emclass_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
                     emclass_fields[emfield.uniq_name] = self.field_to_django(emfield, emclass)
             #print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
-            print("Model for class %s created"%emclass.uniq_name)
+            if self.debug:
+                print("Model for class %s created"%emclass.uniq_name)
             django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
             
             #Creating the EmTypes models with EmClass inherithance
@@ -269,7 +269,6 @@ class DjangoMigrationHandler(object):
                     print("Model for type %s created"%emtype.uniq_name)
                 django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, self.app_name, module_name, parent_class=django_models['classes'][emclass.uniq_name])
 
-        self.models=django_models
         pass
 
     ## @brief Return a good django field type given a field
@@ -328,7 +327,7 @@ class DjangoMigrationHandler(object):
 
                 #through_model_name = f.uniq_name+assoc_comp.uniq_name+'to'+rtype.uniq_name
                 through_model_name = f.name+assoc_comp.name+'to'+rtype.name
-                module_name = self.app_name+'models'
+                module_name = self.app_name+'.models'
                 #model created
                 through_model = create_model(through_model_name, through_fields, self.app_name, module_name)
                 kwargs['through'] = through_model_name

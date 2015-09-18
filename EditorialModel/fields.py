@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import importlib
+import warnings
 
 from EditorialModel.components import EmComponent
 from EditorialModel.exceptions import EmComponentCheckError
@@ -41,7 +42,10 @@ class EmField(EmComponent):
         self.default = default
         self.uniq = uniq
 
-        self.options = kwargs
+        if len(kwargs) > 0:
+            for kwargs_f in kwargs:
+                warnings.warn("Argument '%s' not used and will be invalid for EmField __init__"%kwargs_f,SyntaxWarning)
+            
 
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 

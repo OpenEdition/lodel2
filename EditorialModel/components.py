@@ -10,7 +10,7 @@ import logging
 from collections import OrderedDict
 import hashlib
 
-import EditorialModel.fieldtypes as ftypes
+import EditorialModel
 from EditorialModel.exceptions import *
 from Lodel.utils.mlstring import MlString
 
@@ -64,9 +64,10 @@ class EmComponent(object):
     # Identify a component with his type and name
     def uniq_name(self):
         uname = self.__class__.__name__
-        try:
-            uname += '_'+self.em_class.name
-        except AttributeError: pass
+        if not isinstance(self, EditorialModel.fields.EmField):
+            try:
+                uname += '_'+self.em_class.name
+            except AttributeError: pass
         uname += '_'+self.name
         return uname
         
