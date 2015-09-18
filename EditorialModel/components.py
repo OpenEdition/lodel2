@@ -10,7 +10,7 @@ import logging
 from collections import OrderedDict
 import hashlib
 
-import EditorialModel.fieldtypes as ftypes
+import EditorialModel
 from EditorialModel.exceptions import *
 from Lodel.utils.mlstring import MlString
 
@@ -56,7 +56,7 @@ class EmComponent(object):
     ## @brief Return a dict with attributes name as key and attributes value as value
     # @note Used at creation and deletion to call the migration handler
     def attr_dump(self):
-        return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('__') or (fname == 'uid'))}
+        return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('_') or (fname == 'uid'))}
 
     @property
     ## @brief Provide a uniq name
@@ -64,12 +64,30 @@ class EmComponent(object):
     # Identify a component with his type and name
     def uniq_name(self):
         uname = self.__class__.__name__
-        try:
-            uname += '_'+self.em_class.name
-        except AttributeError: pass
+        if not isinstance(self, EditorialModel.fields.EmField):
+            try:
+                uname += '_'+self.em_class.name
+            except AttributeError: pass
         uname += '_'+self.name
         return uname
         
+    ## @brief dumps attr for serialization
+    def dumps(self):
+        #attr =  {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('_'))}
+        attr = self.attr_dump
+        del(attr['model'])
+        for attr_f in attr:
+            if isinstance(attr[attr_f], EmComponent):
+                attr[attr_f] = attr[attr_f].uid
+            elif isinstance(attr[attr_f], MlString):
+                attr[attr_f] = attr[attr_f].__str__()
+        if isinstance(self, EditorialModel.fields.EmField):
+            attr['component'] = 'EmField'
+            attr['type'] = self.fieldtype
+        else:
+            attr['component'] = self.__class__.__name__
+        return attr
+
     ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
     # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
     def init_ended(self):

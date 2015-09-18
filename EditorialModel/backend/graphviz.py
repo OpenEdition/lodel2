@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import EditorialModel
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
@@ -88,7 +89,8 @@ class EmBackendGraphviz(object):
             for f in c.fields():
                 if ((cn == 'EmType' and f.optional) or (cn == 'EmFieldGroup' and not f.optional)) and f.rel_field_id is None:
                     
-                    if not (f.rel_to_type_id is None):
+                    #if not (f.rel_to_type_id is None):
+                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldRel2Type):
                         rel_node_id = '%s%s'%(EmBackendGraphviz._component_id(c), EmBackendGraphviz._component_id(em.component(f.rel_to_type_id)))
 
                         rel_node = '\t%s [ label="rel_to_type'%rel_node_id
@@ -114,7 +116,8 @@ class EmBackendGraphviz(object):
                     if first:
                         ret += ' { '
                         first = False
-                    if not (f.rel_to_type_id is None):
+                    #if not (f.rel_to_type_id is None):
+                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldRel2Type):
                         ret += '<f%d> '%cntref
                         cntref += 1
                     ret += f.name

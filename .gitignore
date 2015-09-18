@@ -5,3 +5,4 @@
 Lodel/settings/locale.py
 Lodel/settings/local.py
 doc
+.*.swp
