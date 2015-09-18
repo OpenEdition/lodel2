@@ -220,11 +220,6 @@ class EmType(EmComponent):
     # @throw ValueError when relation_nature isn't reconized or not allowed for this type
     # @throw ValueError when relation_nature don't allow to link this types together
     def add_superior(self, em_type, relation_nature):
-        if not isinstance(em_type, EmType) or not isinstance(relation_nature, str):
-            raise TypeError("Excepted <class EmType> and <class str> as em_type argument. But got : " + str(type(em_type)) + " " + str(type(relation_nature)))
-        if relation_nature not in EmClassType.natures(self.classtype['name']):
-            raise ValueError("Invalid nature for add_superior : '" + relation_nature + "'. Allowed relations for this type are " + str(EmClassType.natures(self.classtype['name'])))
-
         #Checking that this relation is allowed by the nature of the relation
         att = self.classtype['hierarchy'][relation_nature]['attach']
         if att == 'classtype':
@@ -233,38 +228,43 @@ class EmType(EmComponent):
         elif self.name != em_type.name:
             raise ValueError("Not allowed to put a different em_type as superior in a relation of nature '" + relation_nature + "'")
 
-        # TODO Réimplémenter
-        # conn = self.db_engine.connect()
-        # htable = self._table_hierarchy
-        # values = {'subordinate_id': self.uid, 'superior_id': em_type.uid, 'nature': relation_nature}
-        # req = htable.insert(values=values)
-        #
-        # try:
-        #     conn.execute(req)
-        # except sql.exc.IntegrityError:
-        #     ret = False
-        # else:
-        #     ret = True
-        # finally:
-        #     conn.close()
-        #
-        # return ret
+        self._change_superiors_list(em_type, relation_nature, True)
 
     ## Delete a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
+    # @param relation_nature str: The name of the relation's nature
     # @throw TypeError when em_type isn't an EmType instance
+    # @throw ValueError when relation_nature isn't reconized or not allowed for this type
     def del_superior(self, em_type, relation_nature):
-        if not isinstance(em_type, EmType):
-            raise TypeError("Excepted <class EmType> as argument. But got : " + str(type(em_type)))
+        self._change_superiors_list(em_type, relation_nature, False)
+
+    ## Apply changes to the superiors_list
+    # @param em_type EmType: An EmType instance
+    # @param relation_nature str: The name of the relation's nature
+    # @param add bool: Add or delete relation
+    def _change_superiors_list(self, em_type, relation_nature, add=True):
+        # check instance of parameters
+        if not isinstance(em_type, EmType) or not isinstance(relation_nature, str):
+            raise TypeError("Excepted <class EmType> and <class str> as em_type argument. But got : " + str(type(em_type)) + " " + str(type(relation_nature)))
+        # check if relation_nature is valid for this type
         if relation_nature not in EmClassType.natures(self.classtype['name']):
             raise ValueError("Invalid nature for add_superior : '" + relation_nature + "'. Allowed relations for this type are " + str(EmClassType.natures(self.classtype['name'])))
 
-        # TODO Réimplémenter
-        # conn = self.db_engine.connect()
-        # htable = self._table_hierarchy
-        # req = htable.delete(htable.c.superior_id == em_type.uid and htable.c.nature == relation_nature)
-        # conn.execute(req)
-        # conn.close()
+        try:
+            if add:
+                self.superiors_list[relation_nature] = em_type.uid
+                self.model.migration_handler.register_change(self.model, self.uid, None, {'superiors_list': {relation_nature: em_type.uid}})
+            else:
+                del self.superiors_list[relation_nature]
+                self.model.migration_handler.register_change(self.model, self.uid, {'superiors_list': {relation_nature: em_type.uid}}, None)
+        except MigrationHandlerChangeError as exception_object:
+            if add:
+                del self.superiors_list[relation_nature]
+            else:
+                self.superiors_list[relation_nature] = em_type.uid
+            raise exception_object
+
+        self.model.migration_handler.register_model_state(self.model, hash(self.model))
 
     ## Checks if the EmType is valid
     # @throw EmComponentCheckError if check fails

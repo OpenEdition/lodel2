@@ -221,7 +221,9 @@ class Model(object):
             uid, fields = fields_list
             for field_id in fields:
                 new_me.component(uid).select_field(new_me.component(field_id))
+
         # add superiors to types
+        # TODO: debug, this add a superior to all types !
         for superiors_list in relations['superiors_list']:
             uid, sup_list = superiors_list
             for nature, superior_uid in sup_list.items():
