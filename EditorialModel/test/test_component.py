@@ -7,6 +7,8 @@ from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 
+from Lodel.utils.mlstring import MlString
+
 from EditorialModel.backend.json_backend import EmBackendJson
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
@@ -15,13 +17,8 @@ class TestEmComponent(unittest.TestCase):
     def setUp(self):
         self.me =  Model(EmBackendJson('EditorialModel/test/me.json'))
     
-    def test_init(self):
-        """ Testing that __init__ is abstract for an EmComponent """
-        with self.assertRaises(NotImplementedError):
-            foo = EmComponent(self.me, self.me.new_uid(), 'invalid instanciation')
-
     def test_hashes(self):
-        """ Testing __hash__ and __eq__ methos """
+        """ Testing __hash__ and __eq__ methods """
         me1 =  Model(EmBackendJson('EditorialModel/test/me.json'))
         me2 =  Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler = DummyMigrationHandler(True))
         
@@ -42,6 +39,11 @@ class TestEmComponent(unittest.TestCase):
                 comp2.modify_rank(2)
                 self.assertEqual(hash(comp1), hash(comp2), "hashes differs for two EmComponent({}) after applying the same modifications on both".format(comp_class.__name__))
                 self.assertTrue(comp1 == comp2)
+
+    def test_virtual_methods(self):
+        """ Testing virtual methods """
+        with self.assertRaises(NotImplementedError):
+            foo = EmComponent(self.me, self.me.new_uid(), 'Invalide')
 
     def test_modify_rank(self):
         """ Testing modify_rank and set_rank method """
@@ -91,4 +93,32 @@ class TestEmComponent(unittest.TestCase):
         cls.check()
         self.assertEqual(cls.rank, 1)
 
-        
+    
+    def test_dump(self):
+        """ Testing dump methods """
+        for comp in self.me.components():
+            dmp = comp.attr_dump
+            self.assertNotIn('uid', dmp)
+            self.assertNotIn('model', dmp)
+            self.assertTrue(dmp['help_text'] is None or isinstance(dmp['help_text'], MlString))
+            self.assertTrue(dmp['string'] is None or isinstance(dmp['string'], MlString))
+            for dmp_f in dmp:
+                self.assertFalse(dmp_f.startswith('_'))
+
+
+            dmp = comp.dumps()
+            for dmp_f, dmp_v in dmp.items():
+                self.assertFalse(isinstance(dmp_v, EmComponent))
+                self.assertFalse(isinstance(dmp_v, Model))
+                self.assertFalse(isinstance(dmp_v, MlString))
+    
+    def test_uniq_name(self):
+        """ Testing uniq_name method """
+        names_l = []
+        for comp in self.me.components():
+            #Should be uniq only for types and classes
+            if isinstance(comp, EmType) or isinstance(comp, EmClass):
+                self.assertNotIn(comp.uniq_name, names_l)
+                names_l.append(comp.uniq_name)
+
+
