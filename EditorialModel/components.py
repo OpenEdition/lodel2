@@ -75,7 +75,8 @@ class EmComponent(object):
     def dumps(self):
         #attr =  {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('_'))}
         attr = self.attr_dump
-        del(attr['model'])
+        if 'model' in attr:
+            del(attr['model'])
         for attr_f in attr:
             if isinstance(attr[attr_f], EmComponent):
                 attr[attr_f] = attr[attr_f].uid
