@@ -25,16 +25,16 @@ class EmType(EmComponent):
     ## Instanciate a new EmType
     # @todo define and check types for icon and sortcolumn
     # @todo better check self.subordinates
-    def __init__(self, model, uid, name, class_id, fields_list = [], superiors_list = {}, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+    def __init__(self, model, uid, name, class_id, fields_list = None, superiors_list = None, icon = '0', sortcolumn = 'rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
         self.class_id = class_id
         self.check_type('class_id', int)
-        self.fields_list = fields_list
+        self.fields_list = fields_list if fields_list is not None else []
         self.check_type('fields_list', list)
         for l_uid in self.fields_list:
             if not isinstance(l_uid, int):
                 raise AttributeError("Excepted fields_list to be a list of integers, but found a +"+str(type(l_uid))+" in it")
 
-        self.superiors_list = superiors_list
+        self.superiors_list = superiors_list if superiors_list is not None else {}
         self.check_type('superiors_list', dict)
         for nature, sup_uid in self.superiors_list.items():
             if nature not in [EmNature.PARENT, EmNature.TRANSLATION, EmNature.IDENTITY]:

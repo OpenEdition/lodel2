@@ -245,10 +245,11 @@ class Model(object):
                 new_me.component(uid).select_field(new_me.component(field_id))
 
         # add superiors to types
-        # TODO: debug, this add a superior to all types !
         for superiors_list in relations['superiors_list']:
             uid, sup_list = superiors_list
             for nature, superior_uid in sup_list.items():
                 new_me.component(uid).add_superior(new_me.component(superior_uid), nature)
+
+        del new_me
 
         self.migration_handler = new_mh
