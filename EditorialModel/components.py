@@ -56,7 +56,7 @@ class EmComponent(object):
     ## @brief Return a dict with attributes name as key and attributes value as value
     # @note Used at creation and deletion to call the migration handler
     def attr_dump(self):
-        return {fname: fval.__str__() for fname, fval in self.__dict__.items() if not (fname.startswith('_') or (fname == 'uid'))}
+        return {fname: fval.__str__() for fname, fval in self.__dict__.items() if not (fname.startswith('_') or (fname == 'uid') or (fname == 'model'))}
 
     @property
     ## @brief Provide a uniq name
