@@ -70,23 +70,6 @@ class EmComponent(object):
             except AttributeError: pass
         uname += '_'+self.name
         return uname
-        
-    ## @brief dumps attr for serialization
-    def dumps(self):
-        #attr =  {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('_'))}
-        attr = self.attr_dump
-        if 'model' in attr:
-            del(attr['model'])
-        for attr_f in attr:
-            if isinstance(attr[attr_f], EmComponent):
-                attr[attr_f] = attr[attr_f].uid
-            elif isinstance(attr[attr_f], MlString):
-                attr[attr_f] = attr[attr_f].__str__()
-        if isinstance(self, EditorialModel.fields.EmField):
-            attr['component'] = 'EmField'
-        else:
-            attr['component'] = self.__class__.__name__
-        return attr
 
     ## @brief This function has to be called after the instanciation, checks, and init manipulations are done
     # @note Create a new attribute _inited that allow __setattr__ to know if it has or not to call the migration handler
@@ -117,9 +100,26 @@ class EmComponent(object):
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
-        component_dump = self.dumps()
-        del component_dump['date_create']
-        del component_dump['date_update']
+        # flatten list of attributes of the component to an ordered list
+        # so every time we have the same string representation
+        attributes_dump = self.attr_dump
+        ordered_attributes = sorted(list(attributes_dump.keys()))
+
+        component_dump = []
+        for attr_name in ordered_attributes:
+            if isinstance(attributes_dump[attr_name], EmComponent):
+                value = attributes_dump[attr_name].uid
+            elif isinstance(attributes_dump[attr_name], MlString):
+                value = attributes_dump[attr_name].__str__()
+            elif isinstance(attributes_dump[attr_name], datetime.datetime):
+                continue
+            else:
+                value = attributes_dump[attr_name]
+            component_dump.append((attr_name, value))
+
+        component_name = 'EmField' if isinstance(self, EditorialModel.fields.EmField) else self.__class__.__name__
+        component_dump.append(('component', component_name))
+
         return int(hashlib.md5(str(component_dump).encode('utf-8')).hexdigest(), 16)
 
     ## @brief Test if two EmComponent are "equals"

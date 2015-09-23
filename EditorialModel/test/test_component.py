@@ -105,13 +105,6 @@ class TestEmComponent(unittest.TestCase):
             for dmp_f in dmp:
                 self.assertFalse(dmp_f.startswith('_'))
 
-
-            dmp = comp.dumps()
-            for dmp_f, dmp_v in dmp.items():
-                self.assertFalse(isinstance(dmp_v, EmComponent))
-                self.assertFalse(isinstance(dmp_v, Model))
-                self.assertFalse(isinstance(dmp_v, MlString))
-    
     def test_uniq_name(self):
         """ Testing uniq_name method """
         names_l = []
