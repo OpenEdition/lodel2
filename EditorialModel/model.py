@@ -195,18 +195,23 @@ class Model(object):
     # @todo unable uid check
     # @todo Handle a raise from the migration handler
     def delete_component(self, uid):
-        #register the deletion in migration handler
-        self.migration_handler.register_change(self, uid, self.component(uid).attr_dump, None)
-
         em_component = self.component(uid)
         if not em_component:
             raise EmComponentNotExistError()
+
         if em_component.delete_check():
+            #register the deletion in migration handler
+            self.migration_handler.register_change(self, uid, self.component(uid).attr_dump, None)
+
+            # delete internal lists
             self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
             del self._components['uids'][uid]
-        #Register the new EM state
-        self.migration_handler.register_model_state(self, hash(self))
-        return True
+
+            #Register the new EM state
+            self.migration_handler.register_model_state(self, hash(self))
+            return True
+
+        return False
 
     ## Changes the current backend
     #
