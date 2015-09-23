@@ -247,8 +247,9 @@ class Model(object):
         # add superiors to types
         for superiors_list in relations['superiors_list']:
             uid, sup_list = superiors_list
-            for nature, superior_uid in sup_list.items():
-                new_me.component(uid).add_superior(new_me.component(superior_uid), nature)
+            for nature, superiors_uid in sup_list.items():
+                for superior_uid in superiors_uid:
+                    new_me.component(uid).add_superior(new_me.component(superior_uid), nature)
 
         del new_me
 
