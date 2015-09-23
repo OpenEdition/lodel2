@@ -52,5 +52,8 @@
   },
   "18" : {
     "component":"EmField", "name":"age", "string":"{\"fre\":\"Age\"}", "help_text":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
+  },
+  "19" : {
+    "component":"EmType", "name":"numero", "string":"{\"fre\":\"Numéro\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank"
   }
 }
