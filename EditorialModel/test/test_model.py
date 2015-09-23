@@ -7,7 +7,6 @@ from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 
 from EditorialModel.backend.json_backend import EmBackendJson
-#from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.migrationhandler.django import DjangoMigrationHandler
 
 class TestModel(unittest.TestCase):
