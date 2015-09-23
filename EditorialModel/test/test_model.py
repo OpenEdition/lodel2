@@ -20,7 +20,7 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'))
         self.assertTrue(isinstance(model, Model))
 
-        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('test',debug=True))
+        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=True))
         self.assertTrue(isinstance(model, Model))
 
     def test_components(self):
@@ -47,19 +47,19 @@ class TestModel(unittest.TestCase):
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('test', debug=True))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=True))
 
         self.assertEqual(hash(me1), hash(me2), "When instanciate from the same backend & file but with another migration handler the hashes differs")
-        self.assertTrue(me1, me2)
+        self.assertTrue(me1.__eq__(me2))
 
         cl_l = me1.classes()
         cl_l[0].modify_rank(1)
 
         self.assertNotEqual(hash(me1), hash(me2), "After a class rank modification the hashes are the same")
-        self.assertFalse(me1, me2)
+        self.assertFalse(me1.__eq__(me2))
 
         cl_l = me2.classes()
         cl_l[0].modify_rank(1)
 
-        self.assertEqual(hash(me), hash(me2), "After doing sames modifications in the two models the hashes differs")
-        self.assertTrue(me1, me2)
+        self.assertEqual(hash(me1), hash(me2), "After doing sames modifications in the two models the hashes differs")
+        self.assertTrue(me1.__eq__(me2))

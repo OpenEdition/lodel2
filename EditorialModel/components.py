@@ -117,7 +117,10 @@ class EmComponent(object):
     ## @brief Hash function that allows to compare two EmComponent
     # @return EmComponent+ClassName+uid
     def __hash__(self):
-        return int(hashlib.md5(str(self.attr_dump).encode('utf-8')).hexdigest(),16)
+        component_dump = self.dumps()
+        del component_dump['date_create']
+        del component_dump['date_update']
+        return int(hashlib.md5(str(component_dump).encode('utf-8')).hexdigest(), 16)
 
     ## @brief Test if two EmComponent are "equals"
     # @return True or False
