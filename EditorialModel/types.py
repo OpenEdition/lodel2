@@ -223,7 +223,13 @@ class EmType(EmComponent):
     # @throw ValueError when relation_nature isn't reconized or not allowed for this type
     # @throw ValueError when relation_nature don't allow to link this types together
     def add_superior(self, em_type, relation_nature):
-        #Checking that this relation is allowed by the nature of the relation
+        # check if relation_nature is valid for this type
+        if relation_nature not in EmClassType.natures(self.classtype['name']):
+            raise ValueError("Invalid nature for add_superior : '" + relation_nature + "'. Allowed relations for this type are " + str(EmClassType.natures(self.classtype['name'])))
+
+        if relation_nature in self.superiors_list and em_type.uid in self.superiors_list[relation_nature]:
+            return True
+
         att = self.classtype['hierarchy'][relation_nature]['attach']
         if att == 'classtype':
             if self.classtype['name'] != em_type.classtype['name']:
@@ -239,6 +245,8 @@ class EmType(EmComponent):
     # @throw TypeError when em_type isn't an EmType instance
     # @throw ValueError when relation_nature isn't reconized or not allowed for this type
     def del_superior(self, em_type, relation_nature):
+        if relation_nature not in self.superiors_list or em_type.uid not in self.superiors_list[relation_nature]:
+            return True
         self._change_superiors_list(em_type, relation_nature, False)
 
     ## Apply changes to the superiors_list
@@ -249,9 +257,6 @@ class EmType(EmComponent):
         # check instance of parameters
         if not isinstance(em_type, EmType) or not isinstance(relation_nature, str):
             raise TypeError("Excepted <class EmType> and <class str> as em_type argument. But got : " + str(type(em_type)) + " " + str(type(relation_nature)))
-        # check if relation_nature is valid for this type
-        if relation_nature not in EmClassType.natures(self.classtype['name']):
-            raise ValueError("Invalid nature for add_superior : '" + relation_nature + "'. Allowed relations for this type are " + str(EmClassType.natures(self.classtype['name'])))
 
         try:
             if add:
