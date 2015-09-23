@@ -1,243 +1,129 @@
-import os
-import logging
-import datetime
-
-from django.conf import settings
-from unittest import TestCase
 import unittest
 
-from EditorialModel.types import EmType
-from EditorialModel.classes import EmClass
-from EditorialModel.classtypes import EmClassType, EmNature
-from EditorialModel.components import EmComponent, EmComponentNotExistError
-from EditorialModel.fieldgroups import EmFieldGroup
-from EditorialModel.fieldtypes import *
-from EditorialModel.fields import EmField
-from EditorialModel.test.utils import *
-from Database import sqlutils
+from EditorialModel.model import Model
+from EditorialModel.classtypes import EmNature
+from EditorialModel.backend.json_backend import EmBackendJson
 
-import sqlalchemy as sqla
+class TypeTestCase(unittest.TestCase):
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
-TEST_TYPE_DBNAME = 'test_em_type_db.sqlite'
-
-def setUpModule():
-    logging.basicConfig(level=logging.CRITICAL)
-
-    initTestDb(TEST_TYPE_DBNAME)
-    setDbConf(TEST_TYPE_DBNAME)
-
-    emclass1 = EmClass.create("entity1", EmClassType.entity)
-    emclass2 = EmClass.create("entity2", EmClassType.entity)
-    emclass3 = EmClass.create("entry1", EmClassType.entry)
-    emclass4 = EmClass.create("person1", EmClassType.person)
-
-    emtype = EmType.create(name='type1', em_class=emclass2)
-    EmType.create(name='type2', em_class=emclass2)
-    EmType.create(name='type3', em_class=emclass2)
-
-    EmType.create(name='type4', em_class=emclass3)
-    EmType.create(name='type5', em_class=emclass3)
-
-    EmType.create(name='type6', em_class=emclass4)
-    EmType.create(name='type7', em_class=emclass4)
-
-    emfieldgroup = EmFieldGroup.create(name='fieldgroup1', em_class=emclass1)
-    emfieldgroup2 = EmFieldGroup.create(name='fieldgroup2', em_class=emclass2)
-    emfieldtype = get_field_type('integer')
-    EmField.create(name='field1', fieldgroup=emfieldgroup, fieldtype=emfieldtype, rel_to_type_id=emtype.uid)
-    EmField.create(name='field2', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=True)
-    EmField.create(name='field3', fieldgroup=emfieldgroup2, fieldtype=emfieldtype, optional=False)
-
-    saveDbState(TEST_TYPE_DBNAME)
-
-def tearDownModule():
-    cleanDb(TEST_TYPE_DBNAME)
-    pass
-
-class TypeTestCase(TestCase):
-    
     def setUp(self):
-        restoreDbState(TEST_TYPE_DBNAME)
-        self.emclass1 = EmClass("entity1")
-        self.emclass2 = EmClass("entity2")
-        self.emtype = EmType('type1')
-        self.emtype2 = EmType('type2')
-        self.emtype3 = EmType('type3')
-        self.emtype4 = EmType('type4')
-        self.emtype5 = EmType('type5')
-        self.emtype6 = EmType('type6')
-        self.emtype7 = EmType('type7')
-        self.emfieldgroup = EmFieldGroup('fieldgroup1')
-        self.emfieldtype = get_field_type('integer')
-        self.emfield = EmField('field1')
-        self.emfield2 = EmField('field2')
-        self.emfield3 = EmField('field3')
-        pass
-
-
+        self.me = Model(EmBackendJson('EditorialModel/test/me.json'))
+        self.rubrique = self.me.component(14)
+        self.article = self.me.component(5)
+        self.personne = self.me.component(6)
+        self.soustitre_field = self.me.component(7)
+        self.age_field = self.me.component(18)
+        self.nom_field = self.me.component(9)
+        self.numero = self.me.component(19)
+        self.gens_group = self.me.component(17)
+        self.info_group = self.me.component(3)
+        self.couleur_group = self.me.component(20)
+        self.couleur_field = self.me.component(21)
 
 class TestSelectField(TypeTestCase):
+
     def testSelectField(self):
         """ Testing optionnal field selection """
-        self.emtype.select_field(self.emfield2)
-        #a bit queick and dirty
-        self.assertIn(self.emfield2, self.emtype.selected_fields()) 
-        pass
+        self.personne.select_field(self.age_field)
+
+        self.assertIn(self.age_field, self.personne.selected_fields())
+        self.assertIn(self.age_field.uid, self.personne.fields_list)
 
     def testUnselectField(self):
         """ Testing optionnal field unselection """
-        self.emtype.select_field(self.emfield2)
-        self.emtype.unselect_field(self.emfield2)
-        self.assertNotIn(self.emfield2, self.emtype.selected_fields())
-        pass
+        self.article.unselect_field(self.soustitre_field)
+
+        self.assertNotIn(self.soustitre_field, self.article.selected_fields())
+        self.assertNotIn(self.soustitre_field.uid, self.article.fields_list)
 
     def testSelectFieldInvalid(self):
         """ Testing optionnal field selection with invalid fields """
-        with self.assertRaises(ValueError, msg="But the field was not optionnal"):
-            self.emtype.select_field(self.emfield3)
-        with self.assertRaises(ValueError, msg="But the field was not part of this type"):
-            self.emtype.select_field(self.emfield)
-        pass
+        with self.assertRaises(ValueError):
+            self.personne.select_field(self.nom_field)
+        with self.assertRaises(ValueError):
+            self.personne.select_field(self.soustitre_field)
 
-class TestLinkedTypes(TypeTestCase):
-    @unittest.skip("Not yet implemented")
-    def testLinkedtypes(self):
-        """ Testing linked types """
-        self.emtype.add_superior(self.emtype2, EmNature.PARENT)
-        self.emtype3.add_superior(self.emtype, EmNature.PARENT)
-
-        linked_types = self.emtype.linked_types()
-
-        self.assertEqual(len(linked_types),2)
-        self.assertNotIn(self.emtype,linked_types)
-        self.assertIn(self.emtype2, linked_types)
-        self.assertIn(self.emtype3, linked_types)
 
 class TestTypeHierarchy(TypeTestCase):
 
-    @staticmethod
-    ## Replace instances by uid in subordinates or superiors return values
-    def _hierarch_uid(subs):
-        res = dict()
-        for nat in subs:
-            res[nat] = []
-            for sub in subs[nat]:
-                res[nat].append(sub.uid)
-        return res
+    def testAddSuperior(self):
+        """ Testing add_superior() """
+        self.numero.add_superior(self.rubrique, EmNature.PARENT)
 
-    # Check that the superior has been added
-    def check_add_sup(self, subtype, suptype, relnat):
-        subuid = self._hierarch_uid(suptype.subordinates())
-        supuid = self._hierarch_uid(subtype.superiors())
+        self.assertIn(self.rubrique, self.numero.superiors()[EmNature.PARENT])
+        self.assertIn(self.rubrique.uid, self.numero.superiors_list[EmNature.PARENT])
+        self.assertIn(self.numero, self.rubrique.subordinates()[EmNature.PARENT])
 
-        for nat in subuid:
-            if nat == relnat:
-                check = self.assertIn
-                msg = " should be in "
-            else:
-                check = self.assertNotIn
-                msg = " should not be in "
-            check(subtype.uid, subuid[nat], subtype.name+msg+suptype.name+" subordinates with nature '"+nat+"'")
-            check(suptype.uid, supuid[nat], suptype.name+msg+subtype.name+" superiors with nature '"+nat+"'")
-        pass
-            
+        # add it twice, it should not be listed twice
+        self.numero.add_superior(self.rubrique, EmNature.PARENT)
+        self.assertEqual(1, len(self.numero.superiors()[EmNature.PARENT]))
 
-    def testAddSuperiorParent(self):
-        """ Testing add superior in relation with Parent nature """
-        self.emtype.add_superior(self.emtype2, EmNature.PARENT)
-        self.check_add_sup(self.emtype, self.emtype2, EmNature.PARENT)
-
-        self.emtype4.add_superior(self.emtype4, EmNature.PARENT)
-        self.check_add_sup(self.emtype4, self.emtype4, EmNature.PARENT)
-        pass
-
-    def testAddSuperiorTranslation(self):
-        """ Testing add superior in relation with Translation nature """
-        self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
-        self.check_add_sup(self.emtype, self.emtype, EmNature.TRANSLATION)
-
-        self.emtype4.add_superior(self.emtype4, EmNature.TRANSLATION)
-        self.check_add_sup(self.emtype4, self.emtype4, EmNature.TRANSLATION)
-        pass
-
-    def testAddSuperiorIdentity(self):
-        """ Testing add superior in relation with Identity nature """
-        self.emtype6.add_superior(self.emtype6, EmNature.IDENTITY)
-        self.check_add_sup(self.emtype6, self.emtype6, EmNature.IDENTITY)
-        self.emtype6.add_superior(self.emtype7, EmNature.IDENTITY)
-        self.check_add_sup(self.emtype6, self.emtype6, EmNature.IDENTITY)
-        pass
-
-    def testIllegalSuperior(self):
-        """ Testing invalid add superior """
-        illegal_combinations = [
-            (self.emtype, self.emtype4, EmNature.PARENT),
-            (self.emtype, self.emtype2, EmNature.TRANSLATION),
-            (self.emtype4, self.emtype5, EmNature.PARENT),
-            (self.emtype4, self.emtype5, EmNature.TRANSLATION),
-            (self.emtype6, self.emtype, EmNature.IDENTITY),
-            (self.emtype4, self.emtype, EmNature.PARENT),
-            (self.emtype6, self.emtype, EmNature.PARENT),
-            (self.emtype, self.emtype2, EmNature.IDENTITY),
-
-        ]
-        for t1, t2, rnat in illegal_combinations:
-            with self.assertRaises(ValueError, msg="When trying to add an illegal superior "+str(t2)+" to "+str(t1)+" with '"+rnat+"' as relation nature"):
-                t1.add_superior(t2, rnat)
-        pass
-    
     def testDelSuperior(self):
-        """ Testing superior deletion """
-        self.emtype.add_superior(self.emtype2, EmNature.PARENT)
-        self.emtype.add_superior(self.emtype, EmNature.PARENT)
-        self.emtype.add_superior(self.emtype, EmNature.TRANSLATION)
+        """ Testing del_superior() """
 
-        self.emtype.del_superior(self.emtype2, EmNature.PARENT)
-        supuid = self._hierarch_uid(self.emtype.superiors())
-        self.assertNotIn(self.emtype2.uid, supuid[EmNature.PARENT], str(self.emtype2)+" should have been deleted as superior of "+str(self.emtype))
+        # rubrique should be a superior of article
+        self.assertIn(self.rubrique, self.article.superiors()[EmNature.PARENT])
+        # article should be in rubrique subordinates
+        self.assertIn(self.article, self.rubrique.subordinates()[EmNature.PARENT])
 
-        self.assertIn(self.emtype.uid, supuid[EmNature.PARENT], "Deleted more than wanted in the same relation nature")
-        self.assertIn(self.emtype.uid, supuid[EmNature.TRANSLATION], "Deleted more than wanted in another relation nature")
-        pass
-        
-        
+        self.article.del_superior(self.rubrique, EmNature.PARENT)
+
+        # article should not have EmNature.PARENT superior anymore
+        with self.assertRaises(KeyError):
+            self.article.superiors()[EmNature.PARENT]
+
+        # article should not be in rubrique subordinates
+        self.assertNotIn(self.article, self.rubrique.subordinates()[EmNature.PARENT])
+
+        # but rubrique should still be a subordinate of itself
+        self.assertIn(self.rubrique, self.rubrique.subordinates()[EmNature.PARENT])
+
+        # test preservation of superiors of other nature
+
+    def testBadHierarchy(self):
+        """ testing bad use of hierarchy """
+
+        # add a superior of different classtype
+        with self.assertRaises(ValueError):
+            self.numero.add_superior(self.personne, EmNature.PARENT)
+
+        # add a superior with bad nature
+        with self.assertRaises(ValueError):
+            self.numero.add_superior(self.rubrique, EmNature.IDENTITY)
+
+        # delete an invalid superior
+        self.article.del_superior(self.numero, EmNature.PARENT)
+
+
+class TestTypesMisc(TypeTestCase):
+
+    def testFieldgroups(self):
+
+        # should not send empty fieldgroups
+        self.assertNotIn(self.couleur_group, self.article.fieldgroups())
+
+        # add a field, fieldgroup should now appear
+        self.article.select_field(self.couleur_field)
+        self.assertIn(self.couleur_group, self.article.fieldgroups())
+
+        # delete it, fieldgroup should disappear
+        self.article.unselect_field(self.couleur_field)
+        self.assertNotIn(self.couleur_group, self.article.fieldgroups())
+
 
 class TestDeleteTypes(TypeTestCase):
+
     def testDeleteTypes(self):
         """ Testing EmType deletion """
-        type_name = self.emtype.name
-        self.assertTrue(self.emtype.delete(), "delete method returns False but should return True")
-        with self.assertRaises(EmComponentNotExistError, msg="Type not deleted"):
-            EmType(type_name)
 
-    def testUndeletableTypes(self):
-        """ Testing invalid non empty EmType deletion """
-        type_name = self.emtype.name
-        self.emtype2.add_superior(self.emtype, 'parent')
-        self.assertFalse(self.emtype.delete(), "delete return True but should return False")
-        try:
-            tmptype = EmType(type_name)
-        except EmComponentNotExistError:
-            self.fail("The type was deleted but it has subordinates when deleted")
-        pass
-    
-    def testDeleteTypesInHierarchy(self):
-        """ Testing if deletetion deletes properly links with superiors """
-        type_name = self.emtype.name
-        type_uid = self.emtype.uid
-        self.emtype.add_superior(self.emtype2, EmNature.PARENT)
-        self.emtype.delete()
-        try:
-            subs_dict = self.emtype2.subordinates()
-        except EmComponentNotExistError:
-            self.fail("The deleted type is style in the types hierarchu. Trying to retrieve it raises an EmComponentNotFoundError")
+        # should be okay to delete article
+        article_id = self.article.uid
+        self.assertTrue(self.me.delete_component(self.article.uid))
 
-        subsuid=[]
-        for _, subs in subs_dict.items():
-            subsuid += subs
-        self.assertNotIn(type_uid, subsuid)
-        pass
+        # and it should not exist anymore
+        self.assertFalse(self.me.component(article_id))
+        # relations with other type should be deleted
+        self.assertNotIn(self.article, self.rubrique.subordinates()[EmNature.PARENT])
 
-
-
+        # rubrique has subordinates, should not be okay to delete
+        self.assertFalse(self.me.delete_component(self.rubrique.uid))
