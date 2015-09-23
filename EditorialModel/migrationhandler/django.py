@@ -262,8 +262,9 @@ class DjangoMigrationHandler(object):
                     #emtype_fields[emfield.uniq_name] = models.CharField(max_length=56, default=emfield.uniq_name)
                     emtype_fields[emfield.uniq_name] = self.field_to_django(emfield, emtype)
                 #Adding superiors foreign key
-                for nature, superior in emtype.superiors().items():
-                    emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
+                for nature, superiors_list in emtype.superiors().items():
+                    for superior in superiors_list:
+                        emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
 
                 if self.debug:
                     print("Model for type %s created"%emtype.uniq_name)
