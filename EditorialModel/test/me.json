@@ -27,7 +27,7 @@
     "component":"EmField", "name":"nom", "string":"{\"fre\":\"Nom\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
   },
   "10" : {
-    "component":"EmField", "name":"prenom", "string":"{\"fre\":\"Preom\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
+    "component":"EmField", "name":"prenom", "string":"{\"fre\":\"Prénom\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
   },
   "11" : {
     "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"rel2type", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
@@ -49,5 +49,8 @@
   },
   "17" : {
     "component":"EmFieldGroup", "name":"gens", "string":"{\"fre\":\"Gens\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "class_id":"1"
+  },
+  "18" : {
+    "component":"EmField", "name":"age", "string":"{\"fre\":\"Age\"}", "help_text":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
   }
 }
