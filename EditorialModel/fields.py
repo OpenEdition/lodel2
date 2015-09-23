@@ -57,7 +57,11 @@ class EmField(EmComponent):
     # @throw When not found
     # @see EmField::fieldtypes()
     def get_field_class(ftype, **kwargs):
-        ftype_module = importlib.import_module('EditorialModel.fieldtypes.%s'%ftype)
+        if ftype == 'integer':
+            ftype_module = importlib.import_module('EditorialModel.fieldtypes.int')
+        else:
+            ftype_module = importlib.import_module('EditorialModel.fieldtypes.%s'%ftype)
+
         return ftype_module.fclass
 
     @staticmethod
