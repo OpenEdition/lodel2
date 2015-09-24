@@ -284,9 +284,9 @@ class Model(object):
     # - rfields : Maximum number of relation_to_type attributes fields (default 5)
     # - optfield : Chances for a field to be optionnal (default 2)
     # @param backend : A backend to use with the new EM
-    # @param **chances dict : Provide tunable generation parameter
+    # @param **kwargs dict : Provide tunable generation parameter
     # @return A randomly generate EM
-    def random(cls, backend, **chances):
+    def random(cls, backend, **kwargs):
         em = Model(backend)
 
         chances = {
@@ -303,6 +303,13 @@ class Model(object):
             'rfields': 5,#max number of attributes relation fields
             'optfield': 2, #chances to be optionnal
         }
+
+        for name,value in kwargs.items():
+            if name not in chances:
+                #warning
+                pass
+            else:
+                chances[name] = value
 
         #classes creation
         for classtype in EmClassType.getall():
@@ -404,8 +411,8 @@ class Model(object):
     ## @brief returns randomly generated datas for an EmComponent
     # @return a dict with name, string and help_text
     def _rnd_component_datas(cls):
-        mlstr_nlang = 5;
-        ret = {}
+        mlstr_nlang = 2;
+        ret = dict()
         ret['name'] = cls._rnd_str()
         ret['string'] = cls._rnd_mlstr(mlstr_nlang)
         ret['help_text'] = cls._rnd_mlstr(mlstr_nlang)
