@@ -36,7 +36,8 @@ class TestEmComponent(unittest.TestCase):
                 self.assertNotEqual(hash(comp1), hash(comp2), "hashes are the same after a modification of rank on one of the two components")
                 self.assertFalse(comp1 == comp2)
 
-                comp2.modify_rank(2)
+                comp2.modify_rank(1)
+
                 self.assertEqual(hash(comp1), hash(comp2), "hashes differs for two EmComponent({}) after applying the same modifications on both".format(comp_class.__name__))
                 self.assertTrue(comp1 == comp2)
 

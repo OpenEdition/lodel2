@@ -141,9 +141,10 @@ class EmComponent(object):
         raise NotImplementedError("Virtual method")
 
     ## @brief Get the maximum rank given an EmComponent child class and a ranked_in filter
-    # @return A positive integer or -1 if no components
+    # @return The max rank is the rank group or -1 if no components in that group
     def get_max_rank(self):
-        return len(self.same_rank_group())
+        same_rgroup = self.same_rank_group()
+        return max([ comp.rank for comp in same_rgroup]) if len(same_rgroup) > 0 else -1
 
     ## Return an array of instances that are concerned by the same rank
     # @return An array of instances that are concerned by the same rank
