@@ -3,6 +3,9 @@
 ## @file editorialmodel.py
 # Manage instance of an editorial model
 
+import random
+import time
+
 import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.backend.dummy_backend import EmBackendDummy
@@ -10,6 +13,8 @@ from EditorialModel.classes import EmClass
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
+from EditorialModel.classtypes import EmClassType
+from Lodel.utils.mlstring import MlString
 from EditorialModel.exceptions import EmComponentCheckError, EmComponentNotExistError, MigrationHandlerChangeError
 import hashlib
 
@@ -259,3 +264,127 @@ class Model(object):
         del new_me
 
         self.migration_handler = new_mh
+
+    @classmethod
+    ## @brief Generate a random editorial model
+    def random(cls, backend):
+        em = Model(backend)
+
+        chances = {
+            'classtype' : 0, # a class in classtype
+            'nclass': 5, #max number of classes per classtype
+            'nofg': 10, #no fieldgroup in a class
+            'nfg': 5, #max number of fieldgroups per classes
+            'notype': 5, # no types in a class
+            'ntype': 3,  # max number of types in a class
+            'seltype': 2, #chances to select an optional field
+            'ntypesuperiors': 3, #chances to link with a superior
+            'nofields': 10, # no fields in a fieldgroup
+            'nfields' : 8, #max number of fields per fieldgroups
+            'rfields': 5,#max number of attributes relation fields
+            'optfield': 2, #chances to be optionnal
+        }
+
+        #classes creation
+        for classtype in EmClassType.getall():
+            if random.randint(0,chances['classtype']) == 0:
+                for _ in range(random.randint(1,chances['nclass'])):
+                    cdats = cls._rnd_component_datas()
+                    cdats['classtype'] = classtype['name']
+                    em.create_component('EmClass', cdats)
+
+        for emclass in em.classes():
+            #fieldgroups creation
+            if random.randint(0, chances['nofg']) != 0:
+                for _ in range(random.randint(1, chances['nfg'])):
+                    fgdats = cls._rnd_component_datas()
+                    fgdats['class_id'] = emclass.uid
+                    em.create_component('EmFieldGroup', fgdats)
+
+            #types creation
+            if random.randint(0, chances['notype']) != 0:
+                for _ in range(random.randint(1, chances['ntype'])):
+                    tdats = cls._rnd_component_datas()
+                    tdats['class_id'] = emclass.uid
+                    em.create_component('EmType', tdats)
+
+        #random type hierarchy
+        for emtype in em.components(EmType):
+            possible = emtype.possible_superiors()
+            for nat in possible:
+                while random.randint(0, chances['ntypesuperiors']) == 0 and len(possible[nat]) > 0:
+                    i = random.randint(0,len(possible[nat])-1)
+                    emtype.add_superior(possible[nat][i], nat)
+
+
+        #fields creation
+        ft_l = EmField.fieldtypes_list()
+        for emfg in em.components(EmFieldGroup):
+            if random.randint(0, chances['nofields']) != 0:
+                for _ in range(random.randint(1, chances['nfields'])):
+                    ft = ft_l[random.randint(0,len(ft_l)-1)]
+                    fdats = cls._rnd_component_datas()
+                    fdats['fieldtype']=ft
+                    fdats['fieldgroup_id'] = emfg.uid
+                    if ft == 'rel2type':
+                        emtypes = em.components(EmType)
+                        fdats['rel_to_type_id'] = emtypes[random.randint(0,len(emtypes)-1)].uid
+                    if random.randint(0,chances['optfield']) == 0:
+                        fdats['optional'] = True
+                    em.create_component('EmField', fdats)
+
+        #relationnal fiels creation
+        ft_l = [ ft for ft in EmField.fieldtypes_list() if ft != 'rel2type' ]
+        for emrelf in [ f for f in em.components(EmField) if f.ftype == 'rel2type' ]:
+            for _ in range(0,chances['rfields']):
+                ft = ft_l[random.randint(0, len(ft_l)-1)]
+                fdats = cls._rnd_component_datas()
+                fdats['fieldtype'] = ft
+                fdats['fieldgroup_id'] = emrelf.fieldgroup_id
+                if random.randint(0, chances['optfield']) == 0:
+                    fdats['optional'] = True
+                em.create_component('EmField', fdats)
+                
+
+        #selection optionnal fields
+        for emtype in em.components(EmType):
+            selectable = [field for fieldgroup in emtype.fieldgroups() for field in fieldgroup.fields() if field.optional ]
+            for field in selectable:
+                if random.randint(0,chances['seltype']) == 0:
+                    emtype.select_field(field)
+                    
+
+        return em
+
+                
+    
+    @staticmethod
+    ## @brief Generate a random string
+    # @warning dirty cache trick with globals()
+    def _rnd_str():
+        if '_words' not in globals():
+            with open('/usr/share/dict/words', 'r') as fpw:
+                globals()['_words'] = [ l for l in fpw ]
+        words = globals()['_words']
+        return words[random.randint(0,len(words)-1)]
+        
+    @classmethod
+    def _rnd_mlstr(cls, nlng):
+        ret = MlString()
+        for _ in range(nlng):
+            ret.set(cls._rnd_str(), cls._rnd_str())
+        return ret
+
+    @classmethod
+    ## @brief returns randomly generated datas for an EmComponent
+    def _rnd_component_datas(cls):
+        mlstr_nlang = 5;
+        ret = {}
+        ret['name'] = cls._rnd_str()
+        ret['string'] = cls._rnd_mlstr(mlstr_nlang)
+        ret['help_text'] = cls._rnd_mlstr(mlstr_nlang)
+
+        return ret
+        
+        
+        
