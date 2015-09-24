@@ -15,13 +15,13 @@ from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 class TestEmComponent(unittest.TestCase):
     def setUp(self):
-        self.me =  Model(EmBackendJson('EditorialModel/test/me.json'))
-    
+        self.model = Model(EmBackendJson('EditorialModel/test/me.json'))
+
     def test_hashes(self):
         """ Testing __hash__ and __eq__ methods """
-        me1 =  Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 =  Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler = DummyMigrationHandler(True))
-        
+        me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler(True))
+
         for comp_class in [EmClass, EmType, EmField, EmFieldGroup]:
             comp_l1 = me1.components(comp_class)
             comp_l2 = me2.components(comp_class)
@@ -43,11 +43,11 @@ class TestEmComponent(unittest.TestCase):
     def test_virtual_methods(self):
         """ Testing virtual methods """
         with self.assertRaises(NotImplementedError):
-            foo = EmComponent(self.me, self.me.new_uid(), 'Invalide')
+            _ = EmComponent(self.model, self.model.new_uid(), 'Invalide')
 
     def test_modify_rank(self):
         """ Testing modify_rank and set_rank method """
-        cls = self.me.classes()[0]
+        cls = self.model.classes()[0]
         orig_rank = cls.rank
 
         cls.modify_rank(1)
@@ -83,7 +83,7 @@ class TestEmComponent(unittest.TestCase):
 
     def test_check(self):
         """ Testing check method """
-        cls = self.me.classes()[0]
+        cls = self.model.classes()[0]
         cls.rank = 10000
 
         cls.check()
@@ -93,10 +93,9 @@ class TestEmComponent(unittest.TestCase):
         cls.check()
         self.assertEqual(cls.rank, 1)
 
-    
     def test_dump(self):
         """ Testing dump methods """
-        for comp in self.me.components():
+        for comp in self.model.components():
             dmp = comp.attr_dump()
             self.assertNotIn('uid', dmp)
             self.assertNotIn('model', dmp)
@@ -108,10 +107,8 @@ class TestEmComponent(unittest.TestCase):
     def test_uniq_name(self):
         """ Testing uniq_name method """
         names_l = []
-        for comp in self.me.components():
+        for comp in self.model.components():
             #Should be uniq only for types and classes
             if isinstance(comp, EmType) or isinstance(comp, EmClass):
                 self.assertNotIn(comp.uniq_name, names_l)
                 names_l.append(comp.uniq_name)
-
-
