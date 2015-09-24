@@ -58,7 +58,7 @@ class TestEmClassCreation(ClassesTestCase):
         testClass = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testclass1', 'classtype': EmClassType.entity['name']})
 
         #We check the uid
-        self.assertEqual(testClass.uid, 18)
+        self.assertEqual(testClass.uid, 22)
 
         # We check that the class has been added in the right list in the model object
         class_components_records = EM_TEST_OBJECT.components(EmClass)
