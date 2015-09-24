@@ -185,16 +185,26 @@ class EmComponent(object):
         self.model.sort_components(self.__class__)
 
     ## Modify a rank given an integer modifier
+    # @note this method always tries to make the modification : if modifier is too big put 
+    # the component in last position, if modifier is to small put the component
+    # in first position
     # @param rank_mod int : can be a negative positive or zero integer
+    # @return True if the modification was made as wanted else return false
     # @throw TypeError if rank_mod is not an integer
-    # @throw ValueError if rank_mod is out of bound
     def modify_rank(self, rank_mod):
         if not isinstance(rank_mod, int):
             raise TypeError("Excepted <class int>. But got %s" % str(type(rank_mod)))
-        try:
-            self.set_rank(self.rank + rank_mod)
-        except ValueError:
-            raise ValueError("The rank modifier '%s' is out of bounds" % str(rank_mod))
+        ret = True
+        new_rank = self.rank + rank_mod
+        if new_rank < 1:
+           ret = False
+           new_rank = 1
+        elif new_rank > self.get_max_rank():
+            ret = False
+            new_rank = self.get_max_rank()
+            
+        self.set_rank(new_rank)
+        return ret
 
     ## @brief Return a string representation of the component
     # @return A string representation of the component

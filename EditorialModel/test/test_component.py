@@ -31,7 +31,8 @@ class TestEmComponent(unittest.TestCase):
                 self.assertEqual(hash(comp1), hash(comp2), "hashes differs for two EmComponent({}) instanciated from the same backend and files".format(comp_class.__name__))
                 self.assertTrue(comp1 == comp2)
 
-                comp1.modify_rank(1)
+                if not comp1.modify_rank(1):
+                    continue #modification not made, drop this test
 
                 self.assertNotEqual(hash(comp1), hash(comp2), "hashes are the same after a modification of rank on one of the two components")
                 self.assertFalse(comp1 == comp2)
@@ -67,11 +68,9 @@ class TestEmComponent(unittest.TestCase):
         cls.set_rank(max_rank)
         self.assertEqual(cls.rank, max_rank)
 
-        with self.assertRaises(ValueError):
-            cls.modify_rank(1)
+        self.assertFalse(cls.modify_rank(1))
 
-        with self.assertRaises(ValueError):
-            cls.modify_rank(-10)
+        self.assertFalse(cls.modify_rank(-10))
 
         with self.assertRaises(ValueError):
             cls.set_rank(0)
