@@ -2,14 +2,13 @@
 
 ## @package EditorialModel.backend.json_backend
 # @brief Handle json files
-# 
+#
 # Allows an editorial model to be loaded/saved in
 # json format
 
 import json
 import datetime
 from Lodel.utils.mlstring import MlString
-import EditorialModel
 
 
 def date_cast(date):
@@ -52,36 +51,47 @@ class EmBackendJson(object):
     ## Constructor
     #
     # @param json_file str: path to the json_file used as data source
-    def __init__(self, json_file):
-        self.json_file = json_file
-        pass
+    # @param json_string str: json_data used as data source
+    def __init__(self, json_file=None, json_string=None):
+        if (not json_file and not json_string) or (json_file and json_string):
+            raise AttributeError
+        self._json_file = json_file
+        self._json_string = json_string
 
     @staticmethod
     ## @brief Used by json.dumps to serialize date and datetime
     def date_handler(obj):
         return obj.strftime('%c') if isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date) else None
 
-
-    ## Loads the data in the data source json file
+    ## Loads the data from given file or string
     #
     # @return list
     def load(self):
         data = {}
-        with open(self.json_file) as json_data:
-            rdata = json.loads(json_data.read())
-            for index, component in rdata.items():
-                attributes = {}
-                for attr_name, attr_value in component.items():
-                    if attr_name in EmBackendJson.cast_methods:
-                        attributes[attr_name] = EmBackendJson.cast_methods[attr_name](attr_value)
-                    else:
-                        attributes[attr_name] = attr_value
-                data[int(index)] = attributes
+        json_string = self._load_from_file() if self._json_file else self._json_string
+        json_data = json.loads(json_string)
+        for index, component in json_data.items():
+            attributes = {}
+            for attr_name, attr_value in component.items():
+                if attr_name in EmBackendJson.cast_methods:
+                    attributes[attr_name] = EmBackendJson.cast_methods[attr_name](attr_value)
+                else:
+                    attributes[attr_name] = attr_value
+            data[int(index)] = attributes
+
+        return data
+
+    def _load_from_file(self):
+        with open(self._json_file) as content:
+            data = content.read()
         return data
 
     ## Saves the data in the data source json file
     # @param filename str : The filename to save the EM in (if None use self.json_file provided at init )
-    def save(self, em, filename = None):
-        with open(self.json_file if filename is None else filename, 'w') as fp:
-            fp.write(json.dumps({ component.uid : component.attr_flat() for component in em.components() }, default=self.date_handler))
-
+    def save(self, model, filename=None):
+        json_dump = json.dumps({component.uid: component.attr_flat() for component in model.components()}, default=self.date_handler)
+        if self._json_file:
+            with open(self._json_file if filename is None else filename, 'w') as json_file:
+                json_file.write(json_dump)
+        else:
+            return json_dump
