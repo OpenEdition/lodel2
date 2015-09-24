@@ -31,7 +31,7 @@ EM_TEST_OBJECT = None
 # define the Database for this module (an sqlite database)
 def setUpModule():
     global EM_TEST_OBJECT
-    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))  # , migration_handler=DjangoMigrationHandler('LodelTestInstance'))
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjangoMigrationHandler('LodelTestInstance'))
     logging.basicConfig(level=logging.CRITICAL)
 
 class ClassesTestCase(TestCase):
