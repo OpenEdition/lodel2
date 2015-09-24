@@ -83,5 +83,5 @@ class EmBackendJson(object):
     # @param filename str : The filename to save the EM in (if None use self.json_file provided at init )
     def save(self, em, filename = None):
         with open(self.json_file if filename is None else filename, 'w') as fp:
-            fp.write(json.dumps({ component.uid : component.dumps() for component in em.components() }, default=self.date_handler))
+            fp.write(json.dumps({ component.uid : component.attr_flat() for component in em.components() }, default=self.date_handler))
 

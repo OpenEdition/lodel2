@@ -57,6 +57,18 @@ class EmComponent(object):
     def attr_dump(self):
         return {fname: fval for fname, fval in self.__dict__.items() if not (fname.startswith('_') or (fname == 'uid') or (fname == 'model'))}
 
+    ## @brief Return a dict with attributes name as key and attributes value flattened
+    def attr_flat(self):
+        attributes_dump = self.attr_dump()
+        for attr_name in list(attributes_dump.keys()):
+            if isinstance(attributes_dump[attr_name], EmComponent):
+                attributes_dump[attr_name] = attributes_dump[attr_name].uid
+            elif isinstance(attributes_dump[attr_name], MlString):
+                attributes_dump[attr_name] = attributes_dump[attr_name].__str__()
+        attributes_dump['component'] = 'EmField' if isinstance(self, EditorialModel.fields.EmField) else self.__class__.__name__
+
+        return attributes_dump
+
     @property
     ## @brief Provide a uniq name
     #
@@ -101,30 +113,21 @@ class EmComponent(object):
     def __hash__(self):
         # flatten list of attributes of the component to an ordered list
         # so every time we have the same string representation
-        attributes_dump = self.attr_dump()
-        ordered_attributes = sorted(list(attributes_dump.keys()))
+        attributes_flat = self.attr_flat()
+        ordered_attributes = sorted(list(attributes_flat.keys()))
 
         component_dump = []
         for attr_name in ordered_attributes:
-            if isinstance(attributes_dump[attr_name], EmComponent):
-                value = attributes_dump[attr_name].uid
-            elif isinstance(attributes_dump[attr_name], MlString):
-                value = attributes_dump[attr_name].__str__()
-            elif isinstance(attributes_dump[attr_name], datetime.datetime):
+            if isinstance(attributes_flat[attr_name], datetime.datetime):  # drop date values
                 continue
-            else:
-                value = attributes_dump[attr_name]
-            component_dump.append((attr_name, value))
-
-        component_name = 'EmField' if isinstance(self, EditorialModel.fields.EmField) else self.__class__.__name__
-        component_dump.append(('component', component_name))
+            component_dump.append((attr_name, attributes_flat[attr_name]))
 
         return int(hashlib.md5(str(component_dump).encode('utf-8')).hexdigest(), 16)
 
     ## @brief Test if two EmComponent are "equals"
     # @return True or False
     def __eq__(self, other):
-        return self.__class__ == other.__class__ and self.uid == other.uid
+        return hash(self) == hash(other)
 
     ## Check if the EmComponent is valid
     # This function has to check that rank are correct and continuous other checks are made in childs classes
