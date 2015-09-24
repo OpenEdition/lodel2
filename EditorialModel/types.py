@@ -213,6 +213,27 @@ class EmType(EmComponent):
     def superiors(self):
         return {nature: [self.model.component(superior_uid) for superior_uid in superiors_uid] for nature, superiors_uid in self.superiors_list.items()}
 
+    ## @brief Given a relation's nature return all the possible type to add as superiors
+    # @param relation_nature str | None : if None check for all natures
+    # @return a list or a dict with nature as key
+    def possible_superiors(self, relation_nature = None):
+        if relation_nature is None:
+            ret = {}
+            for nat in EmNature.getall():
+                ret[nat] = self.possible_superiors(nat)
+            return ret
+
+        #One nature
+        if relation_nature not in self.classtype['hierarchy']:
+            return []
+
+        att = self.classtype['hierarchy'][relation_nature]['attach']
+        if att == 'type':
+            return [ self ]
+        else:
+           return [ t for t in self.model.components(EmType) if t.classtype == self.classtype ]
+
+
     ## Add a superior in the type hierarchy
     # @param em_type EmType: An EmType instance
     # @param relation_nature str: The name of the relation's nature
