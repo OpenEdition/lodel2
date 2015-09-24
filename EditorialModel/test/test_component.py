@@ -20,7 +20,7 @@ class TestEmComponent(unittest.TestCase):
     def test_hashes(self):
         """ Testing __hash__ and __eq__ methods """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler(True))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
 
         for comp_class in [EmClass, EmType, EmField, EmFieldGroup]:
             comp_l1 = me1.components(comp_class)
