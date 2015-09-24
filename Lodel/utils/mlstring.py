@@ -38,7 +38,7 @@ class MlString(object):
     # @return A json dump of the MlString::translations dict
     def __str__(self):
         if self.translations:
-            return json.dumps(self.translations)
+            return json.dumps(self.translations, sort_keys=True)
         else:
             return ""
 
