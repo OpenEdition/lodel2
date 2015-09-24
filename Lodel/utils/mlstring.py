@@ -10,8 +10,8 @@ class MlString(object):
     ## Instanciate a new string with translation
     #
     # @param translations dict: With key = lang and value the translation
-    def __init__(self, translations=dict()):
-        self.translations = translations
+    def __init__(self, translations=None):
+        self.translations = dict() if translations is None else translations
     
     ## Return a translation
     # @param lang str: The lang
