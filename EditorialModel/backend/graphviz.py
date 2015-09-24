@@ -80,9 +80,9 @@ class EmBackendGraphviz(object):
         cn = c.__class__.__name__
         rel_field = ""
         if cn == 'EmClass':
-            ret += '[ label="%s", shape="%s" ]'%(c.name, 'doubleoctagon')
+            ret += '[ label="%s", shape="%s" ]'%(c.name.replace('"','\\"'), 'doubleoctagon')
         elif cn == 'EmType' or cn == 'EmFieldGroup':
-            ret += '[ label="%s %s '%(cn, c.name)
+            ret += '[ label="%s %s '%(cn, c.name.replace('"','\\"'))
 
             cntref = 0
             first = True
