@@ -7,36 +7,36 @@ from EditorialModel.backend.json_backend import EmBackendJson
 class TypeTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.me = Model(EmBackendJson('EditorialModel/test/me.json'))
-        self.rubrique = self.me.component(14)
-        self.article = self.me.component(5)
-        self.personne = self.me.component(6)
-        self.soustitre_field = self.me.component(7)
-        self.age_field = self.me.component(18)
-        self.nom_field = self.me.component(9)
-        self.numero = self.me.component(19)
-        self.gens_group = self.me.component(17)
-        self.info_group = self.me.component(3)
-        self.couleur_group = self.me.component(20)
-        self.couleur_field = self.me.component(21)
+        self.model = Model(EmBackendJson('EditorialModel/test/me.json'))
+        self.rubrique = self.model.component(14)
+        self.article = self.model.component(5)
+        self.personne = self.model.component(6)
+        self.soustitre_field = self.model.component(7)
+        self.age_field = self.model.component(18)
+        self.nom_field = self.model.component(9)
+        self.numero = self.model.component(19)
+        self.gens_group = self.model.component(17)
+        self.info_group = self.model.component(3)
+        self.couleur_group = self.model.component(20)
+        self.couleur_field = self.model.component(21)
 
 class TestSelectField(TypeTestCase):
 
-    def testSelectField(self):
+    def test_select_field(self):
         """ Testing optionnal field selection """
         self.personne.select_field(self.age_field)
 
         self.assertIn(self.age_field, self.personne.selected_fields())
         self.assertIn(self.age_field.uid, self.personne.fields_list)
 
-    def testUnselectField(self):
+    def test_unselect_field(self):
         """ Testing optionnal field unselection """
         self.article.unselect_field(self.soustitre_field)
 
         self.assertNotIn(self.soustitre_field, self.article.selected_fields())
         self.assertNotIn(self.soustitre_field.uid, self.article.fields_list)
 
-    def testSelectFieldInvalid(self):
+    def test_select_field_invalid(self):
         """ Testing optionnal field selection with invalid fields """
         with self.assertRaises(ValueError):
             self.personne.select_field(self.nom_field)
@@ -46,7 +46,7 @@ class TestSelectField(TypeTestCase):
 
 class TestTypeHierarchy(TypeTestCase):
 
-    def testAddSuperior(self):
+    def test_add_superior(self):
         """ Testing add_superior() """
         self.numero.add_superior(self.rubrique, EmNature.PARENT)
 
@@ -58,7 +58,7 @@ class TestTypeHierarchy(TypeTestCase):
         self.numero.add_superior(self.rubrique, EmNature.PARENT)
         self.assertEqual(1, len(self.numero.superiors()[EmNature.PARENT]))
 
-    def testDelSuperior(self):
+    def test_del_superior(self):
         """ Testing del_superior() """
 
         # rubrique should be a superior of article
@@ -70,7 +70,7 @@ class TestTypeHierarchy(TypeTestCase):
 
         # article should not have EmNature.PARENT superior anymore
         with self.assertRaises(KeyError):
-            self.article.superiors()[EmNature.PARENT]
+            _ = self.article.superiors()[EmNature.PARENT]
 
         # article should not be in rubrique subordinates
         self.assertNotIn(self.article, self.rubrique.subordinates()[EmNature.PARENT])
@@ -80,7 +80,7 @@ class TestTypeHierarchy(TypeTestCase):
 
         # test preservation of superiors of other nature
 
-    def testBadHierarchy(self):
+    def test_bad_hierarchy(self):
         """ testing bad use of hierarchy """
 
         # add a superior of different classtype
@@ -97,7 +97,7 @@ class TestTypeHierarchy(TypeTestCase):
 
 class TestTypesMisc(TypeTestCase):
 
-    def testFieldgroups(self):
+    def test_fieldgroups(self):
 
         # should not send empty fieldgroups
         self.assertNotIn(self.couleur_group, self.article.fieldgroups())
@@ -113,17 +113,17 @@ class TestTypesMisc(TypeTestCase):
 
 class TestDeleteTypes(TypeTestCase):
 
-    def testDeleteTypes(self):
+    def test_delete_types(self):
         """ Testing EmType deletion """
 
         # should be okay to delete article
         article_id = self.article.uid
-        self.assertTrue(self.me.delete_component(self.article.uid))
+        self.assertTrue(self.model.delete_component(self.article.uid))
 
         # and it should not exist anymore
-        self.assertFalse(self.me.component(article_id))
+        self.assertFalse(self.model.component(article_id))
         # relations with other type should be deleted
         self.assertNotIn(self.article, self.rubrique.subordinates()[EmNature.PARENT])
 
         # rubrique has subordinates, should not be okay to delete
-        self.assertFalse(self.me.delete_component(self.rubrique.uid))
+        self.assertFalse(self.model.delete_component(self.rubrique.uid))
