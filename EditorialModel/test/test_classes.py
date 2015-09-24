@@ -18,7 +18,7 @@ from EditorialModel.fields import EmField
 import EditorialModel.fieldtypes  as fieldTypes
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-
+from EditorialModel.migrationhandler.django import DjangoMigrationHandler
 #from Database import sqlutils, sqlsetup
 #import sqlalchemy as sqla
 
@@ -31,9 +31,8 @@ EM_TEST_OBJECT = None
 # define the Database for this module (an sqlite database)
 def setUpModule():
     global EM_TEST_OBJECT
-    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))  # , migration_handler=DjangoMigrationHandler('LodelTestInstance'))
     logging.basicConfig(level=logging.CRITICAL)
-    #settings.LODEL2SQLWRAPPER['db']['default'] = {'ENGINE':'sqlite', 'NAME':'/tmp/testdb.sqlite'}
 
 class ClassesTestCase(TestCase):
 
@@ -59,7 +58,7 @@ class TestEmClassCreation(ClassesTestCase):
         testClass = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testclass1', 'classtype': EmClassType.entity['name']})
 
         #We check the uid
-        self.assertEqual(testClass.uid, 22)
+        self.assertEqual(testClass.uid, 18)
 
         # We check that the class has been added in the right list in the model object
         class_components_records = EM_TEST_OBJECT.components(EmClass)
@@ -76,49 +75,41 @@ class TestEmClassCreation(ClassesTestCase):
 
 # Testing class deletion (and associated table drop)
 class TestEmClassDeletion(ClassesTestCase):
-    
+
     def setUp(self):
-        self.names = ['testClass1', 'testClass2', 'testClass3']
-        EmClass.create(self.names[0], EmClassType.entity)
-        EmClass.create(self.names[1], EmClassType.entry)
-        EmClass.create(self.names[2], EmClassType.person)
-        pass
-    
-    # test if the table is deleted after a call to delete
+        self.names = ['testClasse1', 'testClasse2', 'testClasse3']
+        self.emclasses = []
+        self.emclasses.append(EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': self.names[0], 'classtype': EmClassType.entity['name']}))
+        self.emclasses.append(EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': self.names[1], 'classtype': EmClassType.entry['name']}))
+        self.emclasses.append(EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': self.names[2], 'classtype': EmClassType.person['name']}))
+
+    # tests if the table is deleted after a call to delete
     def test_table_delete(self):
-        """ Test associated table deletetion on EmClass deletion """
-        dbe = sqlutils.get_engine()
-        for i,class_name in enumerate(self.names):
-            cur_class = EmClass(class_name)
-            self.assertTrue(cur_class.delete(), "delete method didn't return True but the class has no fieldgroups")
-            meta = sqlutils.meta(dbe)
-            table_list = meta.tables.keys()
-            for deleted_name in self.names[:i+1]:
-                self.assertNotIn(deleted_name, table_list, "Table still exist but the class was deleted")
-            for not_deleted_name in self.names[i+1:]:
-                self.assertIn(not_deleted_name, table_list, "Table don't exist but the class was NOT deleted")
-            with self.assertRaises(EmComponentNotExistError,msg="This EmClass should be deleted"):
-                EmClass(class_name)
-        pass
-    
-    # test if delete refuse to delete if a class had fieldgroups
+        """ Test associated table deletion on EmClass deletion """
+        for i, class_object in enumerate(self.emclasses):
+            self.assertTrue(EM_TEST_OBJECT.delete_component(class_object.uid), "delete method didn't return True but the class has no fieldgroups")
+
+        # TODO check : "table still exists but the class was deleted"
+        # TODO check : "table doesn't exist but the class was not deleted"
+
+
+    # tests if delete refuse to delete if a class had fieldgroups
     def test_table_refuse_delete(self):
-        """ Test delete on an EmClass has fieldgroup """
-        test_class = EmClass(self.names[0])
-        fieldgroup = EmFieldGroup.create('fooFieldGroup', test_class)
-        self.assertFalse(test_class.delete(), "delete method returns True but the class has fieldgroup")
-        dbe = sqlutils.get_engine()
-        meta = sqlutils.meta(dbe)
-        self.assertIn(self.names[0], meta.tables, "Table has been deleted but the class has fieldgroup")
+        """ Test delete on an EmClass that has fieldgroup """
+        test_class = EM_TEST_OBJECT.create_component(EmClass.__name__,{'name': 'testfgclass1', 'classtype': EmClassType.entity['name']})
+        fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testsubfg1', 'class_id': test_class.uid})
+        self.assertFalse(EM_TEST_OBJECT.delete_component(test_class.uid), "delete method returns True but the class has fieldgroup(s)")
+
+        # TODO check : "table has been deleted but the class has fieldgroup"
+
         try:
-            EmClass(self.names[0])
+            EM_TEST_OBJECT.component(test_class.uid)
         except EmComponentNotExistError:
             self.fail("The class has been deleted but it has fieldgroups")
-        pass
 
 
-# interface to fieldGroups
-class TestEmClassFieldgroups(ClassesTestCase):
+# Interface to fieldgroups
+class TestEmClassFieldgrousp(ClassesTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -126,28 +117,29 @@ class TestEmClassFieldgroups(ClassesTestCase):
 
     def setUp(self):
         ClassesTestCase.setUpClass()
-        test_class = EmClass.create('testClass', EmClassType.entity)
+        self.test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassFg', 'classtype': EmClassType.entity['name']})
 
-    # test if fieldgroups() return a list of EmFieldGroup
+    # tests if fieldgroups() returns a list of EmFieldGroup
     def test_fieldgroups(self):
-        """ Test if fieldgroups method return the right list of EmFielGroup """
-        test_class = EmClass('testClass')
-        fg1 = EmFieldGroup.create('fg1', test_class)
-        fg2 = EmFieldGroup.create('fg2', test_class)
+        """ Tests if fieldgroups method returns the right list of EmFieldGroup """
+        test_class = EM_TEST_OBJECT.component(self.test_class.uid)
+        fg1 = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testClassFg1', 'class_id': test_class.uid})
+        fg2 = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testClassFg2', 'class_id': test_class.uid})
 
         fieldgroups = test_class.fieldgroups()
         self.assertIsInstance(fieldgroups, list)
         for fieldgroup in fieldgroups:
             self.assertIsInstance(fieldgroup, EmFieldGroup)
 
-    # with no fieldgroups fieldgroups() should return an empty list
+    # with no fieldgroups, fieldgroups() should return an empty list
     def test_no_fieldgroups(self):
-        """ Test fielgroups method on an empty EmClass """
-        test_class = EmClass('testClass')
+        """ Test fieldgroups method on an empty EmClass """
+        test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassFg3', 'classtype': EmClassType.entity['name']})
         fieldgroups = test_class.fieldgroups()
         self.assertEqual(fieldgroups, [])
 
-# interface to types
+
+# Interface to types
 class TestEmClassTypes(ClassesTestCase):
 
     @classmethod
@@ -156,24 +148,23 @@ class TestEmClassTypes(ClassesTestCase):
 
     def setUp(self):
         ClassesTestCase.setUpClass()
-        test_class = EmClass.create('testClass', EmClassType.entity)
+        self.test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassType', 'classtype': EmClassType.entity['name']})
 
-    # test if types() return a list of EmType
+    # tests if types() returns a list of EmType
     def test_types(self):
-        """ Test if types method return the right list of EmType """
-        test_class = EmClass('testClass')
-        t1 = EmType.create('t1', test_class)
-        t2 = EmType.create('t2', test_class)
-
+        """ Tests if types method returns the right list of EmType """
+        test_class = EM_TEST_OBJECT.component(self.test_class.uid)
+        t1 = EM_TEST_OBJECT.create_component(EmType.__name__, {'name': 'testClassType1', 'class_id': test_class.uid})
+        t2 = EM_TEST_OBJECT.create_component(EmType.__name__, {'name': 'testClassType2', 'class_id': test_class.uid})
         types = test_class.types()
         self.assertIsInstance(types, list)
         for t in types:
             self.assertIsInstance(t, EmType)
 
-    # with no type types() should return an empty list
+    # with no type, types() should return an empty list
     def test_no_types(self):
         """ Test types method on an EmClass with no associated types """
-        test_class = EmClass('testClass')
+        test_class = EM_TEST_OBJECT.component(self.test_class.uid)
         types = test_class.types()
         self.assertEqual(types, [])
 
@@ -186,16 +177,15 @@ class TestEmClassFields(ClassesTestCase):
 
     def setUp(self):
         ClassesTestCase.setUpClass()
-        test_class = EmClass.create('testClass', EmClassType.entity)
+        self.test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassFields', 'classtype': EmClassType.entity['name']})
 
-    # test if fields() return a list of EmField
+    # tests if fields() returns a list of EmField
     def test_fields(self):
-        """ Testing fields method """
-        test_class = EmClass('testClass')
-        fg = EmFieldGroup.create('fg', test_class)
-        f1 = EmField.create('f1', fg, fieldTypes.EmField_char())
-        f2 = EmField.create('f2', fg, fieldTypes.EmField_char())
-
+        """ testing fields method """
+        test_class = EM_TEST_OBJECT.component(self.test_class.uid)
+        fg = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testClassFieldsFg', 'class_id': test_class.uid})
+        f1 = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'f1', 'fieldgroup_id': fg.uid, 'fieldtype': 'char'})
+        f2 = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'f2', 'fieldgroup_id': fg.uid, 'fieldtype': 'char'})
         fields = test_class.fields()
         self.assertIsInstance(fields, list)
         for field in fields:
@@ -204,11 +194,12 @@ class TestEmClassFields(ClassesTestCase):
     # with no field fields() should return an empty list
     def test_no_fields(self):
         """ Testing fields method on an EmClass with no associated fields """
-        test_class = EmClass('testClass')
+        test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassNoFields', 'classtype': EmClassType.entity['name']})
         fields = test_class.fields()
         self.assertEqual(fields, [])
 
-# creating an new EmClass should
+
+# Creating a new EmClass should :
 # - create a table named like the created EmClass
 # - insert a new line in em_classes
 @unittest.skip("Not implemented yet")
@@ -218,10 +209,12 @@ class TestEmClassLinkType(ClassesTestCase):
     @classmethod
     def setUpClass(cls):
         ClassesTestCase.setUpClass()
-        testEntity = EmClass.create('testEntity', EmClassType.entity)
-        testEntry = EmClass.create('testEntry', EmClassType.entry)
-        keywords = EmType.create('keywords', testEntry)
+        testEntity = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testEntity', 'classtype': EmClassType.entity['name']})
+        testEntry = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testEntry', 'classtype': EmClassType.entry['name']})
+        keywords = EM_TEST_OBJECT.create_component(EmType.__name__, {'name': 'keywords', 'class_id': testEntry.uid})
         testEntity.link_type(keywords)
+
+'''
 
     # test if a table 'testEntity_keywords' was created
     # should be able to select on the created table
@@ -245,3 +238,4 @@ class TestEmClassLinkType(ClassesTestCase):
         testEntity = EmClass('testEntity')
         linked_types = testEntity.linked_types()
         self.assertEqual(linked_types[0].name, 'keywords')
+'''
