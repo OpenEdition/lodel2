@@ -178,7 +178,7 @@ class Model(object):
 
         #register the creation in migration handler
         try:
-            self.migration_handler.register_change(self, em_component.uid, None, em_component.attr_dump)
+            self.migration_handler.register_change(self, em_component.uid, None, em_component.attr_dump())
         except MigrationHandlerChangeError as exception_object:
             #Revert the creation
             self.components(em_component.__class__).remove(em_component)
@@ -201,7 +201,7 @@ class Model(object):
 
         if em_component.delete_check():
             #register the deletion in migration handler
-            self.migration_handler.register_change(self, uid, self.component(uid).attr_dump, None)
+            self.migration_handler.register_change(self, uid, self.component(uid).attr_dump(), None)
 
             # delete internal lists
             self._components[self.name_from_emclass(em_component.__class__)].remove(em_component)
@@ -235,7 +235,7 @@ class Model(object):
         for cls in self.components_class:
             for component in self.components(cls):
                 component_type = self.name_from_emclass(cls)
-                component_dump = component.attr_dump
+                component_dump = component.attr_dump()
                 # Save relations between component to apply them later
                 for relation in relations.keys():
                     if relation in component_dump and component_dump[relation]:

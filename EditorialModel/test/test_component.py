@@ -97,7 +97,7 @@ class TestEmComponent(unittest.TestCase):
     def test_dump(self):
         """ Testing dump methods """
         for comp in self.me.components():
-            dmp = comp.attr_dump
+            dmp = comp.attr_dump()
             self.assertNotIn('uid', dmp)
             self.assertNotIn('model', dmp)
             self.assertTrue(dmp['help_text'] is None or isinstance(dmp['help_text'], MlString))

@@ -52,7 +52,6 @@ class EmComponent(object):
         self.rank = rank
         pass
 
-    @property
     ## @brief Return a dict with attributes name as key and attributes value as value
     # @note Used at creation and deletion to call the migration handler
     def attr_dump(self):
@@ -102,7 +101,7 @@ class EmComponent(object):
     def __hash__(self):
         # flatten list of attributes of the component to an ordered list
         # so every time we have the same string representation
-        attributes_dump = self.attr_dump
+        attributes_dump = self.attr_dump()
         ordered_attributes = sorted(list(attributes_dump.keys()))
 
         component_dump = []
