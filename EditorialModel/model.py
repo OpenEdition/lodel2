@@ -267,7 +267,26 @@ class Model(object):
 
     @classmethod
     ## @brief Generate a random editorial model
-    def random(cls, backend):
+    # 
+    # The random generator can be tuned with integer parameters
+    # that represent probability or maximum numbers of items.
+    # The probability (chances) works like 1/x chances to append
+    # with x the tunable parameter
+    # Tunable generator parameters :
+    # - classtype : Chances for a classtype to be empty (default 0)
+    # - nclass : Maximum number of classes per classtypes (default 5)
+    # - nofg : Chances for a classe to have no fieldgroup associated to it (default 10)
+    # - notype : Chances for a classe to have no type associated to it (default 5)
+    # - seltype : Chances for a type to select an optionnal field (default 2)
+    # - ntypesuperiors : Chances for a type to link with a superiors (default 3)
+    # - nofields : Chances for a fieldgroup to be empty (default 10)
+    # - nfields : Maximum number of field per fieldgroups (default 8)
+    # - rfields : Maximum number of relation_to_type attributes fields (default 5)
+    # - optfield : Chances for a field to be optionnal (default 2)
+    # @param backend : A backend to use with the new EM
+    # @param **chances dict : Provide tunable generation parameter
+    # @return A randomly generate EM
+    def random(cls, backend, **chances):
         em = Model(backend)
 
         chances = {
@@ -361,14 +380,20 @@ class Model(object):
     @staticmethod
     ## @brief Generate a random string
     # @warning dirty cache trick with globals()
-    def _rnd_str():
-        if '_words' not in globals():
-            with open('/usr/share/dict/words', 'r') as fpw:
+    # @return a randomly selected string
+    def _rnd_str(words_src='/usr/share/dict/words'):
+        if '_words' not in globals() or globals()['_words_fname'] != words_src:
+            globals()['_words_fname'] = words_src
+            with open(words_src, 'r') as fpw:
                 globals()['_words'] = [ l for l in fpw ]
         words = globals()['_words']
         return words[random.randint(0,len(words)-1)]
         
     @classmethod
+    ## @brief Generate a random MlString
+    # @param nlng : Number of langs in the MlString
+    # @return a random MlString with nlng translations
+    # @todo use a dict to generated langages
     def _rnd_mlstr(cls, nlng):
         ret = MlString()
         for _ in range(nlng):
@@ -377,6 +402,7 @@ class Model(object):
 
     @classmethod
     ## @brief returns randomly generated datas for an EmComponent
+    # @return a dict with name, string and help_text
     def _rnd_component_datas(cls):
         mlstr_nlang = 5;
         ret = {}
