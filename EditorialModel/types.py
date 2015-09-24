@@ -7,8 +7,7 @@ import EditorialModel
 from EditorialModel.components import EmComponent
 from EditorialModel.fields import EmField
 from EditorialModel.classtypes import EmClassType, EmNature
-from EditorialModel.exceptions import *
-import EditorialModel.fieldtypes as ftypes
+from EditorialModel.exceptions import MigrationHandlerChangeError, EmComponentCheckError
 import EditorialModel.classes
 
 
@@ -304,7 +303,7 @@ class EmType(EmComponent):
             if not field.optional:
                 raise EmComponentCheckError("The element %d of selected_field is an EmField not optional"  % i )
             if field.fieldgroup_id not in [ fg.uid for fg in self.fieldgroups() ]:
-                raise EmComponentCheckErrro("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
+                raise EmComponentCheckError("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
 
         for nature, superiors_uid in self.superiors_list.items():
             for superior_uid in superiors_uid:
