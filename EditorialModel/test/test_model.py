@@ -19,7 +19,7 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'))
         self.assertTrue(isinstance(model, Model))
 
-        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=True))
+        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=True, dryrun=True))
         self.assertTrue(isinstance(model, Model))
 
     def test_components(self):
