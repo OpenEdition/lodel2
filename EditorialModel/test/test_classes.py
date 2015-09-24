@@ -9,7 +9,6 @@ from unittest import TestCase
 import unittest
 
 from django.conf import settings
-from EditorialModel.components import EmComponentNotExistError
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
@@ -104,7 +103,7 @@ class TestEmClassDeletion(ClassesTestCase):
 
         try:
             EM_TEST_OBJECT.component(test_class.uid)
-        except EmComponentNotExistError:
+        except Exception:
             self.fail("The class has been deleted but it has fieldgroups")
 
 
