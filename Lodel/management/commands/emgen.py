@@ -19,7 +19,7 @@ class Command(BaseCommand):
         make_option('--max-classes',
             action='store',
             dest='nclass',
-            default = 5,
+            default = 3,
             help='Maximum number of classes per classtype',
             type="int",
             metavar="INT",
@@ -35,8 +35,16 @@ class Command(BaseCommand):
         make_option('--no-types',
             action='store',
             dest='notype',
-            default = 5,
+            default = 10,
             help='Chances for a class to have no types',
+            type="int",
+            metavar="INT",
+        ),
+        make_option('--max-types',
+            action='store',
+            dest='ntype',
+            default = 8,
+            help='Maximum number of types in a class',
             type="int",
             metavar="INT",
         ),
@@ -51,7 +59,7 @@ class Command(BaseCommand):
         make_option('--superiors',
             action='store',
             dest='ntypesuperiors',
-            default = 3,
+            default = 2,
             help='Chances for a type to link with other types (superiors)',
             type="int",
             metavar="INT",
@@ -112,7 +120,7 @@ class Command(BaseCommand):
     help = 'Randomly generate an EditorialModel'
 
     def handle(self, *args, **options):
-        anames = ['classtype','nclass', 'nofg', 'notype', 'seltype', 'ntypesuperiors', 'nofields', 'nfields', 'optfield']
+        anames = ['classtype','nclass', 'nofg', 'notype', 'ntype', 'seltype', 'ntypesuperiors', 'nofields', 'nfields', 'optfield']
         chances = dict()
         for n in anames:
             chances[n] = options[n]

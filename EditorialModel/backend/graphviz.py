@@ -61,8 +61,9 @@ class EmBackendGraphviz(object):
                 self.edges += cid+' -> '+self._component_id(c.em_class)+' [ style="dotted" ]\n'
                 for fg in c.fieldgroups():
                     self.edges += cid+' -> '+self._component_id(fg)+' [ style="dashed" ]\n'
-                for nat in c.superiors():
-                    self.edges += cid+' -> '+self._component_id(c.superiors()[nat])+' [ label="%s" color="green" ]'%nat
+                for nat, sups in c.superiors().items():
+                    for sup in sups:
+                        self.edges += cid+' -> '+self._component_id(sup)+' [ label="%s" color="green" ]'%nat
             #dotfp.write("}\n")
 
             dotfp.write(self.edges)

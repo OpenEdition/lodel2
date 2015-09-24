@@ -294,10 +294,10 @@ class Model(object):
             'nclass': 5, #max number of classes per classtype
             'nofg': 10, #no fieldgroup in a class
             'nfg': 5, #max number of fieldgroups per classes
-            'notype': 5, # no types in a class
-            'ntype': 3,  # max number of types in a class
+            'notype': 10, # no types in a class
+            'ntype': 8,  # max number of types in a class
             'seltype': 2, #chances to select an optional field
-            'ntypesuperiors': 3, #chances to link with a superior
+            'ntypesuperiors': 2, #chances to link with a superior
             'nofields': 10, # no fields in a fieldgroup
             'nfields' : 8, #max number of fields per fieldgroups
             'rfields': 5,#max number of attributes relation fields
@@ -338,9 +338,10 @@ class Model(object):
         for emtype in em.components(EmType):
             possible = emtype.possible_superiors()
             for nat in possible:
-                while random.randint(0, chances['ntypesuperiors']) == 0 and len(possible[nat]) > 0:
-                    i = random.randint(0,len(possible[nat])-1)
-                    emtype.add_superior(possible[nat][i], nat)
+                if len(possible[nat]) > 0 and random.randint(0, chances['ntypesuperiors']) == 0:
+                    random.shuffle(possible[nat])
+                    for i in range(random.randint(1, len(possible[nat]))):
+                        emtype.add_superior(possible[nat][i], nat)
 
 
         #fields creation
@@ -392,7 +393,7 @@ class Model(object):
         if '_words' not in globals() or globals()['_words_fname'] != words_src:
             globals()['_words_fname'] = words_src
             with open(words_src, 'r') as fpw:
-                globals()['_words'] = [ l for l in fpw ]
+                globals()['_words'] = [ l.strip() for l in fpw ]
         words = globals()['_words']
         return words[random.randint(0,len(words)-1)]
         
