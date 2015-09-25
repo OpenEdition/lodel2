@@ -28,8 +28,15 @@ class Model(object):
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
     def __init__(self, backend, migration_handler=None):
-        self.migration_handler = DummyMigrationHandler() if migration_handler is None else migration_handler
-        self.backend = backend
+        if migration_handler is None:
+            self.migration_handler = DummyMigrationHandler()
+        elif issubclass(migration_handler.__class__, DummyMigrationHandler):
+            self.migration_handler = migration_handler
+        else:
+            raise TypeError("migration_handler should be an instance from a subclass of DummyMigrationhandler")
+        self.backend = None
+        self.set_backend(backend)
+
         self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': [], 'EmFieldGroup': []}
         self.load()
 
@@ -226,7 +233,10 @@ class Model(object):
     #
     # @param backend unknown: A backend object
     def set_backend(self, backend):
-        self.backend = backend
+        if issubclass(backend.__class__, EmBackendDummy):
+            self.backend = backend
+        else:
+            raise TypeError('Backend should be an instance of a EmBackednDummy subclass')
 
     ## Returns a list of all the EmClass objects of the model
     def classes(self):

@@ -9,6 +9,7 @@
 import json
 import datetime
 from Lodel.utils.mlstring import MlString
+from EditorialModel.backend.dummy_backend import EmBackendDummy
 
 
 def date_cast(date):
@@ -31,7 +32,7 @@ def int_or_none(i):
 
 
 ## Manages a Json file based backend structure
-class EmBackendJson(object):
+class EmBackendJson(EmBackendDummy):
 
     cast_methods = {
         'uid': int,

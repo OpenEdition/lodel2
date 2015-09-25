@@ -7,6 +7,7 @@ import django
 from django.db import models
 from django.db.models.loading import cache as django_cache
 from django.core.exceptions import ValidationError
+from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 from EditorialModel.exceptions import *
 
@@ -64,7 +65,7 @@ def create_model(name, fields=None, app_label='', module='', options=None, admin
 #
 # Create django models according to the editorial model
 
-class DjangoMigrationHandler(object):
+class DjangoMigrationHandler(DummyMigrationHandler):
 
     ## @brief Instanciate a new DjangoMigrationHandler
     # @param app_name str : The django application name for models generation

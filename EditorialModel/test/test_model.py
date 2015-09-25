@@ -29,6 +29,15 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=False, dryrun=True))
         self.assertTrue(isinstance(model, Model))
 
+    def test_bad_init(self):
+        """ Test initialisation with bad arguments """
+        for bad in [ None, int, EmBackendDummy, DummyMigrationHandler, 'foobar' ]:
+            with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a bad backend"):
+                Model(bad)
+        for bad in [ int, EmBackendDummy, DummyMigrationHandler, 'foobar' ]:
+            with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a migration_handler"):
+                Model(EmBackendDummy(), bad)
+
     def test_components(self):
         """ Test components fetching """
         uid_l = list()
@@ -196,12 +205,12 @@ class TestModel(unittest.TestCase):
     def test_set_backend(self):
         """ Test the set_backend method """
 
-        for backend in [ None, EmBackendJson('EditorialModel/test/me.json'), EmBackendDummy() ]:
+        for backend in [ EmBackendJson('EditorialModel/test/me.json'), EmBackendDummy() ]:
             self.me.set_backend(backend)
             self.assertEqual(self.me.backend, backend)
 
-        for bad_backend in ['wow', int, EmBackendJson ]:
-            with self.assertRaises(AttributeError, msg="But bad argument (%s %s) was given"%(type(bad_backend),bad_backend)):
+        for bad_backend in [None, 'wow', int, EmBackendJson ]:
+            with self.assertRaises(TypeError, msg="But bad argument (%s %s) was given"%(type(bad_backend),bad_backend)):
                 self.me.set_backend(bad_backend)
     ##
     # @todo Test selected fields application
@@ -287,11 +296,4 @@ class TestModel(unittest.TestCase):
         for cls in [EmComponent, int, str]:
             self.assertFalse(Model.name_from_emclass(cls))
 
-    def test_load_save_invalid(self):
-        """ Test the behavior of a Model when no backend given but load and save are called """
-        bad_em = Model(None)
-        
-        self.assertFalse(bad_em.load())
-        self.assertFalse(bad_em.save())
-            
 

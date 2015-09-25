@@ -6,8 +6,9 @@ from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
 from Lodel.utils.mlstring import MlString
+from EditorialModel.backend.dummy_backend import EmBackendDummy
 
-class EmBackendGraphviz(object):
+class EmBackendGraphviz(EmBackendDummy):
 
     ## @brief Constructor
     # @param dot_fname str : The filename where we want to save the dot repr of the EM
