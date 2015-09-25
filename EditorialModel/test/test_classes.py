@@ -16,8 +16,8 @@ from EditorialModel.fields import EmField
 #import EditorialModel.fieldtypes as fieldTypes
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-#from EditorialModel.migrationhandler.django import DjangoMigrationHandler
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from EditorialModel.migrationhandler.django import DjangoMigrationHandler
+#from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
@@ -27,8 +27,8 @@ EM_TEST_OBJECT = None
 # define the Database for this module (an sqlite database)
 def setUpModule():
     global EM_TEST_OBJECT
-    #EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjandoMigrationHandler('LodelTestInstance'))
-    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DummyMigrationHandler())
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjandoMigrationHandler('LodelTestInstance'))
+    #EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DummyMigrationHandler())
     logging.basicConfig(level=logging.CRITICAL)
 
 class ClassesTestCase(TestCase):
