@@ -166,7 +166,7 @@ class EmComponent(object):
     def set_rank(self, new_rank):
         if not isinstance(new_rank, int):
             raise TypeError("Excepted <class int> but got " + str(type(new_rank)))
-        if new_rank <= 0 or new_rank > self.get_max_rank():
+        if new_rank <= 0 or (new_rank > 1 and new_rank > self.get_max_rank()):
             raise ValueError("Invalid new rank : " + str(new_rank))
 
         mod = new_rank - self.rank  # Indicates the "direction" of the "move"
