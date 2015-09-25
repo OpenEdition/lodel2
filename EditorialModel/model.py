@@ -61,8 +61,7 @@ class Model(object):
     # @todo réécrire le split, c'est pas bô
     def name_from_emclass(em_class):
         if em_class not in Model.components_class:
-            spl = em_class.__module__.split('.')
-            if spl[1] == 'fieldtypes':
+            if issubclass(em_class, EmField):
                 return 'EmField'
             return False
         return em_class.__name__
@@ -154,7 +153,12 @@ class Model(object):
     # @todo Handle a raise from the migration handler
     # @todo Transform the datas arg in **datas ?
     def create_component(self, component_type, datas, uid=None):
-        if component_type == 'EmField':
+        if not (uid is None) and (not isinstance(uid, int) or uid <= 0 or uid in self._components['uids']):
+            raise ValueError("Invalid uid provided")
+        
+        if component_type not in [ n for n in self._components.keys() if n != 'uids' ]:
+            raise ValueError("Invalid component_type rpovided")
+        elif component_type == 'EmField':
             #special process for EmField
             if not 'fieldtype' in datas:
                 raise AttributeError("Missing 'fieldtype' from EmField instanciation")
