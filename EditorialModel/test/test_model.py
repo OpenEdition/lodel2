@@ -97,15 +97,19 @@ class TestModel(unittest.TestCase):
                 self.me.create_component(bad_comp_name, testDatas)
 
         #Invalid rank
-        for invalid_rank in [-1, 10000, 'laaaaast', 'tsrif']:
+        for invalid_rank in [-1, 10000]:
             with self.assertRaises(ValueError, msg="A invalid rank (%s) was given"%invalid_rank):
                 foodat = testDatas.copy()
                 foodat['rank'] = invalid_rank
-                self.me.create_component('EmClass', testDatas)
+                self.me.create_component('EmClass', foodat)
+        with self.assertRaises(TypeError, msg="A non integer rank was given"):
+            foodat = testDatas.copy()
+            foodat['rank'] = 'hello world'
+            self.me.create_component('EmClass', foodat)
 
         #Invalid datas
         for invalid_datas in [ dict(), [1,2,3,4], ('hello', 'world') ]:
-            with self.assertRaises(ValueError, msg="Invalid datas was given in parameters"):
+            with self.assertRaises(TypeError, msg="Invalid datas was given in parameters"):
                 self.me.create_component('EmClass', invalid_datas)
 
     def test_create_components(self):
@@ -248,7 +252,7 @@ class TestModel(unittest.TestCase):
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=True))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=False, dryrun=True))
 
         self.assertEqual(hash(me1), hash(me2), "When instanciate from the same backend & file but with another migration handler the hashes differs")
         self.assertTrue(me1.__eq__(me2))
