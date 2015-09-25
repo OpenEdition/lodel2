@@ -6,10 +6,15 @@ from EditorialModel.classes import EmClass
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
+from EditorialModel.fieldtypes.char import EmFieldChar
 from EditorialModel.components import EmComponent
+from Lodel.utils.mlstring import MlString
+
 
 from EditorialModel.backend.json_backend import EmBackendJson
+from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.migrationhandler.django import DjangoMigrationHandler
+from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 class TestModel(unittest.TestCase):
 
@@ -103,29 +108,141 @@ class TestModel(unittest.TestCase):
             with self.assertRaises(ValueError, msg="Invalid datas was given in parameters"):
                 self.me.create_component('EmClass', invalid_datas)
 
-    def test_create_class(self):
+    def test_create_components(self):
         """ Test the create_component method mocking the EmComponent constructors """
-
-        cdats = {
-            'name': 'FooBar',
-            'classtype':'entity',
-            'help_text': None,
-            'string': None,
+        
+        params = {
+            'EmClass' : {
+                'cls' : EmClass,
+                'cdats' : {
+                    'name': 'FooClass',
+                    'classtype':'entity',
+                }
+            },
+            'EmType' : {
+                'cls': EmType,
+                'cdats' : {
+                    'name' : 'FooType',
+                    'class_id': self.me.components(EmClass)[0].uid,
+                    'fields_list': [],
+                }
+            },
+            'EmFieldGroup': {
+                'cls': EmFieldGroup,
+                'cdats' : {
+                    'name' : 'FooFG',
+                    'class_id': self.me.components(EmClass)[0].uid,
+                },
+            },
+            'EmField': {
+                'cls': EmFieldChar,
+                'cdats': {
+                    'name': 'FooField',
+                    'fieldgroup_id': self.me.components(EmFieldGroup)[0].uid,
+                    'fieldtype': 'char',
+                    'max_length': 64,
+                    'optional':True,
+                    'internal': False,
+                    'rel_field_id':None,
+                    'icon': '0',
+                    'nullable': False,
+                    'uniq': True,
+                }
+            }
         }
 
-        tmpuid = self.me.new_uid()
-        #with patch.object(EmClass, '__init__', return_value=EmClass(model=self.me, uid=tmpuid, name=cdats['name'], classtype=cdats['classtype'], help_text = cdats['help_text'], string = cdats['string'])) as initmock:
-        with patch.object(EmClass, '__init__', return_value=None) as initmock:
-            with self.assertRaises(AttributeError): #Raises because mocking
-                self.me.create_component('EmClass', cdats)
-            initmock.assert_called_once_with(
-                uid=tmpuid,
-                model=self.me,
-                name=cdats['name'],
-                classtype=cdats['classtype'],
-                help_text = cdats['help_text'],
-                string = cdats['string'],
-            )
+        for n in params:
+            tmpuid = self.me.new_uid()
+            cdats = params[n]['cdats']
+            cdats['string'] = MlString()
+            cdats['help_text'] = MlString()
+            with patch.object(params[n]['cls'], '__init__', return_value=None) as initmock:
+                try:
+                    self.me.create_component(n, params[n]['cdats'])
+                except AttributeError: #Raises because the component is a MagicMock
+                    pass
+                cdats['uid'] = tmpuid
+                cdats['model'] = self.me
+                #Check that the component __init__ method was called with the good arguments
+                initmock.assert_called_once_with(**cdats)
+
+    def test_delete_component(self):
+        """ Test the delete_component method """
+
+        #Test that the delete_check() method is called
+        for comp in self.me.components():
+            with patch.object(comp.__class__, 'delete_check', return_value=False) as del_check_mock:
+                ret = self.me.delete_component(comp.uid)
+                del_check_mock.assert_called_once_with()
+                #Check that when the delete_check() returns False de delete_component() too
+                self.assertFalse(ret)
+
+        #Using a new me for deletion test
+        new_em = Model(EmBackendJson('EditorialModel/test/me.json'))
+        for comp in new_em.components():
+            cuid = comp.uid
+            cname = new_em.name_from_emclass(comp.__class__)
+            #Simulate that the delete_check() method returns True
+            with patch.object(comp.__class__, 'delete_check', return_value=True) as del_check_mock:
+                ret = new_em.delete_component(cuid)
+                self.assertTrue(ret)
+                self.assertNotIn(cuid, new_em._components['uids'])
+                self.assertNotIn(comp, new_em._components[cname])
+    
+    def test_set_backend(self):
+        """ Test the set_backend method """
+
+        for backend in [ None, EmBackendJson('EditorialModel/test/me.json'), EmBackendDummy() ]:
+            self.me.set_backend(backend)
+            self.assertEqual(self.me.backend, backend)
+
+        for bad_backend in ['wow', int, EmBackendJson ]:
+            with self.assertRaises(AttributeError, msg="But bad argument (%s %s) was given"%(type(bad_backend),bad_backend)):
+                self.me.set_backend(bad_backend)
+    ##
+    # @todo Test selected fields application
+    # @todo Test types hierarchy application
+    def test_migrate_handler(self):
+        """ Test that the migrate_handler() method create component in a good order """
+        
+        #Testing component creation
+        with patch.object(Model, 'create_component', return_value=None) as create_mock:
+            try:
+                self.me.migrate_handler(None)
+            except AttributeError: #Raises because of the mock
+                pass
+            order_comp = ['EmClass', 'EmType', 'EmFieldGroup', 'EmField'] #Excpected creation order
+            cur_comp = 0
+            for mcall in create_mock.mock_calls:
+                #Testing EmComponent order of creation
+                while order_comp[cur_comp] != mcall[1][0]:
+                    cur_comp +=1
+                    if cur_comp >= len(order_comp):
+                        self.assertTrue(False, 'The order of create_component() calls was not respected by migrate_handler() methods');
+
+                #Testing uid
+                comp = self.me.component(mcall[1][2])
+                ctype = self.me.name_from_emclass(comp.__class__)
+                self.assertEqual(mcall[1][0], ctype, "A component was created using a uid belonging to another component type")
+                #Testing arguments of create_component
+                comp_dump = comp.attr_dump()
+                if 'fields_list' in comp_dump and comp_dump['fields_list']:
+                    del(comp_dump['fields_list'])
+                if 'superiors_list' in comp_dump and comp_dump['superiors_list']:
+                    del(comp_dump['superiors_list'])
+
+                self.assertEqual(mcall[1][1], comp_dump)
+
+        #Now testing the select type application
+        pass
+        #Now testing the type hierarchy
+        pass
+
+        #Now testing the hashes
+        with patch.object(DummyMigrationHandler, 'register_change', return_value=None) as mh_mock:
+            new_me = self.me.migrate_handler(DummyMigrationHandler())
+            last_call = mh_mock.mock_calls[-1]
+            self.assertEqual(hash(last_call[1][0]), hash(self.me))
 
 
     def test_hash(self):
