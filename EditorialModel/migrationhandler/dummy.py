@@ -6,6 +6,7 @@
 # According to it every modifications are possible
 #
 
+
 ## Manage Model changes
 class DummyMigrationHandler(object):
 
