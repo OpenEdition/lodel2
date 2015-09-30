@@ -32,7 +32,7 @@ class TestEmComponent(unittest.TestCase):
                 self.assertTrue(comp1 == comp2)
 
                 if not comp1.modify_rank(1):
-                    continue #modification not made, drop this test
+                    continue  # modification not made, drop this test
 
                 self.assertNotEqual(hash(comp1), hash(comp2), "hashes are the same after a modification of rank on one of the two components")
                 self.assertFalse(comp1 == comp2)
