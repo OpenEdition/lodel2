@@ -2,8 +2,9 @@
 
 from EditorialModel.fields import EmField
 
+
 class EmFieldText(EmField):
-    
+
     ftype = 'text'
     help = 'A text field (big string)'
 

@@ -2,9 +2,10 @@
 
 from EditorialModel.fields import EmField
 
+
 class EmFieldRel2Type(EmField):
 
-    ftype= 'rel2type'
+    ftype = 'rel2type'
 
     help = 'Relationnal field (relation2type). Take rel_to_type_id as option (an EmType uid)'
 
@@ -16,7 +17,7 @@ class EmFieldRel2Type(EmField):
         return self.model.component(self.rel_to_type_id)
 
     def get_related_fields(self):
-        return [ f for f in self.model.components(EmField) if f.rel_field_id == self.uid ]
-        
+        return [f for f in self.model.components(EmField) if f.rel_field_id == self.uid]
+
 
 fclass = EmFieldRel2Type

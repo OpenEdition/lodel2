@@ -4,7 +4,7 @@ from EditorialModel.fields import EmField
 
 
 class EmFieldInt(EmField):
-    
+
     ftype = 'int'
 
     help = 'Basic integer field'
@@ -12,4 +12,4 @@ class EmFieldInt(EmField):
     def __init__(self, **kwargs):
         super(EmFieldInt, self).__init__(**kwargs)
 
-fclass=EmFieldInt
+fclass = EmFieldInt
