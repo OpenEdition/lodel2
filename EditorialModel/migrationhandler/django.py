@@ -12,7 +12,6 @@ from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.exceptions import *
 
 
-
 ## @brief Create a django model
 # @param name str : The django model name
 # @param fields dict : A dict that contains fields name and type ( str => DjangoField )
@@ -39,7 +38,7 @@ def create_model(name, fields=None, app_label='', module='', options=None, admin
             setattr(Meta, key, value)
 
     # Set up a dictionary to simulate declarations within a class
-    attrs = {'__module__': module, 'Meta':Meta}
+    attrs = {'__module__': module, 'Meta': Meta}
 
     # Add in any fields that were provided
     if fields:
@@ -91,7 +90,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
     #
     # @warning broken because of : https://code.djangoproject.com/ticket/24735 you have to patch django/core/management/commands/makemigrations.py w/django/core/management/commands/makemigrations.py
     def register_change(self, em, uid, initial_state, new_state):
-        
+
         #Starting django
         os.environ['LODEL_MIGRATION_HANDLER_TESTS'] = 'YES'
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
@@ -110,7 +109,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
             django_cmd('makemigrations', self.app_name, dry_run=True, interactive=False)
         except django.core.management.base.CommandError as e:
             raise MigrationHandlerChangeError(str(e))
-    
+
         return True
 
     ## @brief Print a debug message representing a migration
@@ -141,7 +140,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                     print(str_chg)
             print("##############\n")
         pass
-    
+
     ## @brief Register a new model state and update the data representation given the new state
     # @param em model : The EditorialModel to migrate
     # @param state_hash str : Note usefull (for the moment ?)
@@ -171,7 +170,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
             #Calling migrate to update the database schema
             django_cmd('migrate', self.app_name, interactive=False, noinput=True)
         except django.core.management.base.CommandError as e:
-            raise MigrationHandlerChangeError("Unable to migrate to new model state : %s"%e)
+            raise MigrationHandlerChangeError("Unable to migrate to new model state : %s" % e)
 
         pass
 
@@ -179,13 +178,13 @@ class DjangoMigrationHandler(DummyMigrationHandler):
     #
     # The save function of our class and type models is used to set unconditionnaly the
     # classtype, class_name and type_name models property
-    # 
+    #
     # @param classname str: The classname used to call the super().save
     # @param level str: Wich type of model are we doing. Possible values are 'class' and 'type'
     # @param datas list : List of property => value to set in the save function
     # @return The wanted save function
     def get_save_fun(self, classname, level, datas):
-        
+
         if level == 'class':
             def save(self, *args, **kwargs):
                 self.classtype = datas['classtype']
@@ -197,7 +196,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                 super(classname, self).save(*args, **kwargs)
 
         return save
-    
+
     ## @brief Create django models from an EditorialModel.model object
     # @param edMod EditorialModel.model.Model : The editorial model instance
     # @return a dict with all the models
@@ -205,8 +204,8 @@ class DjangoMigrationHandler(DummyMigrationHandler):
     # @todo write and use a function to forge models name from EmClasses and EmTypes names
     # @note There is a problem with the related_name for superiors fk : The related name cannot be subordinates, it has to be the subordinates em_type name
     def em_to_models(self, edMod):
-        
-        module_name = self.app_name+'.models'
+
+        module_name = self.app_name + '.models'
 
         #Purging django models cache
         if self.app_name in django_cache.all_models:
@@ -214,32 +213,31 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                 del(django_cache.all_models[self.app_name][modname])
             #del(django_cache.all_models[self.app_name])
 
-
         app_name = self.app_name
         #Creating the document model
         document_attrs = {
-            'lodel_id' : models.AutoField(primary_key=True),
+            'lodel_id': models.AutoField(primary_key=True),
             'classtype': models.CharField(max_length=16, editable=False),
             'class_name': models.CharField(max_length=16, editable=False),
             'type_name': models.CharField(max_length=16, editable=False),
-            'string' : models.CharField(max_length=255),
+            'string': models.CharField(max_length=255),
             'date_update': models.DateTimeField(auto_now=True, auto_now_add=True),
             'date_create': models.DateTimeField(auto_now_add=True),
-            'rank' : models.IntegerField(),
+            'rank': models.IntegerField(),
             'help_text': models.CharField(max_length=255),
         }
 
         #Creating the base model document
         document_model = create_model('document', document_attrs, self.app_name, module_name)
 
-        django_models = {'doc' : document_model, 'classes':{}, 'types':{} }
+        django_models = {'doc': document_model, 'classes': {}, 'types': {}}
 
         classes = edMod.classes()
 
         #Creating the EmClasses models with document inheritance
         for emclass in classes:
             emclass_fields = {
-                'save' : self.get_save_fun(emclass.uniq_name, 'class', { 'classtype':emclass.classtype, 'class_name':emclass.uniq_name}),
+                'save': self.get_save_fun(emclass.uniq_name, 'class', {'classtype': emclass.classtype, 'class_name': emclass.uniq_name}),
             }
 
             #Addding non optionnal fields
@@ -250,13 +248,13 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                     emclass_fields[emfield.uniq_name] = self.field_to_django(emfield, emclass)
             #print("Model for class %s created with fields : "%emclass.uniq_name, emclass_fields)
             if self.debug:
-                print("Model for class %s created"%emclass.uniq_name)
+                print("Model for class %s created" % emclass.uniq_name)
             django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
-            
+
             #Creating the EmTypes models with EmClass inherithance
             for emtype in emclass.types():
                 emtype_fields = {
-                    'save': self.get_save_fun(emtype.uniq_name, 'type', { 'type_name':emtype.uniq_name }),
+                    'save': self.get_save_fun(emtype.uniq_name, 'type', {'type_name': emtype.uniq_name}),
                 }
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
@@ -268,7 +266,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                         emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
 
                 if self.debug:
-                    print("Model for type %s created"%emtype.uniq_name)
+                    print("Model for type %s created" % emtype.uniq_name)
                 django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, self.app_name, module_name, parent_class=django_models['classes'][emclass.uniq_name])
 
         pass
@@ -285,32 +283,32 @@ class DjangoMigrationHandler(DummyMigrationHandler):
         args['null'] = f.nullable
         if not (f.default is None):
             args['default'] = f.default
-        v_fun = f.validation_function(raise_e = ValidationError)
+        v_fun = f.validation_function(raise_e=ValidationError)
         if v_fun:
             args['validators'] = [v_fun]
         if f.uniq:
             args['unique'] = True
-        
+
         # Field instanciation
-        if f.ftype == 'char': #varchar field
+        if f.ftype == 'char':  # varchar field
             args['max_length'] = f.max_length
             return models.CharField(**args)
-        elif f.ftype == 'int': #integer field
+        elif f.ftype == 'int':  # integer field
             return models.IntegerField(**args)
-        elif f.ftype == 'text': #text field
+        elif f.ftype == 'text':  # text field
             return models.TextField(**args)
-        elif f.ftype == 'datetime': #Datetime field
+        elif f.ftype == 'datetime':  # Datetime field
             args['auto_now'] = f.now_on_update
             args['auto_now_add'] = f.now_on_create
             return models.DateTimeField(**args)
-        elif f.ftype == 'bool': #Boolean field
+        elif f.ftype == 'bool':  # Boolean field
             if args['null']:
                 return models.NullBooleanField(**args)
             del(args['null'])
             return models.BooleanField(**args)
-        elif f.ftype == 'rel2type': #Relation to type
+        elif f.ftype == 'rel2type':  # Relation to type
 
-            if assoc_comp == None:
+            if assoc_comp is None:
                 raise RuntimeError("Rel2type field in a rel2type table is not allowed")
             #create first a throught model if there is data field associated with the relation
             kwargs = dict()
@@ -318,7 +316,7 @@ class DjangoMigrationHandler(DummyMigrationHandler):
             relf_l = f.get_related_fields()
             if len(relf_l) > 0:
                 through_fields = {}
-                
+
                 #The two FK of the through model
                 through_fields[assoc_comp.name] = models.ForeignKey(assoc_comp.uniq_name)
                 rtype = f.get_related_type()
@@ -328,16 +326,12 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                     through_fields[relf.name] = self.field_to_django(relf, None)
 
                 #through_model_name = f.uniq_name+assoc_comp.uniq_name+'to'+rtype.uniq_name
-                through_model_name = f.name+assoc_comp.name+'to'+rtype.name
-                module_name = self.app_name+'.models'
+                through_model_name = f.name + assoc_comp.name + 'to' + rtype.name
+                module_name = self.app_name + '.models'
                 #model created
                 through_model = create_model(through_model_name, through_fields, self.app_name, module_name)
                 kwargs['through'] = through_model_name
-            
+
             return models.ManyToManyField(f.get_related_type().uniq_name, **kwargs)
-        else: #Unknow data type
-            raise NotImplemented("The conversion to django fields is not yet implemented for %s field type"%f.ftype)
-
-
-        
-
+        else:  # Unknow data type
+            raise NotImplemented("The conversion to django fields is not yet implemented for %s field type" % f.ftype)
