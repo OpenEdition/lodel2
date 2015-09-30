@@ -23,6 +23,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
 EM_TEST_OBJECT = None
 
+
 ## run once for this module
 # define the Database for this module (an sqlite database)
 def setUpModule():
@@ -30,6 +31,7 @@ def setUpModule():
     #EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjandoMigrationHandler('LodelTestInstance'))
     EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DummyMigrationHandler())
     logging.basicConfig(level=logging.CRITICAL)
+
 
 class ClassesTestCase(TestCase):
 
@@ -88,7 +90,6 @@ class TestEmClassDeletion(ClassesTestCase):
 
         # TODO check : "table still exists but the class was deleted"
         # TODO check : "table doesn't exist but the class was not deleted"
-
 
     # tests if delete refuse to delete if a class had fieldgroups
     def test_table_refuse_delete(self):
@@ -164,6 +165,7 @@ class TestEmClassTypes(ClassesTestCase):
         test_class = EM_TEST_OBJECT.component(self.test_class.uid)
         types = test_class.types()
         self.assertEqual(types, [])
+
 
 # interface to fields
 class TestEmClassFields(ClassesTestCase):
