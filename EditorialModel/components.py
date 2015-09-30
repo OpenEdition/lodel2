@@ -10,6 +10,7 @@ import hashlib
 import EditorialModel
 from Lodel.utils.mlstring import MlString
 
+
 ## This class is the mother class of all editorial model objects
 #
 # It gather all the properties and mechanism that are common to every editorial model objects
@@ -70,7 +71,7 @@ class EmComponent(object):
         uname = self.__class__.__name__
         if not isinstance(self, EditorialModel.fields.EmField):  # WARNING this could crash with fieldtypes
             try:
-                uname += '_' + self.em_class.name
+                uname += '_' + self.em_class.name  # TODO Ajouter la propriété
             except AttributeError:
                 pass
         uname += '_' + self.name
@@ -144,7 +145,7 @@ class EmComponent(object):
     # @return The max rank is the rank group or -1 if no components in that group
     def get_max_rank(self):
         same_rgroup = self.same_rank_group()
-        return max([ comp.rank for comp in same_rgroup]) if len(same_rgroup) > 0 else -1
+        return max([comp.rank for comp in same_rgroup]) if len(same_rgroup) > 0 else -1
 
     ## Return an array of instances that are concerned by the same rank
     # @return An array of instances that are concerned by the same rank
@@ -185,7 +186,7 @@ class EmComponent(object):
         self.model.sort_components(self.__class__)
 
     ## Modify a rank given an integer modifier
-    # @note this method always tries to make the modification : if modifier is too big put 
+    # @note this method always tries to make the modification : if modifier is too big put
     # the component in last position, if modifier is to small put the component
     # in first position
     # @param rank_mod int : can be a negative positive or zero integer
@@ -197,12 +198,12 @@ class EmComponent(object):
         ret = True
         new_rank = self.rank + rank_mod
         if new_rank < 1:
-           ret = False
-           new_rank = 1
+            ret = False
+            new_rank = 1
         elif new_rank > self.get_max_rank():
             ret = False
             new_rank = self.get_max_rank()
-            
+
         self.set_rank(new_rank)
         return ret
 
