@@ -8,10 +8,10 @@ class EmNature(object):
     PARENT = 'parent'
     TRANSLATION = 'translation'
     IDENTITY = 'identity'
-    
+
     @classmethod
     def getall(cls):
-        return [ cls.PARENT, cls.TRANSLATION, cls.IDENTITY ]
+        return [cls.PARENT, cls.TRANSLATION, cls.IDENTITY]
 
 
 ## EmClassType (Class)
@@ -80,10 +80,10 @@ class EmClassType(object):
             },
         },
     }
-    
+
     @classmethod
     def getall(cls):
-        return [ cls.entity, cls.entry, cls.person ]
+        return [cls.entity, cls.entry, cls.person]
 
     ## natures (Method)
     #
