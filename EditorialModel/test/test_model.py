@@ -16,6 +16,7 @@ from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.migrationhandler.django import DjangoMigrationHandler
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
+
 class TestModel(unittest.TestCase):
 
     def setUp(self):
@@ -31,10 +32,10 @@ class TestModel(unittest.TestCase):
 
     def test_bad_init(self):
         """ Test initialisation with bad arguments """
-        for bad in [ None, int, EmBackendDummy, DummyMigrationHandler, 'foobar' ]:
+        for bad in [None, int, EmBackendDummy, DummyMigrationHandler, 'foobar']:
             with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a bad backend"):
                 Model(bad)
-        for bad in [ int, EmBackendDummy, DummyMigrationHandler, 'foobar' ]:
+        for bad in [int, EmBackendDummy, DummyMigrationHandler, 'foobar']:
             with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a migration_handler"):
                 Model(EmBackendDummy(), bad)
 
@@ -47,16 +48,16 @@ class TestModel(unittest.TestCase):
             for component in comp_l:
                 self.assertTrue(isinstance(component, comp_class), "Model.components method doesn't return EmComponent of the right type. Asked for {} but got {}".format(type(comp_class), type(component)))
                 uid_l.append(component.uid)
-        
+
         #Testing that we have fetched all the components
         for uid in self.me._components['uids']:
-            self.assertIn(uid, uid_l, "Component with uid %d was not fetched"%uid)
+            self.assertIn(uid, uid_l, "Component with uid %d was not fetched" % uid)
 
         #Testing components method without parameters
-        uid_l = [ comp.uid for comp in self.me.components() ]
+        uid_l = [comp.uid for comp in self.me.components()]
 
         for uid in self.me._components['uids']:
-            self.assertIn(uid, uid_l, "Component with uid %d was not fetched using me.components()"%uid)
+            self.assertIn(uid, uid_l, "Component with uid %d was not fetched using me.components()" % uid)
 
         self.assertFalse(self.me.components(EmComponent))
         self.assertFalse(self.me.components(int))
@@ -67,7 +68,7 @@ class TestModel(unittest.TestCase):
         for comp in self.me.components():
             self.assertEqual(comp, self.me.component(comp.uid))
 
-        for baduid in [-1, 0xffffff, "hello" ]:
+        for baduid in [-1, 0xffffff, "hello"]:
             self.assertFalse(self.me.component(baduid))
 
     def test_sort_components(self):
@@ -89,25 +90,25 @@ class TestModel(unittest.TestCase):
 
         testDatas = {
             'name': 'FooBar',
-            'classtype':'entity',
+            'classtype': 'entity',
             'help_text': None,
             'string': None,
         }
 
         #Invalid uid
         used_uid = self.me.components()[0].uid
-        for bad_uid in [ used_uid, -1, -1000, 'HelloWorld']:
-            with self.assertRaises(ValueError, msg="The component was created but the given uid (%s) whas invalid (allready used, negative or WTF)"%bad_uid):
-                self.me.create_component('EmClass', testDatas, uid = bad_uid)
+        for bad_uid in [used_uid, -1, -1000, 'HelloWorld']:
+            with self.assertRaises(ValueError, msg="The component was created but the given uid (%s) whas invalid (allready used, negative or WTF)" % bad_uid):
+                self.me.create_component('EmClass', testDatas, uid=bad_uid)
 
         #Invalid component_type
         for bad_comp_name in ['EmComponent', 'EmFoobar', 'int', int]:
-            with self.assertRaises(ValueError, msg="The create_component don't raise when an invalid classname (%s) is given as parameter"%bad_comp_name):
+            with self.assertRaises(ValueError, msg="The create_component don't raise when an invalid classname (%s) is given as parameter" % bad_comp_name):
                 self.me.create_component(bad_comp_name, testDatas)
 
         #Invalid rank
         for invalid_rank in [-1, 10000]:
-            with self.assertRaises(ValueError, msg="A invalid rank (%s) was given"%invalid_rank):
+            with self.assertRaises(ValueError, msg="A invalid rank (%s) was given" % invalid_rank):
                 foodat = testDatas.copy()
                 foodat['rank'] = invalid_rank
                 self.me.create_component('EmClass', foodat)
@@ -117,33 +118,33 @@ class TestModel(unittest.TestCase):
             self.me.create_component('EmClass', foodat)
 
         #Invalid datas
-        for invalid_datas in [ dict(), [1,2,3,4], ('hello', 'world') ]:
+        for invalid_datas in [dict(), [1, 2, 3, 4], ('hello', 'world')]:
             with self.assertRaises(TypeError, msg="Invalid datas was given in parameters"):
                 self.me.create_component('EmClass', invalid_datas)
 
     def test_create_components(self):
         """ Test the create_component method mocking the EmComponent constructors """
-        
+
         params = {
-            'EmClass' : {
-                'cls' : EmClass,
-                'cdats' : {
+            'EmClass': {
+                'cls': EmClass,
+                'cdats': {
                     'name': 'FooClass',
-                    'classtype':'entity',
+                    'classtype': 'entity',
                 }
             },
-            'EmType' : {
+            'EmType': {
                 'cls': EmType,
-                'cdats' : {
-                    'name' : 'FooType',
+                'cdats': {
+                    'name': 'FooType',
                     'class_id': self.me.components(EmClass)[0].uid,
                     'fields_list': [],
                 }
             },
             'EmFieldGroup': {
                 'cls': EmFieldGroup,
-                'cdats' : {
-                    'name' : 'FooFG',
+                'cdats': {
+                    'name': 'FooFG',
                     'class_id': self.me.components(EmClass)[0].uid,
                 },
             },
@@ -154,9 +155,9 @@ class TestModel(unittest.TestCase):
                     'fieldgroup_id': self.me.components(EmFieldGroup)[0].uid,
                     'fieldtype': 'char',
                     'max_length': 64,
-                    'optional':True,
+                    'optional': True,
                     'internal': False,
-                    'rel_field_id':None,
+                    'rel_field_id': None,
                     'icon': '0',
                     'nullable': False,
                     'uniq': True,
@@ -172,7 +173,7 @@ class TestModel(unittest.TestCase):
             with patch.object(params[n]['cls'], '__init__', return_value=None) as initmock:
                 try:
                     self.me.create_component(n, params[n]['cdats'])
-                except AttributeError: #Raises because the component is a MagicMock
+                except AttributeError:  # Raises because the component is a MagicMock
                     pass
                 cdats['uid'] = tmpuid
                 cdats['model'] = self.me
@@ -201,37 +202,38 @@ class TestModel(unittest.TestCase):
                 self.assertTrue(ret)
                 self.assertNotIn(cuid, new_em._components['uids'])
                 self.assertNotIn(comp, new_em._components[cname])
-    
+
     def test_set_backend(self):
         """ Test the set_backend method """
 
-        for backend in [ EmBackendJson('EditorialModel/test/me.json'), EmBackendDummy() ]:
+        for backend in [EmBackendJson('EditorialModel/test/me.json'), EmBackendDummy()]:
             self.me.set_backend(backend)
             self.assertEqual(self.me.backend, backend)
 
-        for bad_backend in [None, 'wow', int, EmBackendJson ]:
-            with self.assertRaises(TypeError, msg="But bad argument (%s %s) was given"%(type(bad_backend),bad_backend)):
+        for bad_backend in [None, 'wow', int, EmBackendJson]:
+            with self.assertRaises(TypeError, msg="But bad argument (%s %s) was given" % (type(bad_backend), bad_backend)):
                 self.me.set_backend(bad_backend)
+
     ##
     # @todo Test selected fields application
     # @todo Test types hierarchy application
     def test_migrate_handler(self):
         """ Test that the migrate_handler() method create component in a good order """
-        
+
         #Testing component creation
         with patch.object(Model, 'create_component', return_value=None) as create_mock:
             try:
                 self.me.migrate_handler(None)
-            except AttributeError: #Raises because of the mock
+            except AttributeError:  # Raises because of the mock
                 pass
-            order_comp = ['EmClass', 'EmType', 'EmFieldGroup', 'EmField'] #Excpected creation order
+            order_comp = ['EmClass', 'EmType', 'EmFieldGroup', 'EmField']  # Excpected creation order
             cur_comp = 0
             for mcall in create_mock.mock_calls:
                 #Testing EmComponent order of creation
                 while order_comp[cur_comp] != mcall[1][0]:
-                    cur_comp +=1
+                    cur_comp += 1
                     if cur_comp >= len(order_comp):
-                        self.assertTrue(False, 'The order of create_component() calls was not respected by migrate_handler() methods');
+                        self.assertTrue(False, 'The order of create_component() calls was not respected by migrate_handler() methods')
 
                 #Testing uid
                 comp = self.me.component(mcall[1][2])
@@ -257,7 +259,6 @@ class TestModel(unittest.TestCase):
             last_call = mh_mock.mock_calls[-1]
             self.assertEqual(hash(last_call[1][0]), hash(self.me))
 
-
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
@@ -280,13 +281,13 @@ class TestModel(unittest.TestCase):
 
     def test_compclass_getter(self):
         """ Test the Model methods that handles name <-> EmComponent conversion """
-        for classname in [ 'EmField', 'EmClass', 'EmFieldGroup', 'EmType' ]:
+        for classname in ['EmField', 'EmClass', 'EmFieldGroup', 'EmType']:
             cls = Model.emclass_from_name(classname)
-            self.assertNotEqual(cls, False, "emclass_from_name return False when '%s' given as parameter"%classname)
+            self.assertNotEqual(cls, False, "emclass_from_name return False when '%s' given as parameter" % classname)
             self.assertEqual(cls.__name__, classname)
 
-        for classname in ['EmComponent', 'EmFoobar' ]:
-            self.assertFalse( Model.emclass_from_name(classname))
+        for classname in ['EmComponent', 'EmFoobar']:
+            self.assertFalse(Model.emclass_from_name(classname))
 
         for comp_cls in [EmClass, EmFieldGroup, EmType]:
             self.assertEqual(Model.name_from_emclass(comp_cls), comp_cls.__name__)
@@ -295,5 +296,3 @@ class TestModel(unittest.TestCase):
 
         for cls in [EmComponent, int, str]:
             self.assertFalse(Model.name_from_emclass(cls))
-
-
