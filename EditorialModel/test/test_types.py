@@ -4,6 +4,7 @@ from EditorialModel.model import Model
 from EditorialModel.classtypes import EmNature
 from EditorialModel.backend.json_backend import EmBackendJson
 
+
 class TypeTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -19,6 +20,7 @@ class TypeTestCase(unittest.TestCase):
         self.info_group = self.model.component(3)
         self.couleur_group = self.model.component(20)
         self.couleur_field = self.model.component(21)
+
 
 class TestSelectField(TypeTestCase):
 
