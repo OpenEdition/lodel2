@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
-from EditorialModel.model import Model
+from EditorialModel.randomem import RandomEm
 from EditorialModel.backend.json_backend import EmBackendJson
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.backend.graphviz import EmBackendGraphviz
@@ -127,7 +127,7 @@ class Command(BaseCommand):
         
         bj = EmBackendJson(options['output'])
 
-        em = Model.random(EmBackendDummy())
+        em = RandomEm.random_em(EmBackendDummy())
         bj.save(em)
 
         if options['dotout']:
