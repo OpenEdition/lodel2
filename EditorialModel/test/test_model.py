@@ -312,7 +312,7 @@ class TestModel(unittest.TestCase):
             self.assertNotEqual(cls, False, "emclass_from_name return False when '%s' given as parameter" % classname)
             self.assertEqual(cls.__name__, classname)
 
-        for classname in ['EmComponent', 'EmFoobar']:
+        for classname in ['EmComponent', 'EmFoobar', int, EmClass]:
             self.assertFalse(Model.emclass_from_name(classname))
 
         for comp_cls in [EmClass, EmFieldGroup, EmType]:
