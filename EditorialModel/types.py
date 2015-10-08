@@ -1,8 +1,5 @@
 #-*- coding: utf-8 -*-
 
-# from Database import sqlutils
-# import sqlalchemy as sql
-
 import EditorialModel
 from EditorialModel.components import EmComponent
 from EditorialModel.fields import EmField

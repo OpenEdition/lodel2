@@ -12,13 +12,9 @@ EM_TEST_OBJECT = None
 ## SetUpModule
 #
 # This function is called once for this module.
-# It is designed to overwrite the database configurations, and prepare objects for test_case initialization
 def setUpModule():
     global EM_TEST_OBJECT
     EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST))
-    #initTestDb(TEST_FIELD_DBNAME)
-    #setDbConf(TEST_FIELD_DBNAME)
-    #logging.basicConfig(level=logging.CRITICAL)
 
 
 def tearDownModule():

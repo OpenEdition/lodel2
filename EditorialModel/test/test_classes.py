@@ -25,7 +25,6 @@ EM_TEST_OBJECT = None
 
 
 ## run once for this module
-# define the Database for this module (an sqlite database)
 def setUpModule():
     global EM_TEST_OBJECT
     #EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjandoMigrationHandler('LodelTestInstance'))
