@@ -34,6 +34,10 @@ class MlString(object):
                 del(self.translations[lang])
         else:
             self.translations[lang] = text
+
+    def __repr__(self):
+        return self.__str__()
+
     ## String representation
     # @return A json dump of the MlString::translations dict
     def __str__(self):
