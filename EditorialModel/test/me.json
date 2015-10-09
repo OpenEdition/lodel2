@@ -39,7 +39,7 @@
     "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
   },
   "14" : {
-    "component":"EmType", "name":"rubrique", "string":"{\"fre\":\"Rubrique\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank", "superiors_list":{"parent":[14]}
+    "component":"EmType", "name":"rubrique", "string":"{\"fre\":\"Rubrique\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank", "superiors_list":{"parent":[14, 19]}
   },
   "15" : {
     "component":"EmFieldGroup", "name":"info", "string":"{\"fre\":\"Info\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13"
