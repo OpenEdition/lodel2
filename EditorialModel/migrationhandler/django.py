@@ -7,7 +7,9 @@ import django
 from django.db import models
 from django.db.models.loading import cache as django_cache
 from django.core.exceptions import ValidationError
+from django.contrib import admin
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from EditorialModel.classtypes import EmNature
 
 from EditorialModel.exceptions import *
 
@@ -183,19 +185,24 @@ class DjangoMigrationHandler(DummyMigrationHandler):
     # @param level str: Wich type of model are we doing. Possible values are 'class' and 'type'
     # @param datas list : List of property => value to set in the save function
     # @return The wanted save function
-    def get_save_fun(self, classname, level, datas):
+    @staticmethod
+    def set_save_fun(class_obj, level, datas):
 
         if level == 'class':
             def save(self, *args, **kwargs):
+                #Sets the classtype and class name
                 self.classtype = datas['classtype']
                 self.class_name = datas['class_name']
-                super(classname, self).save(*args, **kwargs)
+                super(class_obj, self).save(*args, **kwargs)
         elif level == 'type':
             def save(self, *args, **kwargs):
+                #Set the type name
                 self.type_name = datas['type_name']
-                super(classname, self).save(*args, **kwargs)
+                super(class_obj, self).save(*args, **kwargs)
 
-        return save
+        class_obj.save = save
+
+        return class_obj
 
     ## @brief Create django models from an EditorialModel.model object
     # @param edMod EditorialModel.model.Model : The editorial model instance
@@ -218,8 +225,8 @@ class DjangoMigrationHandler(DummyMigrationHandler):
         document_attrs = {
             'lodel_id': models.AutoField(primary_key=True),
             'classtype': models.CharField(max_length=16, editable=False),
-            'class_name': models.CharField(max_length=16, editable=False),
-            'type_name': models.CharField(max_length=16, editable=False),
+            'class_name': models.CharField(max_length=76, editable=False),
+            'type_name': models.CharField(max_length=76, editable=False),
             'string': models.CharField(max_length=255),
             'date_update': models.DateTimeField(auto_now=True, auto_now_add=True),
             'date_create': models.DateTimeField(auto_now_add=True),
@@ -234,10 +241,14 @@ class DjangoMigrationHandler(DummyMigrationHandler):
 
         classes = edMod.classes()
 
+        def object_repr(self):
+            return self.string
+
         #Creating the EmClasses models with document inheritance
         for emclass in classes:
             emclass_fields = {
-                'save': self.get_save_fun(emclass.uniq_name, 'class', {'classtype': emclass.classtype, 'class_name': emclass.uniq_name}),
+                'save': None, #will be set later using self.set_save_fun
+                '__str__': object_repr,
             }
 
             #Addding non optionnal fields
@@ -251,10 +262,14 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                 print("Model for class %s created" % emclass.uniq_name)
             django_models['classes'][emclass.uniq_name] = create_model(emclass.uniq_name, emclass_fields, self.app_name, module_name, parent_class=django_models['doc'])
 
+            self.set_save_fun(django_models['classes'][emclass.uniq_name], 'class', {'classtype': emclass.classtype, 'class_name': emclass.uniq_name})
+
+
             #Creating the EmTypes models with EmClass inherithance
             for emtype in emclass.types():
                 emtype_fields = {
-                    'save': self.get_save_fun(emtype.uniq_name, 'type', {'type_name': emtype.uniq_name}),
+                    'save':None,
+                    '__str__': object_repr,
                 }
                 #Adding selected optionnal fields
                 for emfield in emtype.selected_fields():
@@ -263,13 +278,29 @@ class DjangoMigrationHandler(DummyMigrationHandler):
                 #Adding superiors foreign key
                 for nature, superiors_list in emtype.superiors().items():
                     for superior in superiors_list:
-                        emtype_fields[nature] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, null=True)
+                        emtype_fields[nature+'_'+superior.uniq_name] = models.ForeignKey(superior.uniq_name, related_name=emtype.uniq_name, blank=True, default=None, null=True)
+                    
+                    # Method to get the parent that is not None
+                    emtype_fields['sup_field_list'] = [ nature + '_' + superior.uniq_name for superior in superiors_list ]
+                    def get_sup(self):
+                        for field in [ getattr(self, fname) for fname in self.sup_field_list ]:
+                            if not (field is None):
+                                return field
+                        return None
+                    #Adding a method to get the superior by nature
+                    emtype_fields[nature] = get_sup
+                
+                # Adding a dummy function to non present nature
+                def dummyNone(self): return None
+                for nat in [ nat for nat in EmNature.getall() if nat not in emtype_fields]:
+                    emtype_fields[nat] = dummyNone
+                        
 
                 if self.debug:
                     print("Model for type %s created" % emtype.uniq_name)
-                django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, self.app_name, module_name, parent_class=django_models['classes'][emclass.uniq_name])
-
-        pass
+                django_models['types'][emtype.uniq_name] = create_model(emtype.uniq_name, emtype_fields, self.app_name, module_name, parent_class=django_models['classes'][emclass.uniq_name], admin_opts=dict())
+                self.set_save_fun(django_models['types'][emtype.uniq_name], 'type', {'type_name': emtype.uniq_name})
+        return django_models
 
     ## @brief Return a good django field type given a field
     # @param f EmField : an EmField object
