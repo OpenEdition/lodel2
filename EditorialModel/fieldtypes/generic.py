@@ -51,12 +51,20 @@ class GenericFieldType(object):
         pass
 
     ## @brief Given a fieldtype name return the associated python class
+    # @param fieldtype_name str : A fieldtype name
     # @return An GenericFieldType derivated class
     @staticmethod
-    def from_name(name):
-        module_name = 'EditorialModel.fieldtypes.%s'%(name)
-        mod = importlib.import_module(module_name)
+    def from_name(fieldtype_name):
+        mod = importlib.import_module(GenericFieldType.module_name(fieldtype_name))
         return mod.EmFieldType
+
+    ## @brief Get a module name given a fieldtype name
+    # @param fieldtype_name str : A fieldtype name
+    # @return a string representing a python module name
+    @staticmethod
+    def module_name(fieldtype_name):
+        return 'EditorialModel.fieldtypes.%s'%(fieldtype_name)
+        
 
     
     ## @brief Transform a value into a valid python representation according to the fieldtype

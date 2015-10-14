@@ -47,7 +47,6 @@ class EmField(EmComponent):
         if not fieldtype_instance.check(default):
             raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'"%(default, fieldtype))
 
-
         self.nullable = nullable
         self.default = default
         self.uniq = uniq
@@ -61,6 +60,12 @@ class EmField(EmComponent):
     ## @brief Return the list of allowed field type
     def fieldtypes_list():
         return [f for f in EditorialModel.fieldtypes.__all__ if f != '__init__']
+
+    ## @brief Get the fieldtype instance
+    # @return a fieldtype instance
+    def fieldtype_instance(self):
+        return self._fieldtype_cls(self._fieldtype_args)
+        
 
     ## @brief Return the list of relation fields for a rel_to_type
     # @return None if the field is not a rel_to_type else return a list of EmField
