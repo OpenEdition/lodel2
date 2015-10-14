@@ -3,6 +3,7 @@
 ## Main class to handle objects defined by the types of an Editorial Model
 # an instance of these objects is pedantically called LeObject !
 
+from EditorialModel.types import EmType
 
 class LeObject(object):
 
@@ -83,9 +84,34 @@ class LeObject(object):
     # @todo implent !
     def _prepare_filters(self, query_filters):
         if query_filters is None:
-            query_filters = ()
-        elif isinstance(query_filters, str):
+            return ()
+        elif isinstance(query_filters[0], str):
             query_filters = (query_filters)
+        
+        fields, operators, queries = zip(*query_filters)
+        
+        # find name of the type in filters
+        try:
+            type_index = fields.index('type')
+            if operators[type_index] != '=':
+                raise ValueError
+            type_name = queries[type_index]
+            del query_filters[type_index]
+        except ValueError:
+            print ("Le champ type est obligatoire dans une requête")
+            raise
+
+        
+        comps = self.model.components(EmType)
+        for comp in comps:
+            if comp.name == type_name:
+                em_type = comp
+                break
+        
+        class_name = em_type.em_class.name
+        fields = em_type.fields()
+        field_list = [f.name for f in fields]
+        print (em_type, class_name, type_name, fields, field_list)
 
         prepared_filters = query_filters
         return prepared_filters
