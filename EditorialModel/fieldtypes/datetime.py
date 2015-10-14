@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fields import EmField
+from EditorialModel.fieldtypes import GenericFieldType
 
 
-class EmFieldDatetime(EmField):
+class EmFieldType(GenericFieldType):
 
     help = 'A datetime field. Take two boolean options now_on_update and now_on_create'
 
@@ -13,5 +13,5 @@ class EmFieldDatetime(EmField):
     def __init__(self, now_on_update=False, now_on_create=False, **kwargs):
         self.now_on_update = now_on_update
         self.now_on_create = now_on_create
-        super(EmFieldDatetime, self).__init__(ftype='datetime',**kwargs)
+        super(EmFieldType, self).__init__(ftype='datetime',**kwargs)
 

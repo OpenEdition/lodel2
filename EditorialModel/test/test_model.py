@@ -6,14 +6,12 @@ from EditorialModel.classes import EmClass
 from EditorialModel.types import EmType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
-from EditorialModel.fieldtypes.char import EmFieldChar
 from EditorialModel.components import EmComponent
 from Lodel.utils.mlstring import MlString
 
 
 from EditorialModel.backend.json_backend import EmBackendJson
 from EditorialModel.backend.dummy_backend import EmBackendDummy
-from EditorialModel.migrationhandler.django import DjangoMigrationHandler
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 
@@ -27,7 +25,7 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'))
         self.assertTrue(isinstance(model, Model))
 
-        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=False, dryrun=True))
+        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler('LodelTestInstance'))
         self.assertTrue(isinstance(model, Model))
 
     def test_bad_init(self):
@@ -149,7 +147,7 @@ class TestModel(unittest.TestCase):
                 },
             },
             'EmField': {
-                'cls': EmFieldChar,
+                'cls': EmField,
                 'cdats': {
                     'name': 'FooField',
                     'fieldgroup_id': self.ed_mod.components(EmFieldGroup)[0].uid,
@@ -288,7 +286,7 @@ class TestModel(unittest.TestCase):
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DjangoMigrationHandler('LodelTestInstance', debug=False, dryrun=True))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler('LodelTestInstance'))
 
         self.assertEqual(hash(me1), hash(me2), "When instanciate from the same backend & file but with another migration handler the hashes differs")
         self.assertTrue(me1.__eq__(me2))

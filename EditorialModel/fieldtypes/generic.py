@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import types
+import importlib
 
 ## @brief Abstract class representing a fieldtype
 class GenericFieldType(object):
@@ -19,7 +20,7 @@ class GenericFieldType(object):
     # @throw NotImplementedError if called directly
     # @throw AttributeError if bad ftype
     # @throw AttributeError if bad check_function
-    def __init__(self, ftype, default = None, nullable = False, check_function = None, **kwargs):
+    def __init__(self, ftype, default = None, nullable = True, check_function = None, uniq = False, **kwargs):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
         
@@ -33,7 +34,8 @@ class GenericFieldType(object):
 
         self.ftype = ftype
         self.check_function = check_function
-        self.nullalble = bool(nullable)
+        self.nullable = bool(nullable)
+        self.uniq = bool(uniq)
 
         self.check_or_raise(default)
         self.default = default
@@ -47,6 +49,15 @@ class GenericFieldType(object):
     @staticmethod
     def dummy_check(value):
         pass
+
+    ## @brief Given a fieldtype name return the associated python class
+    # @return An GenericFieldType derivated class
+    @staticmethod
+    def from_name(name):
+        module_name = 'EditorialModel.fieldtypes.%s'%(name)
+        mod = importlib.import_module(module_name)
+        return mod.EmFieldType
+
     
     ## @brief Transform a value into a valid python representation according to the fieldtype
     # @param value ? : The value to cast

@@ -1,10 +1,9 @@
 #-*- coding: utf-8 -*-
 
 import re
-from EditorialModel.fieldtypes.generic import GenericFieldType
+import EditorialModel.fieldtypes.char.EmFieldType
 
-
-class EmFieldCharRegex(EmFieldChar):
+class EmFieldType(EditorialModel.fieldtypes.char.EmFieldType):
 
     help = 'String field validated with a regex. Take two optionss : max_length and regex'
 
@@ -18,5 +17,5 @@ class EmFieldCharRegex(EmFieldChar):
         def re_match(value):
             if not v_re.match(regex, value):
                 raise TypeError('"%s" don\'t match the regex "%s"'%(value, regex))
-        super(EmFieldCharRegex, self).__init__(check_function=re_match,**kwargs)
+        super(EmFieldType, self).__init__(check_function=re_match,**kwargs)
 

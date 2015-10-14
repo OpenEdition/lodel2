@@ -58,13 +58,10 @@ class Model(object):
 
     @staticmethod
     ## Given a python class return a name
-    # @param cls : The python class we want the name
+    # @param em_class : The python class we want the name
     # @return A class name as string or False if cls is not an EmComponent child class
-    # @todo réécrire le split, c'est pas bô
     def name_from_emclass(em_class):
         if em_class not in Model.components_class:
-            if issubclass(em_class, EmField):
-                return 'EmField'
             return False
         return em_class.__name__
 
@@ -80,13 +77,7 @@ class Model(object):
             cls_name = kwargs['component']
             del kwargs['component']
 
-            if cls_name == 'EmField':
-                #Special EmField process because of fieldtypes
-                if not 'fieldtype' in kwargs:
-                    raise AttributeError("Missing 'fieldtype' from EmField instanciation")
-                cls = EditorialModel.fields.EmField.get_field_class(kwargs['fieldtype'])
-            else:
-                cls = self.emclass_from_name(cls_name)
+            cls = self.emclass_from_name(cls_name)
 
             if cls:
                 kwargs['uid'] = uid
@@ -160,11 +151,6 @@ class Model(object):
         
         if component_type not in [ n for n in self._components.keys() if n != 'uids' ]:
             raise ValueError("Invalid component_type rpovided")
-        elif component_type == 'EmField':
-            #special process for EmField
-            if not 'fieldtype' in datas:
-                raise AttributeError("Missing 'fieldtype' from EmField instanciation")
-            em_obj = EditorialModel.fields.EmField.get_field_class(datas['fieldtype'])
         else:
             em_obj = self.emclass_from_name(component_type)
 
