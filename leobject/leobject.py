@@ -5,12 +5,17 @@
 
 from EditorialModel.types import EmType
 
-class LeObject(object):
-
-    ## Instantiate with a Model and a DataSource
-    def __init__(self, model, datasource):
-        self.model = model
-        self.datasource = datasource
+class _LeObject(object):
+    
+    ## @brief The editorial model
+    _model = None
+    ## @brief The datasource
+    _datasource = None
+    
+    ## @brief Instantiate with a Model and a DataSource
+    # @param **kwargs dict : datas usefull to instanciate a _LeObject
+    def __init__(self, **kwargs):
+        raise NotImplementedError("Abstract constructor")
 
     ## @brief create a new LeObject
     # @param data dict: a dictionnary of field:value to save

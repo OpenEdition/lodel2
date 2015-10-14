@@ -1,9 +1,10 @@
 #-*- coding: utf-8 -*-
 
-from leobject.dyn import LeObject
+import leobject
 
 ## @brief Represent an EmClass data instance
-class LeClass(LeObject):
+# @note Is not a derivated class of LeObject because the concrete class will be a derivated class from LeObect
+class LeClass(object):
     
     ## @brief Stores fieldtypes by field name
     _fieldtypes = dict()
@@ -14,9 +15,7 @@ class LeClass(LeObject):
     # @param model Model : The editorial model
     # @param datasource ? : The datasource
     def __init__(self, **kwargs):
-        if self._cls_field is None:
-            raise NotImplementedError("Abstract class")
-        super(LeClass, self).__init__(**kwargs)
+        raise NotImplementedError("Abstract class")
     
     ## @brief Get the linked objects
     # @return an array of LeType derivated class instance

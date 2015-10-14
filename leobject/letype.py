@@ -3,7 +3,8 @@
 from leobject.leclass import LeClass
 
 ## @brief Represent an EmType data instance
-class LeType(LeClass):
+# @note Is not a derivated class of LeClass because the concrete class will be a derivated class from LeClass
+class LeType(object):
     
     ## @brief Stores selected fields with key = name
     _fields = list()
@@ -11,20 +12,34 @@ class LeType(LeClass):
     _leclass = None
     
     ## @brief Instanciate a new LeType
-    # @param model Model : The editorial model
-    # @param datasource ? : The datasource
-    def __init__(self, **kwargs):
-        if self._typename is None or self._leclass is None:
+    # @param lodel_id : The lodel id
+    # @param **kwargs : Datas used to populate a LeType
+    def __init__(self, lodel_id, **kwargs):
+        if self._leclass is None:
             raise NotImplementedError("Abstract class")
-        super(LeType, self).__init__(**kwargs)
+
+        self.lodel_id = lodel_id
+        ## Populate the object from the datas received in kwargs
+        for name, value in kwargs.items():
+            if name not in self._fields:
+                raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__)
+            setattr(self, name, value)
     
     ## @brief Insert a new LeType in the datasource
-    # @param datas dict : A dict containing the datas
+    # @param **datas : A dict containing the datas
     # @return The lodel id of the new LeType or False
     # @thorw A leo exception if invalid stuff
     # @throw InvalidArgumentError if invalid argument
     @classmethod
-    def insert(cls, datas):
+    def insert(cls, **datas):
+        #check datas
+        autom_fields = ['lodel_id', 'typename', 'classname' ]
+        for forbiden in autom_fields:
+            if forbiden in datas:
+                raise AttributeError("Not allowed to give explicitly '%s' to insert method"%(forbiden))
+        self.check_datas(datas)
+
+        super(LeType, self).insert(typename=self.__class__.__name__, classname=self._leclass.__name__, **datas)
         pass
     
     ## @brief Delete a LeType from the datasource
@@ -52,8 +67,8 @@ class LeType(LeClass):
     @classmethod
     def check_datas(cls, datas):
         for dname, dval in datas.items():
-            if dname not in cls._fields.keys():
-                raise Exception()
+            if dname not in cls._fields:
+                raise AttributeError("No such field '%s' for %s"%(dname, self.__class__.__name__)
             cls._fields[dname].check_or_raise(dval)
                 
 
