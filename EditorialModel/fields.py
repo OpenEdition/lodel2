@@ -39,13 +39,19 @@ class EmField(EmComponent):
         self.fieldtype = fieldtype
         self._fieldtype_args = kwargs
         self._fieldtype_args.update({'nullable' : nullable, 'default' : default, 'uniq' : uniq})
-        self._fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
+        try:
+            fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
+        except AttributeError as e:
+            raise AttributeError("Error will instanciating fieldtype : %s"%e)
+
+        if not fieldtype_instance.check(default):
+            raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'"%(default, fieldtype))
 
 
         self.nullable = nullable
         self.default = default
         self.uniq = uniq
- 
+
         for kname, kval in kwargs.items():
             setattr(self, kname, kval)
 
