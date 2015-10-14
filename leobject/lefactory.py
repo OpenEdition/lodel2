@@ -11,6 +11,17 @@ class LeFactory(object):
     
     def __init__(self):raise NotImplementedError("Not designed (yet?) to be implemented")
 
+    ## @brief Return a call to a FieldType constructor given an EmField
+    # @param emfield EmField : An EmField
+    # @return a string representing the python code to instanciate a EmFieldType
+    @staticmethod
+    def fieldtype_construct_from_field(emfield):    
+        return '%s.EmFieldType(**%s)'%(
+            GenericFieldType.module_name(emfield.fieldtype),
+            emfield._fieldtype_args.__repr__(),
+        )
+            
+        
     ## @brief Generate python code containing the LeObject API
     # @param model_args dict : Dict of Model __init__ method arguments
     # @param datasource_args dict : Dict of datasource __init__ method arguments
@@ -46,33 +57,25 @@ class LeObject(_LeObject):\n\
         
         for emclass in model.components(EditorialModel.classes.EmClass):
             cls_fields = dict()
-            fieldgroups = emclass.fieldgroups()
-            for fieldgroup in fieldgroups:
-                cls_fields[fieldgroup.name] = dict()
+            for field in emclass.fields():
+                cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
+            cls_fieldgroup = dict()
+            for fieldgroup in emclass.fieldgroups():
+                cls_fieldgroup[fieldgroup.name] = list()
                 for field in fieldgroup.fields():
-                    fieldtype_constructor = '%s.EmFieldType(**%s)'%(
-                        GenericFieldType.module_name(field.fieldtype),
-                        field._fieldtype_args.__repr__(),
-                    )
-                    cls_fields[fieldgroup.name][field.name] = fieldtype_constructor
-            
+                    cls_fieldgroup[fieldgroup.name].append(field.name)
+
             result += "\n\
 class %s(LeObject, LeClass):\n\
-    _cls_fields = %s\n\
+    _fieldtypes = %s\n\
+    _fieldgroups = %s\n\
 \n\
-"%(emclass.name.title(), cls_fields.__repr__())
+"%(emclass.name.title(), cls_fields.__repr__(), cls_fieldgroup.__repr__())
 
         for emtype in model.components(EditorialModel.types.EmType):
-            type_fields = dict()
-            fieldgroups = emtype.fieldgroups()
-            for fieldgroup in fieldgroups:
-                type_fields[fieldgroup.name] = dict()
-                for field in fieldgroup.fields(emtype.uid):
-                    fieltype_constructor = '%s.EmFieldType(**%s)'%(
-                        GenericFieldType.module_name(field.fieldtype),
-                        field._fieldtype_args.__repr__(),
-                    )
-                    type_fields[fieldgroup.name][field.name] = fieldtype_constructor
+            type_fields = list()
+            for field in emtype.fields():
+                type_fields.append(field.name)
 
             result += "\n\
 class %s(%s,LeType):\n\
