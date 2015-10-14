@@ -1,16 +1,13 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fields import EmField
+from EditorialModel.fieldtypes.generic import GenericFieldType
 
+class EmFieldBool(GenericFieldType):
 
-class EmFieldBool(EmField):
-
-    ftype = 'bool'
     help = 'A basic boolean field'
 
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
     def __init__(self, **kwargs):
-        super(EmFieldBool, self).__init__(**kwargs)
+        super(EmFieldBool, self).__init__(ftype='bool',**kwargs)
 
-fclass = EmFieldBool

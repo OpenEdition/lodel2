@@ -1,14 +1,11 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fields import EmField
+from EditorialModel.fieldtypes.generic import GenericFieldType
 
+class EmFieldText(GenericFieldType):
 
-class EmFieldText(EmField):
-
-    ftype = 'text'
     help = 'A text field (big string)'
 
     def __init__(self, **kwargs):
-        super(EmFieldText, self).__init__(**kwargs)
+        super(EmFieldText, self).__init__(ftype='text',**kwargs)
 
-fclass = EmFieldText
