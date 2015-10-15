@@ -13,6 +13,8 @@ from EditorialModel.classtypes import EmNature
 
 from EditorialModel.exceptions import *
 
+## @package EditorialModel::migrationhandler::django
+# @deprecated Broken since EmField and fieldtypes changed
 
 ## @brief Create a django model
 # @param name str : The django model name

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
-from EditorialModel.fields import EmField
+import EditorialModel
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'List all the possible field types'
 
     def handle(self, *args, **options):
-        ftl = EmField.fieldtypes_list()
+        ftl = EditorialModel.fields.EmField.fieldtypes_list()
         ftl.sort()
         if options['silent']:
             for ftype in ftl:
@@ -21,4 +21,4 @@ class Command(BaseCommand):
         else:
             self.stdout.write("Field types list : ")
             for ftype in ftl:
-                self.stdout.write("\t{0:15} {1}".format(ftype, EmField.get_field_class(ftype).help))
+                self.stdout.write("\t{0:15} {1}".format(ftype, EditorialModel.fieldtypes.generic.GenericFieldType.from_name(ftype).help))
