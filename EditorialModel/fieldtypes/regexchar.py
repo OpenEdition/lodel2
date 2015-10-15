@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import re
-import EditorialModel.fieldtypes.char.EmFieldType
+import EditorialModel
 
 class EmFieldType(EditorialModel.fieldtypes.char.EmFieldType):
 

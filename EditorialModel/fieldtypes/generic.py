@@ -16,11 +16,13 @@ class GenericFieldType(object):
     # @param default ? : The default value
     # @param nullable bool : is None allowed as value ?
     # @param check_function function : A callback check function that takes 1 argument and raise a TypeError if the validation fails
+    # @param uniq bool : Indicate if a field should handle uniq values
+    # @param primary bool : If true the field is a primary key
     # @param **kwargs dict : Other arguments
     # @throw NotImplementedError if called directly
     # @throw AttributeError if bad ftype
     # @throw AttributeError if bad check_function
-    def __init__(self, ftype, default = None, nullable = True, check_function = None, uniq = False, **kwargs):
+    def __init__(self, ftype, default = None, nullable = True, check_function = None, uniq = False, primary=False, **kwargs):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
         

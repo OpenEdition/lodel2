@@ -19,16 +19,31 @@ class EmField(EmComponent):
     ranked_in = 'fieldgroup_id'
 
     ## Instanciate a new EmField
-    # @todo define and test type for icon and fieldtype
+    # @todo define and test type for icon
     # @warning nullable == True by default
+    # @param model Model : Editorial model
+    # @param uid int : Uniq id
+    # @param fieldtype str : Fieldtype name ( see Editorialmodel::fieldtypes )
+    # @param optional bool : Indicate if a field is optional or not
+    # @param internal str|bool : If False the field is not internal, else it can takes value in "object" or "automatic"
+    # @param rel_field_id int|None : If not None indicates that the field is a relation attribute (and the value is the UID of the rel2type field)
+    # @param nullable bool : If True None values are allowed
+    # @param default * : Default field value
+    # @param uniq bool : if True the value should be uniq in the db table
+    # @param **kwargs : more keywords arguments for the fieldtype
     def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=True, default=None, uniq=False, **kwargs):
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
-        self.optional = optional
-        self.check_type('optional', bool)
-        self.internal = internal
-        self.check_type('internal', bool)
+        self.optional = bool(optional)
+
+        if not internal:
+            self.internal = False
+        else:
+            if internal.lower() not in ['object', 'automatic']:
+                raise ValueError("The internal arguments possible values are : [False, 'object', 'automatic']")
+            self.internal = internal.lower()
+
         self.rel_field_id = rel_field_id
         self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon
@@ -59,7 +74,7 @@ class EmField(EmComponent):
     @staticmethod
     ## @brief Return the list of allowed field type
     def fieldtypes_list():
-        return [f for f in EditorialModel.fieldtypes.__all__ if f != '__init__']
+        return [f for f in EditorialModel.fieldtypes.__all__ if f != '__init__' and f != 'generic' ]
 
     ## @brief Get the fieldtype instance
     # @return a fieldtype instance
