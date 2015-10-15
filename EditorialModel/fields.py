@@ -44,6 +44,9 @@ class EmField(EmComponent):
                 raise ValueError("The internal arguments possible values are : [False, 'object', 'automatic']")
             self.internal = internal.lower()
 
+        if self.internal == 'object' and name not in EditorialModel.classtypes.common_fields.keys():
+            raise ValueError("Only common_fields are allowed to have the argument internal='object'")
+
         self.rel_field_id = rel_field_id
         self.check_type('rel_field_id', (int, type(None)))
         self.icon = icon

@@ -8,15 +8,14 @@ import logging
 from unittest import TestCase
 import unittest
 
+import EditorialModel
 from EditorialModel.classes import EmClass
 from EditorialModel.classtypes import EmClassType
 from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
-#import EditorialModel.fieldtypes as fieldTypes
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-#from EditorialModel.migrationhandler.django import DjangoMigrationHandler
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
@@ -69,6 +68,21 @@ class TestEmClassCreation(ClassesTestCase):
         # the classtype should have the name of the EmClassType
         test_class = EM_TEST_OBJECT.component(test_class.uid)
         self.assertEqual(test_class.classtype, EmClassType.entity['name'])
+    
+    def test_default_fields(self):
+        """ Test if the default + common_fields are created when an EmClass is created """
+        classtype = EmClassType.entity['name']
+        test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testdefaultfieldclass', 'classtype': classtype})
+        ctype = EditorialModel.classtypes.EmClassType.get(classtype)
+        default_fields = ctype['default_fields']
+        default_fields.update(EditorialModel.classtypes.common_fields)
+        
+        fgs = test_class.fieldgroups()
+        self.assertEqual(len(fgs), 1, "Only one fieldgroup should be created when an EmClass is created")
+        self.assertEqual(fgs[0].name, EmClass.default_fieldgroup)
+        fnames = [ f.name for f in fgs[0].fields() ]
+        self.assertEqual(sorted(fnames), sorted(list(default_fields.keys())))
+            
 
 
 # Testing class deletion (and associated table drop)

@@ -1,6 +1,27 @@
 # -*- coding: utf-8 -*-
 
 
+common_fields = {
+    'lodel_id': {
+        'fieldtype': 'pk',
+        'internal': 'object',
+    },
+    'classid': {
+        'fieldtype': 'integer',
+        'internal': 'object',
+    },
+    'typeid': {
+        'fieldtype': 'integer',
+        'internal': 'object',
+    },
+    'string': {
+        'fieldtype': 'char',
+        'max_length': 128,
+        'internal': 'object',
+    },
+}
+
+
 ## EmNature (Class)
 #
 # constant name for the nature of type hierarchy
@@ -53,25 +74,7 @@ class EmClassType(object):
                 'maxchildren': -1
             },
         },
-        'default_fields': {
-            'lodel_id': {
-                'fieldtype': 'pk',
-                'internal': 'object',
-            },
-            'classid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'typeid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'string': {
-                'fieldtype': 'char',
-                'max_length': 128,
-                'internal': 'object',
-            },
-        }
+        'default_fields':{}
     }
 
     entry = {
@@ -88,25 +91,7 @@ class EmClassType(object):
                 'maxchildren': -1
             },
         },
-        'default_fields': {
-            'lodel_id': {
-                'fieldtype': 'pk',
-                'internal': 'object',
-            },
-            'classid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'typeid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'string': {
-                'fieldtype': 'char',
-                'max_length': 128,
-                'internal': 'object',
-            },
-        }
+        'default_fields': {}
     }
 
     person = {
@@ -119,25 +104,7 @@ class EmClassType(object):
                 'maxchildren': 1
             },
         },
-        'default_fields': {
-            'lodel_id': {
-                'fieldtype': 'pk',
-                'internal': 'object',
-            },
-            'classid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'typeid': {
-                'fieldtype': 'integer',
-                'internal': 'object',
-            },
-            'string': {
-                'fieldtype': 'char',
-                'max_length': 128,
-                'internal': 'object',
-            },
-        }
+        'default_fields': {}
     }
     
     ## @brief return a classtype from its name

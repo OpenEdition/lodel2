@@ -216,7 +216,9 @@ class Model(object):
                     break
 
         ctype = EditorialModel.classtypes.EmClassType.get(emclass.classtype)
-        for fname, fdatas in ctype['default_fields'].items():
+        default_fields = ctype['default_fields']
+        default_fields.update(EditorialModel.classtypes.common_fields)
+        for fname, fdatas in default_fields.items():
             if not (fname in [ f.name for f in emclass.fields() ]):
                 #Adding the field
                 fdatas['name'] = fname
