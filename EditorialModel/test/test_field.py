@@ -57,6 +57,11 @@ class TestField(FieldTestCase):
         field_components_records = EM_TEST_OBJECT.components(EmField)
         self.assertIn(field, field_components_records)
 
+    def test_invalid_internal(self):
+        """ Test that internal='object' is reserved for common_fields """
+        with self.assertRaises(ValueError, msg="Only common_fields should be internal='object'"):
+            field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testbadinternal','internal': 'object', 'fieldgroup_id': self.test_fieldgroup.uid, 'fieldtype': self.test_fieldtype})
+
     ## Test_Deletion
     #
     # tests the deletion process of a field
