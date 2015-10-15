@@ -1,8 +1,10 @@
 #-*- coding: utf-8 -*-
 
-## Main class to handle objects defined by the types of an Editorial Model
+## @package EditorialModel::leobject::leobject
+# @brief Main class to handle objects defined by the types of an Editorial Model
 # an instance of these objects is pedantically called LeObject !
 
+import re
 from EditorialModel.types import EmType
 
 class _LeObject(object):
@@ -11,6 +13,9 @@ class _LeObject(object):
     _model = None
     ## @brief The datasource
     _datasource = None
+
+    _query_re = None
+    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ']
     
     ## @brief Instantiate with a Model and a DataSource
     # @param **kwargs dict : datas usefull to instanciate a _LeObject
@@ -65,11 +70,19 @@ class _LeObject(object):
         return okay
 
     ## @brief make a search to retrieve a collection of LeObject
-    # @param query_filters string | (string): list of string of query filters
+    # @param 
+    # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) )
     # @return responses ({string:*}): a list of dict with field:value
-    def get(self, query_filters):
+    def get(self, query_filters, typename = None, classname = None):
+        filters = list()
+        for query in query_filters:
+            if len(query) == 3 and not isinstance(query, str):
+                filters.append(tuple(query))
+            else:
+                filters.append(self._split_filter(query))
+        #Now filters is a list of tuple (FIELD, OPERATOR, VALUE
+
         try:
-            datasource_filters = self._prepare_filters(query_filters)
             responses = self.datasource.get(datasource_filters)
         except:
             raise
@@ -83,40 +96,33 @@ class _LeObject(object):
     def _check_data(self, data):
         checked_data = data
         return checked_data
+    
+    ## @brief Check and split a query filter
+    # @note The query_filter format is "FIELD OPERATOR VALUE"
+    # @param query_filter str : A query_filter string
+    # @return a tuple (FIELD, OPERATOR, VALUE)
+    @classmethod
+    def _split_filter(cls, query_filter):
+        if cls._query_re is None:
+            cls._compile_query_re()
 
-    ## @brief check and prepare query for the datasource
-    # @param query_filters (string): list of string of query filters
-    # @todo implent !
-    def _prepare_filters(self, query_filters):
-        if query_filters is None:
-            return ()
-        elif isinstance(query_filters[0], str):
-            query_filters = (query_filters)
-        
-        fields, operators, queries = zip(*query_filters)
-        
-        # find name of the type in filters
-        try:
-            type_index = fields.index('type')
-            if operators[type_index] != '=':
-                raise ValueError
-            type_name = queries[type_index]
-            del query_filters[type_index]
-        except ValueError:
-            print ("Le champ type est obligatoire dans une requête")
-            raise
+        matches = cls._query_re.match(query_filter)
+        if not matches:
+            raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
 
-        
-        comps = self.model.components(EmType)
-        for comp in comps:
-            if comp.name == type_name:
-                em_type = comp
-                break
-        
-        class_name = em_type.em_class.name
-        fields = em_type.fields()
-        field_list = [f.name for f in fields]
-        print (em_type, class_name, type_name, fields, field_list)
+        result = (matches.group('field'), re.sub(r'\s', ' ', matches.group('operator'), count=0), matches.group('value').strip())
+        for r in result:
+            if len(r) == 0:
+                raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
+        return result
 
-        prepared_filters = query_filters
-        return prepared_filters
+    ## @brief Compile the regex for query_filter processing
+    # @note Set _LeObject._query_re
+    @classmethod
+    def _compile_query_re(cls):
+        op_re_piece = '(?P<operator>(%s)'%cls._query_operators[0].replace(' ', '\s')
+        for operator in cls._query_operators[1:]:
+            op_re_piece += '|(%s)'%operator.replace(' ', '\s')
+        op_re_piece += ')'
+        cls._query_re = re.compile('^\s*(?P<field>[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+        pass
