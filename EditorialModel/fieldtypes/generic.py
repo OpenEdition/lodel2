@@ -22,7 +22,7 @@ class GenericFieldType(object):
     # @throw NotImplementedError if called directly
     # @throw AttributeError if bad ftype
     # @throw AttributeError if bad check_function
-    def __init__(self, ftype, default = None, nullable = True, check_function = None, uniq = False, primary=False, **kwargs):
+    def __init__(self, ftype, nullable = True, check_function = None, uniq = False, primary=False, **kwargs):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
         
@@ -39,8 +39,10 @@ class GenericFieldType(object):
         self.nullable = bool(nullable)
         self.uniq = bool(uniq)
 
-        self.check_or_raise(default)
-        self.default = default
+        if 'default' in kwargs:
+            self.check_or_raise(default)
+            self.default = default
+            del(kwargs['default'])
 
         for argname,argvalue in kwargs.items():
             setattr(self, argname, argvalue)

@@ -142,6 +142,7 @@ class Model(object):
     # @note datas['rank'] can be an integer or two specials strings 'last' or 'first'
     # @param component_type str : a component type ( component_class, component_fieldgroup, component_field or component_type )
     # @param datas dict : the options needed by the component creation
+    # @return The created EmComponent
     # @throw ValueError if datas['rank'] is not valid (too big or too small, not an integer nor 'last' or 'first' )
     # @todo Handle a raise from the migration handler
     # @todo Transform the datas arg in **datas ?
@@ -184,7 +185,44 @@ class Model(object):
 
         self.migration_handler.register_model_state(self, hash(self))
 
+        if uid is None and component_type == 'EmClass':
+            # !!! If uid is not None it means that we shouldn't create components automatically !!!
+            self.add_default_class_fields(em_component.uid)
+
         return em_component
+
+    ## @brief Add to a class (if not exists) the default fields
+    #
+    # @param class_uid int : An EmClass uid
+    # @throw ValueError if class_uid in not an EmClass uid
+    def add_default_class_fields(self, class_uid):
+        if class_uid not in self._components['uids']:
+            raise ValueError("The uid '%d' don't exists"%class_uid)
+        emclass = self._components['uids'][class_uid]
+        if not isinstance(emclass, EditorialModel.classes.EmClass):
+            raise ValueError("The uid '%d' is not an EmClass uid"%class_uid)
+
+        fgroup_name = EmClass.default_fieldgroup
+
+        if fgroup_name not in [fg.name for fg in emclass.fieldgroups() ]:
+            #Creating the default fieldgroup if not existing
+            fg_datas = { 'name' : fgroup_name, 'class_id': emclass.uid }
+            fgroup = self.create_component('EmFieldGroup', fg_datas)
+            fgid = fgroup.uid
+        else:
+            for fg in emclass.fieldgroups():
+                if fg.name == fgroup_name:
+                    fgid = fg.uid
+                    break
+
+        ctype = EditorialModel.classtypes.EmClassType.get(emclass.classtype)
+        for fname, fdatas in ctype['default_fields'].items():
+            if not (fname in [ f.name for f in emclass.fields() ]):
+                #Adding the field
+                fdatas['name'] = fname
+                fdatas['fieldgroup_id'] = fgid
+                self.create_component('EmField', fdatas)
+        pass
 
     ## Delete a component
     # @param uid int : Component identifier

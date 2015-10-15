@@ -18,15 +18,16 @@ import EditorialModel
 class EmClass(EmComponent):
 
     ranked_in = 'classtype'
+    
+    ## @brief default fieldgroup name
+    default_fieldgroup = '_default'
 
     ## EmClass instanciation
     # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
     # @todo defines types check for icon and sortcolumn
     def __init__(self, model, uid, name, classtype, icon='0', sortcolumn='rank', string=None, help_text=None, date_update=None, date_create=None, rank=None):
 
-        try:
-            getattr(EmClassType, classtype)
-        except AttributeError:
+        if EmClassType.get(classtype) is None:
             raise AttributeError("Unknown classtype '%s'" % classtype)
 
         self.classtype = classtype
@@ -47,7 +48,12 @@ class EmClass(EmComponent):
             if emtype.class_id == self.uid:
                 return False
         for fieldgroup in self.model.components(EditorialModel.fieldgroups.EmFieldGroup):
-            if fieldgroup.class_id == self.uid:
+            if fieldgroup.name == self.default_fieldgroup:
+              #checking that the default fieldgroup contains only default fields
+              for fname in [f.name for f in fieldgroup.fields()]:
+                if fname not in EmClassType.get(self.classtype)['default_fields'].keys():
+                    return False
+            elif fieldgroup.class_id == self.uid and fieldgroup.name != self.default_fieldgroup:
                 return False
         return True
 

@@ -32,6 +32,8 @@ class EmNature(object):
 #            - True  : possible superiors can not be defined, they will be enforced by the ME automatically
 #       - maxdepth : maximum depth
 #       - maxchildren : maximum children
+#   
+#   Classtypes contains default internal fields too
 #
 class EmClassType(object):
 
@@ -51,6 +53,25 @@ class EmClassType(object):
                 'maxchildren': -1
             },
         },
+        'default_fields': {
+            'lodel_id': {
+                'fieldtype': 'pk',
+                'internal': 'object',
+            },
+            'classid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'typeid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'string': {
+                'fieldtype': 'char',
+                'max_length': 128,
+                'internal': 'object',
+            },
+        }
     }
 
     entry = {
@@ -67,6 +88,25 @@ class EmClassType(object):
                 'maxchildren': -1
             },
         },
+        'default_fields': {
+            'lodel_id': {
+                'fieldtype': 'pk',
+                'internal': 'object',
+            },
+            'classid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'typeid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'string': {
+                'fieldtype': 'char',
+                'max_length': 128,
+                'internal': 'object',
+            },
+        }
     }
 
     person = {
@@ -79,8 +119,37 @@ class EmClassType(object):
                 'maxchildren': 1
             },
         },
+        'default_fields': {
+            'lodel_id': {
+                'fieldtype': 'pk',
+                'internal': 'object',
+            },
+            'classid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'typeid': {
+                'fieldtype': 'integer',
+                'internal': 'object',
+            },
+            'string': {
+                'fieldtype': 'char',
+                'max_length': 128,
+                'internal': 'object',
+            },
+        }
     }
+    
+    ## @brief return a classtype from its name
+    # @param classtype str : A classtype name
+    # @return None if no classtype with this name, else return a dict containing classtype informations
+    @classmethod
+    def get(cls,classtype):
+        try: return getattr(cls, classtype.lower())
+        except AttributeError: return None
 
+    ## @brief Get all the classtype
+    # @return A list of dict representing classtypes
     @classmethod
     def getall(cls):
         return [cls.entity, cls.entry, cls.person]

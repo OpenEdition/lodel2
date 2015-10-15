@@ -2,7 +2,6 @@
 
 from EditorialModel.fieldtypes.generic import GenericFieldType
 
-
 class EmFieldType(GenericFieldType):
 
     help = 'Basic integer field'

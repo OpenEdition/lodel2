@@ -31,7 +31,7 @@ class EmField(EmComponent):
     # @param default * : Default field value
     # @param uniq bool : if True the value should be uniq in the db table
     # @param **kwargs : more keywords arguments for the fieldtype
-    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=True, default=None, uniq=False, **kwargs):
+    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=False, uniq=False, **kwargs):
 
         self.fieldgroup_id = fieldgroup_id
         self.check_type('fieldgroup_id', int)
@@ -53,17 +53,17 @@ class EmField(EmComponent):
 
         self.fieldtype = fieldtype
         self._fieldtype_args = kwargs
-        self._fieldtype_args.update({'nullable' : nullable, 'default' : default, 'uniq' : uniq})
+        self._fieldtype_args.update({'nullable' : nullable, 'uniq' : uniq})
         try:
             fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
         except AttributeError as e:
             raise AttributeError("Error will instanciating fieldtype : %s"%e)
 
-        if not fieldtype_instance.check(default):
-            raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'"%(default, fieldtype))
+        if 'default' in kwargs:
+            if not fieldtype_instance.check(default):
+                raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'"%(default, fieldtype))
 
         self.nullable = nullable
-        self.default = default
         self.uniq = uniq
 
         for kname, kval in kwargs.items():

@@ -97,20 +97,25 @@ class TestEmClassDeletion(ClassesTestCase):
         fieldgroup = EM_TEST_OBJECT.create_component(EmFieldGroup.__name__, {'name': 'testsubfg1', 'class_id': test_class.uid})
         self.assertFalse(EM_TEST_OBJECT.delete_component(test_class.uid), "delete method returns True but the class has fieldgroup(s)")
 
-        # TODO check : "table has been deleted but the class has fieldgroup"
-
         try:
             EM_TEST_OBJECT.component(test_class.uid)
         except Exception:
             self.fail("The class has been deleted but it has fieldgroups")
 
+        test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassFalseEmpty', 'classtype': EmClassType.entity['name']})
+        foo_field = EM_TEST_OBJECT.create_component('EmField', {'name': 'ahah', 'fieldtype':'char', 'fieldgroup_id':test_class.fieldgroups()[0].uid})
+        self.assertFalse(EM_TEST_OBJECT.delete_component(test_class.uid), "delete method returns True but the class has a non-default field in the default fieldgroup")
+
+        # TODO check : "table has been deleted but the class has fieldgroup"
+
+        try:
+            EM_TEST_OBJECT.component(test_class.uid)
+        except Exception:
+            self.fail("The class has been deleted but it has non-default field in the default fieldgroup")
+
 
 # Interface to fieldgroups
 class TestEmClassFieldgrousp(ClassesTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
 
     def setUp(self):
         ClassesTestCase.setUpClass()
@@ -130,10 +135,11 @@ class TestEmClassFieldgrousp(ClassesTestCase):
 
     # with no fieldgroups, fieldgroups() should return an empty list
     def test_no_fieldgroups(self):
-        """ Test fieldgroups method on an empty EmClass """
+        """ Test fieldgroups method on an 'empty' EmClass """
         test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassFg3', 'classtype': EmClassType.entity['name']})
         fieldgroups = test_class.fieldgroups()
-        self.assertEqual(fieldgroups, [])
+        self.assertEqual(len(fieldgroups), 1)
+        self.assertEqual(fieldgroups[0].name, EmClass.default_fieldgroup)
 
 
 # Interface to types
@@ -190,11 +196,13 @@ class TestEmClassFields(ClassesTestCase):
             self.assertIsInstance(field, EmField)
 
     # with no field fields() should return an empty list
-    def test_no_fields(self):
-        """ Testing fields method on an EmClass with no associated fields """
+    def test_default_fields(self):
+        """ Testing fields method on an EmClass with only defaults fields """
         test_class = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testClassNoFields', 'classtype': EmClassType.entity['name']})
         fields = test_class.fields()
-        self.assertEqual(fields, [])
+    
+        for fname in [f.name for f in fields]:
+            self.assertIn(fname, EmClassType.get(test_class.classtype)['default_fields'].keys())
 
 
 # Creating a new EmClass should :
