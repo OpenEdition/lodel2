@@ -71,10 +71,11 @@ class _LeObject(object):
 
     ## @brief make a search to retrieve a collection of LeObject
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) )
+    # @param field_list list|None : list of string representing fields
     # @param typename str : The name of the LeType we want
     # @param classname str : The name of the LeClass we want
     # @return responses ({string:*}): a list of dict with field:value
-    def get(self, query_filters, typename = None, classname = None):
+    def get(self, query_filters, field_list = None, typename = None, classname = None):
         filters = list()
         for query in query_filters:
             if len(query) == 3 and not isinstance(query, str):
@@ -82,42 +83,53 @@ class _LeObject(object):
             else:
                 filters.append(self._split_filter(query))
         #Now filters is a list of tuple (FIELD, OPERATOR, VALUE
-        #Begining to check the filters
         
-        #Fetching EmType
+        #Fetching LeType
         if typename is None:
             letype = None
         else:
             letype = leobject.lefactory.LeFactory.leobj_from_name(typename)
 
-        #Fetching EmClass
+        #Fetching LeClass
         if classname is None:
             leclass = None
         else:
             leclass = leobject.lefactory.LeFactory.leobj_from_name(classname)
             if not emclass:
                 raise LeObjectQueryError("No such EmClass : '%s'"%classname)
+
+        #Checking field_list
+        if field_list is None:
+            if not (letype is None):
+                flist = letype._fields
+            elif not (leclass is None):
+                flist = leclass._fieldtypes.keys()
+            else:
+                flist = EditorialModel.classtype.common_fields.keys()
+        else:
+            LeFactory._check_fields(letype, leclass, field_list)
         
         #Checking relational filters (for the moment fields like superior.NATURE)
-        relational_filters = list()
-        
-        for i in range(len(filters),0,-1): #reverse iteration to be able to delete relational filters from the list
-            field,_,_ = filters[i]
-            if field.startwith('superior.'):
-                #relationnal field
-                spl = field.split('.')
-                if len(spl) != 2:
-                    raise LeObjectQueryError("Not a valid relationnal field : '%s'"%(field))
-                nature = spl[1]
-                if nature not in EditorialModel.classtypes.EmNature.getall():
-                    raise LeObjectQueryError("'%s' is not a valid nature in the field %s"%(nature, field))
-                relational_filters.append(nature)
+        relational_filters = [ LeFactory._nature_from_relational_field(field), operator, value for field, operator, value in filters if LeFactory._field_is_relational(field)]
+        filters = [f for f in filters if not self._field_is_relational(f[0])]
+        #Checking the rest of the fields
+        LeFactory._check_fields(letype, leclass, [ f[0] for f in filters ])
 
+        return self._datasource.get(emclass, emtype, filters, relational_filters)
+
+    ## @brief Check if a fieldname is valid
+    # @param letype LeType|None : The concerned type (or None)
+    # @param leclass LeClass|None : The concerned class (or None)
+    # @param fields list : List of string representing fields
+    # @throw LeObjectQueryError if their is some problems
+    # @throw AttributeError if letype is not from the leclass class
+    @staticmethod
+    def _check_fields(letype, leclass, fields):
         #Checking that fields in the query_filters are correct
         if letype is None and leclass is None:
             #Only fields from the object table are allowed
-            for field,_,_ in filters:
-                if field not in EditorialModel.classtype.common_fields:
+            for field in fields:
+                if field not in EditorialModel.classtype.common_fields.keys():
                     raise LeObjectQueryError("Not typename and no classname given, but the field %s is not in the common_fields list"%field)
         else:
             if letype is None:
@@ -125,26 +137,34 @@ class _LeObject(object):
             else:
                 if not (leclass is None):
                     if letype._leclass != leclass:
-                        raise LeObjectQueryError("The EmType %s is not a specialisation of the EmClass %s"%(typename, classname))
-                else:
-                    #Set emclass (to query the db ?
-                    leclass = emtype._leclass
+                        raise AttributeError("The EmType %s is not a specialisation of the EmClass %s"%(typename, classname))
                 field_l = letype._fields
             #Checks that fields are in this type
-            for field,_,_ in filters:
+            for field in fields:
                 if field not in fields_l:
                     raise LeObjectQueryError("No field named '%s' in '%s'"%(field, typename))
+        pass
 
-        return self._datasource.get(emclass, emtype, filters, relational_filters)
-
-    ## @brief check if data dict fits with the model
-    # @param data dict: dictionnary of field:value to check
-    # @return checked_data ({string:*}): a list of dict with field:value
-    # @todo implent !
-    def _check_data(self, data):
-        checked_data = data
-        return checked_data
+    ## @brief Check if a field is relational or not
+    # @param field str : the field to test
+    # @return True if the field is relational else False
+    @staticmethod
+    def _field_is_relational(field):
+        return field.startwith('superior.')
     
+    ## @brief Check that a relational field is valid
+    # @param fields str : a relational field
+    # @return a nature
+    @staticmethod
+    def _nature_from_relational_field(field):
+        spl = field.split('.')
+        if len(spl) != 2:
+            raise LeObjectQueryError("The relationalfield '%s' is not valid"%field)
+        nature = spl[-1]
+        if nature not in EditorialModel.classtypes.EmNature.getall():
+            raise LeObjectQueryError("'%s' is not a valid nature in the field %s"%(nature, field))
+        return nature
+
     ## @brief Check and split a query filter
     # @note The query_filter format is "FIELD OPERATOR VALUE"
     # @param query_filter str : A query_filter string
