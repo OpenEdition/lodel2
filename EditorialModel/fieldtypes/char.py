@@ -6,6 +6,8 @@ class EmFieldType(GenericFieldType):
 
     help = 'Basic string (varchar) field. Take max_length=64 as option'
 
+    ftype='char'
+
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
     def __init__(self, max_length=64, **kwargs):

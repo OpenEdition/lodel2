@@ -11,6 +11,9 @@ class GenericFieldType(object):
     ## @brief Allowed type for handled datas
     _allowed_ftype = ['char', 'str', 'int', 'bool', 'datetime', 'text', 'rel2type']
     
+    ## @brief The basic lowlevel value type
+    ftype = None
+    
     ## @brief Instanciate a new fieldtype
     # @param ftype str : The type of datas handled by this fieldtype
     # @param default ? : The default value
@@ -26,6 +29,9 @@ class GenericFieldType(object):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
         
+        if self.ftype is None:
+            raise RuntimeError("The class attribute ftype is not properly set by the %s EmFieldType"%self.name)
+
         if ftype not in self._allowed_ftype:
             raise AttributeError("Ftype '%s' not known"%ftype)
         
@@ -33,6 +39,9 @@ class GenericFieldType(object):
             check_function = self.dummy_check
         elif not isinstance(check_function, types.FunctionType):
             raise AttributeError("check_function argument has to be a function")
+
+        if ftype != self.__class__.ftype:
+            raise RuntimeError("The ftype is not the same for the instance and the class. Maybe %s reimplement ftype at class level but shouldn't"%self.name)
 
         self.ftype = ftype
         self.check_function = check_function
