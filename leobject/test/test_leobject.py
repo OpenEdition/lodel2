@@ -25,6 +25,7 @@ class _LeObjectTestCase(TestCase):
             "hello \nnot\tin \nfoo":('hello', ' not in ', 'foo'),
             'hello != bar':('hello', '!=', 'bar'),
             'hello = "world>= <= != in not in"': ('hello', '=', '"world>= <= != in not in"'),
+            'superior.parent = 13': ('superior.parent', '=', '13'),
         }
         for query, result in query_results.items():
             res = _LeObject._split_filter(query)
@@ -42,6 +43,7 @@ class _LeObjectTestCase(TestCase):
             '=',
             '42',
             '"hello" = world',
+            'foo.bar = 15',
         ]
         for query in invalid_queries:
             with self.assertRaises(ValueError, msg='But the query was not valid : "%s"'%query):

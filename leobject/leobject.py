@@ -157,7 +157,7 @@ class _LeObject(object):
         for operator in cls._query_operators[1:]:
             op_re_piece += '|(%s)'%operator.replace(' ', '\s')
         op_re_piece += ')'
-        cls._query_re = re.compile('^\s*(?P<field>[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+        cls._query_re = re.compile('^\s*(?P<field>(superior\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
         pass
 
 class LeObjectError(Exception):
