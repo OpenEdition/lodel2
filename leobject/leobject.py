@@ -110,7 +110,7 @@ class _LeObject(object):
             LeFactory._check_fields(letype, leclass, field_list)
         
         #Checking relational filters (for the moment fields like superior.NATURE)
-        relational_filters = [ LeFactory._nature_from_relational_field(field), operator, value for field, operator, value in filters if LeFactory._field_is_relational(field)]
+        relational_filters = [ (LeFactory._nature_from_relational_field(field), operator, value) for field, operator, value in filters if LeFactory._field_is_relational(field)]
         filters = [f for f in filters if not self._field_is_relational(f[0])]
         #Checking the rest of the fields
         LeFactory._check_fields(letype, leclass, [ f[0] for f in filters ])
