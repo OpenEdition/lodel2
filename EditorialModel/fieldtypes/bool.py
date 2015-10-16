@@ -6,6 +6,8 @@ class EmFieldType(GenericFieldType):
 
     help = 'A basic boolean field'
 
+    ftype='char'
+
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
     def __init__(self, **kwargs):

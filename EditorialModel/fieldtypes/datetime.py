@@ -6,6 +6,8 @@ class EmFieldType(GenericFieldType):
 
     help = 'A datetime field. Take two boolean options now_on_update and now_on_create'
 
+    ftype='datetime'
+
     ## @brief A datetime field
     # @param now_on_update bool : If true the date is set to NOW on update
     # @param now_on_create bool : If true the date is set to NEW on creation
