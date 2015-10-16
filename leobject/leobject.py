@@ -13,6 +13,8 @@ class _LeObject(object):
     _model = None
     ## @brief The datasource
     _datasource = None
+    ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
+    _me_uid = dict()
 
     _query_re = None
     _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ']
@@ -21,17 +23,6 @@ class _LeObject(object):
     # @param **kwargs dict : datas usefull to instanciate a _LeObject
     def __init__(self, **kwargs):
         raise NotImplementedError("Abstract constructor")
-
-    ## @brief create a new LeObject
-    # @param data dict: a dictionnary of field:value to save
-    # @return lodel_id int: new lodel_id of the newly created LeObject
-    def insert(self, data):
-        try:
-            checked_data = self._check_data(data)
-            lodel_id = self.datasource.insert(checked_data)
-        except:
-            raise
-        return lodel_id
 
     ## @brief update an existing LeObject
     # @param lodel_id int | (int): lodel_id of the object(s) where to apply changes

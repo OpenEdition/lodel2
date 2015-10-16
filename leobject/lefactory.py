@@ -50,6 +50,8 @@ class LeFactory(object):
     # @return A string representing python code
     @staticmethod
     def generate_python(backend_cls, backend_args, datasource_cls, datasource_args):
+        model = Model(backend=backend_cls(**backend_args))
+
         result = ""
         result += "#-*- coding: utf-8 -*-\n"
         #Putting import directives in result
@@ -68,14 +70,17 @@ import %s\n\
 
         #Generating the code for LeObject class
         backend_constructor = '%s.%s(**%s)'%(backend_cls.__module__, backend_cls.__name__, backend_args.__repr__())
+        leobj_me_uid = dict()
+        for comp in model.components('EmType') + model.components('EmClass'):
+            leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
+
         result += "\n\
 class LeObject(_LeObject):\n\
     _model = Model(backend=%s)\n\
     _datasource = %s(**%s)\n\
+    _me_uid = %s\n\
 \n\
-"%(backend_constructor, datasource_cls.__name__, datasource_args.__repr__())
-
-        model = Model(backend=backend_cls(**backend_args))
+"%(backend_constructor, datasource_cls.__name__, datasource_args.__repr__(), leobj_me_uid.__repr__())
         
         for emclass in model.components(EditorialModel.classes.EmClass):
             cls_fields = dict()
