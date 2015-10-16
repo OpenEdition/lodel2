@@ -6,6 +6,7 @@
 # According to it every modifications are possible
 #
 
+import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.model import Model
 from mosql.db import Database
@@ -23,6 +24,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     def __init__(self, module=None, *conn_args, **conn_kargs):
         self.db = Database(module, *conn_args, **conn_kargs)
         super(SQLMigrationHandler, self).__init__(False)
+        self._pk_column = EditorialModel.classtypes.pk_name() + ' INT PRIMARY_KEY AUTOINCREMENT NOT NULL'
         # @todo vérification de l'existance de la table objects et de la table relation
         self._install_tables()
 
@@ -63,7 +65,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     def EmClass_new(self, model, uid, initial_state, new_state):
         class_table_name = self._class_table_name(new_state['name'])
         self._query_bd(
-            create(table=class_table_name, column='id_lodel INT PRIMARY_KEY AUTOINCREMENT NOT NULL')
+            create(table=class_table_name, column=self._pk_column)
         )
 
     # New Field, must create a column in Class table or in Class_Type relational attribute table
@@ -78,7 +80,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
             type_name = model.component(new_state['rel_to_type_id']).name
             table_name = class_name + '_' + type_name
             self._query_bd(
-                create(table=table_name, column='id_lodel INT PRIMARY_KEY AUTOINCREMENT NOT NULL'),
+                create(table=table_name, column=self._pk_column),
             )
             #print('create rel2type table', class_name, type_name)
             return
@@ -102,7 +104,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     # Test if internal tables must be created, create it if it must
     def _install_tables(self):
         self._query_bd(
-            create(table='object', column='id_lodel INT PRIMARY_KEY AUTOINCREMENT NOT NULL'),
+            create(table='object', column=self._pk_column),
             create(table='relation', column=('id_relation INT PRIMARY_KEY AUTOINCREMENT NOT NULL', 'id_superior INT', 'id_subdordinate INT', 'nature CHAR(255)', 'depth INT', 'rank INT'))
         )
 

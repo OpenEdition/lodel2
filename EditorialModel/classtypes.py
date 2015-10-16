@@ -22,6 +22,12 @@ common_fields = {
 }
 
 
+def pk_name():
+    for name, option in common_fields.items():
+        if option['fieldtype'] == 'pk':
+            return name
+
+
 ## EmNature (Class)
 #
 # constant name for the nature of type hierarchy
@@ -53,7 +59,7 @@ class EmNature(object):
 #            - True  : possible superiors can not be defined, they will be enforced by the ME automatically
 #       - maxdepth : maximum depth
 #       - maxchildren : maximum children
-#   
+#
 #   Classtypes contains default internal fields too
 #
 class EmClassType(object):
@@ -74,7 +80,7 @@ class EmClassType(object):
                 'maxchildren': -1
             },
         },
-        'default_fields':{}
+        'default_fields': {}
     }
 
     entry = {
@@ -106,14 +112,16 @@ class EmClassType(object):
         },
         'default_fields': {}
     }
-    
+
     ## @brief return a classtype from its name
     # @param classtype str : A classtype name
     # @return None if no classtype with this name, else return a dict containing classtype informations
     @classmethod
-    def get(cls,classtype):
-        try: return getattr(cls, classtype.lower())
-        except AttributeError: return None
+    def get(cls, classtype):
+        try:
+            return getattr(cls, classtype.lower())
+        except AttributeError:
+            return None
 
     ## @brief Get all the classtype
     # @return A list of dict representing classtypes
