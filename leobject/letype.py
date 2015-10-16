@@ -28,13 +28,32 @@ class LeType(object):
             if name not in self._fields:
                 raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__)
             setattr(self, name, value)
-    
+
+    ## @brief Delete the LeType from Db
+    # @note equivalent to LeType::delete(this.lodel_id)
     @classinstancemethod
     def delete(self):
         pass
     
+    ## @brief Delete a LeType from the datasource
+    # @param lodel_id int : The lodel_id identifying the LeType
+    # @param return True if deleted False if not existing
+    # @throw InvalidArgumentError if invalid parameters
+    # @throw Leo exception if the lodel_id identify an object from another type
     @delete.classmethod
-    def delete(cls, uid):
+    def delete(cls, uid_l):
+        pass
+
+    @classinstancemethod
+    ## @brief Update a LeType in db
+    def update(self):
+        pass
+
+    @update.classmethod
+    ## @brief Update some LeType in db
+    # @param datas : keys are lodel_id and value are dict of fieldname => value
+    # @throw Some exception for some errors in datas
+    def update(cls, datas):
         pass
 
     ## @brief Insert a new LeType in the datasource
@@ -43,27 +62,8 @@ class LeType(object):
     # @thorw A leo exception if invalid stuff
     # @throw InvalidArgumentError if invalid argument
     @classmethod
-    def insert(cls, **datas):
+    def insert(self, **datas):
         super(LeType, self).insert(typename=self.__class__.__name__, classname=self._leclass.__name__, **datas)
-        pass
-    
-    ## @brief Delete a LeType from the datasource
-    # @param lodel_id int : The lodel_id identifying the LeType
-    # @param return True if deleted False if not existing
-    # @throw InvalidArgumentError if invalid parameters
-    # @throw Leo exception if the lodel_id identify an object from another type
-    @classmethod
-    def c_delete(cls, lodel_id):
-        pass
-    
-    ## @brief Update some objects in db
-    # @param lodel_id_l list : A list of lodel_id to update
-    # @param data dict : Represent the datas to update
-    # @return True if updated else False
-    # @throw InvalidArgumentError if invalid parameters
-    # @throw other Leo exceptions
-    @classmethod
-    def c_update(cls, lodel_id_l, datas):
         pass
     
     ## @brief Check that datas are valid for this type
@@ -106,16 +106,6 @@ class LeType(object):
             self._fields[name].check_or_raise(value)
         return super(LeType, self).__setattr__(name, value)
     
-    ## @brief Delete the LeType
-    # @return True if deleted False if not
-    def delete(self):
-        return self.__class__.delete(self.lodel_id)
-    
-    ## @brief Update a LeType
-    # @return True if ok else False
-    def update(self):
-        return self.__class__.update(self.lodel_id, self._datas)
-        
     ## @brief Fetch superiors
     # @param nature str : The relation nature
     # @return if no nature given return a dict with nature as key and arrays of LeObject as value. Else return an array of LeObject
@@ -134,6 +124,6 @@ class LeType(object):
     # @param return True if done False if already done
     # @throw A Leo exception if trying to link with an invalid leo
     # @throw InvalidArgumentError if invalid argument
-    def add_superior(self, nature, leo):
+    def set_superior(self, nature, leo):
         pass
     

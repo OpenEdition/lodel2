@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+import importlib
+
 import EditorialModel
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
@@ -9,7 +11,20 @@ from EditorialModel.fieldtypes.generic import GenericFieldType
 # The name is not good but i've no other ideas for the moment
 class LeFactory(object):
     
+    output_file = 'dyn.py'
+
     def __init__(LeFactory):raise NotImplementedError("Not designed (yet?) to be implemented")
+
+    ## @brief Return a LeObject child class given its name
+    # @return a python class or False
+    @staticmethod
+    def leobj_from_name(name):
+        mod = importlib.import_module('leobject.'+LeFactory.output_file.split('.')[-1])
+        try:
+            res = getattr(mod, name)
+        except AttributeError:
+            return False
+        return res
 
     ## @brief Convert an EmType or EmClass name in a python class name
     # @param name str : The name
