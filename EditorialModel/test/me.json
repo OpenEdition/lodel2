@@ -331,7 +331,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "classid",
+  "name": "class_id",
   "internal": "automatic",
   "component": "EmField"
  },
@@ -366,7 +366,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "typeid",
+  "name": "type_id",
   "internal": "automatic",
   "component": "EmField"
  },
@@ -410,7 +410,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "classid",
+  "name": "class_id",
   "internal": "automatic",
   "component": "EmField"
  },
@@ -445,7 +445,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "typeid",
+  "name": "type_id",
   "internal": "automatic",
   "component": "EmField"
  },
@@ -489,7 +489,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "classid",
+  "name": "class_id",
   "internal": "automatic",
   "component": "EmField"
  },
@@ -524,7 +524,7 @@
   "nullable": false,
   "fieldtype": "integer",
   "uniq": false,
-  "name": "typeid",
+  "name": "type_id",
   "internal": "automatic",
   "component": "EmField"
  },

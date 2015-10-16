@@ -6,11 +6,11 @@ common_fields = {
         'fieldtype': 'pk',
         'internal': 'automatic',
     },
-    'classid': {
+    'class_id': {
         'fieldtype': 'integer',
         'internal': 'automatic',
     },
-    'typeid': {
+    'type_id': {
         'fieldtype': 'integer',
         'internal': 'automatic',
     },
