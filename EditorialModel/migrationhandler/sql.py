@@ -18,14 +18,17 @@ class SQLMigrationHandler(DummyMigrationHandler):
 
     fieldtype_to_sql = {
         'char': "CHAR(255)",
-        'int': 'INT'
+        'integer': 'INT'
     }
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
-        self.db = Database(module, *conn_args, **conn_kargs)
         super(SQLMigrationHandler, self).__init__(False)
+
+        self.db = Database(module, *conn_args, **conn_kargs)
         self._pk_column = EditorialModel.classtypes.pk_name() + ' INT PRIMARY_KEY AUTOINCREMENT NOT NULL'
-        # @todo vérification de l'existance de la table objects et de la table relation
+        self._main_table_name = 'object'
+        self._relation_table_name = 'relation'
+
         self._install_tables()
 
     ## @brief Record a change in the EditorialModel and indicate wether or not it is possible to make it
@@ -36,10 +39,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     # @param new_state dict | None : dict with field name as key and field value as value. Representing the new state. None mean component deletion
     # @throw EditorialModel.exceptions.MigrationHandlerChangeError if the change was refused
     def register_change(self, model, uid, initial_state, new_state):
-        #print(uid, initial_state, new_state)
         # find type of component change
-        component = Model.name_from_emclass(type(model.component(uid)))
-        #print ("ça", component, type(model.component(uid)))
         if initial_state is None:
             state_change = 'new'
         elif new_state is None:
@@ -47,34 +47,25 @@ class SQLMigrationHandler(DummyMigrationHandler):
         else:
             state_change = 'upgrade'
 
-        if component == 'EmType' and len(new_state) == 1:
-            if 'superiors_list' in new_state:
-                what = 'superiors_list'
-            elif 'fields_list' in new_state:
-                what = 'fields_list'
-        else:
-            what = component
-
-        handler_func = what + '_' + state_change
-        #print (handler_func)
+        # call method to handle the database change
+        component_name = Model.name_from_emclass(type(model.component(uid)))
+        handler_func = component_name.lower() + '_' + state_change
         if hasattr(self, handler_func):
             getattr(self, handler_func)(model, uid, initial_state, new_state)
-        #print(handler_func, uid, initial_state, new_state)
 
     # New Class, a table must be created
-    def EmClass_new(self, model, uid, initial_state, new_state):
+    def emclass_new(self, model, uid, initial_state, new_state):
         class_table_name = self._class_table_name(new_state['name'])
         self._query_bd(
             create(table=class_table_name, column=self._pk_column)
         )
 
     # New Field, must create a column in Class table or in Class_Type relational attribute table
-    def EmField_new(self, model, uid, initial_state, new_state):
-        # field is internal, create a column in the objects table
-        if new_state['internal']:
-            return
-        # field is of type rel2type, create the relational class_type table
-        elif new_state['fieldtype'] == 'rel2type':
+    # @todo common fields creation does not allow to add new common fields. It should
+    def emfield_new(self, model, uid, initial_state, new_state):
+
+        # field is of type rel2type, create the relational class_type table and return
+        if new_state['fieldtype'] == 'rel2type':
             # find relational_type name, and class name of the field
             class_name = self._class_table_name_from_field(model, new_state)
             type_name = model.component(new_state['rel_to_type_id']).name
@@ -82,30 +73,45 @@ class SQLMigrationHandler(DummyMigrationHandler):
             self._query_bd(
                 create(table=table_name, column=self._pk_column),
             )
-            #print('create rel2type table', class_name, type_name)
             return
+
+        # Column creation
+        #
+        # field is internal, create a column in the objects table
+        if new_state['internal']:
+            if new_state['fieldtype'] == 'pk':  # this column has already beeen created by self._install_tables()
+                return
+            if new_state['name'] in EditorialModel.classtypes.common_fields:  # this column has already beeen created by self._install_tables()
+                return
+
         # field is relational (rel_field_id), create a column in the class_type table
         elif new_state['rel_field_id']:
             class_name = self._class_table_name_from_field(model, new_state)
             rel_type_id = model.component(new_state['rel_field_id']).rel_to_type_id
             type_name = model.component(rel_type_id).name
             table_name = class_name + '_' + type_name
-            #print('create field in rel2type table', new_state, class_name, rel_type_id, type_name)
+
         # else create a column in the class table
         else:
-            # find name of the class table, and type of the field
             table_name = self._class_table_name_from_field(model, new_state)
 
-        fieldtype = SQLMigrationHandler.fieldtype_to_sql[new_state['fieldtype']]
+        field_definition = SQLMigrationHandler.fieldtype_to_sql[new_state['fieldtype']]
         self._query_bd(
-            alter_add(table=table_name, column=new_state['name'] + ' ' + fieldtype)
+            alter_add(table=table_name, column=new_state['name'] + ' ' + field_definition)
         )
 
     # Test if internal tables must be created, create it if it must
     def _install_tables(self):
+        # create common fields definition
+        common_fields = [self._pk_column]
+        for name, options in EditorialModel.classtypes.common_fields.items():
+            if options['fieldtype'] != 'pk':
+                common_fields.append(name + ' ' + SQLMigrationHandler.fieldtype_to_sql[options['fieldtype']])
+
+        # create common tables
         self._query_bd(
-            create(table='object', column=self._pk_column),
-            create(table='relation', column=('id_relation INT PRIMARY_KEY AUTOINCREMENT NOT NULL', 'id_superior INT', 'id_subdordinate INT', 'nature CHAR(255)', 'depth INT', 'rank INT'))
+            create(table=self._main_table_name, column=common_fields),
+            create(table=self._relation_table_name, column=('relation_id INT PRIMARY_KEY AUTOINCREMENT NOT NULL', 'superior_id INT', 'subdordinate_id INT', 'nature CHAR(255)', 'depth INT', 'rank INT'))
         )
 
     def _query_bd(self, *queries):
