@@ -19,6 +19,17 @@ common_fields = {
         'max_length': 128,
         'internal': 'automatic',
     },
+    'creation_date': {
+        'fieldtype': 'datetime',
+        'now_on_create': True,
+        'internal': 'automatic',
+    },
+    'modification_date': {
+        'fieldtype': 'datetime',
+        'now_on_create': True,
+        'now_on_update': True,
+        'internal': 'automatic',
+    }
 }
 
 
