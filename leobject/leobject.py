@@ -81,13 +81,46 @@ class _LeObject(object):
             else:
                 filters.append(self._split_filter(query))
         #Now filters is a list of tuple (FIELD, OPERATOR, VALUE
+        #Begining to check the filters
+        
+        #Fetching EmType
+        if typename is None:
+            emtype = None
+        else:
+            emtype = self._model.component_from_name(typename, 'EmType')
+            if not emtype:
+                raise LeObjectQueryError("No such EmType : '%s'"%typename)
+        #Fetching EmClass
+        if classname is None:
+            emclass = None
+        else:
+            emclass = self._model.component_from_name(classname, 'EmClass')
+            if not emclass:
+                raise LeObjectQueryError("No such EmClass : '%s'"%classname)
 
-        try:
-            responses = self.datasource.get(datasource_filters)
-        except:
-            raise
+        #Checking that fields in the query_filters are correct
+        if emtype is None and emclass is None:
+            #Only fields from the object table are allowed
+            for field,_,_ in filters:
+                if field not in EditorialModel.classtype.common_fields:
+                    raise LeObjectQueryError("Not typename and no classname given, but the field %s is not in the common_fields list"%field)
+        else:
+            if emtype is None:
+                field_l = emclass.fields()
+            else:
+                if not (emclass is None):
+                    if emtype.em_class != emclass:
+                        raise LeObjectQueryError("The EmType %s is not a specialisation of the EmClass %s"%(typename, classname))
+                else:
+                    #Set emclass (to query the db ?
+                    emclass = emtype.em_class
+                field_l = emtype.fields()
+            #Checks that fields are in this type
+            for field,_,_ in filters:
+                if field not in [ f.name for f in fields_l ]:
+                    raise LeObjectQueryError("No field named '%s' in '%s'"%(field, typename))
 
-        return responses
+        return self._datasource.get(emclass, emtype, filters)
 
     ## @brief check if data dict fits with the model
     # @param data dict: dictionnary of field:value to check
@@ -126,3 +159,9 @@ class _LeObject(object):
         op_re_piece += ')'
         cls._query_re = re.compile('^\s*(?P<field>[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
         pass
+
+class LeObjectError(Exception):
+    pass
+
+class LeObjectQueryError(LeObjectError):
+    pass
