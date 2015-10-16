@@ -3,11 +3,9 @@
 ## @file classes.py
 # @see EditorialModel::classes::EmClass
 
+import EditorialModel
 from EditorialModel.components import EmComponent
 from EditorialModel.classtypes import EmClassType
-#from EditorialModel.exceptions import *
-#import EditorialModel.fieldtypes as ftypes
-import EditorialModel
 
 
 ## @brief Manipulate Classes of the Editorial Model
@@ -35,9 +33,22 @@ class EmClass(EmComponent):
         super(EmClass, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
     ## Check if the EmComponent is valid
+    # @note this function add default and common fields to the EmClass if they are not yet created
     # @throw EmComponentCheckError if fails
     def check(self):
+        for fname in self.default_fields_list().keys():
+            if fname not in [f.name for f in self.fields()]:
+                self.model.add_default_class_fields(self.uid)
         super(EmClass, self).check()
+    
+    ## @brief Return the default fields list for this EmClass
+    # @return a dict with key = fieldname and value is a dict to pass to the EditorialModel::model::Model::creat_component() method
+    def default_fields_list(self):
+        ctype = EditorialModel.classtypes.EmClassType.get(self.classtype)
+        res = ctype['default_fields']
+        res.update(EditorialModel.classtypes.common_fields)
+        return res
+        
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it

@@ -12,6 +12,7 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
             'default': None,
             'nullable': False,
             'uniq': False,
+            'internal': 'automatic',
         }
         # Checking args
         for name, value in kwargs.items():

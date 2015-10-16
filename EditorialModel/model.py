@@ -92,7 +92,8 @@ class Model(object):
             self.sort_components(component_class)
 
         #Check integrity
-        for uid, component in self._components['uids'].items():
+        loaded_comps = [(uid, component) for uid, component in self._components['uids'].items()]
+        for uid, component in loaded_comps:
             try:
                 component.check()
             except EmComponentCheckError as exception_object:
@@ -106,9 +107,14 @@ class Model(object):
         return self.backend.save(self, filename)
 
     ## Given a EmComponent child class return a list of instances
-    # @param cls EmComponent : A python class
+    # @param cls EmComponent|str : A python class
     # @return a list of instances or False if the class is not an EmComponent child
+    # @todo better implementation
     def components(self, cls=None):
+        if isinstance(cls, str):
+            cls = self.emclass_from_name(cls)
+            if not cls:
+                return False
         if cls is None:
             return [ self.component(uid) for uid in self._components['uids'] ]
         key_name = self.name_from_emclass(cls)
@@ -119,6 +125,24 @@ class Model(object):
     # @return The corresponding instance or False if uid don't exists
     def component(self, uid):
         return False if uid not in self._components['uids'] else self._components['uids'][uid]
+
+    ## @brief Search in all the editorial model for a component with a specific name
+    # @param name str : the searched name
+    # @param comp_cls str|EmComponent : filter on component type (see components() method)
+    # @return a list of component with a specific name
+    def component_from_name(self, name, comp_cls = None):
+        if comp_cls == EmField or comp_cls == 'EmField':
+            res = list()
+            for field, fieldname in [ (f, f.name) for f in self.components('EmField')]:
+                if fieldname == name:
+                    res.append(field)
+            return res
+
+        for comp,compname in [ (c, c.name) for c in self.components(comp_cls)]:
+            if compname == name:
+                return comp
+
+        return False
 
     ## Sort components by rank in Model::_components
     # @param emclass pythonClass : The type of components to sort
@@ -215,9 +239,7 @@ class Model(object):
                     fgid = fg.uid
                     break
 
-        ctype = EditorialModel.classtypes.EmClassType.get(emclass.classtype)
-        default_fields = ctype['default_fields']
-        default_fields.update(EditorialModel.classtypes.common_fields)
+        default_fields = emclass.default_fields_list()
         for fname, fdatas in default_fields.items():
             if not (fname in [ f.name for f in emclass.fields() ]):
                 #Adding the field

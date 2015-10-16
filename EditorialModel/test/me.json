@@ -1,65 +1,548 @@
 {
-  "1" : {
-    "component":"EmClass", "name":"textes", "string":"{\"fre\":\"Texte\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
+ "1": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "classtype": "entity",
+  "string": "{\"fre\": \"Texte\"}",
+  "icon": "0",
+  "help_text": "",
+  "name": "textes",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "component": "EmClass",
+  "rank": 1
+ },
+ "2": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "classtype": "person",
+  "string": "{\"fre\": \"Personnes\"}",
+  "icon": "0",
+  "help_text": "",
+  "name": "personnes",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "component": "EmClass",
+  "rank": 1
+ },
+ "3": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Info\"}",
+  "class_id": 1,
+  "help_text": "",
+  "name": "info",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "component": "EmFieldGroup"
+ },
+ "4": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "{\"fre\": \"Titre\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 3,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "titre",
+  "internal": false,
+  "component": "EmField"
+ },
+ "5": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Article\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "fields_list": [
+   7
+  ],
+  "rank": 1,
+  "class_id": 1,
+  "superiors_list": {
+   "parent": [
+    14
+   ]
   },
-  "2" : {
-    "component":"EmClass", "name":"personnes", "string":"{\"fre\":\"Personnes\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "classtype":"person", "icon":"0", "sortcolumn":"rank"
+  "name": "article",
+  "component": "EmType"
+ },
+ "6": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Personne\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "fields_list": [
+   10
+  ],
+  "rank": 1,
+  "class_id": 2,
+  "superiors_list": {},
+  "name": "personne",
+  "component": "EmType"
+ },
+ "7": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": true,
+  "string": "{\"fre\": \"Sous-titre\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 3,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "soustitre",
+  "internal": false,
+  "component": "EmField"
+ },
+ "8": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Civilit\\u00e9\"}",
+  "class_id": 2,
+  "help_text": "",
+  "name": "civilit\u00e9",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "component": "EmFieldGroup"
+ },
+ "9": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "{\"fre\": \"Nom\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 8,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "nom",
+  "internal": false,
+  "component": "EmField"
+ },
+ "10": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": true,
+  "string": "{\"fre\": \"Pr\\u00e9nom\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 8,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "prenom",
+  "internal": false,
+  "component": "EmField"
+ },
+ "11": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "{\"fre\": \"Auteur\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 17,
+  "nullable": false,
+  "fieldtype": "rel2type",
+  "rel_to_type_id": 6,
+  "uniq": false,
+  "name": "auteur",
+  "internal": false,
+  "component": "EmField"
+ },
+ "12": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": 11,
+  "optional": false,
+  "string": "{\"fre\": \"Adresse\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 17,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "adresse",
+  "internal": false,
+  "component": "EmField"
+ },
+ "13": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "classtype": "entity",
+  "string": "{\"fre\": \"Publication\"}",
+  "icon": "0",
+  "help_text": "",
+  "name": "publication",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "component": "EmClass",
+  "rank": 2
+ },
+ "14": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Rubrique\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "fields_list": [],
+  "rank": 1,
+  "class_id": 13,
+  "superiors_list": {
+   "parent": [
+    14,
+    19
+   ]
   },
-  "3" : {
-    "component":"EmFieldGroup", "name":"info", "string":"{\"fre\":\"Info\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"1"
-  },
-  "4" : {
-    "component":"EmField", "name":"titre", "string":"{\"fre\":\"Titre\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"3", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
-  },
-  "5" : {
-    "component":"EmType", "name":"article", "string":"{\"fre\":\"Article\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"1", "icon":"0", "sortcolumn":"rank", "fields_list":[7], "superiors_list":{"parent":[14]}
-  },
-  "6" : {
-    "component":"EmType", "name":"personne", "string":"{\"fre\":\"Personne\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"2", "icon":"0", "sortcolumn":"rank", "fields_list":[10]
-  },
-  "7" : {
-    "component":"EmField", "name":"soustitre", "string":"{\"fre\":\"Sous-titre\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"3", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
-  },
-  "8" : {
-    "component":"EmFieldGroup", "name":"civilité", "string":"{\"fre\":\"Civilité\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"2"
-  },
-  "9" : {
-    "component":"EmField", "name":"nom", "string":"{\"fre\":\"Nom\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
-  },
-  "10" : {
-    "component":"EmField", "name":"prenom", "string":"{\"fre\":\"Prénom\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
-  },
-  "11" : {
-    "component":"EmField", "name":"auteur", "string":"{\"fre\":\"Auteur\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"rel2type", "fieldgroup_id":"17", "rel_to_type_id":"6", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
-  },
-  "12" : {
-    "component":"EmField", "name":"adresse", "string":"{\"fre\":\"Adresse\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"17", "rel_field_id":"11", "optional":0, "internal":"", "icon":"0"
-  },
-  "13" : {
-    "component":"EmClass", "name":"publication", "string":"{\"fre\":\"Publication\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "classtype":"entity", "icon":"0", "sortcolumn":"rank"
-  },
-  "14" : {
-    "component":"EmType", "name":"rubrique", "string":"{\"fre\":\"Rubrique\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank", "superiors_list":{"parent":[14, 19]}
-  },
-  "15" : {
-    "component":"EmFieldGroup", "name":"info", "string":"{\"fre\":\"Info\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "class_id":"13"
-  },
-  "16" : {
-    "component":"EmField", "name":"titre", "string":"{\"fre\":\"Titre\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"15", "rel_field_id":"", "optional":0, "internal":"", "icon":"0"
-  },
-  "17" : {
-    "component":"EmFieldGroup", "name":"gens", "string":"{\"fre\":\"Gens\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "class_id":"1"
-  },
-  "18" : {
-    "component":"EmField", "name":"age", "string":"{\"fre\":\"Age\"}", "help_text":"{}", "rank":"3", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"8", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
-  },
-  "19" : {
-    "component":"EmType", "name":"numero", "string":"{\"fre\":\"Numéro\"}", "help_text":"{}", "rank":"2", "date_update":"", "date_create":"", "class_id":"13", "icon":"0", "sortcolumn":"rank"
-  },
-  "20" : {
-    "component":"EmFieldGroup", "name":"couleurs", "string":"{\"fre\":\"Couleurs\"}", "help_text":"{}", "rank":"3", "date_update":"", "date_create":"", "class_id":"1"
-  },
-  "21" : {
-    "component":"EmField", "name":"bleu", "string":"{\"fre\":\"Bleu\"}", "help_text":"{}", "rank":"1", "date_update":"", "date_create":"", "fieldtype":"char", "fieldgroup_id":"20", "rel_field_id":"", "optional":1, "internal":"", "icon":"0"
-  }
+  "name": "rubrique",
+  "component": "EmType"
+ },
+ "15": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Info\"}",
+  "class_id": 13,
+  "help_text": "",
+  "name": "info",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "component": "EmFieldGroup"
+ },
+ "16": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "{\"fre\": \"Titre\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 15,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "titre",
+  "internal": false,
+  "component": "EmField"
+ },
+ "17": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Gens\"}",
+  "class_id": 1,
+  "help_text": "",
+  "name": "gens",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "component": "EmFieldGroup"
+ },
+ "18": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": true,
+  "string": "{\"fre\": \"Age\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 3,
+  "fieldgroup_id": 8,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "age",
+  "internal": false,
+  "component": "EmField"
+ },
+ "19": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Num\\u00e9ro\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "sortcolumn": "rank",
+  "fields_list": [],
+  "rank": 2,
+  "class_id": 13,
+  "superiors_list": {},
+  "name": "numero",
+  "component": "EmType"
+ },
+ "20": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "{\"fre\": \"Couleurs\"}",
+  "class_id": 1,
+  "help_text": "",
+  "name": "couleurs",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 3,
+  "component": "EmFieldGroup"
+ },
+ "21": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": true,
+  "string": "{\"fre\": \"Bleu\"}",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 20,
+  "nullable": false,
+  "fieldtype": "char",
+  "uniq": false,
+  "name": "bleu",
+  "internal": false,
+  "component": "EmField"
+ },
+ "22": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "",
+  "class_id": 1,
+  "help_text": "",
+  "name": "_default",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 4,
+  "component": "EmFieldGroup"
+ },
+ "23": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 0,
+  "fieldgroup_id": 22,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "classid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "24": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 22,
+  "nullable": false,
+  "fieldtype": "char",
+  "max_length": 128,
+  "uniq": false,
+  "name": "string",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "25": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 22,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "typeid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "26": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 3,
+  "fieldgroup_id": 22,
+  "nullable": false,
+  "fieldtype": "pk",
+  "uniq": false,
+  "name": "lodel_id",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "27": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "",
+  "class_id": 2,
+  "help_text": "",
+  "name": "_default",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "component": "EmFieldGroup"
+ },
+ "28": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 0,
+  "fieldgroup_id": 27,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "classid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "29": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 27,
+  "nullable": false,
+  "fieldtype": "char",
+  "max_length": 128,
+  "uniq": false,
+  "name": "string",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "30": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 27,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "typeid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "31": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 3,
+  "fieldgroup_id": 27,
+  "nullable": false,
+  "fieldtype": "pk",
+  "uniq": false,
+  "name": "lodel_id",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "32": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "string": "",
+  "class_id": 13,
+  "help_text": "",
+  "name": "_default",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "component": "EmFieldGroup"
+ },
+ "33": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 0,
+  "fieldgroup_id": 32,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "classid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "34": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 1,
+  "fieldgroup_id": 32,
+  "nullable": false,
+  "fieldtype": "char",
+  "max_length": 128,
+  "uniq": false,
+  "name": "string",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "35": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 2,
+  "fieldgroup_id": 32,
+  "nullable": false,
+  "fieldtype": "integer",
+  "uniq": false,
+  "name": "typeid",
+  "internal": "automatic",
+  "component": "EmField"
+ },
+ "36": {
+  "date_update": "Fri Oct 16 11:05:04 2015",
+  "rel_field_id": null,
+  "optional": false,
+  "string": "",
+  "icon": "0",
+  "help_text": "",
+  "date_create": "Fri Oct 16 11:05:04 2015",
+  "rank": 3,
+  "fieldgroup_id": 32,
+  "nullable": false,
+  "fieldtype": "pk",
+  "uniq": false,
+  "name": "lodel_id",
+  "internal": "automatic",
+  "component": "EmField"
+ }
 }

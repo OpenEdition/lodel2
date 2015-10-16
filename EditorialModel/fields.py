@@ -40,7 +40,7 @@ class EmField(EmComponent):
         if not internal:
             self.internal = False
         else:
-            if internal.lower() not in ['object', 'automatic']:
+            if internal.lower() not in ['automatic']:
                 raise ValueError("The internal arguments possible values are : [False, 'object', 'automatic']")
             self.internal = internal.lower()
 
@@ -57,6 +57,10 @@ class EmField(EmComponent):
         self.fieldtype = fieldtype
         self._fieldtype_args = kwargs
         self._fieldtype_args.update({'nullable' : nullable, 'uniq' : uniq})
+        #If internal is set, give it to the fieldtype
+        if self.internal:
+            self._fieldtype_args['internal'] = self.internal
+
         try:
             fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
         except AttributeError as e:

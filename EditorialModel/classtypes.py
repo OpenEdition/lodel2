@@ -4,20 +4,20 @@
 common_fields = {
     'lodel_id': {
         'fieldtype': 'pk',
-        'internal': 'object',
+        'internal': 'automatic',
     },
     'classid': {
         'fieldtype': 'integer',
-        'internal': 'object',
+        'internal': 'automatic',
     },
     'typeid': {
         'fieldtype': 'integer',
-        'internal': 'object',
+        'internal': 'automatic',
     },
     'string': {
         'fieldtype': 'char',
         'max_length': 128,
-        'internal': 'object',
+        'internal': 'automatic',
     },
 }
 

@@ -42,7 +42,6 @@ class EmBackendJson(EmBackendDummy):
         'rel_to_type_id': int_or_none,
         'rel_field_id': int_or_none,
         'optional': bool,
-        'internal': bool,
         'string': MlString.load,
         'help_text': MlString.load,
         'date_create': date_cast,
@@ -90,7 +89,7 @@ class EmBackendJson(EmBackendDummy):
     ## Saves the data in the data source json file
     # @param filename str : The filename to save the EM in (if None use self.json_file provided at init )
     def save(self, model, filename=None):
-        json_dump = json.dumps({component.uid: component.attr_flat() for component in model.components()}, default=self.date_handler)
+        json_dump = json.dumps({component.uid: component.attr_flat() for component in model.components()}, default=self.date_handler, indent=True)
         if self._json_file:
             with open(self._json_file if filename is None else filename, 'w') as json_file:
                 json_file.write(json_dump)
