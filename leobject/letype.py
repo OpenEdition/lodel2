@@ -10,6 +10,8 @@ class LeType(object):
     
     ## @brief Stores selected fields with key = name
     _fields = list()
+    ## @brief Allowed LeType superiors 
+    _superiors = list()
     ## @brief Stores the class of LeClass
     _leclass = None
     

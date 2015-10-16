@@ -47,6 +47,11 @@ class GenericFieldType(object):
         for argname,argvalue in kwargs.items():
             setattr(self, argname, argvalue)
     
+    ## @return A fieldtype name from an instance
+    @property
+    def name(self):
+        return self.__module__.split('.')[-1]
+    
     ## @brief Check if a value is correct
     # @param value * : The value
     # @throw TypeError if not valid
@@ -68,8 +73,6 @@ class GenericFieldType(object):
     @staticmethod
     def module_name(fieldtype_name):
         return 'EditorialModel.fieldtypes.%s'%(fieldtype_name)
-        
-
     
     ## @brief Transform a value into a valid python representation according to the fieldtype
     # @param value ? : The value to cast

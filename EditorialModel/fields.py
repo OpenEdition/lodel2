@@ -56,11 +56,7 @@ class EmField(EmComponent):
 
         self.fieldtype = fieldtype
         self._fieldtype_args = kwargs
-        self._fieldtype_args.update({'nullable' : nullable, 'uniq' : uniq})
-        #If internal is set, give it to the fieldtype
-        if self.internal:
-            self._fieldtype_args['internal'] = self.internal
-
+        self._fieldtype_args.update({'nullable' : nullable, 'uniq' : uniq, 'internal': self.internal})
         try:
             fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
         except AttributeError as e:
@@ -86,7 +82,7 @@ class EmField(EmComponent):
     ## @brief Get the fieldtype instance
     # @return a fieldtype instance
     def fieldtype_instance(self):
-        return self._fieldtype_cls(self._fieldtype_args)
+        return self._fieldtype_cls(**self._fieldtype_args)
         
 
     ## @brief Return the list of relation fields for a rel_to_type

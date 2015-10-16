@@ -8,6 +8,8 @@ class LeClass(object):
     
     ## @brief Stores fieldtypes by field name
     _fieldtypes = dict()
+    ## @brief Stores relation with some LeType using rel2type fields. Key = rel2type fieldname value = LeType class
+    _linked_types = dict()
     ## @brief Stores fieldgroups and the fields they contains
     _fieldgroups = dict()
 

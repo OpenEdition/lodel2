@@ -9,7 +9,14 @@ from EditorialModel.fieldtypes.generic import GenericFieldType
 # The name is not good but i've no other ideas for the moment
 class LeFactory(object):
     
-    def __init__(self):raise NotImplementedError("Not designed (yet?) to be implemented")
+    def __init__(LeFactory):raise NotImplementedError("Not designed (yet?) to be implemented")
+
+    ## @brief Convert an EmType or EmClass name in a python class name
+    # @param name str : The name
+    # @return name.title()
+    @staticmethod
+    def name2classname(name):
+        return name.title()
 
     ## @brief Return a call to a FieldType constructor given an EmField
     # @param emfield EmField : An EmField
@@ -57,8 +64,13 @@ class LeObject(_LeObject):\n\
         
         for emclass in model.components(EditorialModel.classes.EmClass):
             cls_fields = dict()
+            cls_linked_types = list()
             for field in emclass.fields():
                 cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
+                fti = field.fieldtype_instance()
+                if fti.name == 'rel2type':
+                    #relationnal field/fieldtype
+                    cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
             cls_fieldgroup = dict()
             for fieldgroup in emclass.fieldgroups():
                 cls_fieldgroup[fieldgroup.name] = list()
@@ -68,21 +80,42 @@ class LeObject(_LeObject):\n\
             result += "\n\
 class %s(LeObject, LeClass):\n\
     _fieldtypes = %s\n\
+    _linked_types = [%s]\n\
     _fieldgroups = %s\n\
 \n\
-"%(emclass.name.title(), cls_fields.__repr__(), cls_fieldgroup.__repr__())
+"%(
+    LeFactory.name2classname(emclass.name),
+    cls_fields.__repr__(),
+    ','.join(cls_linked_types),
+    cls_fieldgroup.__repr__()
+)
 
         for emtype in model.components(EditorialModel.types.EmType):
             type_fields = list()
+            type_superiors = list()
             for field in emtype.fields():
                 type_fields.append(field.name)
+
+            for nat, sup_l in emtype.superiors().items():
+                type_superiors.append('%s:[%s]'%(
+                    nat.__repr__(),
+                    ','.join([ LeFactory.name2classname(sup.name) for sup in sup_l])
+                ))
+
 
             result += "\n\
 class %s(%s,LeType):\n\
     _fields = %s\n\
+    _superiors = {%s}\n\
     _leClass = %s\n\
 \n\
-"%(emtype.name.title(), emtype.em_class.name.title(), type_fields.__repr__(), emtype.em_class.name.title())
+"%(
+    LeFactory.name2classname(emtype.name),
+    LeFactory.name2classname(emtype.em_class.name),
+    type_fields.__repr__(),
+    ','.join(type_superiors),
+    LeFactory.name2classname(emtype.em_class.name)
+)
 
         return result
 
