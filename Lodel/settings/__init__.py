@@ -8,9 +8,6 @@ if DEBUG:
 else:
     from Lodel.settings.production import *
 
-if 'LODEL_MIGRATION_HANDLER_TESTS' in os.environ:
-    from Lodel.settings.migrations import *
-
 try:
     from Lodel.settings.locale import *
 except ImportError:
