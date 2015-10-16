@@ -8,6 +8,7 @@
 
 import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from EditorialModel.fieldtypes.generic import GenericFieldType
 from EditorialModel.model import Model
 from mosql.db import Database
 from Lodel.utils.mosql import create, alter_add
@@ -95,18 +96,40 @@ class SQLMigrationHandler(DummyMigrationHandler):
         else:
             table_name = self._class_table_name_from_field(model, new_state)
 
-        field_definition = SQLMigrationHandler.fieldtype_to_sql[new_state['fieldtype']]
+        field_definition = self._fieldtype_definition(new_state['fieldtype'], new_state)
         self._query_bd(
             alter_add(table=table_name, column=new_state['name'] + ' ' + field_definition)
         )
 
-    # Test if internal tables must be created, create it if it must
+    ## convert fieldtype name to SQL definition
+    def _fieldtype_definition(self, fieldtype, options):
+        basic_type = GenericFieldType.from_name(fieldtype).ftype
+        if basic_type == 'int':
+            return 'INT'
+        elif basic_type == 'char':
+            max_length = options['max_length'] if 'max_length' in options else 255
+            return 'CHAR(%s)' % max_length
+        elif basic_type == 'text':
+            return 'TEXT'
+        elif basic_type == 'bool':
+            return 'BOOLEAN'
+        elif basic_type == 'datetime':
+            definition = 'DATETIME'
+            if 'now_on_create' in options and options['now_on_create']:
+                definition += ' DEFAULT CURRENT_TIMESTAMP'
+            if 'now_on_update' in options and options['now_on_update']:
+                definition += ' ON UPDATE CURRENT_TIMESTAMP'
+            return definition
+
+        raise EditorialModel.exceptions.MigrationHandlerChangeError("Basic type '%s' of fieldtype '%s' is not compatible with SQL migration Handler" % basic_type, fieldtype)
+
+    ## Test if internal tables must be created, create it if it must
     def _install_tables(self):
         # create common fields definition
         common_fields = [self._pk_column]
         for name, options in EditorialModel.classtypes.common_fields.items():
             if options['fieldtype'] != 'pk':
-                common_fields.append(name + ' ' + SQLMigrationHandler.fieldtype_to_sql[options['fieldtype']])
+                common_fields.append(name + ' ' + self._fieldtype_definition(options['fieldtype'], options))
 
         # create common tables
         self._query_bd(
@@ -117,7 +140,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     def _query_bd(self, *queries):
         with self.db as cur:
             for query in queries:
-                print(query)
+                #print(query)
                 cur.execute(query)
 
     def _class_table_name(self, class_name):
