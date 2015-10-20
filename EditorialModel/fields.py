@@ -79,6 +79,16 @@ class EmField(EmComponent):
     def fieldtypes_list():
         return [f for f in EditorialModel.fieldtypes.__all__ if f != '__init__' and f != 'generic' ]
 
+    ##@brief Return the EmFieldgroup this EmField belongs to
+    @property
+    def fieldgroup(self):
+        return self.model.component(self.fieldgroup_id)
+    
+    ## @brief Returns the EmClass this EmField belongs to
+    @property
+    def em_class(self):
+        return self.fieldgroup.em_class
+
     ## @brief Get the fieldtype instance
     # @return a fieldtype instance
     def fieldtype_instance(self):

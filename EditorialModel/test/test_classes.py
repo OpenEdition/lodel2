@@ -219,7 +219,6 @@ class TestEmClassFields(ClassesTestCase):
 # Creating a new EmClass should :
 # - create a table named like the created EmClass
 # - insert a new line in em_classes
-@unittest.skip("Not implemented yet")
 class TestEmClassLinkType(ClassesTestCase):
 
     # create a new EmClass, then test on it
@@ -228,31 +227,9 @@ class TestEmClassLinkType(ClassesTestCase):
         ClassesTestCase.setUpClass()
         test_entity = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testEntity', 'classtype': EmClassType.entity['name']})
         test_entry = EM_TEST_OBJECT.create_component(EmClass.__name__, {'name': 'testEntry', 'classtype': EmClassType.entry['name']})
-        keywords = EM_TEST_OBJECT.create_component(EmType.__name__, {'name': 'keywords', 'class_id': test_entry.uid})
-        test_entity.link_type(keywords)
 
-    '''
+    def testLinkedTypes(self):
+        """ Test the EmClass.linked_types() method """
+        for field, linked_type in [ (f, EM_TEST_OBJECT.component(f.rel_to_type_id)) for f in EM_TEST_OBJECT.components(EmField) if 'rel_to_type_id' in f.__dict__]:
+            self.assertIn(linked_type, field.em_class.linked_types())
 
-    # test if a table 'testEntity_keywords' was created
-    # should be able to select on the created table
-    def test_table_classes_types(self):
-        """ Test if a table 'testEntity_keywords' was created """
-        conn = sqlutils.get_engine().connect()
-        a = sqlutils.meta(conn)
-        try:
-            newtable = sqla.Table('testEntity_keywords', sqlutils.meta(conn))
-            req = sqla.sql.select([newtable])
-            res = conn.execute(req)
-            res = res.fetchall()
-            conn.close()
-        except:
-            self.fail("unable to select table testEntity_keywords")
-        self.assertEqual(res, [])
-
-    # test if we can retrieve the linked type
-    def test_linked_types(self):
-        """ Test linked_types """
-        testEntity = EmClass('testEntity')
-        linked_types = testEntity.linked_types()
-        self.assertEqual(linked_types[0].name, 'keywords')
-    '''

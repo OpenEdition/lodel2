@@ -83,3 +83,9 @@ class TestField(FieldTestCase):
             # We check that the field object is not in the EmField components list
             field_components_records = EM_TEST_OBJECT.components(EmField)
             self.assertNotIn(field, field_components_records)
+
+    def test_emclass(self):
+        """ Test if the EmField.em_class @property method is correct """
+        for field in EM_TEST_OBJECT.components(EmField):
+            self.assertIn(field, field.em_class.fields())
+            self.assertIn(field.fieldgroup, field.em_class.fieldgroups())

@@ -97,10 +97,15 @@ class EmClass(EmComponent):
     ## Add a new EditorialModel.types.EmType that can ben linked to this class
     # @param  em_type EditorialModel.types.EmType: type to link
     # @return success bool: done or not
+    # @deprecated To do this add a rel2type field to any fieldtype of this EmClass
     def link_type(self, em_type):
         pass
 
     ## Retrieve list of EditorialModel.types.EmType that are linked to this class
     #  @return types [EditorialModel.types.EmType]:
     def linked_types(self):
-        pass
+        res = list()
+        for field in self.fields():
+            if field.fieldtype_instance().name == 'rel2type':
+                res.append(self.model.component(field.rel_to_type_id))
+        return res
