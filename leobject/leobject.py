@@ -23,6 +23,16 @@ class _LeObject(object):
     # @param **kwargs dict : datas usefull to instanciate a _LeObject
     def __init__(self, **kwargs):
         raise NotImplementedError("Abstract constructor")
+    
+    ## @brief Given a ME uid return the corresponding LeClass or LeType class
+    # @return a LeType or LeClass child class
+    # @throw KeyError if no corresponding child classes
+    def uid2leobj(cls, uid):
+        uid = int(uid)
+        if uid not in cls._me_uid:
+            raise KeyError("No LeType or LeClass child classes with uid '%d'"%uid)
+        return cls._me_uid[uid]
+        
 
     ## @brief update an existing LeObject
     # @param lodel_id int | (int): lodel_id of the object(s) where to apply changes
@@ -78,6 +88,8 @@ class _LeObject(object):
         #Fetching LeType
         if typename is None:
             letype = None
+            if 'type_id' not in field_list:
+                field_list.append('type_id')
         else:
             letype = leobject.lefactory.LeFactory.leobj_from_name(typename)
 
@@ -105,8 +117,17 @@ class _LeObject(object):
         filters = [f for f in filters if not self._field_is_relational(f[0])]
         #Checking the rest of the fields
         LeFactory._check_fields(letype, leclass, [ f[0] for f in filters ])
+        
+        #Fetching datas from datasource
+        datas = self._datasource.get(emclass, emtype, field_list, filters, relational_filters)
+        
+        #Instanciating corresponding LeType child classes with datas
+        result = list()
+        for leobj_datas in datas:
+            letype = self.uid2leobj(datas['type_id']) if letype is None else letype
+            result.append(letype(datas))
 
-        return self._datasource.get(emclass, emtype, filters, relational_filters)
+        return result
 
     ## @brief Check if a fieldname is valid
     # @param letype LeType|None : The concerned type (or None)

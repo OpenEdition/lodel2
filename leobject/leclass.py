@@ -12,6 +12,8 @@ class LeClass(object):
     _linked_types = dict()
     ## @brief Stores fieldgroups and the fields they contains
     _fieldgroups = dict()
+    ## @brief Stores the EM uid
+    _class_id = None
 
     ## @brief Instanciate a new LeClass
     # @param model Model : The editorial model

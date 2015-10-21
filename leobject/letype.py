@@ -14,6 +14,8 @@ class LeType(object):
     _superiors = list()
     ## @brief Stores the class of LeClass
     _leclass = None
+    ## @brief Stores the EM uid
+    _type_id = None
     
     ## @brief Instanciate a new LeType
     # @param lodel_id : The lodel id
@@ -23,11 +25,37 @@ class LeType(object):
             raise NotImplementedError("Abstract class")
 
         self.lodel_id = lodel_id
+
+        if 'type_id' in kwargs:
+            if self.__class__._type_id != int(kwargs['type_id']):
+                raise RuntimeError("Trying to instanciate a %s with an EM uid that is not correct"%self.__class__.__name__)
+
         ## Populate the object from the datas received in kwargs
         for name, value in kwargs.items():
             if name not in self._fields:
                 raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
             setattr(self, name, value)
+    
+    ## @brief Populate the LeType wih datas from DB
+    # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
+    def populate(self, field_list=None):
+        if field_list == None:
+            field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
+
+        fdatas = self._datasource.get(self._leclass, self.__class__, 'lodel_id = %d'%self.lodel_id)
+        for fname, fdats in fdatas[0].items():
+            setattr(self, name, value)
+
+    ## @brief Get a fieldname:value dict
+    # @warning Giving True as full argument can represent a performances issue
+    # @param full bool : If true populate the object before returning the datas
+    # @return A dict with field name as key and the field value as value
+    @property
+    def datas(self, full=False):
+        if full:
+            self.populate()
+        return { fname: getattr(self, fname) for fname in self._fields if hasattr(self,fname) }
+            
 
     ## @brief Delete the LeType from Db
     # @note equivalent to LeType::delete(this.lodel_id)
@@ -63,6 +91,7 @@ class LeType(object):
     # @throw InvalidArgumentError if invalid argument
     @classmethod
     def insert(self, **datas):
+        self.check_datas_or_raise(datas, complete=True)
         super(LeType, self).insert(typename=self.__class__.__name__, classname=self._leclass.__name__, **datas)
         pass
     
