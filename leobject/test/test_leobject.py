@@ -2,7 +2,6 @@
     Tests for _LeObject
 """
 
-import os
 import unittest
 from unittest import TestCase
 

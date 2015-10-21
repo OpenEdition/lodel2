@@ -26,7 +26,7 @@ class LeType(object):
         ## Populate the object from the datas received in kwargs
         for name, value in kwargs.items():
             if name not in self._fields:
-                raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__)
+                raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
             setattr(self, name, value)
 
     ## @brief Delete the LeType from Db
@@ -77,9 +77,9 @@ class LeType(object):
         autom_fields = [f.name for f in cls._fieldtypes if f.internal]
         for dname, dval in datas.items():
             if dname in autom_fields:
-                raise AttributeError("The field '%s' is internal"%(dname)
+                raise AttributeError("The field '%s' is internal"%(dname))
             if dname not in cls._fields:
-                raise AttributeError("No such field '%s' for %s"%(dname, self.__class__.__name__)
+                raise AttributeError("No such field '%s' for %s"%(dname, self.__class__.__name__))
             cls._fieldtypess[dname].check_or_raise(dval)
         
         fields = [f.name for f in cls._fieldtypes if not f.internal]
