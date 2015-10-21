@@ -141,17 +141,33 @@ class LeObject(_LeObject):
 
 """%(backend_constructor, datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
         
-        #LeClass and LeType child classes definition
-        for emclass in model.components(EditorialModel.classes.EmClass):
-           result += 'class %s(LeObject,LeType): pass\n'%(LeFactory.name2classname(emclass.name))
-        for emtype in model.components(EditorialModel.types.EmType):
-           result += 'class %s(%s,LeType): pass\n'%(LeFactory.name2classname(emtype.name),LeFactory.name2classname(emtype.em_class.name),)
+        emclass_l = model.components(EditorialModel.classes.EmClass)
+        emtype_l = model.components(EditorialModel.types.EmType)
+
+        #LeClass child classes definition
+        for emclass in emclass_l:
+           result += """
+class %s(LeObject,LeType):
+    _class_id = %d
+"""%(LeFactory.name2classname(emclass.name), emclass.uid)
+        #LeType child classes definition
+        for emtype in emtype_l:
+           result += """
+class %s(%s,LeType):
+    _type_id = %d
+"""%(LeFactory.name2classname(emtype.name),LeFactory.name2classname(emtype.em_class.name),emtype.uid)
             
         #Set attributes of created LeClass and LeType child classes
-        for emclass in model.components(EditorialModel.classes.EmClass):
+        for emclass in emclass_l:
             result += LeFactory.emclass_pycode(model, emclass)
-        for emtype in model.components(EditorialModel.types.EmType):
+        for emtype in emtype_l:
             result += LeFactory.emtype_pycode(model, emtype)
+
+        #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
+        result += """
+LeObject._me_uid = %s
+"""%repr({ comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l })
+            
             
         return result
 
