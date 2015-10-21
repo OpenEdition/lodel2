@@ -25,7 +25,7 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'))
         self.assertTrue(isinstance(model, Model))
 
-        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler('LodelTestInstance'))
+        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
         self.assertTrue(isinstance(model, Model))
 
     def test_bad_init(self):
@@ -286,7 +286,7 @@ class TestModel(unittest.TestCase):
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler('LodelTestInstance'))
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
 
         self.assertEqual(hash(me1), hash(me2), "When instanciate from the same backend & file but with another migration handler the hashes differs")
         self.assertTrue(me1.__eq__(me2))
