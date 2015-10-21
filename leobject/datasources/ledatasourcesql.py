@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from ledatasource import LeDataSource
-from mosql.db import Database
+from mosql.db import Database, all_to_dicts
 from mosql.query import select
 
 from Lodel.utils.mosql import *
@@ -23,11 +23,11 @@ class LeDataSourceSQL(LeDataSource):
         class_name = emclass.name
         type_name = emtype.name
 
-        tablename = ""
+        tablename = "" # TODO
         where_filters = self._prepare_filters(filters)
         query = select(tablename, where=where_filters, select=field_list)
         self.db.execute(query)
-        pass
+        return all_to_dicts(self.db)
 
     def _prepare_filters(self, filters):
         prepared_filters = {}
