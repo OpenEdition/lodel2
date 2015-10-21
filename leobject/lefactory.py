@@ -94,7 +94,7 @@ class LeFactory(object):
         return """
 {name}._fields = {fields}
 {name}._superiors = {dsups}
-{name}._leClass = {leclass}
+{name}._leclass = {leclass}
 """.format(
     name = LeFactory.name2classname(emtype.name),
     fields = repr(type_fields),
@@ -103,8 +103,10 @@ class LeFactory(object):
 )
 
     ## @brief Generate python code containing the LeObject API
-    # @param model_args dict : Dict of Model __init__ method arguments
-    # @param datasource_args dict : Dict of datasource __init__ method arguments
+    # @param backend_cls Backend : A model backend class
+    # @param backend_args dict : A dict representing arguments for backend_cls instanciation
+    # @param datasource_cls Datasource : A datasource class
+    # @param datasource_args dict : A dict representing arguments for datasource_cls instanciation
     # @return A string representing python code
     @staticmethod
     def generate_python(backend_cls, backend_args, datasource_cls, datasource_args):
@@ -139,7 +141,7 @@ class LeObject(_LeObject):
     _datasource = %s(**%s)
     _me_uid = %s
 
-"""%(backend_constructor, datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
+"""%(backend_constructor, datasource_cls.__module__+'.'+datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
         
         emclass_l = model.components(EditorialModel.classes.EmClass)
         emtype_l = model.components(EditorialModel.types.EmType)
@@ -147,7 +149,7 @@ class LeObject(_LeObject):
         #LeClass child classes definition
         for emclass in emclass_l:
            result += """
-class %s(LeObject,LeType):
+class %s(LeObject,LeClass):
     _class_id = %d
 """%(LeFactory.name2classname(emclass.name), emclass.uid)
         #LeType child classes definition
@@ -167,7 +169,6 @@ class %s(%s,LeType):
         result += """
 LeObject._me_uid = %s
 """%repr({ comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l })
-            
             
         return result
 

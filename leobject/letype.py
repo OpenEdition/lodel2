@@ -90,9 +90,9 @@ class LeType(object):
     # @thorw A leo exception if invalid stuff
     # @throw InvalidArgumentError if invalid argument
     @classmethod
-    def insert(self, **datas):
-        self.check_datas_or_raise(datas, complete=True)
-        super(LeType, self).insert(typename=self.__class__.__name__, classname=self._leclass.__name__, **datas)
+    def insert(cls, **datas):
+        cls.check_datas_or_raise(datas, complete=True)
+        super(LeType, cls).insert(typename=cls.__name__, **datas)
         pass
     
     ## @brief Check that datas are valid for this type
