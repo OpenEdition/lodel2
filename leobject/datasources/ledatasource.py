@@ -4,9 +4,10 @@
 
 class LeDataSource(object):
 
-    def __init__(self, options=None):
-        self.options = options
-
+    def __init__(self, module=None, *conn_args, **conn_kargs):
+        self.module = module
+        self.conn_args = conn_args
+        self.conn_kargs = conn_kargs
 
     ## @brief update an existing LeObject
     # @param lodel_id (int) : list of lodel_id
