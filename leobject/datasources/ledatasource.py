@@ -8,11 +8,11 @@ class LeDataSource(object):
         self.options = options
 
 
-    ## @brief Update
-    # @param lodel_id int|(int) : id(s) of the object(s) where to apply changes
-    # @param data dict : dictionnary of field:value to save
-    # @param update_filters string | (string) : list of string of updata filters
-    def update(self, lodel_id, data, update_filters=None):
+    ## @brief search for a collection of objects
+    # @param emclass
+    # @param emtype
+    # @param filters
+    # @param relational_filters
+    def get(self, emclass, emtype, filters, relational_filters):
         pass
 
-    
