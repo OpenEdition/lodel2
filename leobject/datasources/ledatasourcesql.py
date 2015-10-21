@@ -2,15 +2,16 @@
 
 from ledatasource import LeDataSource
 from mosql.db import Database
+from mosql.query import select
+
 from Lodel.utils.mosql import *
 
 ## SQL DataSource for LeObject
 class LeDataSourceSQL(LeDataSource):
 
-    def __init__(self, options=None):
+    def __init__(self, module=None, *conn_args, **conn_kargs):
         super(LeDataSourceSQL, self).__init__()
-            
-        self.options = options
+        self.db = Database(self.module, self.conn_args, self.conn_kargs)
 
     ## @brief search for a collection of objects
     # @param emclass
@@ -18,4 +19,21 @@ class LeDataSourceSQL(LeDataSource):
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
     # @param relational_filters
     def get(self, emclass, emtype, field_list, filters, relational_filters):
+
+        class_name = emclass.name
+        type_name = emtype.name
+
+        tablename = ""
+        where_filters = self._prepare_filters(filters)
+        query = select(tablename, where=where_filters, select=field_list)
+        self.db.execute(query)
         pass
+
+    def _prepare_filters(self, filters):
+        prepared_filters = {}
+        for filter in filters:
+            prepared_filter_key = (filter[0], filter[1])
+            prepared_filter_value = filter[2]
+            prepared_filters[prepared_filter_key] = prepared_filter_value
+
+        return prepared_filters
