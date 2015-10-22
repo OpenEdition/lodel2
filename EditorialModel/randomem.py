@@ -47,6 +47,7 @@ class RandomEm(object):
     # - optfield : Chances for a field to be optionnal (default 2)
     # @param backend : A backend to use with the new EM
     # @param **kwargs dict : Provide tunable generation parameter
+    # @param cls
     # @return A randomly generate EM
     def random_em(cls, backend=None, **kwargs):
         ed_mod = Model(EmBackendDummy if backend is None else backend)

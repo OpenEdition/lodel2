@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
-## @file editorialmodel.py
-# Manage instance of an editorial model
+## @package EditorialModel.model
+# Contains the class managing and editorial model
 
 import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
@@ -14,7 +14,7 @@ from EditorialModel.exceptions import EmComponentCheckError, EmComponentNotExist
 import hashlib
 
 
-## Manages the Editorial Model
+## @brief Manages the Editorial Model
 class Model(object):
 
     components_class = [EmClass, EmType, EmFieldGroup, EmField]
@@ -22,6 +22,7 @@ class Model(object):
     ## Constructor
     #
     # @param backend unknown: A backend object instanciated from one of the classes in the backend module
+    # @param migration_handler : A migration handler
     def __init__(self, backend, migration_handler=None):
         if migration_handler is None:
             self.migration_handler = DummyMigrationHandler()
@@ -145,7 +146,7 @@ class Model(object):
         return False
 
     ## Sort components by rank in Model::_components
-    # @param emclass pythonClass : The type of components to sort
+    # @param component_class pythonClass : The type of components to sort
     # @throw AttributeError if emclass is not valid
     # @warning disabled the test on component_class because of EmField new way of working
     def sort_components(self, component_class):
@@ -164,6 +165,9 @@ class Model(object):
     #
     # @note if datas does not contains a rank the new component will be added last
     # @note datas['rank'] can be an integer or two specials strings 'last' or 'first'
+    #
+    # @warning The uid parameter is designed to be used only by Model.load()
+    # @param uid int|None : If given, don't generate a new uid
     # @param component_type str : a component type ( component_class, component_fieldgroup, component_field or component_type )
     # @param datas dict : the options needed by the component creation
     # @return The created EmComponent

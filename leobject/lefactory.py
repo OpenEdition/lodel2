@@ -6,7 +6,8 @@ import EditorialModel
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
 
-## @brief The factory that will return LeObject childs instances
+## @brief This class is designed to generated the leobject API given an EditorialModel.model
+# @note Contains only static methods
 #
 # The name is not good but i've no other ideas for the moment
 class LeFactory(object):
@@ -66,12 +67,13 @@ class LeFactory(object):
                 cls_fieldgroup[fieldgroup.name].append(field.name)
         
         return """
+#Initialisation of {name} class attributes
 {name}._fieldtypes = {ftypes}
 {name}._linked_types = {ltypes}
 {name}._fieldgroups = {fgroups}
 """.format(
     name = LeFactory.name2classname(emclass.name),
-    ftypes = "{"+(','.join([ '\n%s:%s'%(repr(f),v) for f,v in cls_fields.items()]))+"}",
+    ftypes = "{"+(','.join([ '\n\t%s:%s'%(repr(f),v) for f,v in cls_fields.items()]))+"\n}",
     ltypes = "{"+(','.join(cls_linked_types))+'}',
     fgroups = repr(cls_fieldgroup)
 )
@@ -94,6 +96,7 @@ class LeFactory(object):
             ))
 
         return """
+#Initialisation of {name} class attributes
 {name}._fields = {fields}
 {name}._superiors = {dsups}
 {name}._leclass = {leclass}
@@ -138,6 +141,8 @@ import %s
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
 
         result += """
+## @brief _LeObject concret clas
+# @see leobject::leobject::_LeObject
 class LeObject(_LeObject):
     _model = Model(backend=%s)
     _datasource = %s(**%s)
@@ -151,15 +156,26 @@ class LeObject(_LeObject):
         #LeClass child classes definition
         for emclass in emclass_l:
            result += """
-class %s(LeObject,LeClass):
-    _class_id = %d
-"""%(LeFactory.name2classname(emclass.name), emclass.uid)
+## @brief EmClass {name} LeClass child class
+# @see leobject::leclass::LeClass
+class {name}(LeObject,LeClass):
+    _class_id = {uid}
+""".format(
+    name = LeFactory.name2classname(emclass.name),
+    uid = emclass.uid
+)
         #LeType child classes definition
         for emtype in emtype_l:
            result += """
-class %s(%s,LeType):
-    _type_id = %d
-"""%(LeFactory.name2classname(emtype.name),LeFactory.name2classname(emtype.em_class.name),emtype.uid)
+## @brief EmType {name} LeType child class
+# @see leobject::letype::LeType
+class {name}({leclass},LeType):
+    _type_id = {uid}
+""".format(
+    name = LeFactory.name2classname(emtype.name),
+    leclass = LeFactory.name2classname(emtype.em_class.name),
+    uid = emtype.uid
+)
             
         #Set attributes of created LeClass and LeType child classes
         for emclass in emclass_l:
@@ -169,6 +185,7 @@ class %s(%s,LeType):
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
         result += """
+## @brief Dict for getting LeClass and LeType child classes given an EM uid
 LeObject._me_uid = %s
 """%repr({ comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l })
             

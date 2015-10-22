@@ -11,11 +11,10 @@ import EditorialModel
 from Lodel.utils.mlstring import MlString
 
 
-## This class is the mother class of all editorial model objects
+## @brief This class is the mother class of all editorial model objects
 #
 # It gather all the properties and mechanism that are common to every editorial model objects
 # @see EditorialModel::classes::EmClass, EditorialModel::types::EmType, EditorialModel::fieldgroups::EmFieldGroup, EditorialModel::fields::EmField
-# @pure
 class EmComponent(object):
 
     ## Used by EmComponent::modify_rank

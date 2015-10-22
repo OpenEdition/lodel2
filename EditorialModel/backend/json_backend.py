@@ -87,7 +87,9 @@ class EmBackendJson(EmBackendDummy):
         return data
 
     ## Saves the data in the data source json file
-    # @param filename str : The filename to save the EM in (if None use self.json_file provided at init )
+    # @param model Model : The editorial model
+    # @param filename str|None : The filename to save the EM in (if None use self.json_file provided at init )
+    # @return json string
     def save(self, model, filename=None):
         json_dump = json.dumps({component.uid: component.attr_flat() for component in model.components()}, default=self.date_handler, indent=True)
         if self._json_file:

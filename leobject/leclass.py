@@ -16,8 +16,8 @@ class LeClass(object):
     _class_id = None
 
     ## @brief Instanciate a new LeClass
-    # @param model Model : The editorial model
-    # @param datasource ? : The datasource
+    # @note Abstract method
+    # @param **kwargs
     def __init__(self, **kwargs):
         raise NotImplementedError("Abstract class")
     

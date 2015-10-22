@@ -49,7 +49,9 @@ class EmType(EmComponent):
     ## Create a new EmType and instanciate it
     # @param name str: The name of the new type
     # @param em_class EmClass: The class that the new type will specialize
+    # @param sortcolumn str : The name of the field that will be used to sort
     # @param **em_component_args : @ref EditorialModel::components::create()
+    # @param cls
     # @return An EmType instance
     # @throw EmComponentExistError if an EmType with this name but different attributes exists
     # @see EmComponent::__init__()

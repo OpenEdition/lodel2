@@ -16,7 +16,6 @@ class GenericFieldType(object):
     
     ## @brief Instanciate a new fieldtype
     # @param ftype str : The type of datas handled by this fieldtype
-    # @param default ? : The default value
     # @param nullable bool : is None allowed as value ?
     # @param check_function function : A callback check function that takes 1 argument and raise a TypeError if the validation fails
     # @param uniq bool : Indicate if a field should handle uniq values

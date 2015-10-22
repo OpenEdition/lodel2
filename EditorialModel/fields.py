@@ -28,7 +28,6 @@ class EmField(EmComponent):
     # @param internal str|bool : If False the field is not internal, else it can takes value in "object" or "automatic"
     # @param rel_field_id int|None : If not None indicates that the field is a relation attribute (and the value is the UID of the rel2type field)
     # @param nullable bool : If True None values are allowed
-    # @param default * : Default field value
     # @param uniq bool : if True the value should be uniq in the db table
     # @param **kwargs : more keywords arguments for the fieldtype
     def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=False, uniq=False, **kwargs):

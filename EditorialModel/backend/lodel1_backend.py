@@ -102,7 +102,7 @@ class EmBackendLodel1(EmBackendDummy):
         return new_dic
 
     ## convert collection of dom element to a dict
-    # <col name="id">252</col> => {'id':'252'}
+    # \<col name="id"\>252\</col\> => {'id':'252'}
     def _dom_elements_to_dict(self, elements):
         fields = {}
         for element in elements:

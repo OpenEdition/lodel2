@@ -125,6 +125,7 @@ class EmClassType(object):
     }
 
     ## @brief return a classtype from its name
+    # @param cls 
     # @param classtype str : A classtype name
     # @return None if no classtype with this name, else return a dict containing classtype informations
     @classmethod
@@ -140,11 +141,9 @@ class EmClassType(object):
     def getall(cls):
         return [cls.entity, cls.entry, cls.person]
 
-    ## natures (Method)
+    ## @brief Return possible nature of relations for a classtype name
     #
-    # Return possible nature of relations for a classtype name
-    #
-    # @param classtype str: The classtype name
+    # @param classtype_name str: The classtype name
     # @return A list of EmNature names (list of str)
     @staticmethod
     def natures(classtype_name):
