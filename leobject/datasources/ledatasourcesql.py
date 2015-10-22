@@ -21,6 +21,7 @@ class LeDataSourceSQL(DummyDatasource):
     def get(self, emclass, emtype, field_list, filters, relational_filters):
         tablename =  emclass.name
         where_filters = self._prepare_filters(filters)
+        rel_filters = self._prepare_filters(relational_filters)
         query = select(tablename, where=where_filters, select=field_list)
         self.db.execute(query)
         return all_to_dicts(self.db)

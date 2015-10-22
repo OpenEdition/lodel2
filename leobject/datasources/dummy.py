@@ -15,9 +15,8 @@ class DummyDatasource(object):
     ## @brief update an existing LeObject
     # @param lodel_id (int) : list of lodel_id
     # @param checked_data dict
-    # @param datasource_filters (string)
-    def update(self, lodel_id, checked_data, datasource_filters):
-        print ("DummyDatasource.update: ", lodel_id, checked_data, datasource_filters)
+    def update(self, lodel_id, checked_data):
+        print ("DummyDatasource.update: ", lodel_id, checked_data)
         return True
 
     ## @brief create a new LeObject
@@ -31,10 +30,9 @@ class DummyDatasource(object):
 
     ## @brief delete an existing LeObject
     # @param lodel_id int | (int): lodel_id of the object(s) to delete
-    # @param delete_filters string | (string): list of string of delete filters
     # @return okay bool: True on success, it will raise on failure
-    def delete(self, lodel_id, delete_filters=None):
-        print("DummyDatasource.delete: ", lodel_id, delete_filters)
+    def delete(self, lodel_id):
+        print("DummyDatasource.delete: ", lodel_id)
         return True
 
     ## @brief search for a collection of objects
