@@ -19,11 +19,7 @@ class LeDataSourceSQL(LeDataSource):
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
     # @param relational_filters
     def get(self, emclass, emtype, field_list, filters, relational_filters):
-
-        class_name = emclass.name
-        type_name = emtype.name
-
-        tablename = "" # TODO
+        tablename =  emclass.name
         where_filters = self._prepare_filters(filters)
         query = select(tablename, where=where_filters, select=field_list)
         self.db.execute(query)
