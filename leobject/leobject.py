@@ -84,29 +84,13 @@ class _LeObject(object):
     # @param classname str : The name of the LeClass we want
     # @return responses ({string:*}): a list of dict with field:value
     def get(self, query_filters, field_list = None, typename = None, classname = None):
-        filters = list()
-        for query in query_filters:
-            if len(query) == 3 and not isinstance(query, str):
-                filters.append(tuple(query))
-            else:
-                filters.append(self._split_filter(query))
-        #Now filters is a list of tuple (FIELD, OPERATOR, VALUE
-        
+
+        letype,leclass = self._prepare_target(typename, classname)
+
         #Fetching LeType
         if typename is None:
-            letype = None
             if 'type_id' not in field_list:
                 field_list.append('type_id')
-        else:
-            letype = leobject.lefactory.LeFactory.leobj_from_name(typename)
-
-        #Fetching LeClass
-        if classname is None:
-            leclass = None
-        else:
-            leclass = leobject.lefactory.LeFactory.leobj_from_name(classname)
-            if not emclass:
-                raise LeObjectQueryError("No such EmClass : '%s'"%classname)
 
         #Checking field_list
         if field_list is None:
@@ -119,12 +103,9 @@ class _LeObject(object):
         else:
             LeFactory._check_fields(letype, leclass, field_list)
         
-        #Checking relational filters (for the moment fields like superior.NATURE)
-        relational_filters = [ (LeFactory._nature_from_relational_field(field), operator, value) for field, operator, value in filters if LeFactory._field_is_relational(field)]
-        filters = [f for f in filters if not self._field_is_relational(f[0])]
-        #Checking the rest of the fields
-        LeFactory._check_fields(letype, leclass, [ f[0] for f in filters ])
-        
+        #preparing filters
+        filters, relationnal_filters = self._prepare_filters(query_filters, letype, leclass)
+
         #Fetching datas from datasource
         datas = self._datasource.get(emclass, emtype, field_list, filters, relational_filters)
         
@@ -135,6 +116,41 @@ class _LeObject(object):
             result.append(letype(datas))
 
         return result
+
+    ## @brief Preparing letype and leclass arguments
+    # 
+    # This function will do multiple things : 
+    #  - Convert string to LeType or LeClass child instances
+    #  - If both letype and leclass given, check that letype inherit from leclass
+    #  - If only a letype is given, fetch the parent leclass
+    # @note If we give only a leclass as argument returned letype will be None
+    # @note Its possible to give letype=None and leclass=None. In this case the method will return tuple(None,None)
+    # @param letype LeType|str|None : LeType child instant or its name
+    # @param leclass LeClass|str|None : LeClass child instant or its name
+    # @return a tuple with 2 python classes (LeTypeChild, LeClassChild)
+    @staticmethod
+    def _prepare_targets(letype = None , leclass = None):
+
+        if not(leclass is None):
+            if isinstance(leclass, str):
+                leclass = leobject.lefactory.LeFactory.leobj_from_name(leclass)
+
+            if not isinstance(leclass, LeClass) or leclass.__class__ == leobject.leclass.LeClass:
+                raise ValueError("None | str | LeType child class excpected, but got : %s"%type(letype))
+
+        if not(letype is None):
+            if isinstance(letype, str):
+                letype = leobject.lefactory.LeFactory.leobj_from_name(letype)
+
+            if not isinstance(letype, LeType) or letype.__class__ == leobject.letype.LeType:
+                raise ValueError("None | str | LeType child class excpected, but got : %s"%type(letype))
+
+            if leclass is None:
+                leclass = letype._leclass
+            elif leclass != letype._leclass:
+                raise ValueError("LeType child class %s does'nt inherite from LeClass %s"%(letype.__name__, leclass.__name))
+
+        return (letype, leclass)
 
     ## @brief Check if a fieldname is valid
     # @param letype LeType|None : The concerned type (or None)
@@ -163,6 +179,37 @@ class _LeObject(object):
                 if field not in fields_l:
                     raise LeObjectQueryError("No field named '%s' in '%s'"%(field, typename))
         pass
+
+    ## @brief Prepare filters for datasource
+    # 
+    # This method divide filters in two categories :
+    #  - filters : standart FIELDNAME OP VALUE filter
+    #  - relationnal_filters : filter on object relation RELATION_NATURE OP VALUE
+    # 
+    # Both categories of filters are represented in the same way, a tuple with 3 elements (NAME|NAT , OP, VALUE )
+    # 
+    # @warning This method assume that letype and leclass are returned from _LeObject._prepare_targets() method
+    # @param filters_l list : This list can contain str "FIELDNAME OP VALUE" and tuples (FIELDNAME, OP, VALUE)
+    # @param letype LeType|None : needed to check filters
+    # @param leclass LeClass|None : needed to check filters
+    # @return a tuple(FILTERS, RELATIONNAL_FILTERS°
+    @staticmethod
+    def _prepare_filters(filters_l, letype = None, leclass = None):
+        filters = list()
+        for fil in filters_l:
+            if len(fil) == 3 and not isinstance(fil, str):
+                filters.append(tuple(fil))
+            else:
+                filters.append(_LeObject._split_filter(fil))
+
+        #Checking relational filters (for the moment fields like superior.NATURE)
+        relational_filters = [ (LeFactory._nature_from_relational_field(field), operator, value) for field, operator, value in filters if LeFactory._field_is_relational(field)]
+        filters = [f for f in filters if not self._field_is_relational(f[0])]
+        #Checking the rest of the fields
+        LeFactory._check_fields(letype, leclass, [ f[0] for f in filters ])
+        
+        return (filters, relationnal_filters)
+
 
     ## @brief Check if a field is relational or not
     # @param field str : the field to test
