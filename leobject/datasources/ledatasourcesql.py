@@ -48,7 +48,9 @@ class LeDataSourceSQL(DummyDatasource):
         where_filters = self._prepare_filters(filters)
         if relational_filters or len(relational_filters) > 0:
             rel_filters = self._prepare_filters(relational_filters)
-        query = select(tablename, where=where_filters, select=field_list)
+            query = select(tablename, where=where_filters, select=field_list, joins=join('relations', {}))
+        else:
+            query = select(tablename, where=where_filters, select=field_list)
         self.db.execute(query)
 
         return all_to_dicts(self.db)
