@@ -6,7 +6,7 @@ class EmFieldType(GenericFieldType):
 
     help = 'A basic boolean field'
 
-    ftype='char'
+    ftype='bool'
 
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
