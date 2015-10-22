@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 
-from ledatasource import LeDataSource
+from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
 from mosql.query import select
 
 from Lodel.utils.mosql import *
 
 ## SQL DataSource for LeObject
-class LeDataSourceSQL(LeDataSource):
+class LeDataSourceSQL(DummyDatasource):
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
         super(LeDataSourceSQL, self).__init__()
