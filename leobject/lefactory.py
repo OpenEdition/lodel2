@@ -13,6 +13,7 @@ from EditorialModel.fieldtypes.generic import GenericFieldType
 class LeFactory(object):
     
     output_file = 'dyn.py'
+    modname = None
 
     def __init__(LeFactory):raise NotImplementedError("Not designed (yet?) to be implemented")
 
@@ -20,7 +21,11 @@ class LeFactory(object):
     # @return a python class or False
     @staticmethod
     def leobj_from_name(name):
-        mod = importlib.import_module('leobject.'+LeFactory.output_file.split('.')[-1])
+        if LeFactory.modname is None:
+            modname = 'leobject.'+LeFactory.output_file.split('.')[1]
+        else:
+            modname = LeFactory.modname
+        mod = importlib.import_module(modname)
         try:
             res = getattr(mod, name)
         except AttributeError:
@@ -184,10 +189,10 @@ class {name}({leclass},LeType):
             result += LeFactory.emtype_pycode(model, emtype)
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
+        me_uid = { comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l }
         result += """
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
 LeObject._me_uid = %s
-"""%repr({ comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l })
-            
+"""%"{"+(','.join([ '%s:%s'%(k,v) for k,v in me_uid.items()]))+"}"       
         return result
 
