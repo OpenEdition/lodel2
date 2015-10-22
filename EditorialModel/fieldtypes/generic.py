@@ -82,6 +82,15 @@ class GenericFieldType(object):
     @staticmethod
     def module_name(fieldtype_name):
         return 'EditorialModel.fieldtypes.%s'%(fieldtype_name)
+
+    ## @brief __hash__ implementation for fieldtypes
+    def __hash__(self):
+        hash_dats = [ self.__class__.__module__ ]
+        for kdic in sorted([k for k in self.__dict__.keys() if not k.startswith('_')]):
+            hash_dats.append((kdic, getattr(self, kdic)))
+        return hash(tuple(hash_dats))
+
+
     
     ## @brief Transform a value into a valid python representation according to the fieldtype
     # @param value ? : The value to cast

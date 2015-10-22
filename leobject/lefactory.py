@@ -31,6 +31,8 @@ class LeFactory(object):
     # @return name.title()
     @staticmethod
     def name2classname(name):
+        if not isinstance(name, str):
+            raise AttributeError("Argument name should be a str and not a %s"%type(name))
         return name.title()
 
     ## @brief Return a call to a FieldType constructor given an EmField
@@ -64,12 +66,12 @@ class LeFactory(object):
                 cls_fieldgroup[fieldgroup.name].append(field.name)
         
         return """
-{name}._fildtypes = {ftypes}
+{name}._fieldtypes = {ftypes}
 {name}._linked_types = {ltypes}
 {name}._fieldgroups = {fgroups}
 """.format(
     name = LeFactory.name2classname(emclass.name),
-    ftypes = repr(cls_fields),
+    ftypes = "{"+(','.join([ '\n%s:%s'%(repr(f),v) for f,v in cls_fields.items()]))+"}",
     ltypes = "{"+(','.join(cls_linked_types))+'}',
     fgroups = repr(cls_fieldgroup)
 )
