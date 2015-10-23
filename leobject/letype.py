@@ -39,7 +39,10 @@ class LeType(leobject.leobject._LeObject):
 
         if 'type_id' in kwargs:
             if self.__class__._type_id != int(kwargs['type_id']):
-                raise RuntimeError("Trying to instanciate a %s with an EM uid that is not correct"%self.__class__.__name__)
+                raise RuntimeError("Trying to instanciate a %s with an type_id that is not correct"%self.__class__.__name__)
+        if 'class_id' in kwargs:
+            if self.__class__._class_id != int(kwargs['class_id']):
+                raise RuntimeError("Trying to instanciate a %s with a clas_id that is not correct"%self.__class__.__name__)
 
         ## Populate the object from the datas received in kwargs
         for name, value in kwargs.items():
@@ -52,20 +55,26 @@ class LeType(leobject.leobject._LeObject):
     def populate(self, field_list=None):
         if field_list == None:
             field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
+        filters, rel_filters = self._prepare_filters(['lodel_id = %d'%(self.lodel_id)], self.__class__, self._leclass)
 
-        fdatas = self._datasource.get(self._leclass, self.__class__, 'lodel_id = %d'%self.lodel_id)
+        fdatas = self._datasource.get(self._leclass, self.__class__, field_list, filters, rel_filters)
         for fname, fdats in fdatas[0].items():
             setattr(self, name, value)
 
     ## @brief Get a fieldname:value dict
-    # @warning Giving True as full argument can represent a performances issue
-    # @param full bool : If true populate the object before returning the datas
     # @return A dict with field name as key and the field value as value
     @property
     def datas(self, full=False):
-        if full:
-            self.populate()
         return { fname: getattr(self, fname) for fname in self._fields if hasattr(self,fname) }
+    
+    ## @brief Get all the datas for this LeType
+    # @return a dict with fieldname as key and field value as value
+    # @warning Can represent a performance issue
+    @property
+    def all_datas(self):
+        self.populate()
+        return self.datas
+        
             
 
     ## @brief Delete the LeType from Db
@@ -147,8 +156,8 @@ class LeType(leobject.leobject._LeObject):
     # @param name str : The attribute name
     # @param value * : The value
     def __setattr__(self, name, value):
-        if name in self._fields.keys():
-            self._fields[name].check_or_raise(value)
+        if name in self._fields:
+            self._fieldtypes[name].check_or_raise(value)
         return super(LeType, self).__setattr__(name, value)
     
     ## @brief Fetch superiors
