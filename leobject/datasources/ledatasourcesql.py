@@ -2,7 +2,7 @@
 
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
-from mosql.query import select
+from mosql.query import select, insert
 from leobject import REL_SUB, REL_SUP
 
 from Lodel.utils.mosql import *
@@ -32,8 +32,14 @@ class LeDataSourceSQL(DummyDatasource):
     # @param leclass LeClass
     # @param datas dict : dictionnary of field:value pairs to save
     # @return int : lodel_id of the created object
-    def insert(self, letype, leclass, **datas):
-        pass
+    def insert(self, letype, leclass, datas):
+        query_table_name = leclass.name
+        #building the query
+        query = insert(query_table_name, datas)
+        #executing the query
+        with self.db as cur:
+            cur.execute(query)
+        return True
 
     ## @brief delete an existing object
     # @param letype LeType
@@ -81,10 +87,11 @@ class LeDataSourceSQL(DummyDatasource):
             query = select(query_table_name, where=where_filters, select=field_list)
 
         # Executing the query
-        self.db.execute(query)
+        with self.db as cur:
+            results = cur.execute(query)
 
         # Returning it as a list of dict
-        return all_to_dicts(self.db)
+        return all_to_dicts(results)
 
     # @brief prepares the filters to be used by the mosql library's functions
     # @params filters : (FIELD, OPERATOR, VALUE) tuples
