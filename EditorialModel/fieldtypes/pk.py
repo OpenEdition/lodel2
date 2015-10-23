@@ -2,6 +2,7 @@
 
 import EditorialModel.fieldtypes.integer
 
+## @todo This EmFieldType is a bit dirty....
 class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
     
     help = 'Integer primary key fieldtype'
@@ -13,6 +14,7 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
             'nullable': False,
             'uniq': False,
             'internal': 'automatic',
+            'primary': True,
         }
         # Checking args
         for name, value in kwargs.items():
@@ -21,4 +23,5 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
             if value != allowed[name]:
                 raise ValueError("The value '%s' for argument '%s' for pk EmFieldType is not allowed"%(value, name))
 
-        super(EmFieldType, self).__init__(primary=True, nullable=False)
+
+        super(EmFieldType, self).__init__(**kwargs)
