@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import sqlite3
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
 from mosql.query import select, insert
@@ -12,8 +13,10 @@ class LeDataSourceSQL(DummyDatasource):
 
     RELATIONS_TABLE_NAME = 'relations'
     RELATIONS_POSITIONS_FIELDS = {REL_SUP:'superior_id', REL_SUB:'subordinate_id'}
+    MODULE = 'sqlite3'
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
+        self.module = self.MODULE if module == None else module
         super(LeDataSourceSQL, self).__init__()
         self.db = Database(self.module, self.conn_args, self.conn_kargs)
 
