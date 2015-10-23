@@ -76,7 +76,7 @@ class LeDataSourceSQL(DummyDatasource):
                 where_filters[relational_where_filters_key] = relational_where_filters_value
 
             # Building the query
-            query = select(query_table_name, where=where_filters, select=field_list, joins = join(self.RELATIONS_TABLE_NAME, join_fields))
+            query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.RELATIONS_TABLE_NAME, join_fields))
         else:
             query = select(query_table_name, where=where_filters, select=field_list)
 
