@@ -71,17 +71,18 @@ class LeType(object):
     # @note equivalent to LeType::delete(this.lodel_id)
     @classinstancemethod
     def delete(self):
-        pass
+        return self.__class__.delete(('lodel_id','=',self.lodel_id))
     
     ## @brief Delete a LeType from the datasource
-    # @param lodel_id_l list : List of lodel_id to be deleted
+    # @param filters list : List of filters
     # @param cls
     # @return True if deleted False if not existing
     # @throw InvalidArgumentError if invalid parameters
     # @throw Leo exception if the lodel_id identify an object from another type
     @delete.classmethod
-    def delete(cls, lodel_id_l):
+    def delete(cls, filters):
         pass
+        
 
     @classinstancemethod
     ## @brief Update a LeType in db
@@ -96,14 +97,15 @@ class LeType(object):
         pass
 
     ## @brief Insert a new LeType in the datasource
-    # @param **datas : A dict containing the datas
+    # @param **datas list : A list of dict containing the datas
     # @return The lodel id of the new LeType or False
     # @thorw A leo exception if invalid stuff
     # @throw InvalidArgumentError if invalid argument
     @classmethod
-    def insert(cls, **datas):
-        cls.check_datas_or_raise(datas, complete=True)
-        super(LeType, cls).insert(typename=cls.__name__, **datas)
+    def insert(cls, datas):
+        for data in datas:
+            cls.check_datas_or_raise(data, complete=True)
+        super(LeType, cls).insert(letype=cls, datas=datas)
         pass
     
     ## @brief Check that datas are valid for this type

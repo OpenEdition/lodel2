@@ -43,7 +43,20 @@ class _LeObject(object):
         if uid not in cls._me_uid:
             raise KeyError("No LeType or LeClass child classes with uid '%d'"%uid)
         return cls._me_uid[uid]
-        
+    
+    ## @brief Creates new entries in the datasource
+    # @param datas list : A list a dict with fieldname as key
+    # @param cls
+    # @return a list of inserted lodel_id
+    # @see leobject.datasources.dummy.DummyDatasource.insert(), leobject.letype.LeType.insert()
+    @classmethod
+    def insert(cls, letype, datas):
+        if cls == _LeObject:
+            raise NotImplementedError("Abstract method")
+        letype,leclass = cls._prepare_targets(letype)
+        if letype is None:
+            raise ValueError("letype argument cannot be None")
+        return cls._datasource.insert(letype, leclass, datas)
 
     ## @brief update an existing LeObject
     # @param lodel_id int | (int): lodel_id of the object(s) where to apply changes
