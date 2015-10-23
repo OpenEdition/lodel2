@@ -101,11 +101,6 @@ class _LeObject(object):
 
         letype,leclass = cls._prepare_targets(typename, classname)
 
-        #Fetching LeType
-        if typename is None:
-            if 'type_id' not in field_list:
-                field_list.append('type_id')
-
         #Checking field_list
         if field_list is None or len(field_list) == 0:
             #default field_list
@@ -114,7 +109,14 @@ class _LeObject(object):
             elif not (leclass is None):
                 field_list = leclass._fieldtypes.keys()
             else:
-                field_list = EditorialModel.classtype.common_fields.keys()
+                field_list = list(EditorialModel.classtypes.common_fields.keys())
+
+        #Fetching LeType
+        if letype is None:
+            if 'type_id' not in field_list:
+                field_list.append('type_id')
+
+
         field_list = cls._prepare_field_list(field_list, letype, leclass)
         
         #preparing filters

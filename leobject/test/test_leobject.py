@@ -317,3 +317,65 @@ class LeObjectMockDatasourceTestCase(TestCase):
             LeObject.get(filters, field_list, Numero)
             dsmock.assert_called_with(Publication, Numero, fl_ds, filters_ds, rfilters_ds)
             dsmock.reset_mock()
+
+    @patch('leobject.datasources.dummy.DummyDatasource.get')
+    def test_get_incomplete_targer(self, dsmock):
+        """ Testing LeObject.get() method with partial target specifier """
+        from dyncode import Publication, Numero, LeObject
+
+        args = [
+            (
+                ['lodel_id'],
+                [],
+                None,
+                None,
+
+                ['lodel_id', 'type_id'],
+                [],
+                [],
+                None,
+                None
+            ),
+            (
+                [],
+                [],
+                None,
+                None,
+
+                list(EditorialModel.classtypes.common_fields.keys()),
+                [],
+                [],
+                None,
+                None
+            ),
+            (
+                ['lodel_id'],
+                [],
+                None,
+                Publication,
+
+                ['lodel_id', 'type_id'],
+                [],
+                [],
+                None,
+                Publication
+            ),
+            (
+                [],
+                [],
+                Numero,
+                None,
+
+                Numero._fields,
+                [],
+                [],
+                Numero,
+                Publication
+            ),
+        ]
+
+        for field_list, filters, letype, leclass, fl_ds, filters_ds, rfilters_ds, letype_ds, leclass_ds in args:
+            LeObject.get(filters, field_list, letype, leclass)
+            dsmock.assert_called_with(leclass_ds, letype_ds, fl_ds, filters_ds, rfilters_ds)
+            dsmock.reset_mock()
+
