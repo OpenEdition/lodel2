@@ -16,6 +16,9 @@ import leobject
 import EditorialModel
 from EditorialModel.types import EmType
 
+REL_SUP = 0
+REL_SUB = 1
+
 ## @brief Main class to handle objects defined by the types of an Editorial Model
 class _LeObject(object):
     
@@ -95,8 +98,8 @@ class _LeObject(object):
         return okay
 
     ## @brief make a search to retrieve a collection of LeObject
-    # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) )
-    # @param field_list list|None : list of string representing fields
+    # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
+    # @param field_list list|None : list of string representing fields see @ref leobject_filters
     # @param typename str : The name of the LeType we want
     # @param classname str : The name of the LeClass we want
     # @return responses ({string:*}): a list of dict with field:value
@@ -176,6 +179,8 @@ class _LeObject(object):
     # @throw LeObjectQueryError if their is some problems
     # @throw AttributeError if letype is not from the leclass class
     # @todo Delete the checks of letype and leclass and ensure that this method is called with letype and leclass arguments from _prepare_targets()
+    #
+    # @see @ref leobject_filters
     @staticmethod
     def _check_fields(letype, leclass, fields):
         #Checking that fields in the query_filters are correct
@@ -210,7 +215,9 @@ class _LeObject(object):
     # @param filters_l list : This list can contain str "FIELDNAME OP VALUE" and tuples (FIELDNAME, OP, VALUE)
     # @param letype LeType|None : needed to check filters
     # @param leclass LeClass|None : needed to check filters
-    # @return a tuple(FILTERS, RELATIONNAL_FILTERS°
+    # @return a tuple(FILTERS, RELATIONNAL_FILTERS
+    #
+    # @see @ref datasource_side
     @staticmethod
     def _prepare_filters(filters_l, letype = None, leclass = None):
         filters = list()
@@ -285,3 +292,46 @@ class LeObjectError(Exception):
 
 class LeObjectQueryError(LeObjectError):
     pass
+
+## @page leobject_filters LeObject query filters
+# The LeObject API provide methods that accept filters allowing the user
+# to query the database and fetch LodelEditorialObjects.
+#
+# The LeObject API translate those filters for the datasource. 
+# 
+# @section api_user_side API user side filters
+# Filters are string expressing a condition. The string composition
+# is as follow : "<FIELD> <OPERATOR> <VALUE>"
+# @subsection fpart FIELD
+# @subsubsection standart fields
+# Standart fields, represents a value of the LeObject for example "title", "lodel_id" etc.
+# @subsubsection rfields relationnal fields
+# relationnal fields, represents a relation with the object hierarchy. Those fields are composed as follow :
+# "<RELATION>.<NATURE>".
+#
+# - Relation can takes two values : superiors or subordinates
+# - Nature is a relation nature ( see EditorialModel.classtypes )
+# Examples : "superiors.parent", "subordinates.translation" etc.
+# @note The field_list arguement of leobject.leobject._LeObject.get() use the same syntax than the FIELD filter part 
+# @subsection oppart OPERATOR
+# The OPERATOR part of a filter is a comparison operator. There is
+# - standart comparison operators : = , <, > , <=, >=, !=
+# - list operators : 'in' and 'not in'
+# The list of allowed operators is sotred at leobject.leobject._LeObject._query_operators . 
+# @subsection valpart VALUE
+# The VALUE part of a filter is... just a value...
+#
+# @section datasource_side Datasource side filters
+# As said above the API "translate" filters before forwarding them to the datasource. 
+#
+# The translation process transform filters in tuple composed of 3 elements
+# ( @ref fpart , @ref oppart , @ref valpart ). Each element is a string.
+#
+# There is a special case for @ref rfields : the field element is a tuple composed with two elements
+# ( RELATION, NATURE ) where NATURE is a string ( see EditorialModel.classtypes ) and RELATION is one of
+# the defined constant : 
+#
+# - leobject.leobject.REL_SUB for "subordinates"
+# - leobject.leobject.REL_SUP for "superiors"
+#
+# @note The filters translation process also check if given field are valids compared to the concerned letype and/or the leclass
