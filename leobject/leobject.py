@@ -228,7 +228,7 @@ class _LeObject(object):
                 filters.append(_LeObject._split_filter(fil))
 
         #Checking relational filters (for the moment fields like superior.NATURE)
-        relational_filters = [ (_LeObject._nature_from_relational_field(field), operator, value) for field, operator, value in filters if _LeObject._field_is_relational(field)]
+        relational_filters = [ (_LeObject._prepare_relational_field(field), operator, value) for field, operator, value in filters if _LeObject._field_is_relational(field)]
         filters = [f for f in filters if not _LeObject._field_is_relational(f[0])]
         #Checking the rest of the fields
         _LeObject._check_fields(letype, leclass, [ f[0] for f in filters ])
@@ -241,20 +241,26 @@ class _LeObject(object):
     # @return True if the field is relational else False
     @staticmethod
     def _field_is_relational(field):
-        return field.startswith('superior.')
+        return field.startswith('superior.') or field.startswith('subordinate')
     
     ## @brief Check that a relational field is valid
     # @param field str : a relational field
     # @return a nature
     @staticmethod
-    def _nature_from_relational_field(field):
+    def _prepare_relational_field(field):
         spl = field.split('.')
         if len(spl) != 2:
             raise LeObjectQueryError("The relationalfield '%s' is not valid"%field)
         nature = spl[-1]
         if nature not in EditorialModel.classtypes.EmNature.getall():
             raise LeObjectQueryError("'%s' is not a valid nature in the field %s"%(nature, field))
-        return nature
+        
+        if spl[0] == 'superior':
+            return (REL_SUP, nature)
+        elif spl[0] == 'subordinate':
+            return (REL_SUB, nature)
+        else:
+            raise LeObjectQueryError("Invalid preffix for relationnal field : '%s'"%spl[0])
 
     ## @brief Check and split a query filter
     # @note The query_filter format is "FIELD OPERATOR VALUE"
@@ -284,7 +290,7 @@ class _LeObject(object):
         for operator in cls._query_operators[1:]:
             op_re_piece += '|(%s)'%operator.replace(' ', '\s')
         op_re_piece += ')'
-        cls._query_re = re.compile('^\s*(?P<field>(superior\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+        cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
         pass
 
 class LeObjectError(Exception):

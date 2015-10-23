@@ -159,7 +159,7 @@ class LeObjectTestCase(TestCase):
 
         filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
         self.assertEqual(filt, [('lodel_id', '=', '1')])
-        self.assertEqual(rfilt, [('parent', '>', '2')])
+        self.assertEqual(rfilt, [((leobject.leobject.REL_SUP,'parent'), '>', '2')])
         
         #All fields, no relationnal and class given
         filters = []
@@ -175,12 +175,12 @@ class LeObjectTestCase(TestCase):
         #Mixed type filters (tuple and string)
         filters = [
             ('lodel_id', '<=', '0'),
-            'superior.parent = 2',
+            'subordinate.parent = 2',
         ]
         
         filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
         self.assertEqual(filt, [('lodel_id', '<=', '0')])
-        self.assertEqual(rfilt, [('parent', '=', '2')])
+        self.assertEqual(rfilt, [((leobject.leobject.REL_SUB,'parent'), '=', '2')])
 
     def test_prepare_filters_invalid(self):
         """ Testing the _prepare_filters() method """
