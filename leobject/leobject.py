@@ -62,7 +62,6 @@ class _LeObject(object):
 
         for data in datas:
             letype.check_datas_or_raise(data, complete = True)
-
         return cls._datasource.insert(letype, leclass, datas)
     
     ## @brief Delete LeObjects given filters
@@ -72,34 +71,35 @@ class _LeObject(object):
     # @param filters list : list of filters (see @ref leobject_filters)
     # @return bool
     @classmethod
-    def delete(cls, letype, leclass, filters):
-        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, cls, cls._leclass)
-        letype, leclass = cls._prepare_targets(letype, leclass)
-        return cls._datasource(letype, leclass, filters, relationnal_filters)
+    def delete(cls, letype, filters):
+        letype, leclass = cls._prepare_targets(letype)
+        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, letype, leclass)
+        return cls._datasource.delete(letype, leclass, filters, relationnal_filters)
     
     ## @brief Update LeObjects given filters and datas
     # @param cls
     # @param letype LeType|str : LeType child class or name
-    # @param leclass LeClass|str : LeClass child class or name
     # @param filters list : list of filters (see @ref leobject_filters)
     @classmethod
-    def update(cls, letype, leclass, filters, datas):
-        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, cls, cls._leclass)
-        letype, leclass = cls._prepare_targets(letype, leclass)
+    def update(cls, letype, filters, datas):
+        letype, leclass = cls._prepare_targets(letype)
+        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, letype, leclass)
         if letype is None:
             raise ValueError("Argument letype cannot be None")
         letype.check_datas_or_raise(datas, False)
-        return cls._datasource(letype, leclass, filters, relationnal_filters, datas)
+        return cls._datasource.update(letype, leclass, filters, relationnal_filters, datas)
 
     ## @brief make a search to retrieve a collection of LeObject
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
     # @param field_list list|None : list of string representing fields see @ref leobject_filters
     # @param typename str : The name of the LeType we want
     # @param classname str : The name of the LeClass we want
+    # @param cls
     # @return responses ({string:*}): a list of dict with field:value
-    def get(self, query_filters, field_list = None, typename = None, classname = None):
+    @classmethod
+    def get(cls, query_filters, field_list = None, typename = None, classname = None):
 
-        letype,leclass = self._prepare_targets(typename, classname)
+        letype,leclass = cls._prepare_targets(typename, classname)
 
         #Fetching LeType
         if typename is None:
@@ -107,21 +107,21 @@ class _LeObject(object):
                 field_list.append('type_id')
 
         #Checking field_list
-        if field_list is None:
+        if field_list is None or len(field_list) == 0:
+            #default field_list
             if not (letype is None):
-                flist = letype._fields
+                field_list = letype._fields
             elif not (leclass is None):
-                flist = leclass._fieldtypes.keys()
+                field_list = leclass._fieldtypes.keys()
             else:
-                flist = EditorialModel.classtype.common_fields.keys()
-        else:
-            LeFactory._check_fields(letype, leclass, field_list)
+                field_list = EditorialModel.classtype.common_fields.keys()
+        field_list = cls._prepare_field_list(field_list, letype, leclass)
         
         #preparing filters
-        filters, relationnal_filters = self._prepare_filters(query_filters, letype, leclass)
+        filters, relationnal_filters = cls._prepare_filters(query_filters, letype, leclass)
 
         #Fetching datas from datasource
-        datas = self._datasource.get(emclass, emtype, field_list, filters, relational_filters)
+        datas = cls._datasource.get(leclass, letype, field_list, filters, relationnal_filters)
         
         #Instanciating corresponding LeType child classes with datas
         result = list()
@@ -130,6 +130,14 @@ class _LeObject(object):
             result.append(letype(datas))
 
         return result
+
+    @classmethod
+    def _prepare_field_list(cls, field_list, letype, leclass):
+        cls._check_fields(letype, leclass, [f for f in field_list if not cls._field_is_relational(f)])
+        for i, field in enumerate(field_list):
+            if cls._field_is_relational(field):
+                field_list[i] = cls._prepare_relational_field(field)
+        return field_list
 
     ## @brief Preparing letype and leclass arguments
     # 
@@ -194,7 +202,7 @@ class _LeObject(object):
             #Checks that fields are in this type
             for field in fields:
                 if field not in field_l:
-                    raise LeObjectQueryError("No field named '%s' in '%s'"%(field, typename))
+                    raise LeObjectQueryError("No field named '%s' in '%s'"%(field, letype.__name__))
         pass
 
     ## @brief Prepare filters for datasource

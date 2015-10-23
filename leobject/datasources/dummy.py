@@ -38,7 +38,7 @@ class DummyDatasource(object):
     # @param relational_filters list : relationnal filters list (see @ref leobject_filters )
     # @return okay bool: True on success, it will raise on failure
     def delete(self, letype, leclass, filters, relational_filters):
-        print("DummyDatasource.delete: ", lodel_id)
+        print("DummyDatasource.delete: ", filters)
         return True
 
     ## @brief search for a collection of objects

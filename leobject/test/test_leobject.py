@@ -4,6 +4,7 @@
 
 import unittest
 from unittest import TestCase
+from unittest.mock import patch
 
 import EditorialModel
 import leobject
@@ -53,7 +54,6 @@ class _LeObjectTestCase(TestCase):
                 _LeObject._split_filter(query)
 
 ## Testing methods that need the generated code
-# @todo mock the datasource to test the get, update, delete and insert methods
 class LeObjectTestCase(TestCase):
 
     @classmethod
@@ -201,4 +201,119 @@ class LeObjectTestCase(TestCase):
         filters = ['hello world !']
         with self.assertRaises(ValueError):
             LeObject._prepare_filters(filters, None, None)
+
+class LeObjectMockDatasourceTestCase(TestCase):
+    """ Testing _LeObject using a mock on the datasource """
+
+    @classmethod
+    def setUpClass(cls):
+        """ Write the generated code in a temporary directory and import it """
+        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+    @classmethod
+    def tearDownClass(cls):
+        """ Remove the temporary directory created at class setup """
+        leobject.test.utils.cleanup(cls.tmpdir)
     
+    @patch('leobject.datasources.dummy.DummyDatasource.insert')
+    def test_insert(self, dsmock):
+        from dyncode import Publication, Numero, LeObject
+        ndatas = [
+            [{'titre' : 'FooBar'}],
+            [{'titre':'hello'},{'titre':'world'}],
+        ]
+        for ndats in ndatas:
+            LeObject.insert(Numero,ndats)
+            dsmock.assert_called_once_with(Numero, Publication, ndats)
+            dsmock.reset_mock()
+
+            LeObject.insert('Numero',ndats)
+            dsmock.assert_called_once_with(Numero, Publication, ndats)
+            dsmock.reset_mock()
+
+    @patch('leobject.datasources.dummy.DummyDatasource.update')
+    def test_update(self, dsmock):
+        from dyncode import Publication, Numero, LeObject
+
+        args = [
+            (   ['lodel_id = 1'],
+                {'titre':'foobar'},
+                [('lodel_id','=','1')],
+                []
+            ),
+            (   ['superior.parent in [1,2,3,4,5,6]', 'titre != "FooBar"'],
+                {'titre':'FooBar'},
+                [( 'titre','!=','"FooBar"')],
+                [( (leobject.leobject.REL_SUP, 'parent') ,' in ', '[1,2,3,4,5,6]')]
+            ),
+        ]
+
+        for filters, datas, ds_filters, ds_relfilters in args:
+            LeObject.update(Numero, filters, datas)
+            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
+            dsmock.reset_mock()
+
+            LeObject.update('Numero', filters, datas)
+            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
+            dsmock.reset_mock()
+
+    @patch('leobject.datasources.dummy.DummyDatasource.delete')
+    def test_delete(self, dsmock):
+        from dyncode import Publication, Numero, LeObject
+
+        args = [
+            (
+                ['lodel_id=1'],
+                [('lodel_id', '=', '1')],
+                []
+            ),
+            (
+                ['subordinate.parent not in [1,2,3]', 'titre = "titre nul"'],
+                [('titre','=', '"titre nul"')],
+                [( (leobject.leobject.REL_SUB, 'parent'), ' not in ', '[1,2,3]')]
+            ),
+        ]
+
+        for filters, ds_filters, ds_relfilters in args:
+            LeObject.delete(Numero, filters)
+            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters)
+            dsmock.reset_mock()
+
+            LeObject.delete('Numero', filters)
+            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters)
+            dsmock.reset_mock()
+        
+    @patch('leobject.datasources.dummy.DummyDatasource.get')
+    def test_get(self, dsmock):
+        from dyncode import Publication, Numero, LeObject
+        
+        args = [
+            (
+                ['lodel_id', 'superior.parent'],
+                ['titre != "foobar"'],
+
+                ['lodel_id', (leobject.leobject.REL_SUP, 'parent')],
+                [('titre','!=', '"foobar"')],
+                []
+            ),
+            (
+                ['lodel_id', 'titre', 'superior.parent', 'subordinate.translation'],
+                ['superior.parent in  [1,2,3,4,5]'],
+
+                ['lodel_id', 'titre', (leobject.leobject.REL_SUP,'parent'), (leobject.leobject.REL_SUB, 'translation')],
+                [],
+                [( (leobject.leobject.REL_SUP, 'parent'), ' in ', '[1,2,3,4,5]')]
+            ),
+            (
+                [],
+                [],
+
+                Numero._fields,
+                [],
+                []
+            ),
+        ]
+
+        for field_list, filters, fl_ds, filters_ds, rfilters_ds in args:
+            LeObject.get(filters, field_list, Numero)
+            dsmock.assert_called_with(Publication, Numero, fl_ds, filters_ds, rfilters_ds)
+            dsmock.reset_mock()
