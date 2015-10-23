@@ -59,43 +59,37 @@ class _LeObject(object):
         letype,leclass = cls._prepare_targets(letype)
         if letype is None:
             raise ValueError("letype argument cannot be None")
+
+        for data in datas:
+            letype.check_datas_or_raise(data, complete = True)
+
         return cls._datasource.insert(letype, leclass, datas)
-
-    ## @brief update an existing LeObject
-    # @param lodel_id int | (int): lodel_id of the object(s) where to apply changes
-    # @param data dict: dictionnary of field:value to save
-    # @param update_filters string | (string): list of string of update filters
-    # @return okay bool: True on success, it will raise on failure
-    def update(self, lodel_id, data, update_filters=None):
-        if not lodel_id:
-            lodel_id = ()
-        elif isinstance(lodel_id, int):
-            lodel_id = (lodel_id)
-
-        try:
-            checked_data = self._check_data(data)
-            datasource_filters = self._prepare_filters(update_filters)
-            okay = self.datasource.update(lodel_id, checked_data, datasource_filters)
-        except:
-            raise
-        return okay
-
-    ## @brief delete an existing LeObject
-    # @param lodel_id int | (int): lodel_id of the object(s) to delete
-    # @param delete_filters string | (string): list of string of delete filters
-    # @return okay bool: True on success, it will raise on failure
-    def delete(self, lodel_id, delete_filters=None):
-        if not lodel_id:
-            lodel_id = ()
-        elif isinstance(lodel_id, int):
-            lodel_id = (lodel_id)
-
-        try:
-            datasource_filters = self._prepare_filters(delete_filters)
-            okay = self.datasource.delete(lodel_id, datasource_filters)
-        except:
-            raise
-        return okay
+    
+    ## @brief Delete LeObjects given filters
+    # @param cls
+    # @param letype LeType|str : LeType child class or name
+    # @param leclass LeClass|str : LeClass child class or name
+    # @param filters list : list of filters (see @ref leobject_filters)
+    # @return bool
+    @classmethod
+    def delete(cls, letype, leclass, filters):
+        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, cls, cls._leclass)
+        letype, leclass = cls._prepare_targets(letype, leclass)
+        return cls._datasource(letype, leclass, filters, relationnal_filters)
+    
+    ## @brief Update LeObjects given filters and datas
+    # @param cls
+    # @param letype LeType|str : LeType child class or name
+    # @param leclass LeClass|str : LeClass child class or name
+    # @param filters list : list of filters (see @ref leobject_filters)
+    @classmethod
+    def update(cls, letype, leclass, filters, datas):
+        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, cls, cls._leclass)
+        letype, leclass = cls._prepare_targets(letype, leclass)
+        if letype is None:
+            raise ValueError("Argument letype cannot be None")
+        letype.check_datas_or_raise(datas, False)
+        return cls._datasource(letype, leclass, filters, relationnal_filters, datas)
 
     ## @brief make a search to retrieve a collection of LeObject
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
@@ -105,7 +99,7 @@ class _LeObject(object):
     # @return responses ({string:*}): a list of dict with field:value
     def get(self, query_filters, field_list = None, typename = None, classname = None):
 
-        letype,leclass = self._prepare_target(typename, classname)
+        letype,leclass = self._prepare_targets(typename, classname)
 
         #Fetching LeType
         if typename is None:
