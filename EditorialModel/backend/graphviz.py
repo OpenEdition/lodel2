@@ -92,7 +92,7 @@ class EmBackendGraphviz(EmBackendDummy):
                 if ((cn == 'EmType' and f.optional) or (cn == 'EmFieldGroup' and not f.optional)) and f.rel_field_id is None:
                     
                     #if not (f.rel_to_type_id is None):
-                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldRel2Type):
+                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldType):
                         rel_node_id = '%s%s'%(EmBackendGraphviz._component_id(c), EmBackendGraphviz._component_id(em.component(f.rel_to_type_id)))
 
                         rel_node = '\t%s [ label="rel_to_type'%rel_node_id
@@ -119,7 +119,7 @@ class EmBackendGraphviz(EmBackendDummy):
                         ret += ' { '
                         first = False
                     #if not (f.rel_to_type_id is None):
-                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldRel2Type):
+                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldType):
                         ret += '<f%d> '%cntref
                         cntref += 1
                     ret += f.name
