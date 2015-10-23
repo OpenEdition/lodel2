@@ -27,6 +27,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param rel_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
     # @param data dict
     # @return bool
+    # @todo prendre en compte les rel_filters
     def update(self, letype, leclass, filters, rel_filters, data):
 
         query_table_name = leclass.name
@@ -60,8 +61,13 @@ class LeDataSourceSQL(DummyDatasource):
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
     # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
     # @return bool : True on success
+    # @todo prendre en compte les rel_filters
     def delete(self, letype, leclass, filters, relational_filters):
-        pass
+        query_table_name = leclass.name
+        query = delete(query_table_name, filters)
+        with self.db as cur:
+            cur.execute(query)
+        return True
 
     ## @brief search for a collection of objects
     # @param leclass LeClass
