@@ -31,6 +31,10 @@ class LeFactory(object):
         except AttributeError:
             return False
         return res
+    
+    @classmethod
+    def leobject(cls):
+        return cls.leobj_from_name('LeObject')
 
     ## @brief Convert an EmType or EmClass name in a python class name
     # @param name str : The name
@@ -174,7 +178,7 @@ class {name}(LeObject,LeClass):
            result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
-class {name}({leclass},LeType):
+class {name}(LeType, {leclass}):
     _type_id = {uid}
 """.format(
     name = LeFactory.name2classname(emtype.name),

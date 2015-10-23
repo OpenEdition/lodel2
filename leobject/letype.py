@@ -13,11 +13,10 @@
 import leobject
 from leobject.leclass import LeClass
 from leobject.leobject import LeObjectError
-from Lodel.utils.classinstancemethod import classinstancemethod
 
 ## @brief Represent an EmType data instance
 # @note Is not a derivated class of LeClass because the concrete class will be a derivated class from LeClass
-class LeType(leobject.leobject._LeObject):
+class LeType(object):
     
     ## @brief Stores selected fields with key = name
     _fields = list()
@@ -64,24 +63,20 @@ class LeType(leobject.leobject._LeObject):
     ## @brief Get a fieldname:value dict
     # @return A dict with field name as key and the field value as value
     @property
-    def datas(self, full=False):
+    def datas(self):
         return { fname: getattr(self, fname) for fname in self._fields if hasattr(self,fname) }
     
     ## @brief Get all the datas for this LeType
     # @return a dict with fieldname as key and field value as value
     # @warning Can represent a performance issue
-    @property
     def all_datas(self):
         self.populate()
         return self.datas
-        
-            
-
+    
     ## @brief Delete the LeType from Db
     # @note equivalent to LeType::delete(filters=['lodel_id = %s'%self.lodel_id)
-    @classinstancemethod
-    def delete(self):
-        return self.__class__.delete([('lodel_id','=',self.lodel_id)])
+    def db_delete(self):
+        return self.delete([('lodel_id','=',repr(self.lodel_id))])
     
     ## @brief Delete a LeType from the datasource
     # @param filters list : list of filters (see @ref leobject_filters)
@@ -89,27 +84,23 @@ class LeType(leobject.leobject._LeObject):
     # @return True if deleted False if not existing
     # @throw InvalidArgumentError if invalid parameters
     # @throw Leo exception if the lodel_id identify an object from another type
-    @delete.classmethod
+    @classmethod
     def delete(cls, filters):
-        return super(LeType, cls).delete(letype, leclass, filters)
+        return leobject.lefactory.LeFactory.leobject().delete(cls, filters)
         
-
-    @classinstancemethod
     ## @brief Update a LeType in db
-    def update(self):
-        return self.__class__.update(filters=[('lodel_id', '=', self.lodel_id)], datas = self.datas)
+    def db_update(self):
+        return self.update(filters=[('lodel_id', '=', repr(self.lodel_id))], datas = self.datas)
         
-
-    @update.classmethod
+    @classmethod
     ## @brief Update some LeType in db
     # @param datas : keys are lodel_id and value are dict of fieldname => value
     # @param filters list : list of filters (see @ref leobject_filters)
     # @param cls
     # return bool
     def update(cls, filters, datas):
-        return super(LeType, cls).update(letype = cls, leclass = cls._leclass, filters = filters, datas = datas)
+        return leobject.lefactory.LeFactory.leobject().update(letype = cls, filters = filters, datas = datas)
         
-
     ## @brief Insert a new LeType in the datasource
     # @param **datas list : A list of dict containing the datas
     # @return The lodel id of the new LeType or False
@@ -122,14 +113,15 @@ class LeType(leobject.leobject._LeObject):
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
     # @param complete bool : if True expect that datas provide values for all non internal fields
+    # @param allow_internal bool : if True don't raise an error if a field is internal
     # @throw TypeError If the datas are not valids
     # @throw AttributeError if datas provides values for automatic fields
     # @throw AttributeError if datas provides values for fields that doesn't exists
     @classmethod
-    def check_datas_or_raise(cls, datas, complete = False):
+    def check_datas_or_raise(cls, datas, complete = False, allow_internal = True):
         autom_fields = [f for f, ft in cls._fieldtypes.items() if hasattr(ft,'internal') and ft.internal]
         for dname, dval in datas.items():
-            if dname in autom_fields:
+            if not allow_internal and dname in autom_fields:
                 raise AttributeError("The field '%s' is internal"%(dname))
             if dname not in cls._fields:
                 raise AttributeError("No such field '%s' for %s"%(dname, self.__class__.__name__))
@@ -138,6 +130,7 @@ class LeType(leobject.leobject._LeObject):
         fields = [f for f, ft in cls._fieldtypes.items() if not hasattr(ft,'internal') or not ft.internal]
         if complete and len(datas) < len(fields):
             raise LeObjectError("The argument complete was True but some fields are missing : %s"%(set(fields) - set(datas.keys())))
+        
     
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
@@ -159,25 +152,4 @@ class LeType(leobject.leobject._LeObject):
         if name in self._fields:
             self._fieldtypes[name].check_or_raise(value)
         return super(LeType, self).__setattr__(name, value)
-    
-    ## @brief Fetch superiors
-    # @param nature str : The relation nature
-    # @return if no nature given return a dict with nature as key and arrays of LeObject as value. Else return an array of LeObject
-    def superiors(self, nature = None):
-        pass
-
-    ## @brief Fetch subordinates
-    # @param nature str : The relation nature
-    # @return if no nature given return a dict with nature as key and arrays of LeObject as value. Else return an array of LeObject
-    def subordinates(self, nature = None):
-        pass
-
-    ## @brief Add a superior
-    # @param nature str : The raltion nature
-    # @param leo LeObject : The superior
-    # @return True if done False if already done
-    # @throw A Leo exception if trying to link with an invalid leo
-    # @throw InvalidArgumentError if invalid argument
-    def set_superior(self, nature, leo):
-        pass
     
