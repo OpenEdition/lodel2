@@ -3,71 +3,87 @@
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
 from mosql.query import select
+from leobject import REL_SUB, REL_SUP
 
 from Lodel.utils.mosql import *
 
 ## SQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
 
+    RELATIONS_TABLE_NAME = 'relations'
+    RELATIONS_POSITIONS_FIELDS = {REL_SUP:'superior_id', REL_SUB:'subordinate_id'}
+
     def __init__(self, module=None, *conn_args, **conn_kargs):
         super(LeDataSourceSQL, self).__init__()
         self.db = Database(self.module, self.conn_args, self.conn_kargs)
 
     ## @brief update an existing object's data
+    # @param letype LeType
     # @param leclass LeClass
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
+    # @param rel_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
     # @param data dict
-    # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    # @param letype LeType
     # @return bool
-    def update (self, leclass, filters, data, relational_filters=None, letype=None):
+    def update(self, letype, leclass, filters, rel_filters, data):
         pass
 
     ## @brief create a new object in the datasource
-    # @param leclass LeClass
     # @param letype LeType
+    # @param leclass LeClass
     # @param datas dict : dictionnary of field:value pairs to save
     # @return int : lodel_id of the created object
-    def insert(self, leclass, letype=None, **datas):
+    def insert(self, letype, leclass, **datas):
         pass
 
     ## @brief delete an existing object
+    # @param letype LeType
     # @param leclass LeClass
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
     # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    # @param letype LeType
     # @return bool : True on success
-    def delete(self, leclass, filters, relational_filters=None, letype=None):
+    def delete(self, letype, leclass, filters, relational_filters):
         pass
 
     ## @brief search for a collection of objects
-    # @param emclass LeClass
-    # @param emtype LeType
+    # @param leclass LeClass
+    # @param letype LeType
     # @field_list list
     # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
     # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    def get(self, emclass, emtype, field_list, filters, relational_filters=None):
+    # @return list
+    def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        tablename = emclass.name
+        query_table_name = leclass.name
         where_filters = self._prepare_filters(filters)
+        join_fields = {}
+
         if relational_filters or len(relational_filters) > 0:
             for relational_filter in relational_filters:
+                # Parsing the relation_filter
                 relational_position = relational_filter[0][0]
                 relational_field = relational_filter[0][1]
                 relational_operator = relational_filter[1]
                 relational_value = relational_filter[2]
+                relational_where_filters_key = (relational_field, relational_operator)
+                relational_where_filters_value = relational_value
 
+                # Definition of the join condition
+                relation_table_join_field = "%s.%s" % (self.RELATIONS_TABLE_NAME, self.RELATIONS_POSITIONS_FIELDS[relational_position])
+                query_table_join_field = "%s.lodel_id" % query_table_name
+                join_fields[query_table_join_field] = relation_table_join_field
 
+                # Adding "where" filters
+                where_filters[relational_where_filters_key] = relational_where_filters_value
 
-        tablename =  emclass.name
-        where_filters = self._prepare_filters(filters)
-        if relational_filters or len(relational_filters) > 0:
-            rel_filters = self._prepare_filters(relational_filters)
-            query = select(tablename, where=where_filters, select=field_list, joins=join('relations', {}))
+            # Building the query
+            query = select(query_table_name, where=where_filters, select=field_list, joins = join(self.RELATIONS_TABLE_NAME, join_fields))
         else:
-            query = select(tablename, where=where_filters, select=field_list)
+            query = select(query_table_name, where=where_filters, select=field_list)
+
+        # Executing the query
         self.db.execute(query)
 
+        # Returning it as a list of dict
         return all_to_dicts(self.db)
 
     # @brief prepares the filters to be used by the mosql library's functions
