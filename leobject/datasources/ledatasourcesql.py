@@ -13,6 +13,8 @@ class LeDataSourceSQL(DummyDatasource):
 
     RELATIONS_TABLE_NAME = 'relations'
     RELATIONS_POSITIONS_FIELDS = {REL_SUP:'superior_id', REL_SUB:'subordinate_id'}
+    RELATIONS_NATURE_FIELD = 'nature'
+
     MODULE = 'sqlite3'
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
@@ -85,20 +87,24 @@ class LeDataSourceSQL(DummyDatasource):
         if relational_filters or len(relational_filters) > 0:
             for relational_filter in relational_filters:
                 # Parsing the relation_filter
-                relational_position = relational_filter[0][0]
-                relational_field = relational_filter[0][1]
+                relational_position = REL_SUB if relational_filter[0][0] == REL_SUP else REL_SUP
+                relational_nature = relational_filter[0][1]
                 relational_operator = relational_filter[1]
-                relational_value = relational_filter[2]
-                relational_where_filters_key = (relational_field, relational_operator)
-                relational_where_filters_value = relational_value
+
+                relational_condition_key = (self.RELATIONS_POSITIONS_FIELDS[relational_filter[0][0]], relational_operator)
+                relational_condition_value = relational_filter[2]
 
                 # Definition of the join condition
                 relation_table_join_field = "%s.%s" % (self.RELATIONS_TABLE_NAME, self.RELATIONS_POSITIONS_FIELDS[relational_position])
                 query_table_join_field = "%s.lodel_id" % query_table_name
                 join_fields[query_table_join_field] = relation_table_join_field
 
+                # Adding to "where" filters
+                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME,self.RELATIONS_NATURE_FIELD_NAME ]
+
                 # Adding "where" filters
-                where_filters[relational_where_filters_key] = relational_where_filters_value
+                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = relational_field
+                where_filters[relational_condition_key] = relational_condition_value
 
             # Building the query
             query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.RELATIONS_TABLE_NAME, join_fields))
