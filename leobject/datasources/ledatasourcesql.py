@@ -3,7 +3,7 @@
 import sqlite3
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
-from mosql.query import select, insert
+from mosql.query import select, insert, update, delete
 from leobject import REL_SUB, REL_SUP
 
 from Lodel.utils.mosql import *
@@ -28,7 +28,17 @@ class LeDataSourceSQL(DummyDatasource):
     # @param data dict
     # @return bool
     def update(self, letype, leclass, filters, rel_filters, data):
-        pass
+
+        query_table_name = leclass.name
+        where_filters = filters
+        set_data = data
+
+        # Building the query
+        query = update(table=query_table_name, where=where_filters, set=set_data)
+        # Executing the query
+        with self.db as cur:
+            cur.execute(query)
+        return True
 
     ## @brief create a new object in the datasource
     # @param letype LeType
