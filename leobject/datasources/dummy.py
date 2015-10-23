@@ -27,7 +27,7 @@ class DummyDatasource(object):
     # @param leclass LeClass : LeClass child class
     # @param data list: a lis of dictionnary of field:value to save
     # @return lodel_id int: new lodel_id of the newly created LeObject
-    def insert(self, letype, leclass, **datas):
+    def insert(self, letype, leclass, datas):
         print("DummyDatasource.insert: ", letype, leclass, datas)
         return 42
 
