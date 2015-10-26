@@ -3,6 +3,8 @@
 ## @file classes.py
 # @see EditorialModel::classes::EmClass
 
+import copy
+
 import EditorialModel
 from EditorialModel.components import EmComponent
 from EditorialModel.classtypes import EmClassType
@@ -46,7 +48,8 @@ class EmClass(EmComponent):
     def default_fields_list(self):
         ctype = EditorialModel.classtypes.EmClassType.get(self.classtype)
         res = ctype['default_fields']
-        res.update(EditorialModel.classtypes.common_fields)
+        for k,v in EditorialModel.classtypes.common_fields.items():
+            res[k] = copy.copy(v)
         return res
         
 
