@@ -6,23 +6,25 @@ import EditorialModel
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
 
+
 ## @brief This class is designed to generated the leobject API given an EditorialModel.model
 # @note Contains only static methods
 #
 # The name is not good but i've no other ideas for the moment
 class LeFactory(object):
-    
+
     output_file = 'dyn.py'
     modname = None
 
-    def __init__(LeFactory):raise NotImplementedError("Not designed (yet?) to be implemented")
+    def __init__(self):
+        raise NotImplementedError("Not designed (yet?) to be implemented")
 
     ## @brief Return a LeObject child class given its name
     # @return a python class or False
     @staticmethod
     def leobj_from_name(name):
         if LeFactory.modname is None:
-            modname = 'leobject.'+LeFactory.output_file.split('.')[1]
+            modname = 'leobject.' + LeFactory.output_file.split('.')[1]
         else:
             modname = LeFactory.modname
         mod = importlib.import_module(modname)
@@ -31,7 +33,7 @@ class LeFactory(object):
         except AttributeError:
             return False
         return res
-    
+
     @classmethod
     def leobject(cls):
         return cls.leobj_from_name('LeObject')
@@ -42,15 +44,15 @@ class LeFactory(object):
     @staticmethod
     def name2classname(name):
         if not isinstance(name, str):
-            raise AttributeError("Argument name should be a str and not a %s"%type(name))
+            raise AttributeError("Argument name should be a str and not a %s" % type(name))
         return name.title()
 
     ## @brief Return a call to a FieldType constructor given an EmField
     # @param emfield EmField : An EmField
     # @return a string representing the python code to instanciate a EmFieldType
     @staticmethod
-    def fieldtype_construct_from_field(emfield):    
-        return '%s.EmFieldType(**%s)'%(
+    def fieldtype_construct_from_field(emfield):
+        return '%s.EmFieldType(**%s)' % (
             GenericFieldType.module_name(emfield.fieldtype),
             repr(emfield._fieldtype_args),
         )
@@ -74,18 +76,18 @@ class LeFactory(object):
             cls_fieldgroup[fieldgroup.name] = list()
             for field in fieldgroup.fields():
                 cls_fieldgroup[fieldgroup.name].append(field.name)
-        
+
         return """
 #Initialisation of {name} class attributes
 {name}._fieldtypes = {ftypes}
 {name}._linked_types = {ltypes}
 {name}._fieldgroups = {fgroups}
 """.format(
-    name = LeFactory.name2classname(emclass.name),
-    ftypes = "{"+(','.join([ '\n\t%s:%s'%(repr(f),v) for f,v in cls_fields.items()]))+"\n}",
-    ltypes = "{"+(','.join(cls_linked_types))+'}',
-    fgroups = repr(cls_fieldgroup)
-)
+            name=LeFactory.name2classname(emclass.name),
+            ftypes="{" + (','.join(['\n\t%s:%s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
+            ltypes="{" + (','.join(cls_linked_types)) + '}',
+            fgroups=repr(cls_fieldgroup)
+        )
 
     ## @brief Given a Model and an EmType instances generate python code for corresponding LeType
     # @param model Model : A Model instance
@@ -99,9 +101,9 @@ class LeFactory(object):
             type_fields.append(field.name)
 
         for nat, sup_l in emtype.superiors().items():
-            type_superiors.append('%s:[%s]'%(
+            type_superiors.append('%s:[%s]' % (
                 repr(nat),
-                ','.join([ LeFactory.name2classname(sup.name) for sup in sup_l])
+                ','.join([LeFactory.name2classname(sup.name) for sup in sup_l])
             ))
 
         return """
@@ -110,11 +112,11 @@ class LeFactory(object):
 {name}._superiors = {dsups}
 {name}._leclass = {leclass}
 """.format(
-    name = LeFactory.name2classname(emtype.name),
-    fields = repr(type_fields),
-    dsups = '{'+(','.join(type_superiors))+'}',
-    leclass = LeFactory.name2classname(emtype.em_class.name)
-)
+            name=LeFactory.name2classname(emtype.name),
+            fields=repr(type_fields),
+            dsups='{' + (','.join(type_superiors)) + '}',
+            leclass=LeFactory.name2classname(emtype.em_class.name)
+        )
 
     ## @brief Generate python code containing the LeObject API
     # @param backend_cls Backend : A model backend class
@@ -141,10 +143,10 @@ import EditorialModel.fieldtypes
         result += """
 import %s
 import %s
-"""%(backend_cls.__module__, datasource_cls.__module__)
+""" % (backend_cls.__module__, datasource_cls.__module__)
 
         #Generating the code for LeObject class
-        backend_constructor = '%s.%s(**%s)'%(backend_cls.__module__, backend_cls.__name__, repr(backend_args))
+        backend_constructor = '%s.%s(**%s)' % (backend_cls.__module__, backend_cls.__name__, repr(backend_args))
         leobj_me_uid = dict()
         for comp in model.components('EmType') + model.components('EmClass'):
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
@@ -157,35 +159,35 @@ class LeObject(_LeObject):
     _datasource = %s(**%s)
     _me_uid = %s
 
-"""%(backend_constructor, datasource_cls.__module__+'.'+datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
-        
+""" % (backend_constructor, datasource_cls.__module__ + '.' + datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
+
         emclass_l = model.components(EditorialModel.classes.EmClass)
         emtype_l = model.components(EditorialModel.types.EmType)
 
         #LeClass child classes definition
         for emclass in emclass_l:
-           result += """
+            result += """
 ## @brief EmClass {name} LeClass child class
 # @see leobject::leclass::LeClass
 class {name}(LeObject,LeClass):
     _class_id = {uid}
 """.format(
-    name = LeFactory.name2classname(emclass.name),
-    uid = emclass.uid
-)
+                name=LeFactory.name2classname(emclass.name),
+                uid=emclass.uid
+            )
         #LeType child classes definition
         for emtype in emtype_l:
-           result += """
+            result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
 class {name}(LeType, {leclass}):
     _type_id = {uid}
 """.format(
-    name = LeFactory.name2classname(emtype.name),
-    leclass = LeFactory.name2classname(emtype.em_class.name),
-    uid = emtype.uid
-)
-            
+                name=LeFactory.name2classname(emtype.name),
+                leclass=LeFactory.name2classname(emtype.em_class.name),
+                uid=emtype.uid
+            )
+
         #Set attributes of created LeClass and LeType child classes
         for emclass in emclass_l:
             result += LeFactory.emclass_pycode(model, emclass)
@@ -193,10 +195,9 @@ class {name}(LeType, {leclass}):
             result += LeFactory.emtype_pycode(model, emtype)
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
-        me_uid = { comp.uid:LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l }
+        me_uid = {comp.uid: LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l}
         result += """
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
 LeObject._me_uid = %s
-"""%"{"+(','.join([ '%s:%s'%(k,v) for k,v in me_uid.items()]))+"}"       
+""" % "{" + (','.join(['%s:%s' % (k, v) for k, v in me_uid.items()])) + "}"
         return result
-
