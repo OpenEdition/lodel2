@@ -20,3 +20,15 @@ class _LeDataSourceTestCase(TestCase):
         self.assertIsInstance(obj=self.mydatasource, cls=LeDataSourceSQL, msg='A %s object was expected, %s obtained instead' % (LeDataSourceSQL.__class__, self.mydatasource.__class__))
         self.assertIsNotNone(obj=self.mydatasource.connection, msg='The database connection cursor could not be instanciated')
         self.assertIsInstance(self.mydatasource.connection, Database, msg='%s object was expected for the connection cursor, %s obtained instead' % (Database.__class__, self.mydatasource.connection.__class__))
+
+    def test_insert(self):
+        pass
+
+    def test_get(self):
+        pass
+
+    def test_update(self):
+        pass
+
+    def test_delete(self):
+        pass
