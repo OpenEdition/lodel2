@@ -118,7 +118,7 @@ class LeDataSourceSQL(DummyDatasource):
         # Returning it as a list of dict
         return all_to_dicts(results)
 
-    # @brief prepares the filters to be used by the mosql library's functions
+    ## @brief prepares the filters to be used by the mosql library's functions
     # @params filters : (FIELD, OPERATOR, VALUE) tuples
     # @return dict : Dictionnary with (FIELD, OPERATOR):VALUE style elements
     def _prepare_filters(self, filters):
