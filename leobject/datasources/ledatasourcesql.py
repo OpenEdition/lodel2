@@ -1,26 +1,23 @@
 #-*- coding: utf-8 -*-
 
-import sqlite3
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
-from mosql.query import select, insert, update, delete
-from leobject import REL_SUB, REL_SUP
-
-from Lodel.utils.mosql import *
+from mosql.query import select, insert, update, delete, join
+from leobject.leobject import REL_SUB, REL_SUP
 
 ## SQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
 
     RELATIONS_TABLE_NAME = 'relations'
-    RELATIONS_POSITIONS_FIELDS = {REL_SUP:'superior_id', REL_SUB:'subordinate_id'}
+    RELATIONS_POSITIONS_FIELDS = {REL_SUP: 'superior_id', REL_SUB: 'subordinate_id'}
     RELATIONS_NATURE_FIELD = 'nature'
 
     MODULE = 'sqlite3'
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
-        self.module = self.MODULE if module == None else module
+        self.module = self.MODULE if module is None else module
         super(LeDataSourceSQL, self).__init__()
-        self.db = Database(self.module, self.conn_args, self.conn_kargs)
+        self.connection = Database(self.module, self.conn_args, self.conn_kargs)
 
     ## @brief update an existing object's data
     # @param letype LeType
@@ -39,7 +36,7 @@ class LeDataSourceSQL(DummyDatasource):
         # Building the query
         query = update(table=query_table_name, where=where_filters, set=set_data)
         # Executing the query
-        with self.db as cur:
+        with self.connection as cur:
             cur.execute(query)
         return True
 
@@ -53,7 +50,7 @@ class LeDataSourceSQL(DummyDatasource):
         #building the query
         query = insert(query_table_name, datas)
         #executing the query
-        with self.db as cur:
+        with self.connection as cur:
             cur.execute(query)
         return True
 
@@ -67,7 +64,7 @@ class LeDataSourceSQL(DummyDatasource):
     def delete(self, letype, leclass, filters, relational_filters):
         query_table_name = leclass.name
         query = delete(query_table_name, filters)
-        with self.db as cur:
+        with self.connection as cur:
             cur.execute(query)
         return True
 
@@ -99,11 +96,8 @@ class LeDataSourceSQL(DummyDatasource):
                 query_table_join_field = "%s.lodel_id" % query_table_name
                 join_fields[query_table_join_field] = relation_table_join_field
 
-                # Adding to "where" filters
-                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME,self.RELATIONS_NATURE_FIELD_NAME ]
-
                 # Adding "where" filters
-                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = relational_field
+                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = relational_nature
                 where_filters[relational_condition_key] = relational_condition_value
 
             # Building the query
@@ -112,7 +106,7 @@ class LeDataSourceSQL(DummyDatasource):
             query = select(query_table_name, where=where_filters, select=field_list)
 
         # Executing the query
-        with self.db as cur:
+        with self.connection as cur:
             results = cur.execute(query)
 
         # Returning it as a list of dict
@@ -123,9 +117,9 @@ class LeDataSourceSQL(DummyDatasource):
     # @return dict : Dictionnary with (FIELD, OPERATOR):VALUE style elements
     def _prepare_filters(self, filters):
         prepared_filters = {}
-        for filter in filters:
-            prepared_filter_key = (filter[0], filter[1])
-            prepared_filter_value = filter[2]
+        for filter_item in filters:
+            prepared_filter_key = (filter_item[0], filter_item[1])
+            prepared_filter_value = filter_item[2]
             prepared_filters[prepared_filter_key] = prepared_filter_value
 
         return prepared_filters

@@ -19,7 +19,7 @@ class DummyDatasource(object):
     # @param data dict : Dict representing fields and there values
     # @return True if success
     def update(self, letype, leclass, filters, rel_filters, data):
-        print ("DummyDatasource.update: ", lodel_id, checked_data, filters, relational_filters)
+        print ("DummyDatasource.update: ", letype, leclass, filters, rel_filters, data)
         return True
 
     ## @brief create a new LeObject
@@ -38,7 +38,7 @@ class DummyDatasource(object):
     # @param relational_filters list : relationnal filters list (see @ref leobject_filters )
     # @return okay bool: True on success, it will raise on failure
     def delete(self, letype, leclass, filters, relational_filters):
-        print("DummyDatasource.delete: ", filters)
+        print("DummyDatasource.delete: ", letype, leclass, filters, relational_filters)
         return True
 
     ## @brief search for a collection of objects
@@ -49,5 +49,5 @@ class DummyDatasource(object):
     # @param relational_filters list : relationnal filters list (see @ref leobject_filters )
     # @return responses ({string:*}): a list of dict with field:value
     def get(self, leclass, letype, field_list, filters, relational_filters):
-        print("DummyDatasource.get: ", emclass, emtype, field_list, filters, relational_filters)
+        print("DummyDatasource.get: ", leclass, letype, field_list, filters, relational_filters)
         return []
