@@ -237,7 +237,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     def _class2cols(self, emclass):
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The given uid is not an EmClass uid")
-        return { f.name: f.fieldtype_instance() for f in emclass.fields() }
+        return { f.name: f.fieldtype_instance() for f in emclass.fields() if f.name not in EditorialModel.classtypes.common_fields.keys() }
 
     ## @brief Create object and relations tables
     # @param drop_if_exist bool : If true drop tables if exists
