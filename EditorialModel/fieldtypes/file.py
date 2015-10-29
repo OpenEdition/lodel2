@@ -12,5 +12,5 @@ class EmFieldType(GenericFieldType):
     # @brief max_length int : The maximum length of this field
     def __init__(self, upload_path=None, **kwargs):
         self.upload_path = upload_path
-        super(EmFieldType, self).__init__(ftype='char',**kwargs)
+        super(EmFieldType, self).__init__(ftype='char', max_length=512,**kwargs)
 

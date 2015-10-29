@@ -176,7 +176,7 @@ class Model(object):
     # @todo Transform the datas arg in **datas ?
     def create_component(self, component_type, datas, uid=None):
         if not (uid is None) and (not isinstance(uid, int) or uid <= 0 or uid in self._components['uids']):
-            raise ValueError("Invalid uid provided")
+            raise ValueError("Invalid uid provided : %s"%repr(uid))
         
         if component_type not in [ n for n in self._components.keys() if n != 'uids' ]:
             raise ValueError("Invalid component_type rpovided")
@@ -216,6 +216,8 @@ class Model(object):
         if uid is None and component_type == 'EmClass':
             # !!! If uid is not None it means that we shouldn't create components automatically !!!
             self.add_default_class_fields(em_component.uid)
+            #Checking the component
+            em_component.check()
 
         return em_component
 

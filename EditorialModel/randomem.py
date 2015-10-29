@@ -107,7 +107,7 @@ class RandomEm(object):
                         emtype.add_superior(possible[nat][i], nat)
 
         #fields creation
-        ft_l = EmField.fieldtypes_list()
+        ft_l = [ ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' ]
         for emfg in ed_mod.components(EmFieldGroup):
             if random.randint(0, chances['nofields']) != 0:
                 for _ in range(random.randint(1, chances['nfields'])):
@@ -123,8 +123,8 @@ class RandomEm(object):
                     ed_mod.create_component('EmField', fdats)
 
         #relationnal fiels creation
-        ft_l = [field_type for field_type in EmField.fieldtypes_list() if field_type != 'rel2type']
-        for emrelf in [f for f in ed_mod.components(EmField) if f.ftype == 'rel2type']:
+        ft_l = [field_type for field_type in EmField.fieldtypes_list() if field_type != 'rel2type' and field_type  != 'pk']
+        for emrelf in [f for f in ed_mod.components(EmField) if f.fieldtype == 'rel2type']:
             for _ in range(0, chances['rfields']):
                 field_type = ft_l[random.randint(0, len(ft_l) - 1)]
                 fdats = cls._rnd_component_datas()
