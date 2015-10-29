@@ -18,15 +18,22 @@ import EditorialModel
 # - EmClass deletion (untested)
 # - EmField creation
 # - EmField deletion (untested)
+# - rel2type attribute creation
+# - rel2type attribute deletion (unstested)
 #
 # Unsupported operations :
 # - EmClass rename
 # - EmField rename
+# - rel2type field rename
+# - rel2type attribute rename
+# 
 
 ## @brief Modify a MySQL database given editorial model changes
 class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigrationHandler):
     
+    ## @brief Object table name
     _object_tname = 'object'
+    ## @brief Relation table name
     _relation_tname = 'relation'
 
     ## @brief Construct a MysqlMigrationHandler
@@ -59,17 +66,25 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
                 self.delete_emclass_table(em, uid)
         elif isinstance(em.component(uid), EditorialModel.fields.EmField):
             emfield = em.component(uid)
-            if initial_state is None:
-                #EmField creation
-                if not(emfield.name in EditorialModel.classtypes.common_fields.keys()):
-                    self.add_col_from_emfield(em,uid)
-            elif new_state is None:
-                #EmField deletion
-                if not (emfield.name in EditorialModel.classtypes.common_fields.keys()):
-                    self.del_col_from_emfield(em, uid)
-                pass
-        pass
-
+            if emfield.rel_field_id is None:
+                #non rlationnal field
+                if initial_state is None:
+                    #non relationnal EmField creation
+                    if not(emfield.name in EditorialModel.classtypes.common_fields.keys()):
+                        self.add_col_from_emfield(em,uid)
+                elif new_state is None:
+                    #non relationnal EmField deletion
+                    if not (emfield.name in EditorialModel.classtypes.common_fields.keys()):
+                        self.del_col_from_emfield(em, uid)
+            else:
+                #relationnal field
+                if initial_state is None:
+                    #Rel2type attr creation
+                    self.add_relationnal_field(em, uid)
+                elif new_state is None:
+                    #Rel2type attr deletion
+                    self.del_relationnal_field(em, uid)
+    ## @brief dumdumdummy
     def register_model_state(self, em, state_hash):
         pass
 
@@ -80,6 +95,53 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         if not self.dryrun:
             self.db.query(query)
     
+    ## @brief Add a relationnal field
+    #
+    # Add a rel2type attribute
+    # @note this function handles the table creation
+    # @param em Model : EditorialModel.model.Model instance
+    # @param rfuid int : Relationnal field uid
+    def add_relationnal_field(self, em, rfuid):
+        emfield = em.component(rfuid)
+        if not isinstance(emfield, EditorialModel.fields.EmField):
+            raise ValueError("The given uid is not an EmField uid")
+
+        r2tf = em.component(emfield.rel_field_id)
+        tname = self._r2t2table_name(em, r2tf)
+        pkname, pkftype = self._relation_pk
+    
+        #If not exists create a relational table
+        self._create_table(tname, pkname, pkftype, self.db_engine, if_exists = 'nothing')
+        #Add a foreign key if wanted
+        if self.foreign_keys:
+            self._add_fk(tname, self._relation_tname, pkname, pkname)
+        #Add the column
+        self._add_column(tname, emfield.name, emfield.fieldtype_instance())
+        #Update table triggers
+        self._generate_triggers(tname, self._r2type2cols(em, r2tf))
+    
+    ## @brief Delete a rel2type attribute
+    #
+    # Delete a rel2type attribute
+    # @note this method handles the table deletion
+    # @param em Model : EditorialModel.model.Model instance
+    # @param rfuid int : Relationnal field uid
+    def del_relationnal_field(self, em, rfuid):
+        emfield = em.component(rfuid)
+        if not isinstance(emfield, EditorialModel.fields.EmField):
+            raise ValueError("The given uid is not an EmField uid")
+
+        r2tf = em.component(emfield.rel_field_id)
+        tname = self._r2t2table_name(em, r2tf)
+        
+        if len(self._r2type2cols(em, r2tf)) == 1:
+            #The table can be deleted (no more attribute for this rel2type)
+            self._query("""DROP TABLE {table_name}""".format(table_name = tname))
+        else:
+            self._del_column(tname, emfield.name)
+            #Update table triggers
+            self._generate_triggers(tname, self._r2type2cols(em, r2tf))
+
     ## @brief Given an EmField uid add a column to the corresponding table
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
@@ -152,8 +214,23 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @return a table name
     def _emclass2table_name(self, emclass):
         return "class_%s"%emclass.name
+    
+    ## @brief Construct a table name given a rela2type EmField instance
+    # @param em Model : A Model instance
+    # @param emfield EmField : An EmField instance
+    # @return a table name
+    def _r2t2table_name(self, em, emfield):
+        emclass = emfield.em_class
+        emtype = em.component(emfield.rel_to_type_id)
+        return "%s_%s_%s"%(emclass.name, emtype.name, emfield.name)
+     
+    ## @brief Generate a columns_fieldtype dict given a rel2type EmField
+    # @param em Model : an @ref EditorialModel.model.Model instance
+    # @param emfield EmField : and @ref EditorialModel.fields.EmField instance
+    def _r2type2cols(self, em, emfield):
+        return { f.name: f.fieldtype_instance() for f in em.components('EmField') if f.rel_field_id == emfield.uid }
         
-    ## @brief Generate a columns_fieldtype dict given an EmClass uid
+    ## @brief Generate a columns_fieldtype dict given an EmClass
     # @param emclass EmClass : An EmClass instance
     # @return A dict with column name as key and EmFieldType instance as value
     def _class2cols(self, emclass):
@@ -350,31 +427,11 @@ FOR EACH ROW SET {col_val_list};""".format(
             self._query(trig_q)
 
     ## @brief Identifier escaping
+    # @param idname str : An SQL identifier
     def _idname_escape(self, idname):
         if '`' in idname:
             raise ValueError("Invalid name : '%s'"%idname)
         return '`%s`'%idname
-
-    ## @brief Forge a create table query
-    # @param table_name str : The name of the table we want to create
-    # @param colspecs list : List of tuple (fieldname, EmFieldTypes)
-    # @return A MySQL create table query
-    #def _create_table_query(self, table_name, colspecs):
-    #    pass
-    
-    ## @brief Forge a drop column query
-    # @param table_name str : The name of the concerned table
-    # @param colname str : The name of the column we want to drop
-    # @return A MySQL drop column query
-    def _drop_column_query(self, table_name, colname):
-        pass
-
-    ## @brief Forge an add column query
-    # @param table_name str : The name of the concerned table
-    # @param colspec tuple : A tuple (colname, EmFieldType)
-    # @return A MySQL add column query
-    def _add_colum_query(self, table_name, colspec):
-        pass
 
     ## @brief Returns column specs from fieldtype
     # @param emfieldtype EmFieldType : An EmFieldType insance
@@ -440,7 +497,8 @@ FOR EACH ROW SET {col_val_list};""".format(
     @property
     def _relation_pk(self):
         return ('id_relation', EditorialModel.fieldtypes.pk.EmFieldType())
-
+    
+    ## @brief Returns a dict { colname:fieldtype } of relation table columns
     @property
     def _relation_cols(self):
         from_name = EditorialModel.fieldtypes.generic.GenericFieldType.from_name
