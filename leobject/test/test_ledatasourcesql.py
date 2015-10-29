@@ -11,7 +11,7 @@ from mosql.db import Database
 class _LeDataSourceTestCase(TestCase):
 
     def setUp(self):
-        self.mydatasource = LeDataSourceSQL(pymysql, *{'host':'localhost','user':'lodel','passwd':'bruno'})
+        self.mydatasource = LeDataSourceSQL()
 
     def tearDown(self):
         del self.mydatasource
@@ -26,7 +26,6 @@ class _LeDataSourceTestCase(TestCase):
         pass
 
     def test_get(self):
-
         pass
 
     def test_update(self):

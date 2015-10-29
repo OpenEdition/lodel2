@@ -1,10 +1,13 @@
 #-*- coding: utf-8 -*-
 
-import sqlite3
+
+import pymysql
 from leobject.datasources.dummy import DummyDatasource
 from mosql.db import Database, all_to_dicts
 from mosql.query import select, insert, update, delete, join
 from leobject.leobject import REL_SUB, REL_SUP
+import mosql.mysql
+
 
 ## SQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
@@ -13,12 +16,10 @@ class LeDataSourceSQL(DummyDatasource):
     RELATIONS_POSITIONS_FIELDS = {REL_SUP: 'superior_id', REL_SUB: 'subordinate_id'}
     RELATIONS_NATURE_FIELD = 'nature'
 
-    MODULE = sqlite3
-
-    def __init__(self, module=None, *conn_args, **conn_kargs):
+    def __init__(self, module=pymysql, conn_args={'host': '127.0.0.1', 'user':'lodel', 'passwd':'bruno', 'db': 'lodel2'}):
         super(LeDataSourceSQL, self).__init__()
-        self.module = self.MODULE if module is None else module
-        self.connection = Database(self.module, *conn_args, **conn_kargs)
+        self.module = module
+        self.connection = Database(pymysql, host=conn_args['host'], user=conn_args['user'], passwd=conn_args['passwd'], db=conn_args['db'])
 
     ## @brief update an existing object's data
     # @param letype LeType
@@ -78,7 +79,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return list
     def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        query_table_name = 'LodelTestInstance_document' if isinstance(leclass, str) else leclass.name
+        query_table_name = leclass.name
         where_filters = self._prepare_filters(filters)
         join_fields = {}
 
@@ -107,7 +108,7 @@ class LeDataSourceSQL(DummyDatasource):
             query = select(query_table_name, where=where_filters, select=field_list)
 
         # Executing the query
-        with self.db as cur:
+        with self.connection as cur:
             results = all_to_dicts(cur.execute(query))
 
         # Returning it as a list of dict
