@@ -2,6 +2,7 @@
 
 import copy
 import _mysql as mysqlclient
+import _mysql_exceptions
 
 import EditorialModel
 
@@ -12,6 +13,15 @@ import EditorialModel
 #
 # The create_default_table method will call both methods to create the object and relation tables
 #
+# Supported operations :
+# - EmClass creation
+# - EmClass deletion (untested)
+# - EmField creation
+# - EmField deletion (untested)
+#
+# Unsupported operations :
+# - EmClass rename
+# - EmField rename
 
 ## @brief Modify a MySQL database given editorial model changes
 class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigrationHandler):
@@ -24,30 +34,43 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param user str : The db user
     # @param password str : The db password
     # @param db str : The db name
-    def __init__(self, host, user, password, db, debug = False, dryrun = False):
+    def __init__(self, host, user, password, db, db_engine = 'InnoDB', foreign_keys = True, debug = False, dryrun = False, drop_if_exists = False):
         #Connect to MySQL
         self.db = mysqlclient.connect(host=host, user=user, passwd=password, db=db)
         self.debug = debug
         self.dryrun = dryrun
+        self.db_engine = db_engine
+        self.foreign_keys = foreign_keys if db_engine == 'InnoDB' else False
+        self.drop_if_exists = drop_if_exists
         #Create default tables
+        self._create_default_tables(self.drop_if_exists)
         pass
-
-    def register_change(self, em, uid, initial_state, new_state):
+    
+    ## @brief Modify the db given an EM change
+    def register_change(self, em, uid, initial_state, new_state, engine = None):
+        if engine is None:
+            engine = self.db_engine
         if isinstance(em.component(uid), EditorialModel.classes.EmClass):
             if initial_state is None:
-                self.create_emclass_table(em, uid)
-                pass
+                #EmClass creation
+                self.create_emclass_table(em, uid, engine)
             elif new_state is None:
-                #table deletion
-                pass
+                #EmClass deletion
+                self.delete_emclass_table(em, uid)
         elif isinstance(em.component(uid), EditorialModel.fields.EmField):
+            emfield = em.component(uid)
             if initial_state is None:
-                emfield = em.component(uid)
+                #EmField creation
                 if not(emfield.name in EditorialModel.classtypes.common_fields.keys()):
                     self.add_col_from_emfield(em,uid)
             elif new_state is None:
-                #column deletion
+                #EmField deletion
+                if not (emfield.name in EditorialModel.classtypes.common_fields.keys()):
+                    self.del_col_from_emfield(em, uid)
                 pass
+        pass
+
+    def register_model_state(self, em, state_hash):
         pass
 
     ## @brief Exec a query
@@ -69,19 +92,60 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         emclass = emfield.em_class
         tname = self._emclass2table_name(emclass)
         self._add_column(tname, emfield.name, emfield.fieldtype_instance())
-
+        # Refresh the table triggers
         cols_l = self._class2cols(emclass)
         self._generate_triggers(tname, cols_l)
 
 
     ## @brief Given a class uid create the coressponding table
-    def create_emclass_table(self, em, uid):
+    def create_emclass_table(self, em, uid, engine):
         emclass = em.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The given uid is not an EmClass uid")
-        
         pkname, pktype = self._common_field_pk
-        self._create_table(self._emclass2table_name(emclass), pkname, pktype)
+        table_name = self._emclass2table_name(emclass)
+        self._create_table(table_name, pkname, pktype, engine=engine)
+        
+        if self.foreign_keys:
+            self._add_fk(table_name, self._object_tname, pkname, pkname)
+    
+    ## @brief Given an EmClass uid delete the corresponding table
+    def delete_emclass_table(self, em, uid):
+        emclass = emcomponent(uid)
+        if not isinstance(emclass, EditorialModel.classes.EmClass):
+            raise ValueError("The give uid is not an EmClass uid")
+        tname = self._idname_escape(self._emclass2table_name(emclass.name))
+        # Delete the table triggers to prevent errors
+        self._generate_triggers(tname, dict())
+
+        self._query("""DROP TABLE {table_name};""".format(table_name = tname))
+
+    ## @brief Given an EmField delete the corresponding column
+    # @param em Model : an @ref EditorialModel.model.Model instance
+    # @param uid int : an EmField uid
+    def delete_col_from_emfield(self, em, uid):
+        emfield = em.component(uid)
+        if not isinstance(emfield, EditorialModel.fields.EmField):
+            raise ValueError("The given uid is not an EmField uid")
+
+        emclass = emfield.em_class
+        tname = self._emclass2table_name(emclass)
+        # Delete the table triggers to prevent errors
+        self._generate_triggers(tname, dict())
+
+        self._del_column(tname, emfield.name)
+        # Refresh the table triggers
+        cols_ls = self._class2cols(emclass)
+        self._generate_triggers(tname, cols_l)
+    
+    ## @brief Delete a column from a table
+    # @param tname str : The table name
+    # @param fname str : The column name
+    def _del_column(self, tname, fname):
+        tname = self._idname_escape(tname)
+        fname = self._idname_escape(fname)
+
+        self._query("""ALTER TABLE {table_name} DROP COLUMN {col_name};""".format(table_name = tname, col_name = fname))
     
     ## @brief Construct a table name given an EmClass instance
     # @param emclass EmClass : An EmClass instance
@@ -100,10 +164,11 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     ## @brief Create object and relations tables
     # @param drop_if_exist bool : If true drop tables if exists
     def _create_default_tables(self, drop_if_exist = False):
+        if_exists = 'drop' if drop_if_exist else 'nothing'
         #Object tablea
         tname = self._object_tname
         pk_name, pk_ftype = self._common_field_pk
-        self._create_table(tname, pk_name, pk_ftype)
+        self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists = if_exists)
         #Adding columns
         cols = { fname: self._common_field_to_ftype(fname) for fname in EditorialModel.classtypes.common_fields }
         for fname, ftype in cols.items():
@@ -115,7 +180,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         #Relation table
         tname = self._relation_tname
         pk_name, pk_ftype = self._relation_pk
-        self._create_table(tname, pk_name, pk_ftype)
+        self._create_table(tname, pk_name, pk_ftype, engine = self.db_engine, if_exists = if_exists)
         #Adding columns
         for fname, ftype in self._relation_cols.items():
             self._add_column(tname, fname, ftype)
@@ -134,14 +199,15 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param charset str : The charset of this table
     # @param if_exist str : takes values in ['nothing', 'drop']
     # @return None
-    def _create_table(self, table_name, pk_name, pk_ftype, engine = "MyISAM", charset = 'utf8', if_exists = 'nothing'):
+    def _create_table(self, table_name, pk_name, pk_ftype, engine, charset = 'utf8', if_exists = 'nothing'):
         #Escaped table name
         etname = self._idname_escape(table_name)
         pk_type = self._field_to_type(pk_ftype)
         pk_specs = self._field_to_specs(pk_ftype)
 
         if if_exists == 'drop':
-            qres = """DROP TABLE IF EXISTS {table_name};
+            self._query("""DROP TABLE IF EXISTS {table_name};""".format(table_name = etname))
+            qres = """
 CREATE TABLE {table_name} (
 {pk_name} {pk_type} {pk_specs},
 PRIMARY KEY({pk_name})
@@ -168,7 +234,7 @@ PRIMARY KEY({pk_name})
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
     # @return None
-    def _add_column(self, table_name, col_name, col_fieldtype):
+    def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists = False):
         add_col = """ALTER TABLE {table_name}
 ADD COLUMN {col_name} {col_type} {col_specs};"""
         
@@ -181,8 +247,57 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
             col_type = self._field_to_type(col_fieldtype),
             col_specs = self._field_to_specs(col_fieldtype),
         )
+        try:
+            self._query(add_col)
+        except _mysql_exceptions.OperationalError as e:
+            if drop_if_exists:
+                self._del_column(table_name, col_name)
+                self._add_column(table_name, col_name, col_fieldtype, drop_if_exists)
+            else:
+                #LOG
+                print("Aborded, column `%s` exists"%col_name)
+    
+    ## @brief Add a foreign key
+    # @param src_table_name str : The name of the table where we will add the FK
+    # @param dst_table_name str : The name of the table the FK will point on
+    # @param src_col_name str : The name of the concerned column in the src_table
+    # @param dst_col_name str : The name of the concerned column in the dst_table
+    def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name):
+        stname = self._idname_escape(src_table_name)
+        dtname = self._idname_escape(dst_table_name)
+        scname = self._idname_escape(src_col_name)
+        dcname = self._idname_escape(dst_col_name)
 
-        self._query(add_col)
+        fk_name = self._fk_name(src_table_name, dst_table_name)
+        
+        self._del_fk(src_table_name, dst_table_name)
+
+        self._query("""ALTER TABLE {src_table}
+ADD CONSTRAINT {fk_name}
+FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
+            fk_name = self._idname_escape(fk_name),
+            src_table = stname,
+            src_col = scname,
+            dst_table = dtname,
+            dst_col = dcname
+        ))
+    
+    ## @brief Given a source and a destination table, delete the corresponding FK
+    # @param src_table_name str : The name of the table where the FK is
+    # @param dst_table_name str : The name of the table the FK point on
+    # @warning fails silently
+    def _del_fk(self, src_table_name, dst_table_name):
+        try:
+            self._query("""ALTER TABLE {src_table}
+DROP FOREIGN KEY {fk_name}""".format(
+                src_table = self._idname_escape(src_table_name),
+                fk_name = self._idname_escape(self._fk_name(src_table_name, dst_table_name))
+            ))
+        except _mysql_exceptions.OperationalError: pass
+    
+    def _fk_name(self, src_table_name, dst_table_name):
+        return "fk_%s_%s"%(src_table_name, dst_table_name)
+
 
     ## @brief Generate triggers given a table_name and its columns fieldtypes
     # @param table_name str : Table name
