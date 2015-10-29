@@ -35,6 +35,8 @@ class LeDataSourceSQL(DummyDatasource):
         where_filters = filters
         set_data = data
 
+        prepared_rel_filters = self._prepare_rel_filters(rel_filters)
+
         # Building the query
         query = update(table=query_table_name, where=where_filters, set=set_data)
         # Executing the query
@@ -65,6 +67,8 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo prendre en compte les rel_filters
     def delete(self, letype, leclass, filters, relational_filters):
         query_table_name = leclass.name
+        prepared_relational_filters = self._prepare_rel_filters(relational_filters)
+
         query = delete(query_table_name, filters)
         with self.connection as cur:
             cur.execute(query)
@@ -84,23 +88,15 @@ class LeDataSourceSQL(DummyDatasource):
         join_fields = {}
 
         if relational_filters is not None and len(relational_filters) > 0:
-            for relational_filter in relational_filters:
-                # Parsing the relation_filter
-                relational_position = REL_SUB if relational_filter[0][0] == REL_SUP else REL_SUP
-                relational_nature = relational_filter[0][1]
-                relational_operator = relational_filter[1]
-
-                relational_condition_key = (self.RELATIONS_POSITIONS_FIELDS[relational_filter[0][0]], relational_operator)
-                relational_condition_value = relational_filter[2]
-
+            prepared_rel_filters = self._prepare_rel_filters(relational_filters)
+            for prepared_rel_filter in prepared_rel_filters:
                 # Definition of the join condition
-                relation_table_join_field = "%s.%s" % (self.RELATIONS_TABLE_NAME, self.RELATIONS_POSITIONS_FIELDS[relational_position])
+                relation_table_join_field = "%s.%s" % (self.RELATIONS_TABLE_NAME, self.RELATIONS_POSITIONS_FIELD[prepared_rel_filter['position']])
                 query_table_join_field = "%s.lodel_id" % query_table_name
                 join_fields[query_table_join_field] = relation_table_join_field
-
                 # Adding "where" filters
-                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = relational_nature
-                where_filters[relational_condition_key] = relational_condition_value
+                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = prepared_rel_filter['nature']
+                where_filters[prepared_rel_filter['condition_key']] = prepared_rel_filter['condition_value']
 
             # Building the query
             query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.RELATIONS_TABLE_NAME, join_fields))
@@ -125,3 +121,20 @@ class LeDataSourceSQL(DummyDatasource):
             prepared_filters[prepared_filter_key] = prepared_filter_value
 
         return prepared_filters
+
+    ## @brief prepares the relational filters
+    # @params rel_filters : (("superior"|"subordinate"), operator, value)
+    # @return list
+    def _prepare_rel_filters(self, rel_filters):
+        prepared_rel_filters = []
+
+        for rel_filter in rel_filters:
+            rel_filter_dict = {
+                'position': REL_SUB if rel_filter[0][0] == REL_SUP else REL_SUB,
+                'nature': rel_filter[0][1],
+                'condition_key': (self.RELATIONS_POSITIONS_FIELDS[rel_filter[0][0]], rel_filter[1]),
+                'condition_value': rel_filter[2]
+            }
+            prepared_rel_filters.append(rel_filter_dict)
+
+        return prepared_rel_filters
