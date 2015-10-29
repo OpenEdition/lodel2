@@ -16,8 +16,8 @@ class LeDataSourceSQL(DummyDatasource):
     MODULE = sqlite3
 
     def __init__(self, module=None, *conn_args, **conn_kargs):
-        self.module = self.MODULE if module is None else module
         super(LeDataSourceSQL, self).__init__()
+        self.module = self.MODULE if module is None else module
         self.connection = Database(self.module, *conn_args, **conn_kargs)
 
     ## @brief update an existing object's data
@@ -82,7 +82,7 @@ class LeDataSourceSQL(DummyDatasource):
         where_filters = self._prepare_filters(filters)
         join_fields = {}
 
-        if relational_filters or len(relational_filters) > 0:
+        if relational_filters is not None and len(relational_filters) > 0:
             for relational_filter in relational_filters:
                 # Parsing the relation_filter
                 relational_position = REL_SUB if relational_filter[0][0] == REL_SUP else REL_SUP
@@ -107,11 +107,11 @@ class LeDataSourceSQL(DummyDatasource):
             query = select(query_table_name, where=where_filters, select=field_list)
 
         # Executing the query
-        with self.connection as cur:
-            results = cur.execute(query)
+        with self.db as cur:
+            results = all_to_dicts(cur.execute(query))
 
         # Returning it as a list of dict
-        return all_to_dicts(results)
+        return results
 
     ## @brief prepares the filters to be used by the mosql library's functions
     # @params filters : (FIELD, OPERATOR, VALUE) tuples
