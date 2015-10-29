@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
-import _mysql as mysqlclient
-import _mysql_exceptions
+import pymysql
 
 import EditorialModel
 
@@ -43,7 +42,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param db str : The db name
     def __init__(self, host, user, password, db, db_engine = 'InnoDB', foreign_keys = True, debug = False, dryrun = False, drop_if_exists = False):
         #Connect to MySQL
-        self.db = mysqlclient.connect(host=host, user=user, passwd=password, db=db)
+        self.db = pymysql.connect(host=host, user=user, passwd=password, db=db)
         self.debug = debug
         self.dryrun = dryrun
         self.db_engine = db_engine
@@ -93,7 +92,9 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         if self.debug:
             print(query+"\n")
         if not self.dryrun:
-            self.db.query(query)
+            with self.db.cursor() as cur:
+                cur.execute(query)
+        self.db.commit() #autocommit
     
     ## @brief Add a relationnal field
     #
@@ -326,7 +327,7 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         )
         try:
             self._query(add_col)
-        except _mysql_exceptions.OperationalError as e:
+        except pymysql.err.InternalError as e:
             if drop_if_exists:
                 self._del_column(table_name, col_name)
                 self._add_column(table_name, col_name, col_fieldtype, drop_if_exists)
@@ -370,7 +371,7 @@ DROP FOREIGN KEY {fk_name}""".format(
                 src_table = self._idname_escape(src_table_name),
                 fk_name = self._idname_escape(self._fk_name(src_table_name, dst_table_name))
             ))
-        except _mysql_exceptions.OperationalError: pass
+        except pymysql.err.InternalError: pass
     
     def _fk_name(self, src_table_name, dst_table_name):
         return "fk_%s_%s"%(src_table_name, dst_table_name)

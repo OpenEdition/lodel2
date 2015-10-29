@@ -1,2 +1,4 @@
-mysqlclient
+PyMySQL==0.6.7
 mosql==0.11
+pep8==1.6.2
+pylint==1.4.4
