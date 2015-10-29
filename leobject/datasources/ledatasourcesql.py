@@ -78,7 +78,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return list
     def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        query_table_name = leclass.name
+        query_table_name = 'LodelTestInstance_document' if isinstance(leclass, str) else leclass.name
         where_filters = self._prepare_filters(filters)
         join_fields = {}
 

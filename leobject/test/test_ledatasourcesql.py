@@ -2,6 +2,7 @@
 
 import unittest
 import sqlite3
+import pymysql
 from unittest import TestCase
 from leobject.datasources.ledatasourcesql import LeDataSourceSQL
 from mosql.db import Database
@@ -10,7 +11,7 @@ from mosql.db import Database
 class _LeDataSourceTestCase(TestCase):
 
     def setUp(self):
-        self.mydatasource = LeDataSourceSQL(sqlite3, *{'db.sqlite3': '127.0.0.1'})
+        self.mydatasource = LeDataSourceSQL(pymysql, *{'host':'localhost','user':'lodel','passwd':'bruno'})
 
     def tearDown(self):
         del self.mydatasource
@@ -25,6 +26,7 @@ class _LeDataSourceTestCase(TestCase):
         pass
 
     def test_get(self):
+
         pass
 
     def test_update(self):
