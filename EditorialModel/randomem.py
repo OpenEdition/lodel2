@@ -63,6 +63,7 @@ class RandomEm(object):
             'ntypesuperiors': 2,    # chances to link with a superior
             'nofields': 10,         # no fields in a fieldgroup
             'nfields': 8,           # max number of fields per fieldgroups
+            'nr2tfields': 1,        # max number of rel2type fields per fieldgroups
             'rfields': 5,           # max number of attributes relation fields
             'optfield': 2,          # chances to be optionnal
         }
@@ -107,7 +108,7 @@ class RandomEm(object):
                         emtype.add_superior(possible[nat][i], nat)
 
         #fields creation
-        ft_l = [ ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' ]
+        ft_l = [ ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' and ftname != 'rel2type']
         for emfg in ed_mod.components(EmFieldGroup):
             if random.randint(0, chances['nofields']) != 0:
                 for _ in range(random.randint(1, chances['nfields'])):
@@ -115,19 +116,31 @@ class RandomEm(object):
                     fdats = cls._rnd_component_datas()
                     fdats['fieldtype'] = field_type
                     fdats['fieldgroup_id'] = emfg.uid
-                    if field_type == 'rel2type':
-                        emtypes = ed_mod.components(EmType)
-                        fdats['rel_to_type_id'] = emtypes[random.randint(0, len(emtypes) - 1)].uid
                     if random.randint(0, chances['optfield']) == 0:
                         fdats['optional'] = True
                     ed_mod.create_component('EmField', fdats)
+        
+        #rel2type creation (in case none where created before
+        for emfg in ed_mod.components(EmFieldGroup):    
+            for _ in range(random.randint(0, chances['nr2tfields'])):
+                field_type = 'rel2type'
+                fdats = cls._rnd_component_datas()
+                fdats['fieldtype'] = field_type
+                fdats['fieldgroup_id'] = emfg.uid
+                emtypes = ed_mod.components(EmType)
+                fdats['rel_to_type_id'] = emtypes[random.randint(0, len(emtypes) - 1)].uid
+                if random.randint(0, chances['optfield']) == 0:
+                    fdats['optional'] = True
+                ed_mod.create_component('EmField', fdats)
 
-        #relationnal fiels creation
+
+        #relationnal fields creation
         ft_l = [field_type for field_type in EmField.fieldtypes_list() if field_type != 'rel2type' and field_type  != 'pk']
         for emrelf in [f for f in ed_mod.components(EmField) if f.fieldtype == 'rel2type']:
             for _ in range(0, chances['rfields']):
                 field_type = ft_l[random.randint(0, len(ft_l) - 1)]
                 fdats = cls._rnd_component_datas()
+                fdats['rel_field_id'] = emrelf.uid
                 fdats['fieldtype'] = field_type
                 fdats['fieldgroup_id'] = emrelf.fieldgroup_id
                 if random.randint(0, chances['optfield']) == 0:
