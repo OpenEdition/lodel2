@@ -48,8 +48,8 @@ class GenericFieldType(object):
         self.uniq = bool(uniq)
 
         if 'default' in kwargs:
-            self.check_or_raise(default)
-            self.default = default
+            self.check_or_raise(kwargs['default'])
+            self.default = kwargs['default']
             del(kwargs['default'])
 
         for argname,argvalue in kwargs.items():

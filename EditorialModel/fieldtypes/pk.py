@@ -10,7 +10,6 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
     def __init__(self, **kwargs):
         # Allowed argument => value for this EmFieldType
         allowed = {
-            'default': None,
             'nullable': False,
             'uniq': False,
             'internal': 'automatic',
@@ -22,6 +21,7 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
                 raise TypeError("Got an unexpected argument '%s' for pk EmFieldType"%name)
             if value != allowed[name]:
                 raise ValueError("The value '%s' for argument '%s' for pk EmFieldType is not allowed"%(value, name))
-
+        
+        kwargs.update(allowed)
 
         super(EmFieldType, self).__init__(**kwargs)
