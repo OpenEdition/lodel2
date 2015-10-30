@@ -115,10 +115,11 @@ class LeDataSourceSQL(DummyDatasource):
     # @return dict : Dictionnary with (FIELD, OPERATOR):VALUE style elements
     def _prepare_filters(self, filters):
         prepared_filters = {}
-        for filter_item in filters:
-            prepared_filter_key = (filter_item[0], filter_item[1])
-            prepared_filter_value = filter_item[2]
-            prepared_filters[prepared_filter_key] = prepared_filter_value
+        if filters is not None and len(filters)>0:
+            for filter_item in filters:
+                prepared_filter_key = (filter_item[0], filter_item[1])
+                prepared_filter_value = filter_item[2]
+                prepared_filters[prepared_filter_key] = prepared_filter_value
 
         return prepared_filters
 
@@ -128,13 +129,14 @@ class LeDataSourceSQL(DummyDatasource):
     def _prepare_rel_filters(self, rel_filters):
         prepared_rel_filters = []
 
-        for rel_filter in rel_filters:
-            rel_filter_dict = {
-                'position': REL_SUB if rel_filter[0][0] == REL_SUP else REL_SUB,
-                'nature': rel_filter[0][1],
-                'condition_key': (self.RELATIONS_POSITIONS_FIELDS[rel_filter[0][0]], rel_filter[1]),
-                'condition_value': rel_filter[2]
-            }
-            prepared_rel_filters.append(rel_filter_dict)
+        if rel_filters is not None and len(rel_filters)>0:
+            for rel_filter in rel_filters:
+                rel_filter_dict = {
+                    'position': REL_SUB if rel_filter[0][0] == REL_SUP else REL_SUB,
+                    'nature': rel_filter[0][1],
+                    'condition_key': (self.RELATIONS_POSITIONS_FIELDS[rel_filter[0][0]], rel_filter[1]),
+                    'condition_value': rel_filter[2]
+                }
+                prepared_rel_filters.append(rel_filter_dict)
 
         return prepared_rel_filters
