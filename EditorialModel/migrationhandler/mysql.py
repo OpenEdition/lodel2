@@ -25,6 +25,9 @@ import EditorialModel
 # - EmField rename
 # - rel2type field rename
 # - rel2type attribute rename
+# - EmFieldType changes
+#
+# @todo Unified datasources and migration handlers via utils functions
 # 
 
 ## @brief Modify a MySQL database given editorial model changes
@@ -506,9 +509,9 @@ FOR EACH ROW SET {col_val_list};""".format(
         return {
             'id_sup': from_name('integer')(),
             'id_sub': from_name('integer')(),
-            'rank': from_name('integer')(),
-            'depth': from_name('integer')(),
-            'nature': from_name('char')(max_lenght=10),
+            'rank': from_name('integer')(nullable=True),
+            'depth': from_name('integer')(nullable=True),
+            'nature': from_name('char')(max_lenght=10, nullable=True),
         }
 
     ## @brief Given a common field name return an EmFieldType instance
