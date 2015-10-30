@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
-#import leobject
+import leobject
+
 
 
 ## @brief Represent an EmClass data instance
@@ -15,6 +16,8 @@ class LeClass(object):
     _fieldgroups = dict()
     ## @brief Stores the EM uid
     _class_id = None
+    ## @brief Stores the classtype
+    _classtype = None
 
     ## @brief Instanciate a new LeClass
     # @note Abstract method
@@ -22,14 +25,3 @@ class LeClass(object):
     def __init__(self, **kwargs):
         raise NotImplementedError("Abstract class")
 
-    ## @brief Get the linked objects
-    # @return an array of LeType derivated class instance
-    def linked(self):
-        pass
-
-    ## @brief Link this class with an LeObject
-    # @param leo LeObject : The object to be linked with
-    # @return True if success False allready done
-    # @throw A Leo exception if the link is not allowed
-    def link_to(self, leo):
-        pass

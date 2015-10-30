@@ -86,11 +86,13 @@ class LeFactory(object):
 {name}._fieldtypes = {ftypes}
 {name}._linked_types = {ltypes}
 {name}._fieldgroups = {fgroups}
+{name}._classtype = {classtype}
 """.format(
-            name=LeFactory.name2classname(emclass.name),
-            ftypes="{" + (','.join(['\n\t%s:%s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
-            ltypes="{" + (','.join(cls_linked_types)) + '}',
-            fgroups=repr(cls_fieldgroup)
+            name = LeFactory.name2classname(emclass.name),
+            ftypes = "{" + (','.join(['\n\t%s:%s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
+            ltypes = "{" + (','.join(cls_linked_types)) + '}',
+            fgroups = repr(cls_fieldgroup),
+            classtype = repr(emclass.classtype)
         )
 
     ## @brief Given a Model and an EmType instances generate python code for corresponding LeType

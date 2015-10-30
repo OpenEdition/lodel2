@@ -51,3 +51,26 @@ class DummyDatasource(object):
     def get(self, leclass, letype, field_list, filters, relational_filters):
         print("DummyDatasource.get: ", leclass, letype, field_list, filters, relational_filters)
         return []
+    
+    ## @brief Link two object given a relation nature, depth and rank
+    # @param id_sup int : a lodel_id
+    # @param id_sub int : a lodel_id
+    # @param nature str|None : The relation nature or None if rel2type
+    # @param rank int : a rank
+    def add_relation(self, id_sup, id_sub, nature=None, depth=None, rank=None):
+        pass
+
+    ## @brief Delete a link between two objects given a relation nature
+    # @param id_sup int : a lodel_id
+    # @param id_sub int : a lodel_id
+    # @param nature str|None : The relation nature
+    def del_relation(self, id_sup, id_sub, nature=None):
+        pass
+    
+    ## @brief Return all relation of a lodel_id given a position and a nature
+    # @param lodel_id int : We want the relations of this lodel_id
+    # @param superior bool : If true search the relations where lodel_id is in id_sup
+    # @param nature str|None : Search for relations with the given nature (if None rel2type)
+    # @param return an array of dict with keys [ id_sup, id_sub, rank, depth, nature ]
+    def get_relations(self, lodel_id, superior=True, nature=None):
+        pass

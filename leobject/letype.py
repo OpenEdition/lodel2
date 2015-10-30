@@ -78,6 +78,53 @@ class LeType(object):
     def db_delete(self):
         return self.delete([('lodel_id','=',repr(self.lodel_id))])
     
+    ## @brief Add a superior given a nature
+    # @param leo LeObject : A LeObject instance that will be the superior
+    # @param nature str : the relation nature
+    # @throw leobject.leobject.LeObjectError if this
+    # @todo find what value depth and rank should have....
+    # @todo Unit tests
+    def add_superior(self, leo, nature):
+        if nature not in self._superiors.keys():
+            raise LeObjectError("%s cannot have a superior with %s as relation nature"%(self.__class__.__name__, nature))
+        if leo.__class__ not in self._superiors[nature]:
+            raise LeObjectError("%s cannot have a %s superior in a %s relation"%(self.__class__.__name__, leo.__class__.__name__, nature))
+
+        return self._datasource.add_relation(leo.lodel_id, self.lodel_id, nature = nature, depth=None, rank = None)
+    
+    ## @brief Delete a superior given a nature
+    # @param leo LeObject : A LeObject instance
+    # @param nature str : The relation nature
+    # @todo Unit tests
+    def del_superior(self, leo, nature):
+        if nature is None:
+            raise ValueError('The argument nature cannot be None')
+        return self._datasource(leo.lodel_id, self.lodel_id, nature)
+
+    ## @brief Get the linked objects lodel_id
+    # @return an array of lodel_id linked with this object
+    # @todo unit tests
+    def linked(self):
+        return [ rel['id_sub'] for rel in self._datasource.get_relations(self.lodel_id) ]
+
+    ## @brief Link this object with a LeObject
+    # @note rel2type
+    # @param leo LeObject : The object to be linked with
+    # @return True if success False allready done
+    # @throw A Leo exception if the link is not allowed
+    # @todo unit tests
+    # @todo find a value for depth and rank....
+    def link_to(self, leo):
+        if leo.__class__ not in self._linked_types:
+            raise leobject.leobject.LeObjectError("Constraint error : %s cannot be linked with %s"%(self.__class__.__name__, leo.__class__.__name__))
+        return self._datasource.add_relation(self.lodel_id, leo.lodel_id)
+
+    ## @brief Remove a link bewteen this object and another
+    # @param leo LeObject : A LeObject instance linked with self
+    # @todo unit tests
+    def unlink(self, leo):
+        return self._datasource.del_relation(self.lodel_id, leo.lodel_id)
+        
     ## @brief Delete a LeType from the datasource
     # @param filters list : list of filters (see @ref leobject_filters)
     # @param cls
