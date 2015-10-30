@@ -64,11 +64,13 @@ class LeFactory(object):
     @staticmethod
     def emclass_pycode(model, emclass):
         cls_fields = dict()
-        cls_linked_types = list()
+        cls_linked_types = dict() #keys are LeType classnames and values are tuples (attr_fieldname, attr_fieldtype)
         #Populating linked_type attr
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
-            cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
+            cls_linked_types[LeFactory.name2classname(model.component(fti.rel_to_type_id).name)] = [
+                (f.name, LeFactory.fieldtype_construct_from_field(f)) for f in model.components('EmField') if f.rel_field_id == rfield.uid 
+            ]
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
             cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
@@ -90,7 +92,16 @@ class LeFactory(object):
 """.format(
             name = LeFactory.name2classname(emclass.name),
             ftypes = "{" + (','.join(['\n\t%s:%s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
-            ltypes = "{" + (','.join(cls_linked_types)) + '}',
+
+            ltypes = '{'+ (','.join(
+                [
+                    '\n\t{ltname}:{ltattr_list}'.format(
+                        ltname = lt,
+                        ltattr_list = '['+(','.join([
+                            '(%s,%s)'%(repr(ltname), ltftype) for ltname, ltftype in ltattr
+                        ]))+']'
+                    ) for lt, ltattr in cls_linked_types.items()
+                ]))+'}',
             fgroups = repr(cls_fieldgroup),
             classtype = repr(emclass.classtype)
         )
