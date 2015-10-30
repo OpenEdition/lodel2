@@ -32,13 +32,31 @@ class LeDataSourceSQL(DummyDatasource):
     # @return int : lodel_id of the created object
     # @todo add the returning clause and the insertion in "object"
     def insert(self, letype, leclass, datas):
-        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+        if isinstance(datas, list):
+            res = list()
+            for data in datas:
+                res.append(self.insert(letype, leclass, data))
+        elif isinstance(datas, dict):
+            
+            with self.connection as cur:
+                object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
+                if cur.execute(insert(self.OBJECTS_TABLE_NAME, object_datas)) != 1:
+                    raise RuntimeError('SQL error')
+                    
+                if cur.execute('SELECT last_insert_id() as lodel_id') != 1:
+                    raise RuntimeError('SQL error')
+                    
+                lodel_id, = cur.fetchone()
 
-        query = insert(query_table_name, datas)
-        with self.connection as cur:
-            cur.execute(query)
+                print("Object inserted : %s with lodel_id %s"%(object_datas, lodel_id))
+                datas[self.LODEL_ID_FIELD] = lodel_id
+                query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+                query = insert(query_table_name, datas)
 
-        return True
+                if cur.execute(query) != 1:
+                    raise RuntimeError('SQL error')
+
+            return lodel_id
 
     ## @brief search for a collection of objects
     # @param leclass LeClass
@@ -145,7 +163,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @params classname str
     # @return str
     def _get_table_name_from_class_name(self, classname):
-        return classname if self.CLASS_TABLE_PREFIX in classname else "%s%s" % (self.CLASS_TABLE_PREFIX, classname)
+        return (classname if self.CLASS_TABLE_PREFIX in classname else "%s%s" % (self.CLASS_TABLE_PREFIX, classname)).lower()
 
     ## @brief prepares the relational filters
     # @params rel_filters : (("superior"|"subordinate"), operator, value)

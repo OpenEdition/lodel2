@@ -54,6 +54,9 @@ class _LeObject(object):
     # @see leobject.datasources.dummy.DummyDatasource.insert(), leobject.letype.LeType.insert()
     @classmethod
     def insert(cls, letype, datas):
+        if isinstance(datas, dict):
+            datas = [datas]
+
         if cls == _LeObject:
             raise NotImplementedError("Abstract method")
         letype,leclass = cls._prepare_targets(letype)
