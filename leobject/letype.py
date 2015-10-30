@@ -102,20 +102,22 @@ class LeType(object):
         return self._datasource(leo, self, nature)
 
     ## @brief Get the linked objects lodel_id
+    # @param rel2type_name str : the name of the relation
     # @return an array of lodel_id linked with this object
     # @todo unit tests
-    def linked(self):
+    def linked(self, rel2type_name):
         return [ rel['id_sub'] for rel in self._datasource.get_relations(self.lodel_id) ]
 
     ## @brief Link this object with a LeObject
     # @note rel2type
     # @param leo LeObject : The object to be linked with
+    # @param rel2type_name : The name of the rel2type field (the name of the relation)
     # @param **rel_attr : keywords arguments for relations attributes
     # @return True if success False allready done
     # @throw A Leo exception if the link is not allowed
     # @todo unit tests
     # @todo find a value for depth and rank....
-    def link_to(self, leo, **rel_attr):
+    def link_to(self, leo, rel2type_name, **rel_attr):
         if leo.__class__ not in self._linked_types.keys():
             raise leobject.leobject.LeObjectError("Constraint error : %s cannot be linked with %s"%(self.__class__.__name__, leo.__class__.__name__))
 
@@ -125,13 +127,14 @@ class LeType(object):
             if not self._linked_types[leo.__class__][1].check(rel_attr[attr_name]):
                 raise ValueError("Wrong value '%s' for attribute %s"%(rel_attr[attr_name], attr_name))
 
-        return self._datasource.add_relation(self, leo, nature=None, depth=None, rank=None, **rel_attr)
+        return self._datasource.add_relation(self, leo, nature=None, depth=None, rank=None, **rel_attr)#Broken ! need to give the rel2type_name
 
     ## @brief Remove a link bewteen this object and another
     # @param leo LeObject : A LeObject instance linked with self
+    # @param rel2type_name : the name of the relation
     # @todo unit tests
-    def unlink(self, leo):
-        return self._datasource.del_relation(self, leo)
+    def unlink(self, leo, rel2type_name):
+        return self._datasource.del_relation(self, leo) #Broken ! need to give the rel2type_name
         
     ## @brief Delete a LeType from the datasource
     # @param filters list : list of filters (see @ref leobject_filters)
