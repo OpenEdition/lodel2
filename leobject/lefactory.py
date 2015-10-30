@@ -65,16 +65,20 @@ class LeFactory(object):
     def emclass_pycode(model, emclass):
         cls_fields = dict()
         cls_linked_types = list()
-        for field in emclass.fields():
+        #Populating linked_type attr
+        for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
+            fti = rfield.fieldtype_instance()
+            cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
+        # Populating fieldtype attr
+        for field in emclass.fields(relational = False):
             cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
             fti = field.fieldtype_instance()
-            if fti.name == 'rel2type':
-                #relationnal field/fieldtype
-                cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
+        
+        # Populating fieldgroup attr
         cls_fieldgroup = dict()
         for fieldgroup in emclass.fieldgroups():
             cls_fieldgroup[fieldgroup.name] = list()
-            for field in fieldgroup.fields():
+            for field in fieldgroup.fields(relational = False):
                 cls_fieldgroup[fieldgroup.name].append(field.name)
 
         return """
@@ -97,7 +101,7 @@ class LeFactory(object):
     def emtype_pycode(model, emtype):
         type_fields = list()
         type_superiors = list()
-        for field in emtype.fields():
+        for field in emtype.fields(relational=False):
             type_fields.append(field.name)
 
         for nat, sup_l in emtype.superiors().items():

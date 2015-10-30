@@ -81,11 +81,11 @@ class EmClass(EmComponent):
 
     ## Retrieve list of fields
     # @return fields [EmField]:
-    def fields(self):
+    def fields(self, relational = True):
         fieldgroups = self.fieldgroups()
         fields = []
         for fieldgroup in fieldgroups:
-            fields += fieldgroup.fields()
+            fields += fieldgroup.fields(relational=relational)
         return fields
 
     ## Retrieve list of type of this class

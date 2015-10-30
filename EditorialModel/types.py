@@ -101,8 +101,10 @@ class EmType(EmComponent):
 
     ## Return the list of associated fields
     # @return A list of EmField instance
-    def fields(self):
+    def fields(self, relational = False):
         fields = [field for fieldgroup in self.fieldgroups() for field in fieldgroup.fields(self.uid)]
+        if not relational:
+            fields = [ f for f in fields if f.rel_field_id is None and f.fieldtype != 'rel2type' ]
         return fields
 
     ## Select_field (Function)

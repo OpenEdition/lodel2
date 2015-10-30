@@ -179,6 +179,12 @@ class TestFields(FieldGroupTestCase):
                 res.append(field.uid)
             self.assertEqual(set(res), set(expected1))
 
+    def test_non_relational(self):
+        """ Check that relationnal=False returns only non relational fields """
+        for fgrp in [ self.fg1, self.fg2, self.fg3 ]:
+            for field in fgrp.fields(relational=False):
+                self.assertTrue(field.fieldtype != 'rel2type' and field.rel_field_id is None)
+
     def test_empty_fields(self):
         """ Testing fields method on an empty fieldgroup """
         fieldgroup = self.fg3

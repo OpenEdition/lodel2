@@ -69,7 +69,7 @@ class TestLeFactory(TestCase):
             )
             for fgroup in emclass.fieldgroups():
                 self.assertEqual(
-                    set([ f.name for f in fgroup.fields()]),
+                    set([ f.name for f in fgroup.fields(relational=False)]),
                     set(leclass._fieldgroups[fgroup.name])
                 )
             
@@ -81,10 +81,10 @@ class TestLeFactory(TestCase):
 
             #Testing fieldtypes
             self.assertEqual(
-                set([ f.name for f in emclass.fields()]),
+                set([ f.name for f in emclass.fields(relational=False)]),
                 set(leclass._fieldtypes.keys())
             )
-            for field in emclass.fields():
+            for field in emclass.fields(relational=False):
                 self.assertEqual(
                     hash(field.fieldtype_instance()),
                     hash(leclass._fieldtypes[field.name])

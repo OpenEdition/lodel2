@@ -45,9 +45,11 @@ class EmFieldGroup(EmComponent):
 
     ## Get the list of associated fields
     # if type_id, the fields will be filtered to represent selected fields of this EmType
+    # @param type_id int|None : if not None the fields will be filtered to represent selected fields of the EmType identified by this uid
+    # @param relational bool : If False don't returns the relational fields
     # @return A list of EmField instance
-    def fields(self, type_id=0):
-        if not type_id:
+    def fields(self, type_id=None, relational=True):
+        if type_id is None:
             fields = [field for field in self.model.components(EmField) if field.fieldgroup_id == self.uid]
         else:
             # for an EmType, fields have to be filtered
@@ -62,6 +64,9 @@ class EmFieldGroup(EmComponent):
                     if parent.optional and parent.uid not in em_type.fields_list:
                         continue
                 fields.append(field)
+        
+        if not relational:
+            fields = [ f for f in fields if f.rel_field_id is None and f.fieldtype != 'rel2type' ]
 
         return fields
 
