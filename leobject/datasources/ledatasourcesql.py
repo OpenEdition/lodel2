@@ -36,6 +36,7 @@ class LeDataSourceSQL(DummyDatasource):
             res = list()
             for data in datas:
                 res.append(self.insert(letype, leclass, data))
+            return res
         elif isinstance(datas, dict):
             
             with self.connection as cur:
@@ -48,7 +49,6 @@ class LeDataSourceSQL(DummyDatasource):
                     
                 lodel_id, = cur.fetchone()
 
-                print("Object inserted : %s with lodel_id %s"%(object_datas, lodel_id))
                 datas[self.LODEL_ID_FIELD] = lodel_id
                 query_table_name = self._get_table_name_from_class_name(leclass.__name__)
                 query = insert(query_table_name, datas)
