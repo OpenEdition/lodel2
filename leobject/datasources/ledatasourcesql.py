@@ -130,8 +130,10 @@ class LeDataSourceSQL(DummyDatasource):
         else:
             query = delete(query_table_name, filters)
 
+        query_delete_from_object = delete(self.OBJECTS_TABLE_NAME, {'lodel_id':filters['lodel_id']})
         with self.connection as cur:
             cur.execute(query)
+            cur.execute(query_delete_from_object)
 
         return True
 
