@@ -32,7 +32,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return int : lodel_id of the created object
     # @todo add the returning clause and the insertion in "object"
     def insert(self, letype, leclass, datas):
-        query_table_name = self._get_table_name_from_class_name(leclass.name)
+        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
 
         query = insert(query_table_name, datas)
         with self.connection as cur:
@@ -49,7 +49,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return list
     def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        query_table_name = self._get_table_name_from_class_name(leclass.name)
+        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
         where_filters = self._prepare_filters(filters, query_table_name)
         join_fields = {}
 
@@ -82,7 +82,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
     # @return bool : True on success
     def delete(self, letype, leclass, filters, relational_filters):
-        query_table_name = self._get_table_name_from_class_name(leclass.name)
+        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
         prep_filters = self._prepare_filters(filters, query_table_name)
         prep_rel_filters = self._prepare_rel_filters(relational_filters)
 
@@ -127,7 +127,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo prendre en compte les rel_filters
     def update(self, letype, leclass, filters, rel_filters, data):
 
-        query_table_name = self._get_table_name_from_class_name(leclass.name)
+        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
         where_filters = filters
         set_data = data
 
