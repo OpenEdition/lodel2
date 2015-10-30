@@ -124,10 +124,10 @@ class LeType(object):
             if not allow_internal and dname in autom_fields:
                 raise AttributeError("The field '%s' is internal"%(dname))
             if dname not in cls._fields:
-                raise AttributeError("No such field '%s' for %s"%(dname, self.__class__.__name__))
+                raise AttributeError("No such field '%s' for %s"%(dname, cls.__name__))
             cls._fieldtypes[dname].check_or_raise(dval)
         
-        fields = [f for f, ft in cls._fieldtypes.items() if not hasattr(ft,'internal') or not ft.internal]
+        fields = [f for f, ft in cls._fieldtypes.items() if not hasattr(ft,'internal') or not ft.internal and f in cls._fields]
         if complete and len(datas) < len(fields):
             raise LeObjectError("The argument complete was True but some fields are missing : %s"%(set(fields) - set(datas.keys())))
         
