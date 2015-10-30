@@ -120,13 +120,13 @@ class LeDataSourceSQL(DummyDatasource):
                 if prep_rel_filter['condition_key'][0] is not None:
                     prep_filters[("%s.%s" % (self.RELATIONS_TABLE_NAME, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
 
-        if prep_filters is not None and len(prep_filters) > 0:
-            query += " WHERE "
-            filter_counter = 0
-            for filter_item in prep_filters:
-                if filter_counter > 1:
-                    query += " AND "
-                query += "%s %s %s" % (filter_item[0][0], filter_item[0][1], filter_item[1])
+            if prep_filters is not None and len(prep_filters) > 0:
+                query += " WHERE "
+                filter_counter = 0
+                for filter_item in prep_filters:
+                    if filter_counter > 1:
+                        query += " AND "
+                    query += "%s %s %s" % (filter_item[0][0], filter_item[0][1], filter_item[1])
         else:
             query = delete(query_table_name, filters)
 
