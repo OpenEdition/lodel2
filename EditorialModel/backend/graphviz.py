@@ -3,8 +3,8 @@
 import datetime
 import EditorialModel
 from EditorialModel.classtypes import EmClassType
-from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.types import EmType
+from EditorialModel.fields import EmField
 from Lodel.utils.mlstring import MlString
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 
@@ -45,27 +45,22 @@ class EmBackendGraphviz(EmBackendDummy):
                 self.edges += cid+' -> ct%s [ style="dashed" ]\n'%c.classtype
             dotfp.write("}\n")
 
-            #dotfp.write('subgraph cluster_fieldgroup {\nstyle="invis"\n')
-            for c in em.components(EmFieldGroup):
-                dotfp.write(self._component_node(c, em))
-                cn = c.__class__.__name__
-                cid = self._component_id(c)
-                self.edges += cid+' -> '+self._component_id(c.em_class)+' [ style="dashed" ]\n'
-            #dotfp.write("}\n")
-
-
             #dotfp.write('subgraph cluster_type {\nstyle="invis"\n')
             for c in em.components(EmType):
                 dotfp.write(self._component_node(c, em))
                 cn = c.__class__.__name__
                 cid = self._component_id(c)
                 self.edges += cid+' -> '+self._component_id(c.em_class)+' [ style="dotted" ]\n'
-                for fg in c.fieldgroups():
-                    self.edges += cid+' -> '+self._component_id(fg)+' [ style="dashed" ]\n'
                 for nat, sups in c.superiors().items():
                     for sup in sups:
                         self.edges += cid+' -> '+self._component_id(sup)+' [ label="%s" color="green" ]'%nat
             #dotfp.write("}\n")
+            
+            for rf in [ f for f in em.components(EmField) if f.fieldtype == 'rel2type']:
+                dotfp.write(self._component_node(rf, em))
+                cid = self._component_id(rf)
+                self.edges += cid+' -> '+self._component_id(rf.em_class)+'\n'
+                self.edges += cid+' -> '+self._component_id(em.component(rf.rel_to_type_id))+'\n'
 
             dotfp.write(self.edges)
 
@@ -83,13 +78,17 @@ class EmBackendGraphviz(EmBackendDummy):
         rel_field = ""
         if cn == 'EmClass':
             ret += '[ label="%s", shape="%s" ]'%(c.name.replace('"','\\"'), 'doubleoctagon')
-        elif cn == 'EmType' or cn == 'EmFieldGroup':
+        elif cn == 'EmField':
+            str_def = '[ label="Rel2Type {fname}|{{{records}}}", shape="record"]'
+            records = ' | '.join([f.name for f in em.components('EmField') if f.rel_field_id == c.uid])
+            ret += str_def.format(fname=c.name.replace('"','\\"'), records=records)
+        elif cn == 'EmType':
             ret += '[ label="%s %s '%(cn, c.name.replace('"','\\"'))
 
             cntref = 0
             first = True
             for f in c.fields():
-                if ((cn == 'EmType' and f.optional) or (cn == 'EmFieldGroup' and not f.optional)) and f.rel_field_id is None:
+                if cn == 'EmType' and f.rel_field_id is None:
                     
                     #if not (f.rel_to_type_id is None):
                     if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldType):
