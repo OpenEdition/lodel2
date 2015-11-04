@@ -2,12 +2,12 @@
 
 ## @package EditorialModel.randomem
 #
+# @warning BROKEN because there is no more fieldgroups
 # Provide methods for random EM generation
 
 import random
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.model import Model
-from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
 from EditorialModel.classtypes import EmClassType
@@ -85,11 +85,13 @@ class RandomEm(object):
 
         for emclass in ed_mod.classes():
             #fieldgroups creation
+            """
             if random.randint(0, chances['nofg']) != 0:
                 for _ in range(random.randint(1, chances['nfg'])):
                     fgdats = cls._rnd_component_datas()
                     fgdats['class_id'] = emclass.uid
                     ed_mod.create_component('EmFieldGroup', fgdats)
+            """
 
             #types creation
             if random.randint(0, chances['notype']) != 0:
@@ -109,24 +111,24 @@ class RandomEm(object):
 
         #fields creation
         ft_l = [ ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' and ftname != 'rel2type']
-        for emfg in ed_mod.components(EmFieldGroup):
+        for emc in ed_mod.components('EmClass'):
             if random.randint(0, chances['nofields']) != 0:
                 for _ in range(random.randint(1, chances['nfields'])):
                     field_type = ft_l[random.randint(0, len(ft_l) - 1)]
                     fdats = cls._rnd_component_datas()
                     fdats['fieldtype'] = field_type
-                    fdats['fieldgroup_id'] = emfg.uid
+                    fdats['class_id'] = emc.uid
                     if random.randint(0, chances['optfield']) == 0:
                         fdats['optional'] = True
                     ed_mod.create_component('EmField', fdats)
         
         #rel2type creation (in case none where created before
-        for emfg in ed_mod.components(EmFieldGroup):    
+        for emc in ed_mod.components('EmClass'):
             for _ in range(random.randint(0, chances['nr2tfields'])):
                 field_type = 'rel2type'
                 fdats = cls._rnd_component_datas()
                 fdats['fieldtype'] = field_type
-                fdats['fieldgroup_id'] = emfg.uid
+                fdats['class_id'] = emc.uid
                 emtypes = ed_mod.components(EmType)
                 fdats['rel_to_type_id'] = emtypes[random.randint(0, len(emtypes) - 1)].uid
                 if random.randint(0, chances['optfield']) == 0:
@@ -142,14 +144,14 @@ class RandomEm(object):
                 fdats = cls._rnd_component_datas()
                 fdats['rel_field_id'] = emrelf.uid
                 fdats['fieldtype'] = field_type
-                fdats['fieldgroup_id'] = emrelf.fieldgroup_id
+                fdats['class_id'] = emrelf.class_id
                 if random.randint(0, chances['optfield']) == 0:
                     fdats['optional'] = True
                 ed_mod.create_component('EmField', fdats)
 
         #selection optionnal fields
         for emtype in ed_mod.components(EmType):
-            selectable = [field for fieldgroup in emtype.fieldgroups() for field in fieldgroup.fields() if field.optional]
+            selectable = [field  for field in emtype.em_class.fields() if field.optional]
             for field in selectable:
                 if random.randint(0, chances['seltype']) == 0:
                     emtype.select_field(field)

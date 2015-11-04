@@ -87,7 +87,7 @@ class EmBackendGraphviz(EmBackendDummy):
 
             cntref = 0
             first = True
-            for f in c.fields():
+            for f in [ f for f in c.fields() if f.name not in c.em_class.default_fields_list().keys()]:
                 if cn == 'EmType' and f.rel_field_id is None:
                     
                     #if not (f.rel_to_type_id is None):
