@@ -4,6 +4,7 @@ from unittest import TestCase
 from EditorialModel.fields import EmField
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
+from EditorialModel.exceptions import EmComponentCheckError
 
 EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
 EM_TEST_OBJECT = None
@@ -61,6 +62,30 @@ class TestField(FieldTestCase):
         """ Test that internal='object' is reserved for common_fields """
         with self.assertRaises(ValueError, msg="Only common_fields should be internal='object'"):
             field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testbadinternal','internal': 'object', 'fieldgroup_id': self.test_fieldgroup.uid, 'fieldtype': self.test_fieldtype})
+
+    def test_double_rel2type(self):
+        """ Test the rel2type unicity """
+        em = EM_TEST_OBJECT
+        emtype = em.components('EmType')[0]
+        emclass = [c for c in em.components('EmClass') if c != emtype.em_class][0]
+
+        f1 = em.create_component('EmField', {'name': 'testr2t', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
+
+        with self.assertRaises(EmComponentCheckError):
+            f2 = em.create_component('EmField', {'name': 'testr2t2', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
+
+    def test_same_name(self):
+        """ Test the name unicity is the same EmClass"""
+        em = EM_TEST_OBJECT
+        emtype = em.components('EmType')[0]
+        emclass = [c for c in em.components('EmClass') if c != emtype.em_class][0]
+
+        f1 = em.create_component('EmField', {'name': 'samename', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'char'})
+
+        with self.assertRaises(EmComponentCheckError):
+            f2 = em.create_component('EmField', {'name': 'samename', 'fieldgroup_id': emclass.fieldgroups()[1].uid, 'fieldtype': 'integer'} )
+
+        
 
     ## Test_Deletion
     #

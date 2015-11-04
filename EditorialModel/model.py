@@ -213,11 +213,12 @@ class Model(object):
 
         self.migration_handler.register_model_state(self, hash(self))
 
-        if uid is None and component_type == 'EmClass':
-            # !!! If uid is not None it means that we shouldn't create components automatically !!!
-            self.add_default_class_fields(em_component.uid)
+        if uid is None:
             #Checking the component
             em_component.check()
+            if component_type == 'EmClass':
+               # !!! If uid is not None it means that we shouldn't create components automatically !!!
+                self.add_default_class_fields(em_component.uid)
 
         return em_component
 

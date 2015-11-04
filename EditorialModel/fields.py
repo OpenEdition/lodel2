@@ -103,14 +103,28 @@ class EmField(EmComponent):
         return [f for f in self.model.components(EmField) if f.rel_field_id == self.uid]
 
     ## Check if the EmField is valid
+    # 
+    # Check multiple things :
+    # - the fieldgroup_id is valid
+    # - the name is uniq in the EmClass
+    # - if its a rel2type check that the linked_type is uniq in the EmClass
     # @return True if valid False if not
     def check(self):
         super(EmField, self).check()
+        #Fieldgroup check
         em_fieldgroup = self.model.component(self.fieldgroup_id)
         if not em_fieldgroup:
             raise EmComponentCheckError("fieldgroup_id contains a non existing uid : '%d'" % self.fieldgroup_id)
         if not isinstance(em_fieldgroup, EditorialModel.fieldgroups.EmFieldGroup):
             raise EmComponentCheckError("fieldgroup_id contains an uid from a component that is not an EmFieldGroup but a %s" % str(type(em_fieldgroup)))
+        #Uniq Name check
+        if len([ f for f in self.em_class.fields() if f.name == self.name]) > 1:
+            raise EmComponentCheckError("The field %d has a name '%s' that is not uniq in the EmClass %d"%(self.uid, self.name, self.em_class.uid))
+        #rel2type uniq check
+        if self.fieldtype == 'rel2type':
+            if len([f for f in self.em_class.fields() if f.fieldtype == 'rel2type' and f.rel_to_type_id == self.rel_to_type_id]) > 1:
+                raise EmComponentCheckError("The rel2type %d is not uniq, another field is linked to the same type '%s' in the same class '%s'"%(self.uid, self.model.component(self.rel_to_type_id).name, self.em_class.name))
+
 
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded
