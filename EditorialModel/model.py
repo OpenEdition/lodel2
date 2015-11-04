@@ -7,7 +7,7 @@ import EditorialModel
 from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.classes import EmClass
-from EditorialModel.fieldgroups import EmFieldGroup
+#from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
 from EditorialModel.exceptions import EmComponentCheckError, EmComponentNotExistError, MigrationHandlerChangeError
@@ -17,7 +17,7 @@ import hashlib
 ## @brief Manages the Editorial Model
 class Model(object):
 
-    components_class = [EmClass, EmType, EmFieldGroup, EmField]
+    components_class = [EmClass, EmType, EmField]
 
     ## Constructor
     #
@@ -33,7 +33,7 @@ class Model(object):
         self.backend = None
         self.set_backend(backend)
 
-        self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': [], 'EmFieldGroup': []}
+        self._components = {'uids': {}, 'EmClass': [], 'EmType': [], 'EmField': []}
         self.load()
 
     def __hash__(self):
@@ -232,7 +232,8 @@ class Model(object):
         emclass = self._components['uids'][class_uid]
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The uid '%d' is not an EmClass uid"%class_uid)
-
+        
+        """
         fgroup_name = EmClass.default_fieldgroup
 
         if fgroup_name not in [fg.name for fg in emclass.fieldgroups() ]:
@@ -245,13 +246,14 @@ class Model(object):
                 if fg.name == fgroup_name:
                     fgid = fg.uid
                     break
+        """
 
         default_fields = emclass.default_fields_list()
         for fname, fdatas in default_fields.items():
             if not (fname in [ f.name for f in emclass.fields() ]):
                 #Adding the field
                 fdatas['name'] = fname
-                fdatas['fieldgroup_id'] = fgid
+                fdatas['class_id'] = class_uid
                 self.create_component('EmField', fdatas)
         pass
 

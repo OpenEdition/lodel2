@@ -200,3 +200,43 @@ class LeDataSourceSQL(DummyDatasource):
                 prepared_filters[prepared_filter_key] = prepared_filter_value
 
         return prepared_filters
+
+    ## @brief Link two object given a relation nature, depth and rank
+    # @param lesup LeObject : a LeObject
+    # @param lesub LeObject : a LeObject
+    # @param nature str|None : The relation nature or None if rel2type
+    # @param rank int : a rank
+    def add_relation(self, lesup, lesub, nature=None, depth=None, rank=None, **rel_attr):
+        if len(rel_attr) > 0 and not (nature is None):
+            #not a rel2type but have some relation attribute
+            raise AttributeError("No relation attributes allowed for non rel2type relations")
+
+        with self.connection() as cur:
+            sql = insert(RELATIONS_TABLE_NAME, {'id_sup':lesup.lodel_id, 'id_sub':lesub.lodel_id, 'nature':nature,'rank':rank, 'depth':depth})
+            if cur.execute(sql) != 1:
+                raise RuntimeError("Unknow SQL error")
+
+            if len(rel_attr) > 0:
+                #a relation table exists
+                cur.execute('SELECT last_insert_id()')
+                relation_id, = cur.fetchone()
+                raise NotImplementedError()
+
+
+        return True
+            
+
+    ## @brief Delete a link between two objects given a relation nature
+    # @param lesup LeObject : a LeObject
+    # @param lesub LeObject : a LeObject
+    # @param nature str|None : The relation nature
+    def del_relation(self, lesup, lesub, nature=None):
+        raise NotImplementedError()
+    
+    ## @brief Return all relation of a lodel_id given a position and a nature
+    # @param lodel_id int : We want the relations of this lodel_id
+    # @param superior bool : If true search the relations where lodel_id is in id_sup
+    # @param nature str|None : Search for relations with the given nature (if None rel2type)
+    # @param return an array of dict with keys [ id_sup, id_sub, rank, depth, nature ]
+    def get_relations(self, lodel_id, superior=True, nature=None):
+        raise NotImplementedError()

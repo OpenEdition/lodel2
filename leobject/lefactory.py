@@ -75,19 +75,11 @@ class LeFactory(object):
         for field in emclass.fields(relational = False):
             cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
             fti = field.fieldtype_instance()
-        
-        # Populating fieldgroup attr
-        cls_fieldgroup = dict()
-        for fieldgroup in emclass.fieldgroups():
-            cls_fieldgroup[fieldgroup.name] = list()
-            for field in fieldgroup.fields(relational = False):
-                cls_fieldgroup[fieldgroup.name].append(field.name)
 
         return """
 #Initialisation of {name} class attributes
 {name}._fieldtypes = {ftypes}
 {name}._linked_types = {ltypes}
-{name}._fieldgroups = {fgroups}
 {name}._classtype = {classtype}
 """.format(
             name = LeFactory.name2classname(emclass.name),
@@ -102,7 +94,6 @@ class LeFactory(object):
                         ]))+']'
                     ) for lt, ltattr in cls_linked_types.items()
                 ]))+'}',
-            fgroups = repr(cls_fieldgroup),
             classtype = repr(emclass.classtype)
         )
 

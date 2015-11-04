@@ -97,22 +97,6 @@ class TestTypeHierarchy(TypeTestCase):
         self.article.del_superior(self.numero, EmNature.PARENT)
 
 
-class TestTypesMisc(TypeTestCase):
-
-    def test_fieldgroups(self):
-
-        # should not send empty fieldgroups
-        self.assertNotIn(self.couleur_group, self.article.fieldgroups())
-
-        # add a field, fieldgroup should now appear
-        self.article.select_field(self.couleur_field)
-        self.assertIn(self.couleur_group, self.article.fieldgroups())
-
-        # delete it, fieldgroup should disappear
-        self.article.unselect_field(self.couleur_field)
-        self.assertNotIn(self.couleur_group, self.article.fieldgroups())
-
-
 class TestDeleteTypes(TypeTestCase):
 
     def test_delete_types(self):

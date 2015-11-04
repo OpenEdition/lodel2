@@ -89,7 +89,7 @@ class EmType(EmComponent):
 
     ## Get the list of non empty associated fieldgroups
     # @return A list of EmFieldGroup instance
-    def fieldgroups(self):
+    def _fieldgroups(self):
         fieldgroups = [fieldgroup for fieldgroup in self.em_class.fieldgroups() if len(fieldgroup.fields(self.uid))]
         return fieldgroups
 
@@ -102,10 +102,7 @@ class EmType(EmComponent):
     ## Return the list of associated fields
     # @return A list of EmField instance
     def fields(self, relational = False):
-        fields = [field for fieldgroup in self.fieldgroups() for field in fieldgroup.fields(self.uid)]
-        if not relational:
-            fields = [ f for f in fields if f.rel_field_id is None and f.fieldtype != 'rel2type' ]
-        return fields
+        return [ field for field in self.em_class.fields() if not field.optional or (field.optional and field.uid in self.fields_list) ]
 
     ## Select_field (Function)
     #
@@ -323,8 +320,10 @@ class EmType(EmComponent):
                 raise EmComponentCheckError("The element %d of selected_field is not an EmField but a %s" % (i, str(type(field))))
             if not field.optional:
                 raise EmComponentCheckError("The element %d of selected_field is an EmField not optional" % i)
+            """
             if field.fieldgroup_id not in [fg.uid for fg in self.fieldgroups()]:
                 raise EmComponentCheckError("The element %d of selected_field is an EmField that is part of an EmFieldGroup that is not associated with this EmType" % i)
+            """
 
         for nature, superiors_uid in self.superiors_list.items():
             for superior_uid in superiors_uid:

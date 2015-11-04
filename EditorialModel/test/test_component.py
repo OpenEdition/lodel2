@@ -4,7 +4,6 @@ from EditorialModel.model import Model
 from EditorialModel.components import EmComponent
 from EditorialModel.classes import EmClass
 from EditorialModel.types import EmType
-from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 
 from Lodel.utils.mlstring import MlString
@@ -22,7 +21,7 @@ class TestEmComponent(unittest.TestCase):
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
         me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
 
-        for comp_class in [EmClass, EmType, EmField, EmFieldGroup]:
+        for comp_class in [EmClass, EmType, EmField]:
             comp_l1 = me1.components(comp_class)
             comp_l2 = me2.components(comp_class)
 

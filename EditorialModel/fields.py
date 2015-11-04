@@ -16,7 +16,7 @@ import EditorialModel.fieldtypes
 # Represents one data for a lodel2 document
 class EmField(EmComponent):
 
-    ranked_in = 'fieldgroup_id'
+    ranked_in = 'class_id'
 
     ## Instanciate a new EmField
     # @todo define and test type for icon
@@ -30,10 +30,10 @@ class EmField(EmComponent):
     # @param nullable bool : If True None values are allowed
     # @param uniq bool : if True the value should be uniq in the db table
     # @param **kwargs : more keywords arguments for the fieldtype
-    def __init__(self, model, uid, name, fieldgroup_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=False, uniq=False, **kwargs):
+    def __init__(self, model, uid, name, class_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=False, uniq=False, **kwargs):
 
-        self.fieldgroup_id = fieldgroup_id
-        self.check_type('fieldgroup_id', int)
+        self.class_id = class_id
+        self.check_type('class_id', int)
         self.optional = bool(optional)
 
         if not internal:
@@ -80,13 +80,13 @@ class EmField(EmComponent):
 
     ##@brief Return the EmFieldgroup this EmField belongs to
     @property
-    def fieldgroup(self):
+    def _fieldgroup(self):
         return self.model.component(self.fieldgroup_id)
     
     ## @brief Returns the EmClass this EmField belongs to
     @property
     def em_class(self):
-        return self.fieldgroup.em_class
+        return self.model.component(self.class_id)
 
     ## @brief Get the fieldtype instance
     # @return a fieldtype instance
@@ -111,12 +111,14 @@ class EmField(EmComponent):
     # @return True if valid False if not
     def check(self):
         super(EmField, self).check()
+        """
         #Fieldgroup check
         em_fieldgroup = self.model.component(self.fieldgroup_id)
         if not em_fieldgroup:
             raise EmComponentCheckError("fieldgroup_id contains a non existing uid : '%d'" % self.fieldgroup_id)
         if not isinstance(em_fieldgroup, EditorialModel.fieldgroups.EmFieldGroup):
             raise EmComponentCheckError("fieldgroup_id contains an uid from a component that is not an EmFieldGroup but a %s" % str(type(em_fieldgroup)))
+        """
         #Uniq Name check
         if len([ f for f in self.em_class.fields() if f.name == self.name]) > 1:
             raise EmComponentCheckError("The field %d has a name '%s' that is not uniq in the EmClass %d"%(self.uid, self.name, self.em_class.uid))

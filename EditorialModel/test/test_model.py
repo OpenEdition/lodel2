@@ -4,7 +4,6 @@ from unittest.mock import patch
 from EditorialModel.model import Model
 from EditorialModel.classes import EmClass
 from EditorialModel.types import EmType
-from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.components import EmComponent
 from Lodel.utils.mlstring import MlString
@@ -40,7 +39,7 @@ class TestModel(unittest.TestCase):
     def test_components(self):
         """ Test components fetching """
         uid_l = list()
-        for comp_class in [EmClass, EmType, EmField, EmFieldGroup]:
+        for comp_class in [EmClass, EmType, EmField]:
             comp_l = self.ed_mod.components(comp_class)
             #Testing types of returned components
             for component in comp_l:
@@ -139,18 +138,11 @@ class TestModel(unittest.TestCase):
                     'fields_list': [],
                 }
             },
-            'EmFieldGroup': {
-                'cls': EmFieldGroup,
-                'cdats': {
-                    'name': 'FooFG',
-                    'class_id': self.ed_mod.components(EmClass)[0].uid,
-                },
-            },
             'EmField': {
                 'cls': EmField,
                 'cdats': {
                     'name': 'FooField',
-                    'fieldgroup_id': self.ed_mod.components(EmFieldGroup)[0].uid,
+                    'class_id': self.ed_mod.components(EmClass)[0].uid,
                     'fieldtype': 'char',
                     'max_length': 64,
                     'optional': True,
@@ -305,7 +297,7 @@ class TestModel(unittest.TestCase):
 
     def test_compclass_getter(self):
         """ Test the Model methods that handles name <-> EmComponent conversion """
-        for classname in ['EmField', 'EmClass', 'EmFieldGroup', 'EmType']:
+        for classname in ['EmField', 'EmClass', 'EmType']:
             cls = Model.emclass_from_name(classname)
             self.assertNotEqual(cls, False, "emclass_from_name return False when '%s' given as parameter" % classname)
             self.assertEqual(cls.__name__, classname)
@@ -313,7 +305,7 @@ class TestModel(unittest.TestCase):
         for classname in ['EmComponent', 'EmFoobar', int, EmClass]:
             self.assertFalse(Model.emclass_from_name(classname))
 
-        for comp_cls in [EmClass, EmFieldGroup, EmType]:
+        for comp_cls in [EmClass, EmField, EmType]:
             self.assertEqual(Model.name_from_emclass(comp_cls), comp_cls.__name__)
         for comp in self.ed_mod.components(EmField):
             self.assertEqual(Model.name_from_emclass(comp.__class__), 'EmField')

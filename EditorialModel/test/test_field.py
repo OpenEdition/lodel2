@@ -35,7 +35,7 @@ class FieldTestCase(TestCase):
 
     def setUp(self):
         self.test_fieldtype = 'integer'
-        self.test_fieldgroup = EM_TEST_OBJECT.component(3)
+        self.test_class = EM_TEST_OBJECT.components('EmClass')[0]
 
 
 ## TestField (Class)
@@ -48,7 +48,7 @@ class TestField(FieldTestCase):
     # tests the creation process of a field
     def test_create(self):
 
-        field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testfield1', 'fieldgroup_id': self.test_fieldgroup.uid, 'fieldtype': self.test_fieldtype})
+        field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testfield1', 'class_id': self.test_class.uid, 'fieldtype': self.test_fieldtype})
 
         # We check that the field has been added
         field_records = EM_TEST_OBJECT.component(field.uid)
@@ -61,7 +61,7 @@ class TestField(FieldTestCase):
     def test_invalid_internal(self):
         """ Test that internal='object' is reserved for common_fields """
         with self.assertRaises(ValueError, msg="Only common_fields should be internal='object'"):
-            field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testbadinternal','internal': 'object', 'fieldgroup_id': self.test_fieldgroup.uid, 'fieldtype': self.test_fieldtype})
+            field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testbadinternal','internal': 'object', 'class_id': self.test_class.uid, 'fieldtype': self.test_fieldtype})
 
     def test_double_rel2type(self):
         """ Test the rel2type unicity """
@@ -69,10 +69,10 @@ class TestField(FieldTestCase):
         emtype = em.components('EmType')[0]
         emclass = [c for c in em.components('EmClass') if c != emtype.em_class][0]
 
-        f1 = em.create_component('EmField', {'name': 'testr2t', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
+        f1 = em.create_component('EmField', {'name': 'testr2t', 'class_id': emclass.uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
 
         with self.assertRaises(EmComponentCheckError):
-            f2 = em.create_component('EmField', {'name': 'testr2t2', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
+            f2 = em.create_component('EmField', {'name': 'testr2t2', 'class_id': emclass.uid, 'fieldtype': 'rel2type', 'rel_to_type_id': emtype.uid})
 
     def test_same_name(self):
         """ Test the name unicity is the same EmClass"""
@@ -80,10 +80,10 @@ class TestField(FieldTestCase):
         emtype = em.components('EmType')[0]
         emclass = [c for c in em.components('EmClass') if c != emtype.em_class][0]
 
-        f1 = em.create_component('EmField', {'name': 'samename', 'fieldgroup_id': emclass.fieldgroups()[0].uid, 'fieldtype': 'char'})
+        f1 = em.create_component('EmField', {'name': 'samename', 'class_id': emclass.uid, 'fieldtype': 'char'})
 
         with self.assertRaises(EmComponentCheckError):
-            f2 = em.create_component('EmField', {'name': 'samename', 'fieldgroup_id': emclass.fieldgroups()[1].uid, 'fieldtype': 'integer'} )
+            f2 = em.create_component('EmField', {'name': 'samename', 'class_id': emclass.uid, 'fieldtype': 'integer'} )
 
         
 
@@ -96,7 +96,7 @@ class TestField(FieldTestCase):
 
         # We create the two fields
         for name in field_names:
-            fields.append(EM_TEST_OBJECT.create_component(EmField.__name__, {'name': name, 'fieldgroup_id': self.test_fieldgroup.uid, 'fieldtype': self.test_fieldtype}))
+            fields.append(EM_TEST_OBJECT.create_component(EmField.__name__, {'name': name, 'class_id': self.test_class.uid, 'fieldtype': self.test_fieldtype}))
 
         for field in fields:
             # We check if the delete process was performed to the end
@@ -113,4 +113,3 @@ class TestField(FieldTestCase):
         """ Test if the EmField.em_class @property method is correct """
         for field in EM_TEST_OBJECT.components(EmField):
             self.assertIn(field, field.em_class.fields())
-            self.assertIn(field.fieldgroup, field.em_class.fieldgroups())

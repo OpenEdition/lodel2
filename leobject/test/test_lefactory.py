@@ -62,17 +62,6 @@ class TestLeFactory(TestCase):
             #Testing inheritance
             self.assertEqual(set(leclass.__bases__), set([dyncode.LeObject, leobject.leclass.LeClass]))
             
-            #Testing _fieldgroups attr
-            self.assertEqual(
-                set([ fg.name for fg in emclass.fieldgroups()]),
-                set(leclass._fieldgroups.keys())
-            )
-            for fgroup in emclass.fieldgroups():
-                self.assertEqual(
-                    set([ f.name for f in fgroup.fields(relational=False)]),
-                    set(leclass._fieldgroups[fgroup.name])
-                )
-            
             #Testing _linked_types attr
             self.assertEqual(
                 set([ LeFactory.name2classname(lt.name) for lt in emclass.linked_types()]),
