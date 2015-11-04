@@ -52,26 +52,57 @@ class DummyDatasource(object):
         print("DummyDatasource.get: ", leclass, letype, field_list, filters, relational_filters)
         return []
     
-    ## @brief Link two object given a relation nature, depth and rank
-    # @param lesup LeObject : a LeObject
-    # @param lesub LeObject : a LeObject
-    # @param nature str|None : The relation nature or None if rel2type
-    # @param rank int : a rank
-    def add_relation(self, lesup, lesub, nature=None, depth=None, rank=None, **rel_attr):
+    ## @brief Add a superior to a LeObject
+    # @note in the MySQL version the method will have a depth=None argument to allow reccursive calls to add all the path to the root with corresponding depth
+    # @param lesup LeType : superior LeType child class instance
+    # @param lesub LeType : subordinate LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return True if added with no problems
+    def add_superior(self, lesup, lesub, nature):
         pass
-            
 
-    ## @brief Delete a link between two objects given a relation nature
-    # @param lesup LeObject : a LeObject
-    # @param lesub LeObject : a LeObject
-    # @param nature str|None : The relation nature
-    def del_relation(self, lesup, lesub, nature=None):
+    ## @brief Delete a superior to a LeObject
+    # @param lesup LeType : superior LeType child class instance
+    # @param lesub Letype : subordinate LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return True if deleted
+    def del_superior(self, lesup, lesub, nature):
+        pass
+
+    ## @brief Fetch a superiors list ordered by depth for a LeType
+    # @param lesub LeType : subordinate LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return A list of LeType ordered by depth
+    def get_superiors(self, lesub, nature):
+        pass
+
+    ## @brief Fetch the list of the subordinates given a nature
+    # @param lesup LeType : superior LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return A list of LeType that are subordinates of lesup in a "nature" relation
+    def get_subordinates(self, lesup, nature):
+        pass
+
+    ## @brief Make a relation between 2 LeType
+    # @note rel2type relations. Superior is the LeType from the EmClass and subordinate the LeType for the EmType
+    # @param lesup LeType : LeType child class instance that is from the EmClass containing the rel2type field
+    # @param lesub LeType : LeType child class instance that is from the EmType linked by the rel2type field ( @ref EditorialModel.fieldtypes.rel2type.EmFieldType.rel_to_type_id )
+    # @return True if added with no problem
+    def add_related(self, lesup, lesub, **rel_attr):
         pass
     
-    ## @brief Return all relation of a lodel_id given a position and a nature
-    # @param leo LeObject : We want the relations of this LeObject
-    # @param superior bool : If true search the relations where lodel_id is in id_sup
-    # @param nature str|None : Search for relations with the given nature (if None rel2type)
-    # @param return an array of dict with keys [ id_sup, id_sub, rank, depth, nature ]
-    def get_relations(self, leo, superior=True, nature=None):
+    ## @brief Returns related LeType
+    # @param leo LeType : The from LeType child class instance
+    # @param letype LeType : The wanted LeType child class (not instance !)
+    # @param get_sub bool : If True, leo will be the superior and we wants all subordinates of Type letype, else its the oposite, leo is the subordinates and we want superiors with Type letype
+    # @return A dict with LeType instance as key and list of relation attributes as value
+    def get_related(self, leo, letype, get_sub=True):
+        pass
+
+    ## @brief Delete a relation between two LeType
+    # @note It will deleted a relation in a rel2type between lesup.Class and lesub.Type
+    # @param lesub LeType : The superior
+    # @param lesup LeType : The subordinate
+    # @return True if deleted
+    def del_related(self, lesup, lesub):
         pass
