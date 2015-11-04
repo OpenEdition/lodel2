@@ -1,7 +1,6 @@
 # -*- coding: utf8 -*-
 
 
-import EditorialModel
 import pymysql
 
 
@@ -14,7 +13,7 @@ class MySQL(object):
     _class_table_prefix = 'class_'
     _objects_table_name = 'object'
     _connections = {
-        'default':{
+        'default': {
             'module': pymysql,
             'host': '127.0.0.1',
             'user': 'lodel',
@@ -54,7 +53,6 @@ class MySQL(object):
         if '`' in idname:
             raise ValueError("Invalid name : '%s'" % idname)
         return '`%s`' % idname
-
 
     @classmethod
     ## @brief Given a fieldtype, returns a MySQL type specifier
