@@ -2,6 +2,8 @@
 
 
 import EditorialModel
+import pymysql
+
 
 ## @brief Manages the accesses to a MySQL datasource
 class MySQL(object):
@@ -42,7 +44,7 @@ class MySQL(object):
     # @param src_table_name str
     # @param dst_table_name str
     # @return str
-    def _fk_name(cls, src_table_name, dst_table_name):
+    def get_fk_name(cls, src_table_name, dst_table_name):
         return "fk_%s_%s" % (src_table_name, dst_table_name)
 
     @classmethod

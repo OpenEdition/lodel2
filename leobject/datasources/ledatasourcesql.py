@@ -9,6 +9,7 @@ from mosql.db import Database, all_to_dicts
 from mosql.query import select, insert, update, delete, join
 from mosql.util import raw
 import mosql.mysql
+from DataSource.MySQL.MySQL import MySQL
 
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
