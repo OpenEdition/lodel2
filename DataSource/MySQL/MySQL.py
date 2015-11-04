@@ -28,7 +28,7 @@ class MySQL(object):
     # @param class_name str
     # @return str
     def get_table_name_from_class(cls, class_name):
-        return "%s%s" % (cls._class_table_prefix, class_name)
+        return (class_name if cls._class_table_prefix in class_name else "%s%s" % (cls._class_table_prefix, class_name)).lower()
 
     @classmethod
     ## @brief gets the table name given a class, a type and a field names

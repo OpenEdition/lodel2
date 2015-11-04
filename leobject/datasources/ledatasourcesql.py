@@ -14,17 +14,15 @@ from DataSource.MySQL.MySQL import MySQL
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
 
-    RELATIONS_TABLE_NAME = 'relations'
     RELATIONS_POSITIONS_FIELDS = { REL_SUP: 'superior_id', REL_SUB: 'subordinate_id'}
-    RELATIONS_NATURE_FIELD = 'nature'
-    LODEL_ID_FIELD = 'lodel_id'
-    CLASS_TABLE_PREFIX = 'class_'
-    OBJECTS_TABLE_NAME = 'object'
 
-    def __init__(self, module=pymysql, conn_args={'host': '127.0.0.1', 'user':'lodel', 'passwd':'bruno', 'db': 'lodel2'}):
+    def __init__(self, module=pymysql, conn_args=None):
         super(LeDataSourceSQL, self).__init__()
         self.module = module
-        self.connection = Database(pymysql, host=conn_args['host'], user=conn_args['user'], passwd=conn_args['passwd'], db=conn_args['db'])
+        self.datasource_utils = MySQL
+        if conn_args is None:
+            conn_args = self.datasource_utils._connections['default']
+        self.connection = Database(self.module, host=conn_args['host'], user=conn_args['user'], passwd=conn_args['passwd'], db=conn_args['db'])
 
     ## @brief inserts a new object
     # @param letype LeType
@@ -42,7 +40,7 @@ class LeDataSourceSQL(DummyDatasource):
             
             with self.connection as cur:
                 object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
-                if cur.execute(insert(self.OBJECTS_TABLE_NAME, object_datas)) != 1:
+                if cur.execute(insert(self.datasource_utils._objects_table_name, object_datas)) != 1:
                     raise RuntimeError('SQL error')
                     
                 if cur.execute('SELECT last_insert_id() as lodel_id') != 1:
@@ -50,8 +48,8 @@ class LeDataSourceSQL(DummyDatasource):
                     
                 lodel_id, = cur.fetchone()
 
-                datas[self.LODEL_ID_FIELD] = lodel_id
-                query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+                datas[self.datasource_utils._field_lodel_id] = lodel_id
+                query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
                 query = insert(query_table_name, datas)
 
                 if cur.execute(query) != 1:
@@ -68,7 +66,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return list
     def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
         where_filters = self._prepare_filters(filters, query_table_name)
         join_fields = {}
 
@@ -76,15 +74,15 @@ class LeDataSourceSQL(DummyDatasource):
             rel_filters = self._prepare_rel_filters(relational_filters)
             for rel_filter in rel_filters:
                 # join condition
-                relation_table_join_field = "%s.%s" % (self.RELATIONS_TABLE_NAME, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
-                query_table_join_field = "%s.%s" % (query_table_name, self.LODEL_ID_FIELD)
+                relation_table_join_field = "%s.%s" % (self.datasource_utils._relations_table_name, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
+                query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils._field_lodel_id)
                 join_fields[query_table_join_field] = relation_table_join_field
                 # Adding "where" filters
-                where_filters['%s.%s' % (self.RELATIONS_TABLE_NAME, self.RELATIONS_NATURE_FIELD)] = rel_filter['nature']
+                where_filters['%s.%s' % (self.datasource_utils._relations_table_name, self.datasource_utils._relations_field_nature)] = rel_filter['nature']
                 where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
 
             # building the query
-            query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.RELATIONS_TABLE_NAME, join_fields))
+            query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.datasource_utils._relations_table_name, join_fields))
         else:
             query = select(query_table_name, where=where_filters, select=field_list)
 
@@ -101,7 +99,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
     # @return bool : True on success
     def delete(self, letype, leclass, filters, relational_filters):
-        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
         prep_filters = self._prepare_filters(filters, query_table_name)
         prep_rel_filters = self._prepare_rel_filters(relational_filters)
 
@@ -110,16 +108,16 @@ class LeDataSourceSQL(DummyDatasource):
 
             for prep_rel_filter in prep_rel_filters:
                 query += "%s INNER JOIN %s ON (%s.%s = %s.%s)" % (
-                    self.RELATIONS_TABLE_NAME,
+                    self.datasource_utils._relations_table_name,
                     query_table_name,
-                    self.RELATIONS_TABLE_NAME,
+                    self.datasource_utils._relations_table_name,
                     prep_rel_filter['position'],
                     query_table_name,
-                    self.LODEL_ID_FIELD
+                    self.datasource_utils._field_lodel_id
                 )
 
                 if prep_rel_filter['condition_key'][0] is not None:
-                    prep_filters[("%s.%s" % (self.RELATIONS_TABLE_NAME, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
+                    prep_filters[("%s.%s" % (self.datasource_utils._relations_table_name, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
 
             if prep_filters is not None and len(prep_filters) > 0:
                 query += " WHERE "
@@ -131,7 +129,7 @@ class LeDataSourceSQL(DummyDatasource):
         else:
             query = delete(query_table_name, filters)
 
-        query_delete_from_object = delete(self.OBJECTS_TABLE_NAME, {'lodel_id':filters['lodel_id']})
+        query_delete_from_object = delete(self.datasource_utils._objects_table_name, {'lodel_id':filters['lodel_id']})
         with self.connection as cur:
             cur.execute(query)
             cur.execute(query_delete_from_object)
@@ -148,7 +146,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo prendre en compte les rel_filters
     def update(self, letype, leclass, filters, rel_filters, data):
 
-        query_table_name = self._get_table_name_from_class_name(leclass.__name__)
+        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
         where_filters = filters
         set_data = data
 
@@ -160,13 +158,6 @@ class LeDataSourceSQL(DummyDatasource):
         with self.connection as cur:
             cur.execute(query)
         return True
-
-
-    ## @brief prepares the table name using a "class_" prefix
-    # @params classname str
-    # @return str
-    def _get_table_name_from_class_name(self, classname):
-        return (classname if self.CLASS_TABLE_PREFIX in classname else "%s%s" % (self.CLASS_TABLE_PREFIX, classname)).lower()
 
     ## @brief prepares the relational filters
     # @params rel_filters : (("superior"|"subordinate"), operator, value)
@@ -213,7 +204,7 @@ class LeDataSourceSQL(DummyDatasource):
             raise AttributeError("No relation attributes allowed for non rel2type relations")
 
         with self.connection() as cur:
-            sql = insert(RELATIONS_TABLE_NAME, {'id_sup':lesup.lodel_id, 'id_sub':lesub.lodel_id, 'nature':nature,'rank':rank, 'depth':depth})
+            sql = insert(self.datasource_utils._relations_table_name, {'id_sup':lesup.lodel_id, 'id_sub':lesub.lodel_id, 'nature':nature,'rank':rank, 'depth':depth})
             if cur.execute(sql) != 1:
                 raise RuntimeError("Unknow SQL error")
 

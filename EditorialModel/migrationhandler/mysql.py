@@ -4,6 +4,7 @@ import copy
 import pymysql
 
 import EditorialModel
+from DataSource.MySQL.MySQL import MySQL
 
 # The global MH algorithm is as follow :
 # A create_table(table_name, pk_name, pk_opt) method that create a table
@@ -34,9 +35,9 @@ import EditorialModel
 class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigrationHandler):
     
     ## @brief Object table name
-    _object_tname = 'object'
+    #_object_tname = 'object'
     ## @brief Relation table name
-    _relation_tname = 'relation'
+    #_relation_tname = 'relation'
 
     ## @brief Construct a MysqlMigrationHandler
     # @param host str : The db host
@@ -44,6 +45,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param password str : The db password
     # @param db str : The db name
     def __init__(self, host, user, password, db, db_engine = 'InnoDB', foreign_keys = True, debug = False, dryrun = False, drop_if_exists = False):
+        self.datasource = MySQL
         #Connect to MySQL
         self.db = pymysql.connect(host=host, user=user, passwd=password, db=db)
         self.debug = debug
@@ -162,7 +164,6 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         cols_l = self._class2cols(emclass)
         self._generate_triggers(tname, cols_l)
 
-
     ## @brief Given a class uid create the coressponding table
     def create_emclass_table(self, em, uid, engine):
         emclass = em.component(uid)
@@ -180,7 +181,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         emclass = emcomponent(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The give uid is not an EmClass uid")
-        tname = self._idname_escape(self._emclass2table_name(emclass.name))
+        tname = self.datasource.escape_idname(self._emclass2table_name(emclass))
         # Delete the table triggers to prevent errors
         self._generate_triggers(tname, dict())
 
@@ -208,8 +209,8 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param tname str : The table name
     # @param fname str : The column name
     def _del_column(self, tname, fname):
-        tname = self._idname_escape(tname)
-        fname = self._idname_escape(fname)
+        tname = self.datasource.escape_idname(tname)
+        fname = self.datasource.escape_idname(fname)
 
         self._query("""ALTER TABLE {table_name} DROP COLUMN {col_name};""".format(table_name = tname, col_name = fname))
     
@@ -217,7 +218,8 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param emclass EmClass : An EmClass instance
     # @return a table name
     def _emclass2table_name(self, emclass):
-        return "class_%s"%emclass.name
+        return self.datasource.get_table_name_from_class(emclass.name)
+        #return "class_%s"%emclass.name
     
     ## @brief Construct a table name given a rela2type EmField instance
     # @param em Model : A Model instance
@@ -226,7 +228,8 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     def _r2t2table_name(self, em, emfield):
         emclass = emfield.em_class
         emtype = em.component(emfield.rel_to_type_id)
-        return "%s_%s_%s"%(emclass.name, emtype.name, emfield.name)
+        return self.datasource.get_r2t2table_name(emclass.name, emtype.name, emfield.name)
+        #return "%s_%s_%s"%(emclass.name, emtype.name, emfield.name)
      
     ## @brief Generate a columns_fieldtype dict given a rel2type EmField
     # @param em Model : an @ref EditorialModel.model.Model instance
@@ -282,7 +285,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @return None
     def _create_table(self, table_name, pk_name, pk_ftype, engine, charset = 'utf8', if_exists = 'nothing'):
         #Escaped table name
-        etname = self._idname_escape(table_name)
+        etname = self.datasource.escape_idname(table_name)
         pk_type = self._field_to_type(pk_ftype)
         pk_specs = self._field_to_specs(pk_ftype)
 
@@ -302,8 +305,8 @@ PRIMARY KEY({pk_name})
             raise ValueError("Unexpected value for argument if_exists '%s'."%if_exists)
 
         self._query(qres.format(
-            table_name = self._idname_escape(table_name),
-            pk_name = self._idname_escape(pk_name),
+            table_name = self.datasource.escape_idname(table_name),
+            pk_name = self.datasource.escape_idname(pk_name),
             pk_type = pk_type,
             pk_specs = pk_specs,
             engine = engine,
@@ -319,8 +322,8 @@ PRIMARY KEY({pk_name})
         add_col = """ALTER TABLE {table_name}
 ADD COLUMN {col_name} {col_type} {col_specs};"""
         
-        etname = self._idname_escape(table_name)
-        ecname = self._idname_escape(col_name)
+        etname = self.datasource.escape_idname(table_name)
+        ecname = self.datasource.escape_idname(col_name)
 
         add_col = add_col.format(
             table_name = etname,
@@ -344,19 +347,19 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
     # @param src_col_name str : The name of the concerned column in the src_table
     # @param dst_col_name str : The name of the concerned column in the dst_table
     def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name):
-        stname = self._idname_escape(src_table_name)
-        dtname = self._idname_escape(dst_table_name)
-        scname = self._idname_escape(src_col_name)
-        dcname = self._idname_escape(dst_col_name)
+        stname = self.datasource.escape_idname(src_table_name)
+        dtname = self.datasource.escape_idname(dst_table_name)
+        scname = self.datasource.escape_idname(src_col_name)
+        dcname = self.datasource.escape_idname(dst_col_name)
 
-        fk_name = self._fk_name(src_table_name, dst_table_name)
+        fk_name = self.datasource.get_fk_name(src_table_name, dst_table_name)
         
         self._del_fk(src_table_name, dst_table_name)
 
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
 FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
-            fk_name = self._idname_escape(fk_name),
+            fk_name = self.datasource.escape_idname(fk_name),
             src_table = stname,
             src_col = scname,
             dst_table = dtname,
@@ -371,13 +374,13 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
-                src_table = self._idname_escape(src_table_name),
-                fk_name = self._idname_escape(self._fk_name(src_table_name, dst_table_name))
+                src_table = self.datasource.escape_idname(src_table_name),
+                fk_name = self.datasource.escape_idname(self.datasource.get_fk_name(src_table_name, dst_table_name))
             ))
         except pymysql.err.InternalError: pass
     
-    def _fk_name(self, src_table_name, dst_table_name):
-        return "fk_%s_%s"%(src_table_name, dst_table_name)
+    #def _fk_name(self, src_table_name, dst_table_name):
+    #    return "fk_%s_%s"%(src_table_name, dst_table_name)
 
 
     ## @brief Generate triggers given a table_name and its columns fieldtypes
@@ -413,18 +416,18 @@ DROP FOREIGN KEY {fk_name}""".format(
     # @param cols_val dict : Dict with column name as key and column value as value
     # @return None
     def _table_trigger(self, table_name, moment, cols_val):
-        trigger_name = self._idname_escape("%s_%s_trig"%(table_name, moment))
+        trigger_name = self.datasource.escape_idname("%s_%s_trig"%(table_name, moment))
         #Try to delete the trigger
         drop_trig = """DROP TRIGGER IF EXISTS {trigger_name};""".format(trigger_name = trigger_name)
         self._query(drop_trig)
 
-        col_val_l = ', '.join([ "NEW.%s = %s"%(self._idname_escape(cname), cval)for cname, cval in cols_val.items() ])
+        col_val_l = ', '.join([ "NEW.%s = %s"%(self.datasource.escape_idname(cname), cval)for cname, cval in cols_val.items() ])
         #Create a trigger if needed
         if len(col_val_l) > 0:
             trig_q = """CREATE TRIGGER {trigger_name} BEFORE {moment} ON {table_name}
 FOR EACH ROW SET {col_val_list};""".format(
                 trigger_name = trigger_name,
-                table_name = self._idname_escape(table_name),
+                table_name = self.datasource.escape_idname(table_name),
                 moment = moment,
                 col_val_list = col_val_l
             )
@@ -432,10 +435,10 @@ FOR EACH ROW SET {col_val_list};""".format(
 
     ## @brief Identifier escaping
     # @param idname str : An SQL identifier
-    def _idname_escape(self, idname):
-        if '`' in idname:
-            raise ValueError("Invalid name : '%s'"%idname)
-        return '`%s`'%idname
+    #def _idname_escape(self, idname):
+    #    if '`' in idname:
+    #        raise ValueError("Invalid name : '%s'"%idname)
+    #    return '`%s`'%idname
 
     ## @brief Returns column specs from fieldtype
     # @param emfieldtype EmFieldType : An EmFieldType insance
