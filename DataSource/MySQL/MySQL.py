@@ -7,12 +7,12 @@ import pymysql
 ## @brief Manages the accesses to a MySQL datasource
 class MySQL(object):
 
-    _relations_table_name = 'relation'
-    _relations_field_nature = 'nature'
-    _field_lodel_id = 'lodel_id'
-    _class_table_prefix = 'class_'
-    _objects_table_name = 'object'
-    _connections = {
+    relations_table_name = 'relation'
+    relations_field_nature = 'nature'
+    field_lodel_id = 'lodel_id'
+    class_table_prefix = 'class_'
+    objects_table_name = 'object'
+    connections = {
         'default': {
             'module': pymysql,
             'host': '127.0.0.1',

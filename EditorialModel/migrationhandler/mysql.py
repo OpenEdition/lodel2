@@ -33,11 +33,6 @@ from DataSource.MySQL.MySQL import MySQL
 
 ## @brief Modify a MySQL database given editorial model changes
 class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigrationHandler):
-    
-    ## @brief Object table name
-    #_object_tname = 'object'
-    ## @brief Relation table name
-    #_relation_tname = 'relation'
 
     ## @brief Construct a MysqlMigrationHandler
     # @param host str : The db host
@@ -120,7 +115,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         self._create_table(tname, pkname, pkftype, self.db_engine, if_exists = 'nothing')
         #Add a foreign key if wanted
         if self.foreign_keys:
-            self._add_fk(tname, self._relation_tname, pkname, pkname)
+            self._add_fk(tname, self.datasource.relations_table_name, pkname, pkname)
         #Add the column
         self._add_column(tname, emfield.name, emfield.fieldtype_instance())
         #Update table triggers
@@ -174,7 +169,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         self._create_table(table_name, pkname, pktype, engine=engine)
         
         if self.foreign_keys:
-            self._add_fk(table_name, self._object_tname, pkname, pkname)
+            self._add_fk(table_name, self.datasource.objects_table_name, pkname, pkname)
     
     ## @brief Given an EmClass uid delete the corresponding table
     def delete_emclass_table(self, em, uid):
@@ -250,7 +245,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     def _create_default_tables(self, drop_if_exist = False):
         if_exists = 'drop' if drop_if_exist else 'nothing'
         #Object tablea
-        tname = self._object_tname
+        tname = self.datasource.objects_table_name
         pk_name, pk_ftype = self._common_field_pk
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists = if_exists)
         #Adding columns
@@ -262,7 +257,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         self._generate_triggers(tname, cols)
 
         #Relation table
-        tname = self._relation_tname
+        tname = self.datasource.relations_table_name
         pk_name, pk_ftype = self._relation_pk
         self._create_table(tname, pk_name, pk_ftype, engine = self.db_engine, if_exists = if_exists)
         #Adding columns
