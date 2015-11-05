@@ -1,8 +1,7 @@
 # -*- coding: utf8 -*-
 
-
 import pymysql
-
+import settings
 
 ## @brief Manages the accesses to a MySQL datasource
 class MySQL(object):
@@ -12,15 +11,7 @@ class MySQL(object):
     field_lodel_id = 'lodel_id'
     class_table_prefix = 'class_'
     objects_table_name = 'object'
-    connections = {
-        'default': {
-            'module': pymysql,
-            'host': '127.0.0.1',
-            'user': 'lodel',
-            'passwd': 'bruno',
-            'db': 'lodel2'
-        }
-    }
+    connections = settings.DATABASE_CONNECTIONS
 
     @classmethod
     ## @brief gets the table name from class name
