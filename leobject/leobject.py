@@ -67,6 +67,20 @@ class _LeObject(object):
             letype.check_datas_or_raise(data, complete = True)
         return cls._datasource.insert(letype, leclass, datas)
     
+    ## @brief Check if a LeType is a hierarchy root
+    @staticmethod
+    def is_root(leo):
+        if isinstance(leo, leobject.letype.LeType):
+            return False
+        elif isinstance(leo, LeRoot):
+            return True
+        raise ValueError("Invalid value for a LeType : %s"%leo)
+    
+    ## @brief Return a LeRoot instance
+    @staticmethod
+    def get_root():
+        return LeRoot()
+
     ## @brief Delete LeObjects given filters
     # @param cls
     # @param letype LeType|str : LeType child class or name
@@ -216,6 +230,42 @@ class _LeObject(object):
 
         return cls._datasource.del_related(lesup, lesub)
     
+    ## @brief Add a hierarchy relation between two LeObject
+    # @param lesup LeType|LeRoot : LeType child class instance
+    # @param lesub LeType : LeType child class instance
+    # @param nature str : The nature of the relation @ref EditorialModel.classtypes
+    # @param rank str|int :  The relation rank. Can be 'last', 'first' or an integer
+    # @param replace_if_exists bool : if True delete the old superior and set the new one. If False and there is a superior raise an LeObjectQueryError
+    # @return The relation ID or False if fails
+    # @throw LeObjectQueryError replace_if_exists == False and there is a superior
+    @classmethod
+    def hierarchy_add(cls, lesup, lesub, nature, rank = 'last', replace_if_exists = False):
+        #Arguments check
+        if nature not in EditorialModel.classtypes.EmClassType.natures(lesub._classtype):
+            raise ValueError("Invalid nature '%s' for %s"%(nature, lesup.__class__.__name__))
+
+        if not cls.leo_is_root(lesup):
+            if nature not in EditorialModel.classtypes.EmClassType.natures(lesup._classtype):
+                raise ValueError("Invalid nature '%s' for %s"%(nature, lesup.__class__.__name__))
+            if lesup.__class__ not in lesub._superiors[nature]:
+                raise ValueError("%s is not a valid superior for %s"%(lesup.__class__, lesub.__class__))
+        #else:
+        #   lesup is not a LeType but a hierarchy root
+
+        if rank not in ['first', 'last'] and not isinstance(rank, int):
+            raise ValueError("Allowed values for rank are integers and 'first' or 'last' but '%s' found"%rank)
+
+        superiors = cls.hierarchy_get(lesub, nature, leo_is_sup = False)
+        if lesup in len(superiors) > 0:
+            if not replace_if_exists:
+                raise LeObjectQueryError("The subordinate allready has a superior")
+            #remove existig superior
+            if not cls.hierarchy_del(superiors[0], lesub, nature):
+                raise RuntimeError("Unable to delete the previous superior")
+
+        return self._datasource.add_superior(lesup, lesub, nature, rank)
+        
+
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
     # @param letype LeType : LeType child class
@@ -384,6 +434,11 @@ class _LeObject(object):
         op_re_piece += ')'
         cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
         pass
+
+## @brief Class designed to represent the hierarchy roots
+# @see _LeObject.get_root() _LeObject.is_root()
+class LeRoot(object):
+    pass
 
 class LeObjectError(Exception):
     pass

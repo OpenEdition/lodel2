@@ -16,6 +16,8 @@ class MySQL(object):
     ## @brief indicates if we want ON DELETE CASCADE on foreign keys
     # @todo implementation in migration handler
     fk_on_delete_cascade = False
+    ## @brief Lodel_id for the hierachy root
+    leroot_lodel_id = 0
 
     @classmethod
     ## @brief gets the table name from class name

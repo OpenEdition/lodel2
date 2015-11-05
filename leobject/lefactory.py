@@ -160,7 +160,7 @@ import %s
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
 
         result += """
-## @brief _LeObject concret clas
+## @brief _LeObject concret class
 # @see leobject::leobject::_LeObject
 class LeObject(_LeObject):
     _model = Model(backend=%s)

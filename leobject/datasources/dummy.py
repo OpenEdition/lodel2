@@ -74,8 +74,8 @@ class DummyDatasource(object):
     ## @brief Fetch a superiors list ordered by depth for a LeType
     # @param lesub LeType : subordinate LeType child class instance
     # @param nature str : A relation nature @ref EditorialModel.classtypes
-    # @return A list of LeType ordered by depth
-    def get_superiors(self, lesub, nature):
+    # @return A list of LeType ordered by depth (the first is the direct superior)
+    def get_superiors(self, lesub, nature = None):
         pass
 
     ## @brief Fetch the list of the subordinates given a nature
