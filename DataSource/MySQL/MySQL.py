@@ -7,7 +7,7 @@ import settings
 class MySQL(object):
 
     relations_table_name = 'relation'
-    relation_table_pkname = 'id_relation'
+    relations_pkname = 'id_relation'
     relations_field_nature = 'nature'
     field_lodel_id = 'lodel_id'
     class_table_prefix = 'class_'

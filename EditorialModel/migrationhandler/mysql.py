@@ -72,7 +72,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         elif isinstance(em.component(uid), EditorialModel.fields.EmField):
             emfield = em.component(uid)
             if emfield.rel_field_id is None:
-                #non rlationnal field
+                #non relationnal field
                 if initial_state is None:
                     #non relationnal EmField creation
                     if not(emfield.name in EditorialModel.classtypes.common_fields.keys()):
@@ -504,7 +504,7 @@ FOR EACH ROW SET {col_val_list};""".format(
     # @todo do it
     @property
     def _relation_pk(self):
-        return (MySQL.relation_table_pkname, EditorialModel.fieldtypes.pk.EmFieldType())
+        return (MySQL.relations_pkname, EditorialModel.fieldtypes.pk.EmFieldType())
     
     ## @brief Returns a dict { colname:fieldtype } of relation table columns
     @property

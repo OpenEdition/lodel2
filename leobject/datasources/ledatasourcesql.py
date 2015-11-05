@@ -2,6 +2,7 @@
 
 import pymysql
 
+import leobject
 from leobject.datasources.dummy import DummyDatasource
 from leobject.leobject import REL_SUB, REL_SUP
 
@@ -217,13 +218,17 @@ class LeDataSourceSQL(DummyDatasource):
                 raise NotImplementedError()
 
         return True
-
-    ## @brief Delete a link between two objects given a relation nature
-    # @param lesup LeObject : a LeObject
-    # @param lesub LeObject : a LeObject
-    # @param nature str|None : The relation nature
+    
+    ## @brief Delete a rel2type relation
+    # @warning this method may not be efficient
+    # @param id_relation int : The relation identifier
     # @return bool
-    def del_relation(self, lesup, lesub, nature=None):
+    def del_relation(self, id_relation):
+
+        #First step : Get the two concerned lodel_id to be able to fetch
+        #               each LeObject class and type in order to build 
+        #               the attribute table name (if one exists)
+
 
         if lesup is None or lesub is None:
             raise AttributeError("Missing member(s) of the relation to delete")
@@ -239,6 +244,49 @@ class LeDataSourceSQL(DummyDatasource):
                 raise RuntimeError("Unknown SQL Error")
 
         return True
+    
+    ## @brief Fetch a relation
+    # @param id_relation int : The relation identifier
+    # @return a tuple(lesup, lesub, dict_attr) or False if no relation exists with this id
+    # @throw Exception if the nature is not NULL
+    #
+    # @todo TESTS
+    def get_relation(self, id_relation):
+        with self.connection as cur:
+            sql = select(MySQL.relation_table_name, {MySQL.relations_pkname: id_relation})
+            if cur.execute(sql) != 1:
+                raise RuntimeError("Unknow SQL error")
+            res = all_to_dicts(cur)
+            if len(res) == 0:
+                return False
+            if len(res) > 1:
+                raise RuntimeError("When selecting on primary key, get more than one result. Bailout")
+
+            leobj = leobject.lefactory.LeFactory.leobj_from_name('LeObject')
+            lesup = leobj.uid2leobj(res['id_sup'])
+            lesub = leobj.uid2leobj(res['id_sub'])
+            
+            if len(lesup._linked_types[lesub.__class__]) == 0:
+                #No relation attributes
+                attrs = dict()
+            else:
+                #Fetch relation attributes
+                rel_attr_table = MySQL.get_r2t2table_name(lesup.__class__.__name__, lesub.__class__.__name__)
+                sql = select(MySQL.rel_attr_table, {MySQL.relations_pkname: id_relation})
+                if cur.execute(sql) != 1:
+                    raise RuntimeError("Unknow SQL error")
+
+                res = all_to_dicts(cur)
+                if len(res) == 0:
+                    #Here raising a warning and adding empty (or default) attributes will be better
+                    raise RuntimeError("This relation should have attributes but none found !!!")
+                if len(res) > 1:
+                    raise RuntimeError("When selecting on primary key, get more than one result. Bailout")
+                attrs = res[0]
+
+            return (lesup, lesub, attrs)
+            
+        
 
     ## @brief Fetch all relations concerning an object (rel2type relations)
     # @param leo LeType : LeType child instance
