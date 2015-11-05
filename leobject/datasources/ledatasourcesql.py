@@ -218,24 +218,15 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
 
-    ## @brief Delete a link between two objects given a relation nature
-    # @param lesup LeObject : a LeObject
-    # @param lesub LeObject : a LeObject
-    # @param nature str|None : The relation nature
-    # @return bool
-    def del_relation(self, lesup, lesub, nature=None):
-
-        if lesup is None or lesub is None:
-            raise AttributeError("Missing member(s) of the relation to delete")
-        
-        delete_params = {'id_sup': lesup.lodel_id, 'id_sub': lesub.lodel_id}
-        if nature is not None:
-            delete_params['nature'] = nature
-
+    ## @brief Delete a relation between two LeType
+    # @note It will delete a relation in a rel2type between lesup.Class and lesub.Type
+    # @param id_relation int : The relation identifier
+    # @return True if deleted
+    def del_relation(self, id_relation):
+        delete_params = {'id_relation':id_relation}
         sql = delete(self.datasource_utils.relations_table_name, delete_params)
-
         with self.connection as cur:
-            if cur.execute(sql) != 1:
+            if cur.execute(sql)!=1:
                 raise RuntimeError("Unknown SQL Error")
 
         return True
