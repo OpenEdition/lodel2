@@ -7,8 +7,9 @@ from leobject.leobject import REL_SUB, REL_SUP
 
 from mosql.db import Database, all_to_dicts
 from mosql.query import select, insert, update, delete, join
-from mosql.util import raw
+from mosql.util import raw, or_
 import mosql.mysql
+
 from DataSource.MySQL.MySQL import MySQL
 
 
@@ -239,23 +240,25 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
 
-    ## @brief Return all relation of a lodel_id given a position and a nature
-    # @param lodel_id int : We want the relations of this lodel_id
-    # @param superior bool : If true search the relations where lodel_id is in id_sup
-    # @param nature str|None : Search for relations with the given nature (if None rel2type)
-    # @param return an array of dict with keys [ id_sup, id_sub, rank, depth, nature ]
-    def get_relations(self, lodel_id, superior=True, nature=None):
-        select_params = {}
-        if superior is True:
-            select_params['id_sup'] = lodel_id
-        else:
-            select_params['id_sub'] = lodel_id
+    ## @brief Fetch all relations concerning an object (rel2type relations)
+    # @param leo LeType : LeType child instance
+    # @return a list of tuple (lesup, lesub, dict_attr)
+    def get_relations(self, leo):
 
-        select_params['nature'] = nature
-
-        sql = select(self.datasource_utils.relations_table_name, select_params)
+        sql = select(self.datasource_utils.relations_table_name, where=or_(({'id_sub':leo.lodel_id},{'id_sup':leo.lodel_id})))
 
         with self.connection as cur:
             results = all_to_dicts(cur.execute(sql))
 
-        return results
+        relations = []
+        for result in results:
+            id_sup = result['id_sup']
+            id_sub = result['id_sub']
+
+            del result['id_sup']
+            del result['id_sub']
+            rel_attr = result
+
+            relations.append((id_sup, id_sub, rel_attr))
+
+        return relations
