@@ -204,7 +204,7 @@ class LeDataSourceSQL(DummyDatasource):
             #not a rel2type but have some relation attribute
             raise AttributeError("No relation attributes allowed for non rel2type relations")
 
-        with self.connection() as cur:
+        with self.connection as cur:
             sql = insert(self.datasource_utils.relations_table_name, {'id_sup': lesup.lodel_id, 'id_sub': lesub.lodel_id, 'nature': nature, 'rank': rank, 'depth': depth})
             if cur.execute(sql) != 1:
                 raise RuntimeError("Unknow SQL error")
@@ -221,7 +221,24 @@ class LeDataSourceSQL(DummyDatasource):
     # @param lesup LeObject : a LeObject
     # @param lesub LeObject : a LeObject
     # @param nature str|None : The relation nature
+    # @return bool
     def del_relation(self, lesup, lesub, nature=None):
+
+        if lesup is None or lesub is None:
+            raise AttributeError("Missing member(s) of the relation to delete")
+        
+        delete_params = {'id_sup': lesup.lodel_id, 'id_sub': lesub.lodel_id}
+        if nature is not None:
+            delete_params['nature'] = nature
+
+        sql = delete(self.datasource_utils.relations_table_name, delete_params)
+
+        with self.connection as cur:
+            if cur.execute(sql) != 1:
+                raise RuntimeError("Unknown SQL Error")
+
+        return True
+
         raise NotImplementedError()
 
     ## @brief Return all relation of a lodel_id given a position and a nature
