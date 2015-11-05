@@ -53,6 +53,12 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         pass
     
     ## @brief Modify the db given an EM change
+    # 
+    # @param em model : The EditorialModel.model object to provide the global context
+    # @param uid int : The uid of the change EmComponent
+    # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
+    # @param new_state dict | None : dict with field name as key and field value as value. Representing the new state. None mean component deletion
+    # @throw EditorialModel.exceptions.MigrationHandlerChangeError if the change was refused
     def register_change(self, em, uid, initial_state, new_state, engine = None):
         if engine is None:
             engine = self.db_engine
@@ -83,11 +89,14 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
                 elif new_state is None:
                     #Rel2type attr deletion
                     self.del_relationnal_field(em, uid)
+
     ## @brief dumdumdummy
+    # @note implemented to avoid the log message of EditorialModel.migrationhandler.dummy.DummyMigrationHandler
     def register_model_state(self, em, state_hash):
         pass
 
     ## @brief Exec a query
+    # @param query str : SQL query
     def _query(self, query):
         if self.debug:
             print(query+"\n")
@@ -146,7 +155,6 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     ## @brief Given an EmField uid add a column to the corresponding table
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
-    # @return None
     def add_col_from_emfield(self, em, uid):
         emfield = em.component(uid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
@@ -160,6 +168,8 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         self._generate_triggers(tname, cols_l)
 
     ## @brief Given a class uid create the coressponding table
+    # @param em Model : A Model instance
+    # @param uid int : An EmField uid
     def create_emclass_table(self, em, uid, engine):
         emclass = em.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
@@ -172,6 +182,8 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
             self._add_fk(table_name, self.datasource.objects_table_name, pkname, pkname)
     
     ## @brief Given an EmClass uid delete the corresponding table
+    # @param em Model : A Model instance
+    # @param uid int : An EmField uid
     def delete_emclass_table(self, em, uid):
         emclass = emcomponent(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
@@ -277,7 +289,6 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param engine str : The engine to use with this table
     # @param charset str : The charset of this table
     # @param if_exist str : takes values in ['nothing', 'drop']
-    # @return None
     def _create_table(self, table_name, pk_name, pk_ftype, engine, charset = 'utf8', if_exists = 'nothing'):
         #Escaped table name
         etname = self.datasource.escape_idname(table_name)
@@ -312,7 +323,6 @@ PRIMARY KEY({pk_name})
     # @param table_name str : The table name
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
-    # @return None
     def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists = False):
         add_col = """ALTER TABLE {table_name}
 ADD COLUMN {col_name} {col_type} {col_specs};"""
@@ -372,16 +382,13 @@ DROP FOREIGN KEY {fk_name}""".format(
                 src_table = self.datasource.escape_idname(src_table_name),
                 fk_name = self.datasource.escape_idname(self.datasource.get_fk_name(src_table_name, dst_table_name))
             ))
-        except pymysql.err.InternalError: pass
+        except pymysql.err.InternalError:
+            # If the FK don't exists we do not care
+            pass
     
-    #def _fk_name(self, src_table_name, dst_table_name):
-    #    return "fk_%s_%s"%(src_table_name, dst_table_name)
-
-
     ## @brief Generate triggers given a table_name and its columns fieldtypes
     # @param table_name str : Table name
     # @param cols_ftype dict : with col name as key and column fieldtype as value
-    # @return None
     def _generate_triggers(self, table_name, cols_ftype):
         colval_l_upd = dict() #param for update trigger
         colval_l_ins = dict() #param for insert trigger
@@ -409,7 +416,6 @@ DROP FOREIGN KEY {fk_name}""".format(
     # @param table_name str : The table name
     # @param moment str : can be 'update' or 'insert'
     # @param cols_val dict : Dict with column name as key and column value as value
-    # @return None
     def _table_trigger(self, table_name, moment, cols_val):
         trigger_name = self.datasource.escape_idname("%s_%s_trig"%(table_name, moment))
         #Try to delete the trigger
