@@ -245,4 +245,17 @@ class LeDataSourceSQL(DummyDatasource):
     # @param nature str|None : Search for relations with the given nature (if None rel2type)
     # @param return an array of dict with keys [ id_sup, id_sub, rank, depth, nature ]
     def get_relations(self, lodel_id, superior=True, nature=None):
-        raise NotImplementedError()
+        select_params = {}
+        if superior is True:
+            select_params['id_sup'] = lodel_id
+        else:
+            select_params['id_sub'] = lodel_id
+
+        select_params['nature'] = nature
+
+        sql = select(self.datasource_utils.relations_table_name, select_params)
+
+        with self.connection as cur:
+            results = all_to_dicts(cur.execute(sql))
+
+        return results
