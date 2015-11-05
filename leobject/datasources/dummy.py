@@ -56,9 +56,11 @@ class DummyDatasource(object):
     # @note in the MySQL version the method will have a depth=None argument to allow reccursive calls to add all the path to the root with corresponding depth
     # @param lesup LeType : superior LeType child class instance
     # @param lesub LeType : subordinate LeType child class instance
-    # @param nature str : A relation nature @ref EditorialModel.classtypes
-    # @return True if added with no problems
-    def add_superior(self, lesup, lesub, nature):
+    # @param nature str : A relation nature @ref EditorialModel.classtypesa
+    # @param rank int : The rank of this relation
+    # @param depth None|int : The depth of the relation (used to make reccursive calls in order to link with all superiors)
+    # @return The relation ID or False if fails
+    def add_superior(self, lesup, lesub, nature, rank, depth = None):
         pass
 
     ## @brief Delete a superior to a LeObject
