@@ -345,7 +345,7 @@ class LeDataSourceSQL(DummyDatasource):
             self.datasource_utils.relations_table_name,
             columns=('id_sup',),
             where={'id_sub': lesub.lodel_id, 'nature': nature},
-            order_by=('depth',)
+            order_by=('depth desc',)
         )
 
         result = []
