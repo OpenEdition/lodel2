@@ -82,7 +82,7 @@ class DummyDatasource(object):
     # @param lesup LeType : superior LeType child class instance
     # @param nature str : A relation nature @ref EditorialModel.classtypes
     # @return A list of LeType ordered by rank that are subordinates of lesup in a "nature" relation
-    def get_subordinates(self, lesup, nature = None):
+    def get_subordinates(self, lesup, nature):
         pass
 
 

@@ -355,3 +355,21 @@ class LeDataSourceSQL(DummyDatasource):
         superiors = [LeType(result['id_sup']) for result in results]
 
         return superiors
+    
+    ## @brief Fetch the list of the subordinates given a nature
+    # @param lesup LeType : superior LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return A list of LeType ordered by rank that are subordinates of lesup in a "nature" relation
+    def get_subordinates(self, lesup, nature):
+        with self.connection as cur:
+            id_sup = lesup.lodel_id if isinstance(lesup, leobject.letype.LeType) else MySQL.leroot_lodel_id
+            sql = select(
+                MySQL.relations_table_name,
+                columns=('id_sup',),
+                where={'id_sup': id_sup, 'nature': nature},
+                order_by=('rank',)
+            )
+            cur.execut(sql)
+            res = all_to_dicts(cur)
+
+            return [LeType(r['id_sup']) for r in res]
