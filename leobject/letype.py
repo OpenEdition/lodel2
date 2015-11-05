@@ -165,14 +165,14 @@ class LeType(object):
     # @param rank str|int :  The relation rank. Can be 'last', 'first' or an integer
     # @param replace_if_exists bool : if True delete the old superior and set the new one. If False and there is a superior raise an LeObjectQueryError
     # @return The relation ID or False if fails
-    def add_superior(self, leo, nature, rank = 'last', replace_if_exists = False):
+    def superior_add(self, leo, nature, rank = 'last', replace_if_exists = False):
         return leobject.lefactory.LeFactory.leobj_from_name('LeObject').hierarchy_add(leo, self, nature, rank, replace_if_exists)
 
     ## @brief Delete a superior given a relation's natue
     # @param leo LeType | LeRoot : The superior to delete
     # @param nature str : The nature of the relation @ref EditorialModel.classtypes
     # @return True if deletion is a success
-    def del_superior(self, leo, nature):
+    def superior_del(self, leo, nature):
         return leobject.lefactory.leobj_from_name('LeObject').hierarchy_del(leo, self, nature)
         
     
