@@ -1,0 +1,13 @@
+#-*- coding:utf8 -*-
+
+import pymysql
+
+DATABASE_CONNECTIONS = {
+    'default': {
+        'module': pymysql,
+        'host': '127.0.0.1',
+        'user': 'lodel',
+        'passwd': 'lodel',
+        'db': 'lodel'
+    }
+}
