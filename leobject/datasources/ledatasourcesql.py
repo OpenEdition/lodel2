@@ -224,22 +224,15 @@ class LeDataSourceSQL(DummyDatasource):
     # @param id_relation int : The relation identifier
     # @return bool
     def del_relation(self, id_relation):
-
-        #First step : Get the two concerned lodel_id to be able to fetch
-        #               each LeObject class and type in order to build 
-        #               the attribute table name (if one exists)
-
-
-        if lesup is None or lesub is None:
-            raise AttributeError("Missing member(s) of the relation to delete")
-        
-        delete_params = {'id_sup': lesup.lodel_id, 'id_sub': lesub.lodel_id}
-        if nature is not None:
-            delete_params['nature'] = nature
-
-        sql = delete(self.datasource_utils.relations_table_name, delete_params)
-
         with self.connection as cur:
+            pk_where = {MySQL.relations_pkname:id_relation}
+            if not MySQL.fk_on_delete_cascade and len(lesup._linked_types[lesub.__class__]) > 0:
+                #Delete the row in the relation attribute table
+                (lesup, lesub, _) = self.get_relation(id_relation, no_attr = False)
+                sql = delete(MySQL.relations_table_name, pk_where)
+                if cur.execute(sql) != 1:
+                    raise RuntimeError("Unknown SQL Error")
+            sql = delete(MySQL.relations_table_name, pk_where)
             if cur.execute(sql) != 1:
                 raise RuntimeError("Unknown SQL Error")
 
@@ -247,11 +240,12 @@ class LeDataSourceSQL(DummyDatasource):
     
     ## @brief Fetch a relation
     # @param id_relation int : The relation identifier
+    # @param no_attr bool : If true put None in place of relations attributes
     # @return a tuple(lesup, lesub, dict_attr) or False if no relation exists with this id
     # @throw Exception if the nature is not NULL
     #
     # @todo TESTS
-    def get_relation(self, id_relation):
+    def get_relation(self, id_relation, no_attr = False):
         with self.connection as cur:
             sql = select(MySQL.relation_table_name, {MySQL.relations_pkname: id_relation})
             if cur.execute(sql) != 1:
@@ -262,11 +256,16 @@ class LeDataSourceSQL(DummyDatasource):
             if len(res) > 1:
                 raise RuntimeError("When selecting on primary key, get more than one result. Bailout")
 
+            if res['nature'] != None:
+                raise ValueError("The relation with id %d is not a rel2type relation"%id_relation)
+
             leobj = leobject.lefactory.LeFactory.leobj_from_name('LeObject')
             lesup = leobj.uid2leobj(res['id_sup'])
             lesub = leobj.uid2leobj(res['id_sub'])
             
-            if len(lesup._linked_types[lesub.__class__]) == 0:
+            if no_attr:
+                attrs = None
+            elif len(lesup._linked_types[lesub.__class__]) == 0:
                 #No relation attributes
                 attrs = dict()
             else:

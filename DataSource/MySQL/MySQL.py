@@ -13,6 +13,9 @@ class MySQL(object):
     class_table_prefix = 'class_'
     objects_table_name = 'object'
     connections = settings.DATABASE_CONNECTIONS
+    ## @brief indicates if we want ON DELETE CASCADE on foreign keys
+    # @todo implementation in migration handler
+    fk_on_delete_cascade = False
 
     @classmethod
     ## @brief gets the table name from class name
