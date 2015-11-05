@@ -138,6 +138,13 @@ class LeType(object):
     def linked_subordinates(self, letype):
         return leobject.lefactory.LeFactory.leobj_from_name('LeObject').linked_together(self, letype, True)
 
+    ## @brief Remove a link with a subordinate
+    # @param leo LeType : LeType child instance
+    # @return True if a link has been deleted
+    # @throw LeObjectError if the relation between the two LeObject is not possible
+    def unlink_subordinate(self, leo):
+        return leobject.lefactory.LeFactory.leobj_from_name('LeObject').linked_together(self, leo)
+
     ## @brief Remove a link bewteen this object and another
     # @param leo LeType : LeType child class instance
     # @todo unit tests

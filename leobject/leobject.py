@@ -144,6 +144,9 @@ class _LeObject(object):
     # @throw LeObjectError if the link is not valid
     # @throw AttributeError if an non existing relation attribute is given as argument
     # @throw ValueError if the relation attrivute value check fails
+    # 
+    # @todo Code factorisation on relation check
+    # @todo unit tests
     @classmethod
     def link_together(cls, lesup, lesub, **rel_attr):
         if lesub.__class__ not in lesup._linked_types.keys():
@@ -162,6 +165,9 @@ class _LeObject(object):
     # @param leo_is_superior bool : if True leo is the superior in the relation
     # @return A dict with LeType child class instance as key and dict {rel_attr_name:rel_attr_value, ...}
     # @throw LeObjectError if the relation is not possible
+    # 
+    # @todo Code factorisation on relation check
+    # @todo unit tests
     @classmethod
     def linked_together(cls, leo, letype, leo_is_superior = True):
         valid_link = letype in leo._linked_types.keys() if leo_is_superior else leo.__class__ in letype._linked_types.keys()
@@ -173,6 +179,21 @@ class _LeObject(object):
             ))
 
         return cls._datasource.get_related(leo, letype, leo_is_superior)
+    
+    ## @brief Remove a link (and attributes) between two LeObject
+    # @param lesup LeType : LeType child instance
+    # @param lesub LeType : LeType child instance
+    # @return True if a link has been deleted
+    # @throw LeObjectError if the relation between the two LeObject is not possible
+    #
+    # @todo Code factorisation on relation check
+    # @todo unit tests
+    @classmethod
+    def link_remove(cls, lesup, lesub):
+        if lesub.__class__ not in lesup._linked_types.keys():
+            raise LeObjectError("Relation errorr : %s cannot be linked with %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
+
+        return cls._datasource.del_related(lesup, lesub)
     
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
