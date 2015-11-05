@@ -154,8 +154,26 @@ class _LeObject(object):
                 raise AttributeError("A rel2type between a %s and a %s doesn't have an attribute %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
             if not sup._linked_types[lesub.__class__][1].check(rel_attr[attr_name]):
                 raise ValueError("Wrong value '%s' for attribute %s"%(rel_attr[attr_name], attr_name))
-        return self._datasource.add_related(lesup, lesub, **rel_attr)
+        return cls._datasource.add_related(lesup, lesub, **rel_attr)
+    
+    ## @brief Get related objects
+    # @param leo LeType(instance) : LeType child class instance
+    # @param letype LeType(class) : the wanted LeType child class (not instance) 
+    # @param leo_is_superior bool : if True leo is the superior in the relation
+    # @return A dict with LeType child class instance as key and dict {rel_attr_name:rel_attr_value, ...}
+    # @throw LeObjectError if the relation is not possible
+    @classmethod
+    def linked_together(cls, leo, letype, leo_is_superior = True):
+        valid_link = letype in leo._linked_types.keys() if leo_is_superior else leo.__class__ in letype._linked_types.keys()
 
+        if not valid_link:
+            raise LeObjectError("Relation error : %s have no links with %s"%(
+                leo.__class__ if leo_is_superior else letype,
+                letype if leo_is_superior else leo.__class__
+            ))
+
+        return cls._datasource.get_related(leo, letype, leo_is_superior)
+    
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
     # @param letype LeType : LeType child class

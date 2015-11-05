@@ -126,8 +126,17 @@ class LeType(object):
     # @throw LeObjectError if the link is not valid
     # @throw AttributeError if an non existing relation attribute is given as argument
     # @throw ValueError if the relation attrivute value check fails
+    # @see leobject.lefactory.LeFactory.link_together()
     def link(self, leo, **rel_attr):
-        leobject.lefactory.LeFactory.leobj_from_name('LeObject').link_together(self, leo, **rel_attr)
+        return leobject.lefactory.LeFactory.leobj_from_name('LeObject').link_together(self, leo, **rel_attr)
+    
+    ## @brief Returns linked subordinates in a rel2type given a wanted LeType child class
+    # @param letype LeType(class) : The wanted LeType of result
+    # @return A dict with LeType child class instance as key and dict {rel_attr_name:rel_attr_value, ...}
+    # @throw LeObjectError if the relation is not possible
+    # @see leobject.lefactory.LeFactory.linked_together()
+    def linked_subordinates(self, letype):
+        return leobject.lefactory.LeFactory.leobj_from_name('LeObject').linked_together(self, letype, True)
 
     ## @brief Remove a link bewteen this object and another
     # @param leo LeType : LeType child class instance
