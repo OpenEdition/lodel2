@@ -8,23 +8,6 @@ First test installation :
 ** create local config in settings.py
 Copy settings.py.example to settings.py, change the conf to your local settings
 
-Add this basic configuration inside the settings.py file (using the connection parameters configured on your local install):
-```python
-#-*- coding:utf8 -*-
-
-import pymysql
-
-DATABASE_CONNECTIONS = {
-    'default': {
-        'module': pymysql,
-        'host': '127.0.0.1',
-        'user': 'myusername',
-        'passwd': 'mypassword',
-        'db': 'mydatabasename'
-    }
-}
-```
-
 ** create DATABASES
   mysql
   > CREATE DATABASE `lodel2`  CHARACTER SET utf8 COLLATE utf8_general_ci;
