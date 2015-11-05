@@ -87,12 +87,6 @@ class EmType(EmComponent):
                 self.del_superior(sup, nature)
         return True
 
-    ## Get the list of non empty associated fieldgroups
-    # @return A list of EmFieldGroup instance
-    def _fieldgroups(self):
-        fieldgroups = [fieldgroup for fieldgroup in self.em_class.fieldgroups() if len(fieldgroup.fields(self.uid))]
-        return fieldgroups
-
     ## Return selected optional field
     # @return A list of EmField instance
     def selected_fields(self):
