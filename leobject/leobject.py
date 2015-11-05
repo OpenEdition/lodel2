@@ -142,6 +142,7 @@ class _LeObject(object):
     # @param **rel_attr : Relation attributes
     # @return True if linked without problems
     # @throw LeObjectError if the link is not valid
+    # @throw LeObkectError if the link already exists
     # @throw AttributeError if an non existing relation attribute is given as argument
     # @throw ValueError if the relation attrivute value check fails
     # 
@@ -157,6 +158,13 @@ class _LeObject(object):
                 raise AttributeError("A rel2type between a %s and a %s doesn't have an attribute %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
             if not sup._linked_types[lesub.__class__][1].check(rel_attr[attr_name]):
                 raise ValueError("Wrong value '%s' for attribute %s"%(rel_attr[attr_name], attr_name))
+
+        #Checks that attributes are uniq for this relation
+        rels_attr = [ attrs for lesup, lesub, attrs in cls.links_get(lesup) if lesup == lesup ]
+        for e_attrs in rels_attrs:
+            if rel_attr == e_attrs:
+                raise LeObjectError("Relation error : a relation with the same attributes already exists")
+
         return cls._datasource.add_related(lesup, lesub, **rel_attr)
     
     ## @brief Get related objects
@@ -180,16 +188,29 @@ class _LeObject(object):
 
         return cls._datasource.get_related(leo, letype, leo_is_superior)
     
+    ## @brief Fetch a relation and its attributes
+    # @param id_relation int : the relation identifier
+    # @return a tuple(lesup, lesub, dict_attr) or False if no relation exists with this id
+    # @throw Exception if the relation is not a rel2type relation
+    @classmethod
+    def link_get(cls, id_relation):
+        return cls._datasource.get_relation(id_relation)
+    
+    ## @brief Fetch all relations for an objects
+    # @param leo LeType : LeType child class instance
+    # @return a list of tuple (lesup, lesub, dict_attr)
+    def links_get(cls, leo):
+        return cls._datasource.get_relations(leo)
+    
     ## @brief Remove a link (and attributes) between two LeObject
-    # @param lesup LeType : LeType child instance
-    # @param lesub LeType : LeType child instance
+    # @param id_relation int : Relation identifier
     # @return True if a link has been deleted
-    # @throw LeObjectError if the relation between the two LeObject is not possible
+    # @throw LeObjectError if the relation is not a rel2type
     #
     # @todo Code factorisation on relation check
     # @todo unit tests
     @classmethod
-    def link_remove(cls, lesup, lesub):
+    def link_remove(cls, id_relation):
         if lesub.__class__ not in lesup._linked_types.keys():
             raise LeObjectError("Relation errorr : %s cannot be linked with %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
 

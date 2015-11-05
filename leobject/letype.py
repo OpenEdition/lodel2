@@ -122,8 +122,9 @@ class LeType(object):
     # @note shortcut for @ref leobject.leobject._LeObject.link_together()
     # @param lesub LeObject : The object to be linked with as subordinate
     # @param **rel_attr : keywords arguments for relations attributes
-    # @return True if success False allready done
+    # @return The relation_id if success else return False
     # @throw LeObjectError if the link is not valid
+    # @throw LeObkectError if the link already exists
     # @throw AttributeError if an non existing relation attribute is given as argument
     # @throw ValueError if the relation attrivute value check fails
     # @see leobject.lefactory.LeFactory.link_together()
@@ -132,7 +133,7 @@ class LeType(object):
     
     ## @brief Returns linked subordinates in a rel2type given a wanted LeType child class
     # @param letype LeType(class) : The wanted LeType of result
-    # @return A dict with LeType child class instance as key and dict {rel_attr_name:rel_attr_value, ...}
+    # @return A dict with LeType child class instance as key and dict {'id_relation':id, rel_attr_name:rel_attr_value, ...}
     # @throw LeObjectError if the relation is not possible
     # @see leobject.lefactory.LeFactory.linked_together()
     def linked_subordinates(self, letype):
@@ -141,8 +142,8 @@ class LeType(object):
     ## @brief Remove a link with a subordinate
     # @param leo LeType : LeType child instance
     # @return True if a link has been deleted
-    # @throw LeObjectError if the relation between the two LeObject is not possible
-    def unlink_subordinate(self, leo):
+    # @throw LeObjectError if the relation do not concern the current LeType
+    def unlink_subordinate(self, id_relation):
         return leobject.lefactory.LeFactory.leobj_from_name('LeObject').linked_together(self, leo)
 
     ## @brief Remove a link bewteen this object and another
