@@ -6,7 +6,7 @@ import leobject
 from leobject.datasources.dummy import DummyDatasource
 from leobject.leobject import REL_SUB, REL_SUP
 
-from mosql.db import Database, all_to_dicts
+from mosql.db import Database, all_to_dicts, one_to_dict
 from mosql.query import select, insert, update, delete, join
 from mosql.util import raw, or_
 import mosql.mysql
@@ -284,8 +284,6 @@ class LeDataSourceSQL(DummyDatasource):
                 attrs = res[0]
 
             return (lesup, lesub, attrs)
-            
-        
 
     ## @brief Fetch all relations concerning an object (rel2type relations)
     # @param leo LeType : LeType child instance
@@ -309,3 +307,28 @@ class LeDataSourceSQL(DummyDatasource):
             relations.append((id_sup, id_sub, rel_attr))
 
         return relations
+
+    ## @brief Add a superior to a LeObject
+    # @note in the MySQL version the method will have a depth=None argument to allow reccursive calls to add all the path to the root with corresponding depth
+    # @param lesup LeType : superior LeType child class instance
+    # @param lesub LeType : subordinate LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypesa
+    # @param rank int : The rank of this relation
+    # @param depth None|int : The depth of the relation (used to make reccursive calls in order to link with all superiors)
+    # @return The relation ID or False if fails
+    def add_superior(self, lesup, lesub, nature, rank, depth=None):
+
+        params = {'id_sup': lesup.lodel_id,'id_sub': lesub.lodel_id,'nature': nature,'rank': rank}
+        if depth is not None:
+            params['depth'] = depth
+
+
+        sql_insert = insert(self.datasource_utils.relations_table_name, params)
+        with self.connection as cur:
+            if cur.execute(sql_insert) != 1:
+                return False
+
+            cur.execute('SELECT last_insert_id()')
+            relation_id, = cur.fetchone()
+
+        return relation_id
