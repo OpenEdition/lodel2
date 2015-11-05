@@ -136,6 +136,31 @@ class _LeObject(object):
 
         return result
 
+    ## @brief Link two leobject together using a rel2type field
+    # @param lesup LeType : LeType child class instance linked as superior
+    # @param lesub LeType : LeType child class instance linked as subordinate
+    # @param **rel_attr : Relation attributes
+    # @return True if linked without problems
+    # @throw LeObjectError if the link is not valid
+    # @throw AttributeError if an non existing relation attribute is given as argument
+    # @throw ValueError if the relation attrivute value check fails
+    @classmethod
+    def link_together(cls, lesup, lesub, **rel_attr):
+        if lesub.__class__ not in lesup._linked_types.keys():
+            raise LeObjectError("Relation error : %s cannot be linked with %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
+
+        for attr_name in rel_attr.keys():
+            if attr_name not in [ f for f,g in lesup._linked_types[lesub.__class__] ]:
+                raise AttributeError("A rel2type between a %s and a %s doesn't have an attribute %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
+            if not sup._linked_types[lesub.__class__][1].check(rel_attr[attr_name]):
+                raise ValueError("Wrong value '%s' for attribute %s"%(rel_attr[attr_name], attr_name))
+        return self._datasource.add_related(lesup, lesub, **rel_attr)
+
+    ## @brief Prepare a field_list
+    # @param field_list list : List of string representing fields
+    # @param letype LeType : LeType child class
+    # @param leclass LeClass : LeClass child class
+    # @return A well formated field list
     @classmethod
     def _prepare_field_list(cls, field_list, letype, leclass):
         cls._check_fields(letype, leclass, [f for f in field_list if not cls._field_is_relational(f)])

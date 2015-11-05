@@ -102,40 +102,54 @@ class LeType(object):
         return self._datasource(leo, self, nature)
 
     ## @brief Get the linked objects lodel_id
-    # @param rel2type_name str : the name of the relation
-    # @return an array of lodel_id linked with this object
+    # @param letype LeType : Filter the result with LeType child class (not instance) 
+    # @return a dict with LeType instance as key and dict{attr_name:attr_val...} as value
     # @todo unit tests
-    def linked(self, rel2type_name):
-        return [ rel['id_sub'] for rel in self._datasource.get_relations(self.lodel_id) ]
+    def linked(self, letype):
+        if leobject.letype.LeType not in letype.__bases__:
+            raise ValueError("letype has to be a child class of LeType (not an instance) but %s found"%type(letype))
+        
+        if letype in self._linked_types.keys():
+            get_sub = True
+        elif self.__class__ in letype._linked_types.keys():
+            get_sub = False
+        else:
+            raise ValueError("The two LeType classes %s and %s are not linked with a rel2type field"%(self.__class__.__name__, letype.__name__))
 
-    ## @brief Link this object with a LeObject
-    # @note rel2type
-    # @param leo LeObject : The object to be linked with
-    # @param rel2type_name : The name of the rel2type field (the name of the relation)
+        return self._datasource.get_related(self, letype, get_sub)
+
+    ## @brief Link this object with a LeObject as subordinate
+    # @note shortcut for @ref leobject.leobject._LeObject.link_together()
+    # @param lesub LeObject : The object to be linked with as subordinate
     # @param **rel_attr : keywords arguments for relations attributes
     # @return True if success False allready done
-    # @throw A Leo exception if the link is not allowed
-    # @todo unit tests
-    # @todo find a value for depth and rank....
-    def link_to(self, leo, rel2type_name, **rel_attr):
-        if leo.__class__ not in self._linked_types.keys():
-            raise leobject.leobject.LeObjectError("Constraint error : %s cannot be linked with %s"%(self.__class__.__name__, leo.__class__.__name__))
-
-        for attr_name in rel_attr.keys():
-            if attr_name not in [ f for f,g in self._linked_types[leo.__class__] ]:
-                raise AttributeError("A rel2type between a %s and a %s doesn't have an attribute %s"%(self.__class__.__name__, leo.__class__.__name__, attr_name))
-            if not self._linked_types[leo.__class__][1].check(rel_attr[attr_name]):
-                raise ValueError("Wrong value '%s' for attribute %s"%(rel_attr[attr_name], attr_name))
-
-        return self._datasource.add_relation(self, leo, nature=None, depth=None, rank=None, **rel_attr)#Broken ! need to give the rel2type_name
+    # @throw LeObjectError if the link is not valid
+    # @throw AttributeError if an non existing relation attribute is given as argument
+    # @throw ValueError if the relation attrivute value check fails
+    def link(self, leo, **rel_attr):
+        leobject.lefactory.LeFactory.leobj_from_name('LeObject').link_together(self, leo, **rel_attr)
 
     ## @brief Remove a link bewteen this object and another
-    # @param leo LeObject : A LeObject instance linked with self
-    # @param rel2type_name : the name of the relation
+    # @param leo LeType : LeType child class instance
     # @todo unit tests
-    def unlink(self, leo, rel2type_name):
-        return self._datasource.del_relation(self, leo) #Broken ! need to give the rel2type_name
+    def unlink(self, leo):
+        if leo.__class__ in self._linked_types.keys():
+            sup = self
+            sub = leo
+        elif self.__class__ in leo._linked_types.keys():
+            sup = leo
+            sub = self
         
+        return self._datasource.del_related(sup, sub)
+    
+    ## @brief Add a superior
+    # @param lesup LeType : LeType child class instance that will be the superior
+    # @param nature str : @ref EditorialModel.classtypes
+    # @return True if add with no problems
+    def add_superior(self, lesup, nature):
+        self._datasource.add_superior(lesub, self)
+        
+    
     ## @brief Delete a LeType from the datasource
     # @param filters list : list of filters (see @ref leobject_filters)
     # @param cls

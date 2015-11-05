@@ -95,7 +95,7 @@ class DummyDatasource(object):
     # @param leo LeType : The from LeType child class instance
     # @param letype LeType : The wanted LeType child class (not instance !)
     # @param get_sub bool : If True, leo will be the superior and we wants all subordinates of Type letype, else its the oposite, leo is the subordinates and we want superiors with Type letype
-    # @return A dict with LeType instance as key and list of relation attributes as value
+    # @return A dict with LeType instance as key and dict(attr_name:attr_val, ...) as value
     def get_related(self, leo, letype, get_sub=True):
         pass
 
