@@ -235,7 +235,7 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     def _r2t2table_name(self, em, emfield):
         emclass = emfield.em_class
         emtype = em.component(emfield.rel_to_type_id)
-        return self.datasource.get_r2t2table_name(emclass.name, emtype.name, emfield.name)
+        return self.datasource.get_r2t2table_name(emclass.name, emtype.name)
         #return "%s_%s_%s"%(emclass.name, emtype.name, emfield.name)
      
     ## @brief Generate a columns_fieldtype dict given a rel2type EmField
@@ -504,7 +504,7 @@ FOR EACH ROW SET {col_val_list};""".format(
     # @todo do it
     @property
     def _relation_pk(self):
-        return ('id_relation', EditorialModel.fieldtypes.pk.EmFieldType())
+        return (MySQL.relation_table_pkname, EditorialModel.fieldtypes.pk.EmFieldType())
     
     ## @brief Returns a dict { colname:fieldtype } of relation table columns
     @property

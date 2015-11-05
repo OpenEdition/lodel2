@@ -7,6 +7,7 @@ import settings
 class MySQL(object):
 
     relations_table_name = 'relation'
+    relation_table_pkname = 'id_relation'
     relations_field_nature = 'nature'
     field_lodel_id = 'lodel_id'
     class_table_prefix = 'class_'
@@ -26,8 +27,8 @@ class MySQL(object):
     # @param type_name str
     # @param field_name str
     # @return str
-    def get_r2t2table_name(cls, class_name, type_name, field_name):
-        return "%s_%s_%s" % (class_name, type_name, field_name)
+    def get_r2t2table_name(cls, class_name, type_name):
+        return "r2t_%s_%s" % (class_name, type_name)
 
     @classmethod
     ## @brief gets the fk name between two tables
