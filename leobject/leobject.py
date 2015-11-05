@@ -288,7 +288,24 @@ class _LeObject(object):
                 #How to handler this ?
                 res = False
         return res
-
+    
+    ## @brief Fetch neighbour in hierarchy relation
+    # @param leo LeType | LeRoot : We want the neighbour of this LeObject (can be the root)
+    # @param nature str : @ref EditorialModel.classtypes
+    # @param leo_is_sup bool : if True leo is the superior and we want to fetch the subordinates else its the oposite
+    # @return A list of LeObject ordered by depth if leo_is_sup, else a list of subordinates
+    @classmethod
+    def hierarchy_get(cls, leo, nature, leo_is_sup = True):
+        #Checking arguments
+        if not (nature is None) and not cls.is_root(leo):
+            if nature not in EditorialModel.classtypes.EmClassType.natures(leo._classtype):
+                raise ValueError("Invalid nature '%s' for %s"%(nature, lesup.__class__.__name__))
+        
+        if leo_is_sup:
+            return cls._datasource.get_subordinates(leo, nature)
+        else:
+            return cls._datasource.get_superior(leo, nature)
+    
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
     # @param letype LeType : LeType child class
