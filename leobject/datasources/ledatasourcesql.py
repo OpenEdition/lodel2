@@ -6,6 +6,8 @@ import leobject
 from leobject.datasources.dummy import DummyDatasource
 from leobject.leobject import REL_SUB, REL_SUP
 
+from leobject.letype import LeType
+
 from mosql.db import Database, all_to_dicts, one_to_dict
 from mosql.query import select, insert, update, delete, join
 from mosql.util import raw, or_
@@ -332,3 +334,24 @@ class LeDataSourceSQL(DummyDatasource):
             relation_id, = cur.fetchone()
 
         return relation_id
+
+    ## @brief Fetch a superiors list ordered by depth for a LeType
+    # @param lesub LeType : subordinate LeType child class instance
+    # @param nature str : A relation nature @ref EditorialModel.classtypes
+    # @return A list of LeType ordered by depth (the first is the direct superior)
+    def get_superiors(self, lesub, nature):
+
+        sql = select(
+            self.datasource_utils.relations_table_name,
+            columns=('id_sup',),
+            where={'id_sub': lesub.lodel_id, 'nature': nature},
+            order_by=('depth',)
+        )
+
+        result = []
+        with self.connection as cur:
+            results = all_to_dicts(cur.execute(sql))
+
+        superiors = [LeType(result['id_sup']) for result in results]
+
+        return superiors
