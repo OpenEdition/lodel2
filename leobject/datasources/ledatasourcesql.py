@@ -239,8 +239,6 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
 
-        raise NotImplementedError()
-
     ## @brief Return all relation of a lodel_id given a position and a nature
     # @param lodel_id int : We want the relations of this lodel_id
     # @param superior bool : If true search the relations where lodel_id is in id_sup
