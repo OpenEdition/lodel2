@@ -264,7 +264,30 @@ class _LeObject(object):
                 raise RuntimeError("Unable to delete the previous superior")
 
         return self._datasource.add_superior(lesup, lesub, nature, rank)
-        
+    
+    ## @brief Delete a hierarchy link between two LeObject
+    # @param lesup LeType | LeRoot : LeType child class or hierarchy root
+    # @param lesub LeType : LeType child class
+    # @param nature str : The nature of the relation @ref EditorialModel.classtypes
+    # @return True if deletion done successfully
+    # @throw ValueError when bad arguments given
+    @classmethod
+    def hierarchy_del(cls, lesup, lesub, nature):
+        if nature not in EditorialModel.classtypes.EmClassType.natures(lesub._classtype):
+            raise ValueError("Invalid nature '%s' for %s"%(nature, lesup.__class__.__name__))
+
+        if not cls.leo_is_root(lesup):
+            if nature not in EditorialModel.classtypes.EmClassType.natures(lesup._classtype):
+                raise ValueError("Invalid nature '%s' for %s"%(nature, lesup.__class__.__name__))
+            if lesup.__class__ not in lesub._superiors[nature]:
+                raise ValueError("%s is not a valid superior for %s"%(lesup.__class__, lesub.__class__))
+        superiors = cls.hierarchy_get(lesub, nature, leo_is_sup = False)
+        res = True
+        for _lesup in superiors:
+            if not cls._datasource.del_superior(_lesup, lesub, nature):
+                #How to handler this ?
+                res = False
+        return res
 
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields

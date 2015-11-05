@@ -54,7 +54,7 @@ class DummyDatasource(object):
     
     ## @brief Add a superior to a LeObject
     # @note in the MySQL version the method will have a depth=None argument to allow reccursive calls to add all the path to the root with corresponding depth
-    # @param lesup LeType : superior LeType child class instance
+    # @param lesup LeType | LeRoot : superior LeType child class instance or @ref
     # @param lesub LeType : subordinate LeType child class instance
     # @param nature str : A relation nature @ref EditorialModel.classtypesa
     # @param rank int : The rank of this relation
@@ -84,6 +84,7 @@ class DummyDatasource(object):
     # @return A list of LeType that are subordinates of lesup in a "nature" relation
     def get_subordinates(self, lesup, nature):
         pass
+
 
     ## @brief Make a relation between 2 LeType
     # @note rel2type relations. Superior is the LeType from the EmClass and subordinate the LeType for the EmType

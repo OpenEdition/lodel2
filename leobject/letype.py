@@ -167,6 +167,13 @@ class LeType(object):
     # @return The relation ID or False if fails
     def add_superior(self, leo, nature, rank = 'last', replace_if_exists = False):
         return leobject.lefactory.LeFactory.leobj_from_name('LeObject').hierarchy_add(leo, self, nature, rank, replace_if_exists)
+
+    ## @brief Delete a superior given a relation's natue
+    # @param leo LeType | LeRoot : The superior to delete
+    # @param nature str : The nature of the relation @ref EditorialModel.classtypes
+    # @return True if deletion is a success
+    def del_superior(self, leo, nature):
+        return leobject.lefactory.leobj_from_name('LeObject').hierarchy_del(leo, self, nature)
         
     
     ## @brief Delete a LeType from the datasource
