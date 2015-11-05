@@ -78,29 +78,6 @@ class LeType(object):
     def db_delete(self):
         return self.delete([('lodel_id','=',repr(self.lodel_id))])
     
-    ## @brief Add a superior given a nature
-    # @param leo LeObject : A LeObject instance that will be the superior
-    # @param nature str : the relation nature
-    # @throw leobject.leobject.LeObjectError if this
-    # @todo find what value depth and rank should have....
-    # @todo Unit tests
-    def add_superior(self, leo, nature):
-        if nature not in self._superiors.keys():
-            raise LeObjectError("%s cannot have a superior with %s as relation nature"%(self.__class__.__name__, nature))
-        if leo.__class__ not in self._superiors[nature]:
-            raise LeObjectError("%s cannot have a %s superior in a %s relation"%(self.__class__.__name__, leo.__class__.__name__, nature))
-
-        return self._datasource.add_relation(leo.lodel_id, self.lodel_id, nature = nature, depth=None, rank = None)
-    
-    ## @brief Delete a superior given a nature
-    # @param leo LeObject : A LeObject instance
-    # @param nature str : The relation nature
-    # @todo Unit tests
-    def del_superior(self, leo, nature):
-        if nature is None:
-            raise ValueError('The argument nature cannot be None')
-        return self._datasource(leo, self, nature)
-
     ## @brief Get the linked objects lodel_id
     # @param letype LeType : Filter the result with LeType child class (not instance) 
     # @return a dict with LeType instance as key and dict{attr_name:attr_val...} as value
@@ -174,7 +151,16 @@ class LeType(object):
     # @return True if deletion is a success
     def superior_del(self, leo, nature):
         return leobject.lefactory.leobj_from_name('LeObject').hierarchy_del(leo, self, nature)
-        
+    
+    ## @brief Fetch superiors by depth
+    # @return A list of LeObject ordered by depth (the first is the one with the bigger depth)
+    def superiors(self):
+        return leobject.lefactory.leobj_from_name('LeObject').hierarchy_get(self,nature, leo_is_sup = False)
+
+    ## @brief Fetch subordinates ordered by rank
+    # @return A list of LeObject ordered by rank
+    def subordinates(self):
+        return leobject.lefactory.leobj_from_name('LeObject').hierarchy_get(self,nature, leo_is_sup = True)
     
     ## @brief Delete a LeType from the datasource
     # @param filters list : list of filters (see @ref leobject_filters)
