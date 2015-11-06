@@ -83,14 +83,14 @@ class LeFactory(object):
 {name}._classtype = {classtype}
 """.format(
             name = LeFactory.name2classname(emclass.name),
-            ftypes = "{" + (','.join(['\n\t%s:%s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
+            ftypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
 
             ltypes = '{'+ (','.join(
                 [
-                    '\n\t{ltname}:{ltattr_list}'.format(
+                    '\n    {ltname}: {ltattr_list}'.format(
                         ltname = lt,
-                        ltattr_list = '['+(','.join([
-                            '(%s,%s)'%(repr(ltname), ltftype) for ltname, ltftype in ltattr
+                        ltattr_list = '['+(', '.join([
+                            '(%s, %s)'%(repr(ltname), ltftype) for ltname, ltftype in ltattr
                         ]))+']'
                     ) for lt, ltattr in cls_linked_types.items()
                 ]))+'}',
@@ -109,9 +109,9 @@ class LeFactory(object):
             type_fields.append(field.name)
 
         for nat, sup_l in emtype.superiors().items():
-            type_superiors.append('%s:[%s]' % (
+            type_superiors.append('%s: [%s]' % (
                 repr(nat),
-                ','.join([LeFactory.name2classname(sup.name) for sup in sup_l])
+                ', '.join([LeFactory.name2classname(sup.name) for sup in sup_l])
             ))
 
         return """
@@ -122,7 +122,7 @@ class LeFactory(object):
 """.format(
             name=LeFactory.name2classname(emtype.name),
             fields=repr(type_fields),
-            dsups='{' + (','.join(type_superiors)) + '}',
+            dsups='{' + (', '.join(type_superiors)) + '}',
             leclass=LeFactory.name2classname(emtype.em_class.name)
         )
 
@@ -139,7 +139,7 @@ class LeFactory(object):
         result = ""
         #result += "#-*- coding: utf-8 -*-\n"
         #Putting import directives in result
-        result += """
+        result += """## @author LeFactory
 
 from EditorialModel.model import Model
 from leobject.leobject import _LeObject
@@ -151,6 +151,7 @@ import EditorialModel.fieldtypes
         result += """
 import %s
 import %s
+
 """ % (backend_cls.__module__, datasource_cls.__module__)
 
         #Generating the code for LeObject class
@@ -177,8 +178,9 @@ class LeObject(_LeObject):
             result += """
 ## @brief EmClass {name} LeClass child class
 # @see leobject::leclass::LeClass
-class {name}(LeObject,LeClass):
+class {name}(LeObject, LeClass):
     _class_id = {uid}
+
 """.format(
                 name=LeFactory.name2classname(emclass.name),
                 uid=emclass.uid
@@ -190,6 +192,7 @@ class {name}(LeObject,LeClass):
 # @see leobject::letype::LeType
 class {name}(LeType, {leclass}):
     _type_id = {uid}
+
 """.format(
                 name=LeFactory.name2classname(emtype.name),
                 leclass=LeFactory.name2classname(emtype.em_class.name),
@@ -206,6 +209,6 @@ class {name}(LeType, {leclass}):
         me_uid = {comp.uid: LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l}
         result += """
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
-LeObject._me_uid = %s
-""" % "{" + (','.join(['%s:%s' % (k, v) for k, v in me_uid.items()])) + "}"
+LeObject._me_uid = %s""" % "{" + (', '.join(['%s: %s' % (k, v) for k, v in me_uid.items()])) + "}"
+        result += "\n"
         return result
