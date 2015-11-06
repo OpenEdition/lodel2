@@ -13,6 +13,7 @@
 import re
 
 import leobject
+from .lefactory import LeFactory
 import EditorialModel
 from EditorialModel.types import EmType
 
@@ -335,14 +336,14 @@ class _LeObject(object):
 
         if not(leclass is None):
             if isinstance(leclass, str):
-                leclass = leobject.lefactory.LeFactory.leobj_from_name(leclass)
+                leclass = LeFactory.leobj_from_name(leclass)
             
             if not isinstance(leclass, type) or not (leobject.leclass.LeClass in leclass.__bases__) or leclass.__class__ == leobject.leclass.LeClass:
                 raise ValueError("None | str | LeType child class excpected, but got : '%s' %s"%(leclass,type(leclass)))
 
         if not(letype is None):
             if isinstance(letype, str):
-                letype = leobject.lefactory.LeFactory.leobj_from_name(letype)
+                letype = LeFactory.leobj_from_name(letype)
 
             if not isinstance(letype, type) or not leobject.letype.LeType in letype.__bases__ or letype.__class__ == leobject.letype.LeType:
                 raise ValueError("None | str | LeType child class excpected, but got : %s"%type(letype))
