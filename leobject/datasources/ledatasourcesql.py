@@ -397,7 +397,7 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
     
-    ## @brief Delete a rel2type relation
+    ## @brief Delete a relation
     # @warning this method may not be efficient
     # @param id_relation int : The relation identifier
     # @return bool
