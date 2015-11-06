@@ -24,7 +24,7 @@
   "string": "{\"fre\": \"Personnes\"}"
  },
  "4": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": false,
   "icon": "0",
@@ -77,7 +77,7 @@
   "sortcolumn": "rank"
  },
  "7": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": true,
   "icon": "0",
@@ -94,7 +94,7 @@
   "name": "soustitre"
  },
  "9": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": false,
   "icon": "0",
@@ -111,7 +111,7 @@
   "name": "nom"
  },
  "10": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": true,
   "icon": "0",
@@ -128,7 +128,7 @@
   "name": "prenom"
  },
  "11": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": false,
   "icon": "0",
@@ -146,7 +146,7 @@
   "name": "auteur"
  },
  "12": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": false,
   "icon": "0",
@@ -194,7 +194,7 @@
   "sortcolumn": "rank"
  },
  "16": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": false,
   "icon": "0",
@@ -211,7 +211,7 @@
   "name": "titre"
  },
  "18": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": true,
   "icon": "0",
@@ -242,7 +242,7 @@
   "sortcolumn": "rank"
  },
  "21": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "optional": true,
   "icon": "0",
@@ -276,7 +276,7 @@
   "name": "class_id"
  },
  "24": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "max_length": 128,
   "icon": "0",
@@ -345,7 +345,7 @@
   "name": "class_id"
  },
  "29": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "max_length": 128,
   "icon": "0",
@@ -414,7 +414,7 @@
   "name": "class_id"
  },
  "34": {
-  "nullable": false,
+  "nullable": true,
   "date_update": "Fri Oct 16 11:05:04 2015",
   "max_length": 128,
   "icon": "0",
