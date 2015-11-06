@@ -423,11 +423,11 @@ class LeDataSourceSQL(DummyDatasource):
             cur.execute('SELECT last_insert_id()')
             relation_id, = cur.fetchone()
 
-        if nature == EmNature.PARENT:
+        if nature in EmNature.getall():
             parent_superiors = lesup.superiors()
             for superior in parent_superiors:
                 depth = depth - 1 if depth is not None else 1
-                self.add_relation(lesup=superior.lodel_id, lesub=lesub.lodel_id, nature=EmNature.PARENT, depth=depth, rank=rank)
+                self.add_relation(lesup=superior.lodel_id, lesub=lesub.lodel_id, nature=nature, depth=depth, rank=rank)
 
         return relation_id
 
