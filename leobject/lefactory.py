@@ -24,7 +24,7 @@ class LeFactory(object):
     @staticmethod
     def leobj_from_name(name):
         if LeFactory.modname is None:
-            modname = 'leobject.' + LeFactory.output_file.split('.')[1]
+            modname = 'leobject.' + LeFactory.output_file.split('.')[0]
         else:
             modname = LeFactory.modname
         mod = importlib.import_module(modname)
