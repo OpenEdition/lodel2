@@ -52,6 +52,28 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
         self._create_default_tables(self.drop_if_exists)
         pass
     
+    ## @brief Delete all table created by the MH
+    # @param model Model : the Editorial model
+    def __purge_db(self, model):
+        for uid in [c.uid for c in model.components('EmClass')]:
+            try:
+                self.delete_emclass_table(model, uid)
+            except pymysql.err.InternalError as e:
+                print(e)
+        
+        for tname in [ MySQL.get_r2t2table_name(f.em_class.name, model.component(f.rel_to_type_id).name) for f in model.components('EmField') if f.fieldtype == 'rel2type' ]:
+            try:
+                self._query("DROP TABLE %s;"%tname)
+            except pymysql.err.InternalError as e:
+                print(e)
+
+        for tname in [ MySQL.relations_table_name, MySQL.objects_table_name ]:
+            try:
+                self._query("DROP TABLE %s;"%tname)
+            except pymysql.err.InternalError as e:
+                print(e)
+        
+
     ## @brief Modify the db given an EM change
     # 
     # @param em model : The EditorialModel.model object to provide the global context
@@ -185,12 +207,14 @@ class MysqlMigrationHandler(EditorialModel.migrationhandler.dummy.DummyMigration
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
     def delete_emclass_table(self, em, uid):
-        emclass = emcomponent(uid)
+        emclass = em.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The give uid is not an EmClass uid")
-        tname = self.datasource.escape_idname(self._emclass2table_name(emclass))
+        tname = self._emclass2table_name(emclass)
         # Delete the table triggers to prevent errors
         self._generate_triggers(tname, dict())
+
+        tname = self.datasource.escape_idname(tname)
 
         self._query("""DROP TABLE {table_name};""".format(table_name = tname))
 

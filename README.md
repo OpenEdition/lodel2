@@ -5,6 +5,10 @@ First test installation :
 ** install dependencies
   pip install -r requirements.txt
 
+** Doxygen generation
+  Dependencies : doxygen graphviz doxypy
+  Generation : run doxygen in the root folder (where the Doxyfile is)
+
 ** create local config in settings.py
 Copy settings.py.example to settings.py, change the conf to your local settings
 
