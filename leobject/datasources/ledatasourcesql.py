@@ -198,6 +198,90 @@ class LeDataSourceSQL(DummyDatasource):
 
         return prepared_filters
 
+
+    ## @brief Make a relation between 2 LeType
+    # @note rel2type relations. Superior is the LeType from the EmClass and subordinate the LeType for the EmType
+    # @param lesup LeType : LeType child class instance that is from the EmClass containing the rel2type field
+    # @param lesub LeType : LeType child class instance that is from the EmType linked by the rel2type field ( @ref EditorialModel.fieldtypes.rel2type.EmFieldType.rel_to_type_id )
+    # @return The relation_id if success else return False
+    def add_related(self, lesup, lesub, rank, **rel_attr):
+        with self.connection as cur:
+            #First step : relation table insert
+            sql = insert(MySQL.relations_table_name,{
+                        'id_sup': lesup.lodel_id, 
+                        'id_sub': lesub.lodel_id,
+                        'rank': 0, #default value that will be set latter
+                    })
+            cur.execute(sql)
+            relation_id = cur.lastrowid
+
+
+            if len(rel_attr) > 0:
+                #There is some relation attribute to add in another table
+                attr_table = get_r2t2table_name(lesup._leclass.__name__, lesub.__class__.__name__)
+                rel_attr['id_relation'] = relation_id
+                sql = insert(attr_table, rel_attr)
+                cur.execute(sql)
+        self._set_relation_rank(id_relation, rank)
+        return relation_id
+    
+    ## @brief Set the rank of a relation identified by its ID
+    # @param id_relation int : relation ID
+    # @param rank int|str : 'first', 'last', or an integer value
+    # @throw ValueError if rank is not valid
+    # @throw leobject.leobject.LeObjectQueryError if id_relation don't exists
+    def set_relation_rank(self, id_relation, rank):
+        self._check_rank(rank)
+        self._set_relation_rank(id_relation, rank)
+
+        
+
+    ## @brief Set the rank of a relation identified by its ID
+    #
+    # @note this solution is not the more efficient solution but it
+    # garantee that ranks are continuous and starts at 1
+    # @warning there is no way to fail on rank parameters even giving very bad parameters, if you want a method that may fail on rank use set_relation_rank() instead
+    # @param id_relation int : relation ID
+    # @param rank int|str : 'first', 'last', or an integer value
+    # @throw leobject.leobject.LeObjectQueryError if id_relation don't exists
+    def _set_relation_rank(self, id_relation, rank):
+        ret = self.get_relation(id_relation, no_attr = True)
+        if not ret:
+            raise leobject.leobject.LeObjectQueryError("No relation with id_relation = %d"%id_relation)
+        lesup = ret['lesup']
+        lesub = ret['lesup']
+        cur_rank = ret['rank']
+        rank = 1 if rank == 'first' or rank < 1 else rank
+        if cur_rank == rank:
+            return True
+
+        relations = self.get_related(lesup, lesub.__class__, get_sub=True)
+
+        if not isinstance(rank, int) or rank > len(relations):
+            rank = len(relations)
+            if cur_rank == rank:
+                return True
+        
+        #insert the relation at the good position
+        our_relation = relations.pop(cur_rank)
+        relations.insert(our_relation, rank)
+
+        #gathering (relation_id, new_rank)
+        rdatas = [ (attrs['relation_id'], new_rank+1) for new_rank,(sup, sub, attrs) in enumerate(relations) ]
+        sql = insert(MySQL.relations_table_name, columns=(MySQL.relations_pkname, 'rank'), values = rdatas, on_duplicate_key_update={'rank',mosql.util.raw('VALUES(`rank`)')})
+
+    
+    ## @brief Check a rank value
+    # @param rank int | str : Can be an integer >= 1 , 'first' or 'last'
+    # @throw ValueError if the rank is not valid
+    def _check_rank(self, rank):
+        if isinstance(rank, str) and rank != 'first' and rank != 'last':
+            raise ValueError("Invalid rank value : %s"%rank)
+        elif isinstance(rank, int) and rank < 1:
+            raise ValueError("Invalid rank value : %d"%rank)
+        else:
+            raise ValueError("Invalid rank type : %s"%type(rank))
+    
     ## @brief Link two object given a relation nature, depth and rank
     # @param lesup LeObject : a LeObject
     # @param lesub LeObject : a LeObject
@@ -230,7 +314,9 @@ class LeDataSourceSQL(DummyDatasource):
             pk_where = {MySQL.relations_pkname:id_relation}
             if not MySQL.fk_on_delete_cascade and len(lesup._linked_types[lesub.__class__]) > 0:
                 #Delete the row in the relation attribute table
-                (lesup, lesub, _) = self.get_relation(id_relation, no_attr = False)
+                ret = self.get_relation(id_relation, no_attr = False)
+                lesup = ret['lesup']
+                lesub = ret['lesub']
                 sql = delete(MySQL.relations_table_name, pk_where)
                 if cur.execute(sql) != 1:
                     raise RuntimeError("Unknown SQL Error")
@@ -242,12 +328,12 @@ class LeDataSourceSQL(DummyDatasource):
     
     ## @brief Fetch a relation
     # @param id_relation int : The relation identifier
-    # @param no_attr bool : If true put None in place of relations attributes
-    # @return a tuple(lesup, lesub, dict_attr) or False if no relation exists with this id
-    # @throw Exception if the nature is not NULL
+    # @param no_attr bool : If true dont fetch rel_attr
+    # @return a dict{'id_relation':.., 'lesup':.., 'lesub':..,'rank':.., 'depth':.., #if not none#'nature':.., #if exists#'dict_attr':..>}
     #
     # @todo TESTS
     def get_relation(self, id_relation, no_attr = False):
+        relation = dict()
         with self.connection as cur:
             sql = select(MySQL.relation_table_name, {MySQL.relations_pkname: id_relation})
             if cur.execute(sql) != 1:
@@ -264,13 +350,16 @@ class LeDataSourceSQL(DummyDatasource):
             leobj = leobject.lefactory.LeFactory.leobj_from_name('LeObject')
             lesup = leobj.uid2leobj(res['id_sup'])
             lesub = leobj.uid2leobj(res['id_sub'])
+
+            relation['id_relation'] = res['id_relation']
+            relation['lesup'] = lesup
+            relation['lesub'] = lesub
+            relation['rank'] = rank
+            relation['depth'] = depth
+            if not (res['nature'] is None):
+                relation['nature'] = res['nature']
             
-            if no_attr:
-                attrs = None
-            elif len(lesup._linked_types[lesub.__class__]) == 0:
-                #No relation attributes
-                attrs = dict()
-            else:
+            if not no_attr and res['nature'] is None and len(lesup._linked_types[lesub.__class__]) != 0:
                 #Fetch relation attributes
                 rel_attr_table = MySQL.get_r2t2table_name(lesup.__class__.__name__, lesub.__class__.__name__)
                 sql = select(MySQL.rel_attr_table, {MySQL.relations_pkname: id_relation})
@@ -284,8 +373,9 @@ class LeDataSourceSQL(DummyDatasource):
                 if len(res) > 1:
                     raise RuntimeError("When selecting on primary key, get more than one result. Bailout")
                 attrs = res[0]
+            relation['rel_attr'] = attrs
 
-            return (lesup, lesub, attrs)
+            return relation
 
     ## @brief Fetch all relations concerning an object (rel2type relations)
     # @param leo LeType : LeType child instance

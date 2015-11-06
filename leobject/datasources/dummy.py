@@ -90,29 +90,35 @@ class DummyDatasource(object):
     # @note rel2type relations. Superior is the LeType from the EmClass and subordinate the LeType for the EmType
     # @param lesup LeType : LeType child class instance that is from the EmClass containing the rel2type field
     # @param lesub LeType : LeType child class instance that is from the EmType linked by the rel2type field ( @ref EditorialModel.fieldtypes.rel2type.EmFieldType.rel_to_type_id )
+    # @param rank int : Begin at 0 ?
     # @return The relation_id if success else return False
-    def add_related(self, lesup, lesub, **rel_attr):
+    def add_related(self, lesup, lesub, rank = 'last', **rel_attr):
         pass
     
     ## @brief Returns related LeType
     # @param leo LeType : The from LeType child class instance
     # @param letype LeType : The wanted LeType child class (not instance !)
     # @param get_sub bool : If True, leo will be the superior and we wants all subordinates of Type letype, else its the oposite, leo is the subordinates and we want superiors with Type letype
-    # @return A dict with LeType instance as key and dict('id_relation':id, attr_name:attr_val, ...) as value
+    # @return A list of tuple( LeType instance, dict('id_relation':id,'rank':rank,  attr_name:attr_val, ...) ) ordered by rank
     def get_related(self, leo, letype, get_sub=True):
         pass
 
     ## @brief Fetch a relation
     # @param id_relation int : The relation identifier
-    # @return a tuple(lesup, lesub, dict_attr) or False if no relation exists with this id
-    # @throw Exception if the nature is not NULL
-    def get_relation(self, id_relation):
+    # @return a dict{'id_relation':.., 'lesup':.., 'lesub':.., < if exists 'dict_attr':..>}
+    def get_relation(self, id_relation, no_attr = False):
         pass
 
     ## @brief Fetch all relations concerning an object (rel2type relations)
     # @param leo LeType : LeType child instance
     # @return a list of tuple (lesup, lesub, dict_attr)
     def get_relations(self, leo):
+        pass
+
+    ## @brief Set the rank of a relation identified by its ID
+    # @param id_relation int : relation ID
+    # @param rank int|str : 'first', 'last', or an integer value
+    def set_relation_rank(self, id_relation, rank):
         pass
 
     ## @brief Delete a relation between two LeType

@@ -163,7 +163,7 @@ class _LeObject(object):
     # @todo Code factorisation on relation check
     # @todo unit tests
     @classmethod
-    def link_together(cls, lesup, lesub, **rel_attr):
+    def link_together(cls, lesup, lesub, rank = 'last', **rel_attr):
         if lesub.__class__ not in lesup._linked_types.keys():
             raise LeObjectError("Relation error : %s cannot be linked with %s"%(lesup.__class__.__name__, lesub.__class__.__name__))
 
@@ -179,7 +179,7 @@ class _LeObject(object):
             if rel_attr == e_attrs:
                 raise LeObjectError("Relation error : a relation with the same attributes already exists")
 
-        return cls._datasource.add_related(lesup, lesub, **rel_attr)
+        return cls._datasource.add_related(lesup, lesub, rank, **rel_attr)
     
     ## @brief Get related objects
     # @param leo LeType(instance) : LeType child class instance
