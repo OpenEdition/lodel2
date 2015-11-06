@@ -230,6 +230,8 @@ class LeDataSourceSQL(DummyDatasource):
     # @param lesup LeType
     # @param lesub LeType
     # @return True if success else False
+    # @todo Add fields parameter to identify relation
+    # @todo Delete relationnal fields if some exists
     def del_related(self, lesup, lesub):
         with self.connection as cur:
             sql = delete(
@@ -273,9 +275,11 @@ class LeDataSourceSQL(DummyDatasource):
             common_infos = ('r.id_relation', 'r.id_sup', 'r.id_sub', 'r.rank', 'r.depth')
             if len(lesup._linked_types[lesub]) > 0:
                 #relationnal attributes, need to join with r2t table
+                cls_name = leo.__class__.__name__ if get_sub else letype.__name__
+                type_name =  letype.__name__ if get_sub else leo.__class__.__name__
                 joins.append(
                     join(
-                        (MySQL.get_r2t2table_name, 'r2t'),
+                        (MySQL.get_r2t2table_name(cls_name, type_name), 'r2t'),
                         on={'r.'+MySQL.relations_pkname: 'r2t'+MySQL.relations_pkname}
                     )
                 )
