@@ -14,7 +14,7 @@ from mosql.util import raw, or_
 import mosql.mysql
 
 from DataSource.MySQL.MySQL import MySQL
-
+from EditorialModel.classtypes import EmNature
 
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
@@ -423,11 +423,11 @@ class LeDataSourceSQL(DummyDatasource):
             cur.execute('SELECT last_insert_id()')
             relation_id, = cur.fetchone()
 
-        if nature == 'parent':
+        if nature == EmNature.PARENT:
             parent_superiors = lesup.superiors()
             for superior in parent_superiors:
                 depth = depth - 1 if depth is not None else 1
-                self.add_relation(lesup=superior.lodel_id, lesub=lesub.lodel_id, nature='parent', depth=depth, rank=rank)
+                self.add_relation(lesup=superior.lodel_id, lesub=lesub.lodel_id, nature=EmNature.PARENT, depth=depth, rank=rank)
 
         return relation_id
 
