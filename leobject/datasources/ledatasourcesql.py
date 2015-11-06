@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import pymysql
+import copy
 
 import leobject
 from leobject.datasources.dummy import DummyDatasource
@@ -244,6 +245,76 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
 
+    ## @brief Fetch related (rel2type) by LeType
+    # @param leo LeType : We want related LeObject of this LeType child class instance
+    # @param letype LeType(class) : We want related LeObject of this LeType child class (not instance)
+    # @param get_sub bool : If True leo is the superior and we want subordinates, else its the opposite
+    # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
+    def get_related(self, leo, letype, get_sub=True):
+        if leobject.letype.LeType not in letype.__bases__:
+            raise ValueError("letype argument should be a LeType child class, but got %s"%type(letype))
+        if not isinstance(leo, LeType):
+            raise ValueError("leo argument should be a LeType child class instance but got %s"%type(leo))
+        with self.connection as cur:
+            id_leo, id_type = 'id_sup', 'id_sub' if get_sub else 'id_sub', 'id_sup'
+            
+            joins = [
+                join(
+                    (MySQL.objects_table_name, 'o'),
+                    on={'r.'+id_type: 'o.'+MySQL.field_lodel_id}
+                ),
+                join(
+                    (MySQL.objects_table_name, 'p'),
+                    on={'r.'+id_leo: 'p.'+MySQL.field_lodel_id}
+                ),
+            ]
+
+            lesup, lesub = leo.__class__, letype if get_sub else letype, leo.__class__
+            common_infos = ('r.id_relation', 'r.id_sup', 'r.id_sub', 'r.rank', 'r.depth')
+            if len(lesup._linked_types[lesub]) > 0:
+                #relationnal attributes, need to join with r2t table
+                joins.append(
+                    join(
+                        (MySQL.get_r2t2table_name, 'r2t'),
+                        on={'r.'+MySQL.relations_pkname: 'r2t'+MySQL.relations_pkname}
+                    )
+                )
+                select=('r.id_relation', 'r.id_sup', 'r.id_sub', 'r.rank', 'r.depth', 'r2t.*')
+            else:
+                select = common_infos
+
+            sql = select(
+                (MySQL.relations_table_name, 'r'),
+                select=select,
+                where={
+                    id_leo: leo.lodel_id,
+                    'type_id': letype._type_id,
+                },
+                joins=joins
+            )
+
+            cur.execute(sql)
+            res = all_to_dicts(cur)
+            
+            #Building result
+            ret = list()
+            for datas in res:
+                r_letype = letype(res['r.'+id_type])
+                ret_item = {
+                    'id_relation':+datas[MySQL.relations_pkname],
+                    'lesup': r_leo if get_sub else r_letype,
+                    'lesub': r_letype if get_sub else r_leo,
+                    'rank': res['rank']
+                }
+
+                rel_attr = copy.copy(datas)
+                for todel in common_infos:
+                    del(rel_attr[todel])
+                ret_item['rel_attrs'] = rel_attr
+                ret.append(ret_item)
+
+            return ret
+    
     ## @brief Set the rank of a relation identified by its ID
     # @param id_relation int : relation ID
     # @param rank int|str : 'first', 'last', or an integer value
@@ -252,8 +323,6 @@ class LeDataSourceSQL(DummyDatasource):
     def set_relation_rank(self, id_relation, rank):
         self._check_rank(rank)
         self._set_relation_rank(id_relation, rank)
-
-        
 
     ## @brief Set the rank of a relation identified by its ID
     #

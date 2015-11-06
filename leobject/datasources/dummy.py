@@ -99,7 +99,7 @@ class DummyDatasource(object):
     # @param leo LeType : The from LeType child class instance
     # @param letype LeType : The wanted LeType child class (not instance !)
     # @param get_sub bool : If True, leo will be the superior and we wants all subordinates of Type letype, else its the oposite, leo is the subordinates and we want superiors with Type letype
-    # @return A list of tuple( LeType instance, dict('id_relation':id,'rank':rank,  attr_name:attr_val, ...) ) ordered by rank
+    # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
     def get_related(self, leo, letype, get_sub=True):
         pass
 
