@@ -136,18 +136,18 @@ class _LeObject(object):
 
 
         field_list = cls._prepare_field_list(field_list, letype, leclass)
-        
+
         #preparing filters
         filters, relationnal_filters = cls._prepare_filters(query_filters, letype, leclass)
 
         #Fetching datas from datasource
         datas = cls._datasource.get(leclass, letype, field_list, filters, relationnal_filters)
-        
+
         #Instanciating corresponding LeType child classes with datas
         result = list()
         for leobj_datas in datas:
-            letype = self.uid2leobj(datas['type_id']) if letype is None else letype
-            result.append(letype(datas))
+            letype = cls.uid2leobj(leobj_datas['type_id']) if letype is None else letype
+            result.append(letype(**leobj_datas))
 
         return result
 
