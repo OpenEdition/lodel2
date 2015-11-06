@@ -224,7 +224,26 @@ class LeDataSourceSQL(DummyDatasource):
                 cur.execute(sql)
         self._set_relation_rank(id_relation, rank)
         return relation_id
-    
+
+    ## @brief Deletes the relation between 2 LeType
+    # @param lesup LeType
+    # @param lesub LeType
+    # @return True if success else False
+    def del_related(self, lesup, lesub):
+        with self.connection as cur:
+            sql = delete(
+                self.datasource_utils.relations_table_name,
+                {
+                    'id_sup': lesup.lodel_id,
+                    'id_sub': lesub.lodel_id
+                }
+            )
+
+            if cur.execute(sql) != 1:
+                return False
+
+        return True
+
     ## @brief Set the rank of a relation identified by its ID
     # @param id_relation int : relation ID
     # @param rank int|str : 'first', 'last', or an integer value
