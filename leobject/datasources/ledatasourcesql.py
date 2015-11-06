@@ -72,7 +72,10 @@ class LeDataSourceSQL(DummyDatasource):
     # @return list
     def get(self, leclass, letype, field_list, filters, relational_filters=None):
 
-        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+        if leclass is None:
+            query_table_name = self.datasource_utils.objects_table_name
+        else:
+            query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
         where_filters = self._prepare_filters(filters, query_table_name)
         join_fields = {}
 
@@ -94,7 +97,8 @@ class LeDataSourceSQL(DummyDatasource):
 
         # Executing the query
         with self.connection as cur:
-            results = all_to_dicts(cur.execute(query))
+            cur.execute(query)
+            results = all_to_dicts(cur)
 
         return results
 
