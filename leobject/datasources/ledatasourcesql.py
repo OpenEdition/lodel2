@@ -423,6 +423,12 @@ class LeDataSourceSQL(DummyDatasource):
             cur.execute('SELECT last_insert_id()')
             relation_id, = cur.fetchone()
 
+        if nature == 'parent':
+            parent_superiors = lesup.superiors()
+            for superior in parent_superiors:
+                depth = depth - 1 if depth is not None else 1
+                self.add_relation(lesup=superior.lodel_id, lesub=lesub.lodel_id, nature='parent', depth=depth, rank=rank)
+
         return relation_id
 
     ## @brief Fetch a superiors list ordered by depth for a LeType

@@ -304,7 +304,7 @@ class _LeObject(object):
         if leo_is_sup:
             return cls._datasource.get_subordinates(leo, nature)
         else:
-            return cls._datasource.get_superior(leo, nature)
+            return cls._datasource.get_superiors(leo, nature)
     
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
