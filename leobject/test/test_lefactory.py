@@ -100,8 +100,8 @@ class TestLeFactory(TestCase):
 
             #Testing _fields
             self.assertEqual(
-                set([ f.name for f in emtype.fields() ]),
-                set(letype._fields)
+                set([ f.name for f in emtype.fields(False) ]),
+                set([ f for f in letype._fields])
             )
 
             #Testing superiors

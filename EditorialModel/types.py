@@ -95,8 +95,8 @@ class EmType(EmComponent):
 
     ## Return the list of associated fields
     # @return A list of EmField instance
-    def fields(self, relational = False):
-        return [ field for field in self.em_class.fields() if not field.optional or (field.optional and field.uid in self.fields_list) ]
+    def fields(self, relational = True):
+        return [ field for field in self.em_class.fields(relational) if not field.optional or (field.optional and field.uid in self.fields_list) ]
 
     ## Select_field (Function)
     #

@@ -74,7 +74,10 @@ class EmClass(EmComponent):
     ## Retrieve list of fields
     # @return fields [EmField]:
     def fields(self, relational = True):
-        return [ f for f in self.model.components('EmField') if f.class_id == self.uid ]
+        if relational:
+            return [ f for f in self.model.components('EmField') if f.class_id == self.uid]
+        else:
+            return [ f for f in self.model.components('EmField') if f.class_id == self.uid and f.fieldtype != 'rel2type' and f.rel_field_id is None]
 
     ## Retrieve list of type of this class
     # @return types [EditorialModel.types.EmType]:
