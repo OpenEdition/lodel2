@@ -41,7 +41,7 @@ class LeDataSourceSQL(DummyDatasource):
             res = list()
             for data in datas:
                 res.append(self.insert(letype, leclass, data))
-            return res
+            return res if len(res)>1 else res[0]
         elif isinstance(datas, dict):
 
             with self.connection as cur:
