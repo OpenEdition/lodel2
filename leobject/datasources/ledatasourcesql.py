@@ -49,10 +49,7 @@ class LeDataSourceSQL(DummyDatasource):
                 if cur.execute(insert(self.datasource_utils.objects_table_name, object_datas)) != 1:
                     raise RuntimeError('SQL error')
 
-                if cur.execute('SELECT last_insert_id() as lodel_id') != 1:
-                    raise RuntimeError('SQL error')
-
-                lodel_id, = cur.fetchone()
+                lodel_id = cur.lastrowid
 
                 datas[self.datasource_utils.field_lodel_id] = lodel_id
                 query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
