@@ -106,8 +106,9 @@ class DummyDatasource(object):
     ## @brief Delete a relation between 2 LeType
     # @param lesup LeType
     # @param lesub LeType
+    # @param fields dict
     # @return True if success else return False
-    def del_related(self, lesup, lesub):
+    def del_related(self, lesup, lesub, fields=None):
         pass
 
     ## @brief Fetch a relation
