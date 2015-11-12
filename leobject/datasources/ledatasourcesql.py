@@ -233,17 +233,28 @@ class LeDataSourceSQL(DummyDatasource):
     ## @brief Deletes the relation between 2 LeType
     # @param lesup LeType
     # @param lesub LeType
+    # @param fields dict
     # @return True if success else False
     # @todo Add fields parameter to identify relation
     # @todo Delete relationnal fields if some exists
-    def del_related(self, lesup, lesub):
+    def del_related(self, lesup, lesub, fields=None):
         with self.connection as cur:
+            del_params = {
+                'id_sup': lesup.lodel_id,
+                'id_sub': lesub.lodel_id
+            }
+            delete_params = {}
+
+            if fields is not None:
+                delete_params = del_params.copy()
+                delete_params.update(fields)
+            else:
+                delete_params = del_params
+
+
             sql = delete(
                 self.datasource_utils.relations_table_name,
-                {
-                    'id_sup': lesup.lodel_id,
-                    'id_sub': lesub.lodel_id
-                }
+                delete_params
             )
 
             if cur.execute(sql) != 1:
