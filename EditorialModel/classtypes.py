@@ -125,7 +125,7 @@ class EmClassType(object):
     }
 
     ## @brief return a classtype from its name
-    # @param cls 
+    # @param cls
     # @param classtype str : A classtype name
     # @return None if no classtype with this name, else return a dict containing classtype informations
     @classmethod
