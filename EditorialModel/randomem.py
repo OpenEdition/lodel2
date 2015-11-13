@@ -15,7 +15,7 @@ from Lodel.utils.mlstring import MlString
 
 
 class RandomEm(object):
-    
+
     ## @brief Instanciate a class allowing to generate random EM
     # @see RandomEm::random_em()
     def __init__(self, backend=None, **kwargs):
@@ -110,7 +110,7 @@ class RandomEm(object):
                         emtype.add_superior(possible[nat][i], nat)
 
         #fields creation
-        ft_l = [ ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' and ftname != 'rel2type']
+        ft_l = [ftname for ftname in EmField.fieldtypes_list() if ftname != 'pk' and ftname != 'rel2type']
         for emc in ed_mod.components('EmClass'):
             if random.randint(0, chances['nofields']) != 0:
                 for _ in range(random.randint(1, chances['nfields'])):
@@ -121,7 +121,7 @@ class RandomEm(object):
                     if random.randint(0, chances['optfield']) == 0:
                         fdats['optional'] = True
                     ed_mod.create_component('EmField', fdats)
-        
+
         #rel2type creation (in case none where created before
         for emc in ed_mod.components('EmClass'):
             for _ in range(random.randint(0, chances['nr2tfields'])):
@@ -135,9 +135,8 @@ class RandomEm(object):
                     fdats['optional'] = True
                 ed_mod.create_component('EmField', fdats)
 
-
-        #relationnal fields creation
-        ft_l = [field_type for field_type in EmField.fieldtypes_list() if field_type != 'rel2type' and field_type  != 'pk']
+        # relationnal fields creation
+        ft_l = [field_type for field_type in EmField.fieldtypes_list() if field_type != 'rel2type' and field_type != 'pk']
         for emrelf in [f for f in ed_mod.components(EmField) if f.fieldtype == 'rel2type']:
             for _ in range(0, chances['rfields']):
                 field_type = ft_l[random.randint(0, len(ft_l) - 1)]
@@ -151,7 +150,7 @@ class RandomEm(object):
 
         #selection optionnal fields
         for emtype in ed_mod.components(EmType):
-            selectable = [field  for field in emtype.em_class.fields() if field.optional]
+            selectable = [field for field in emtype.em_class.fields() if field.optional]
             for field in selectable:
                 if random.randint(0, chances['seltype']) == 0:
                     emtype.select_field(field)
