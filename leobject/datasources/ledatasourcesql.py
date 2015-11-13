@@ -28,7 +28,9 @@ class LeDataSourceSQL(DummyDatasource):
         self.datasource_utils = MySQL
         if conn_args is None:
             conn_args = self.datasource_utils.connections['default']
-        self.connection = Database(self.module, host=conn_args['host'], user=conn_args['user'], passwd=conn_args['passwd'], db=conn_args['db'])
+            self.module = conn_args['module']
+            del conn_args['module']
+        self.connection = Database(self.module, **conn_args)
 
     ## @brief inserts a new object
     # @param letype LeType
