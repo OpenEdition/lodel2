@@ -2,15 +2,16 @@
 
 from EditorialModel.fieldtypes.generic import GenericFieldType
 
+
 class EmFieldType(GenericFieldType):
 
     help = 'Basic string (varchar) field. Take max_length=64 as option'
 
-    ftype='char'
+    ftype = 'char'
 
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
     def __init__(self, max_length=64, **kwargs):
         self.max_length = max_length
-        super(EmFieldType, self).__init__(ftype = 'char', **kwargs)
+        super(EmFieldType, self).__init__(ftype='char', **kwargs)
 

@@ -2,9 +2,10 @@
 
 import EditorialModel.fieldtypes.integer
 
+
 ## @todo This EmFieldType is a bit dirty....
 class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
-    
+
     help = 'Integer primary key fieldtype'
 
     def __init__(self, **kwargs):
@@ -18,10 +19,10 @@ class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
         # Checking args
         for name, value in kwargs.items():
             if name not in allowed:
-                raise TypeError("Got an unexpected argument '%s' for pk EmFieldType"%name)
+                raise TypeError("Got an unexpected argument '%s' for pk EmFieldType" % name)
             if value != allowed[name]:
-                raise ValueError("The value '%s' for argument '%s' for pk EmFieldType is not allowed"%(value, name))
-        
+                raise ValueError("The value '%s' for argument '%s' for pk EmFieldType is not allowed" % (value, name))
+
         kwargs.update(allowed)
 
         super(EmFieldType, self).__init__(**kwargs)
