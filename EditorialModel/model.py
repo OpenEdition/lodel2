@@ -104,7 +104,7 @@ class Model(object):
 
     ## Saves data using the current backend
     # @param filename str | None : if None use the current backend file (provided at backend instanciation)
-    def save(self, filename = None):
+    def save(self, filename=None):
         return self.backend.save(self, filename)
 
     ## Given a EmComponent child class return a list of instances
@@ -117,7 +117,7 @@ class Model(object):
             if not cls:
                 return False
         if cls is None:
-            return [ self.component(uid) for uid in self._components['uids'] ]
+            return [self.component(uid) for uid in self._components['uids']]
         key_name = self.name_from_emclass(cls)
         return False if key_name is False else self._components[key_name]
 
@@ -131,15 +131,15 @@ class Model(object):
     # @param name str : the searched name
     # @param comp_cls str|EmComponent : filter on component type (see components() method)
     # @return a list of component with a specific name
-    def component_from_name(self, name, comp_cls = None):
+    def component_from_name(self, name, comp_cls=None):
         if comp_cls == EmField or comp_cls == 'EmField':
             res = list()
-            for field, fieldname in [ (f, f.name) for f in self.components('EmField')]:
+            for field, fieldname in [(f, f.name) for f in self.components('EmField')]:
                 if fieldname == name:
                     res.append(field)
             return res
 
-        for comp,compname in [ (c, c.name) for c in self.components(comp_cls)]:
+        for comp, compname in [(c, c.name) for c in self.components(comp_cls)]:
             if compname == name:
                 return comp
 
@@ -176,9 +176,9 @@ class Model(object):
     # @todo Transform the datas arg in **datas ?
     def create_component(self, component_type, datas, uid=None):
         if not (uid is None) and (not isinstance(uid, int) or uid <= 0 or uid in self._components['uids']):
-            raise ValueError("Invalid uid provided : %s"%repr(uid))
-        
-        if component_type not in [ n for n in self._components.keys() if n != 'uids' ]:
+            raise ValueError("Invalid uid provided : %s" % repr(uid))
+
+        if component_type not in [n for n in self._components.keys() if n != 'uids']:
             raise ValueError("Invalid component_type rpovided")
         else:
             em_obj = self.emclass_from_name(component_type)
@@ -191,7 +191,7 @@ class Model(object):
         datas['uid'] = uid if uid else self.new_uid()
         em_component = em_obj(model=self, **datas)
 
-        em_component.rank = em_component.get_max_rank() + 1 #  Inserting last by default
+        em_component.rank = em_component.get_max_rank() + 1  # Inserting last by default
 
         self._components['uids'][em_component.uid] = em_component
         self._components[component_type].append(em_component)
@@ -217,7 +217,7 @@ class Model(object):
             #Checking the component
             em_component.check()
             if component_type == 'EmClass':
-               # !!! If uid is not None it means that we shouldn't create components automatically !!!
+                # !!! If uid is not None it means that we shouldn't create components automatically !!!
                 self.add_default_class_fields(em_component.uid)
 
         return em_component
@@ -228,11 +228,11 @@ class Model(object):
     # @throw ValueError if class_uid in not an EmClass uid
     def add_default_class_fields(self, class_uid):
         if class_uid not in self._components['uids']:
-            raise ValueError("The uid '%d' don't exists"%class_uid)
+            raise ValueError("The uid '%d' don't exists" % class_uid)
         emclass = self._components['uids'][class_uid]
         if not isinstance(emclass, EditorialModel.classes.EmClass):
-            raise ValueError("The uid '%d' is not an EmClass uid"%class_uid)
-        
+            raise ValueError("The uid '%d' is not an EmClass uid" % class_uid)
+
         """
         fgroup_name = EmClass.default_fieldgroup
 
@@ -250,12 +250,11 @@ class Model(object):
 
         default_fields = emclass.default_fields_list()
         for fname, fdatas in default_fields.items():
-            if not (fname in [ f.name for f in emclass.fields() ]):
+            if not (fname in [f.name for f in emclass.fields()]):
                 #Adding the field
                 fdatas['name'] = fname
                 fdatas['class_id'] = class_uid
                 self.create_component('EmField', fdatas)
-        pass
 
     ## Delete a component
     # @param uid int : Component identifier
