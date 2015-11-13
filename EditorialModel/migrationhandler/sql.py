@@ -26,7 +26,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
         super(SQLMigrationHandler, self).__init__(False)
 
         self.db = Database(module, *conn_args, **conn_kargs)
-        self._pk_column = EditorialModel.classtypes.pk_name() + ' INT PRIMARY_KEY AUTOINCREMENT NOT NULL'
+        self._pk_column = (EditorialModel.classtypes.pk_name(), 'INTEGER PRIMARY KEY AUTOINCREMENT')
         self._main_table_name = 'object'
         self._relation_table_name = 'relation'
 
@@ -58,7 +58,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
     def emclass_new(self, model, uid, initial_state, new_state):
         class_table_name = self._class_table_name(new_state['name'])
         self._query_bd(
-            create(table=class_table_name, column=self._pk_column)
+            create(table=class_table_name, column=[self._pk_column])
         )
 
     # New Field, must create a column in Class table or in Class_Type relational attribute table
@@ -70,9 +70,9 @@ class SQLMigrationHandler(DummyMigrationHandler):
             # find relational_type name, and class name of the field
             class_name = self._class_table_name_from_field(model, new_state)
             type_name = model.component(new_state['rel_to_type_id']).name
-            table_name = class_name + '_' + type_name
+            table_name = self._relational_table_name(class_name, type_name)
             self._query_bd(
-                create(table=table_name, column=self._pk_column),
+                create(table=table_name, column=[self._pk_column]),
             )
             return
 
@@ -90,7 +90,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
             class_name = self._class_table_name_from_field(model, new_state)
             rel_type_id = model.component(new_state['rel_field_id']).rel_to_type_id
             type_name = model.component(rel_type_id).name
-            table_name = class_name + '_' + type_name
+            table_name = self._relational_table_name(class_name, type_name)
 
         # else create a column in the class table
         else:
@@ -98,7 +98,7 @@ class SQLMigrationHandler(DummyMigrationHandler):
 
         field_definition = self._fieldtype_definition(new_state['fieldtype'], new_state)
         self._query_bd(
-            alter_add(table=table_name, column=new_state['name'] + ' ' + field_definition)
+            alter_add(table=table_name, column=[(new_state['name'],field_definition)])
         )
 
     ## convert fieldtype name to SQL definition
@@ -117,8 +117,8 @@ class SQLMigrationHandler(DummyMigrationHandler):
             definition = 'DATETIME'
             if 'now_on_create' in options and options['now_on_create']:
                 definition += ' DEFAULT CURRENT_TIMESTAMP'
-            if 'now_on_update' in options and options['now_on_update']:
-                definition += ' ON UPDATE CURRENT_TIMESTAMP'
+            #if 'now_on_update' in options and options['now_on_update']:
+                #definition += ' ON UPDATE CURRENT_TIMESTAMP'
             return definition
 
         raise EditorialModel.exceptions.MigrationHandlerChangeError("Basic type '%s' of fieldtype '%s' is not compatible with SQL migration Handler" % basic_type, fieldtype)
@@ -129,25 +129,28 @@ class SQLMigrationHandler(DummyMigrationHandler):
         common_fields = [self._pk_column]
         for name, options in EditorialModel.classtypes.common_fields.items():
             if options['fieldtype'] != 'pk':
-                common_fields.append(name + ' ' + self._fieldtype_definition(options['fieldtype'], options))
+                common_fields.append((name, self._fieldtype_definition(options['fieldtype'], options)))
 
         # create common tables
         self._query_bd(
             create(table=self._main_table_name, column=common_fields),
-            create(table=self._relation_table_name, column=('relation_id INT PRIMARY_KEY AUTOINCREMENT NOT NULL', 'superior_id INT', 'subdordinate_id INT', 'nature CHAR(255)', 'depth INT', 'rank INT'))
+            create(table=self._relation_table_name, column=[('relation_id','INTEGER PRIMARY KEY AUTOINCREMENT'), ('superior_id','INT'), ('subdordinate_id','INT'), ('nature','CHAR(255)'), ('depth','INT'), ('rank','INT')])
         )
 
     def _query_bd(self, *queries):
         with self.db as cur:
             for query in queries:
-                #print(query)
+                print(query)
                 cur.execute(query)
 
     def _class_table_name(self, class_name):
-        return class_name
+        return 'class_' + class_name
+
+    def _relational_table_name(self, class_name, type_name):
+        return 'r2t_' + class_name + '_' + type_name
 
     def _class_table_name_from_field(self, model, field):
-        fieldgroup_id = model.component(field['fieldgroup_id']).class_id
-        class_name = model.component(fieldgroup_id).name
+        class_id = field['class_id']
+        class_name = model.component(class_id).name
         class_table_name = self._class_table_name(class_name)
         return class_table_name
