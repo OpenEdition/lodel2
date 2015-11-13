@@ -17,7 +17,7 @@ from EditorialModel.classtypes import EmClassType
 class EmClass(EmComponent):
 
     ranked_in = 'classtype'
-    
+
     ## EmClass instanciation
     # @todo Classtype initialisation and test is not good EmClassType should give an answer or something like that
     # @todo defines types check for icon and sortcolumn
@@ -39,16 +39,15 @@ class EmClass(EmComponent):
             if fname not in [f.name for f in self.fields()]:
                 self.model.add_default_class_fields(self.uid)
         super(EmClass, self).check()
-    
+
     ## @brief Return the default fields list for this EmClass
     # @return a dict with key = fieldname and value is a dict to pass to the EditorialModel::model::Model::creat_component() method
     def default_fields_list(self):
         ctype = EditorialModel.classtypes.EmClassType.get(self.classtype)
         res = ctype['default_fields']
-        for k,v in EditorialModel.classtypes.common_fields.items():
+        for k, v in EditorialModel.classtypes.common_fields.items():
             res[k] = copy.copy(v)
         return res
-        
 
     ## @brief Delete a class if it's ''empty''
     # If a class has no fieldgroups delete it
@@ -73,11 +72,11 @@ class EmClass(EmComponent):
 
     ## Retrieve list of fields
     # @return fields [EmField]:
-    def fields(self, relational = True):
+    def fields(self, relational=True):
         if relational:
-            return [ f for f in self.model.components('EmField') if f.class_id == self.uid]
+            return [f for f in self.model.components('EmField') if f.class_id == self.uid]
         else:
-            return [ f for f in self.model.components('EmField') if f.class_id == self.uid and f.fieldtype != 'rel2type' and f.rel_field_id is None]
+            return [f for f in self.model.components('EmField') if f.class_id == self.uid and f.fieldtype != 'rel2type' and f.rel_field_id is None]
 
     ## Retrieve list of type of this class
     # @return types [EditorialModel.types.EmType]:
