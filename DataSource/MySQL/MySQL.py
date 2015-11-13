@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import pymysql
 import settings
 
 ## @brief Manages the accesses to a MySQL datasource
