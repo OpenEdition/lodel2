@@ -308,6 +308,7 @@ class _LeObject(object):
             return cls._datasource.get_superiors(leo, nature)
     
     ## @brief Prepare a field_list
+    # @warning This method assume that letype and leclass are returned from _LeObject._prepare_targets() method
     # @param field_list list : List of string representing fields
     # @param letype LeType : LeType child class
     # @param leclass LeClass : LeClass child class
@@ -356,6 +357,7 @@ class _LeObject(object):
         return (letype, leclass)
 
     ## @brief Check if a fieldname is valid
+    # @warning This method assume that letype and leclass are returned from _LeObject._prepare_targets() method
     # @param letype LeType|None : The concerned type (or None)
     # @param leclass LeClass|None : The concerned class (or None)
     # @param fields list : List of string representing fields
@@ -376,9 +378,6 @@ class _LeObject(object):
             if letype is None:
                 field_l = leclass._fieldtypes.keys()
             else:
-                if not (leclass is None):
-                    if letype._leclass != leclass:
-                        raise AttributeError("The EmType %s is not a specialisation of the EmClass %s"%(typename, classname))
                 field_l = letype._fields
             #Checks that fields are in this type
             for field in fields:
