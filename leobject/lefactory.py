@@ -141,7 +141,6 @@ class LeFactory(object):
         #Putting import directives in result
         result += """## @author LeFactory
 
-from EditorialModel.model import Model
 from leobject.leobject import _LeObject
 from leobject.leclass import LeClass
 from leobject.letype import LeType
@@ -164,11 +163,10 @@ import %s
 ## @brief _LeObject concret class
 # @see leobject::leobject::_LeObject
 class LeObject(_LeObject):
-    _model = Model(backend=%s)
     _datasource = %s(**%s)
     _me_uid = %s
 
-""" % (backend_constructor, datasource_cls.__module__ + '.' + datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
+""" % ( datasource_cls.__module__ + '.' + datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
 
         emclass_l = model.components(EditorialModel.classes.EmClass)
         emtype_l = model.components(EditorialModel.types.EmType)
