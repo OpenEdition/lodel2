@@ -7,9 +7,9 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import EditorialModel
-import leobject
-import leobject.test.utils
-from leobject.leobject import _LeObject
+import leapi
+import leapi.test.utils
+from leapi.leobject import _LeObject
 
 ## Testing methods that need the generated code
 class LeObjectTestCase(TestCase):
@@ -17,11 +17,11 @@ class LeObjectTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+        cls.tmpdir = leapi.test.utils.tmp_load_factory_code()
     @classmethod
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+        leapi.test.utils.cleanup(cls.tmpdir)
 
     def test_split_query_filter(self):
         """ Tests the _split_filter() classmethod """
@@ -69,9 +69,9 @@ class LeObjectTestCase(TestCase):
         import dyncode
         for i in dyncode.LeObject._me_uid.keys():
             cls = dyncode.LeObject.uid2leobj(i)
-            if leobject.letype.LeType in cls.__bases__:
+            if leapi.letype.LeType in cls.__bases__:
                 self.assertEqual(i, cls._type_id)
-            elif leobject.leclass.LeClass in cls.__bases__:
+            elif leapi.leclass.LeClass in cls.__bases__:
                 self.assertEqual(i, cls._class_id)
             else:
                 self.fail("Bad value returned : '%s'"%cls)
@@ -110,8 +110,8 @@ class LeObjectTestCase(TestCase):
         test_v = [
             ('',''),
             (Personnes, Numero),
-            (leobject.leclass.LeClass, Numero),
-            (Publication, leobject.letype.LeType),
+            (leapi.leclass.LeClass, Numero),
+            (Publication, leapi.letype.LeType),
             ('foobar', Numero),
             (Publication, 'foobar'),
             (Numero, Numero),
@@ -143,7 +143,7 @@ class LeObjectTestCase(TestCase):
         LeObject._check_fields(None, None, EditorialModel.classtypes.common_fields.keys())
 
         #Invalid fields
-        with self.assertRaises(leobject.leobject.LeObjectQueryError):
+        with self.assertRaises(leapi.leobject.LeObjectQueryError):
             LeObject._check_fields(None, None, Numero._fields)
 
     def test_prepare_filters(self):
@@ -158,7 +158,7 @@ class LeObjectTestCase(TestCase):
 
         filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
         self.assertEqual(filt, [('lodel_id', '=', '1')])
-        self.assertEqual(rfilt, [((leobject.leobject.REL_SUP,'parent'), '>', '2')])
+        self.assertEqual(rfilt, [((leapi.leobject.REL_SUP,'parent'), '>', '2')])
         
         #All fields, no relationnal and class given
         filters = []
@@ -179,7 +179,7 @@ class LeObjectTestCase(TestCase):
         
         filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
         self.assertEqual(filt, [('lodel_id', '<=', '0')])
-        self.assertEqual(rfilt, [((leobject.leobject.REL_SUB,'parent'), '=', '2')])
+        self.assertEqual(rfilt, [((leapi.leobject.REL_SUB,'parent'), '=', '2')])
 
     def test_prepare_filters_invalid(self):
         """ Testing the _prepare_filters() method """
@@ -192,7 +192,7 @@ class LeObjectTestCase(TestCase):
             filters.append('%s=1'%field)
             res_filt.append((field, '=', '1'))
         
-        with self.assertRaises(leobject.leobject.LeObjectQueryError):
+        with self.assertRaises(leapi.leobject.LeObjectQueryError):
             LeObject._prepare_filters(filters, None, None)
 
 
@@ -207,13 +207,13 @@ class LeObjectMockDatasourceTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+        cls.tmpdir = leapi.test.utils.tmp_load_factory_code()
     @classmethod
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+        leapi.test.utils.cleanup(cls.tmpdir)
     
-    @patch('leobject.datasources.dummy.DummyDatasource.insert')
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         ndatas = [
@@ -229,7 +229,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, Publication, ndats)
             dsmock.reset_mock()
 
-    @patch('leobject.datasources.dummy.DummyDatasource.update')
+    @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
@@ -242,7 +242,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             (   ['superior.parent in [1,2,3,4,5,6]', 'titre != "FooBar"'],
                 {'titre':'FooBar'},
                 [( 'titre','!=','"FooBar"')],
-                [( (leobject.leobject.REL_SUP, 'parent') ,' in ', '[1,2,3,4,5,6]')]
+                [( (leapi.leobject.REL_SUP, 'parent') ,' in ', '[1,2,3,4,5,6]')]
             ),
         ]
 
@@ -255,7 +255,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
             dsmock.reset_mock()
 
-    @patch('leobject.datasources.dummy.DummyDatasource.delete')
+    @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
@@ -268,7 +268,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             (
                 ['subordinate.parent not in [1,2,3]', 'titre = "titre nul"'],
                 [('titre','=', '"titre nul"')],
-                [( (leobject.leobject.REL_SUB, 'parent'), ' not in ', '[1,2,3]')]
+                [( (leapi.leobject.REL_SUB, 'parent'), ' not in ', '[1,2,3]')]
             ),
         ]
 
@@ -281,7 +281,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters)
             dsmock.reset_mock()
         
-    @patch('leobject.datasources.dummy.DummyDatasource.get')
+    @patch('leapi.datasources.dummy.DummyDatasource.get')
     @unittest.skip('Dummy datasource doesn\'t fit anymore')
     def test_get(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -291,7 +291,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
                 ['lodel_id', 'superior.parent'],
                 ['titre != "foobar"'],
 
-                ['lodel_id', (leobject.leobject.REL_SUP, 'parent')],
+                ['lodel_id', (leapi.leobject.REL_SUP, 'parent')],
                 [('titre','!=', '"foobar"')],
                 []
             ),
@@ -299,9 +299,9 @@ class LeObjectMockDatasourceTestCase(TestCase):
                 ['lodel_id', 'titre', 'superior.parent', 'subordinate.translation'],
                 ['superior.parent in  [1,2,3,4,5]'],
 
-                ['lodel_id', 'titre', (leobject.leobject.REL_SUP,'parent'), (leobject.leobject.REL_SUB, 'translation')],
+                ['lodel_id', 'titre', (leapi.leobject.REL_SUP,'parent'), (leapi.leobject.REL_SUB, 'translation')],
                 [],
-                [( (leobject.leobject.REL_SUP, 'parent'), ' in ', '[1,2,3,4,5]')]
+                [( (leapi.leobject.REL_SUP, 'parent'), ' in ', '[1,2,3,4,5]')]
             ),
             (
                 [],
@@ -318,7 +318,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_with(Publication, Numero, fl_ds, filters_ds, rfilters_ds)
             dsmock.reset_mock()
 
-    @patch('leobject.datasources.dummy.DummyDatasource.get')
+    @patch('leapi.datasources.dummy.DummyDatasource.get')
     @unittest.skip('Dummy datasource doesn\'t fit anymore')
     def test_get_incomplete_target(self, dsmock):
         """ Testing LeObject.get() method with partial target specifier """

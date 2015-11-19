@@ -3,11 +3,11 @@
 import pymysql
 import copy
 
-import leobject
-from leobject.datasources.dummy import DummyDatasource
-from leobject.leobject import REL_SUB, REL_SUP
+import leapi
+from leapi.datasources.dummy import DummyDatasource
+from leapi.leobject import REL_SUB, REL_SUP
 
-from leobject.letype import LeType
+from leapi.letype import LeType
 
 from mosql.db import Database, all_to_dicts, one_to_dict
 from mosql.query import select, insert, update, delete, join
@@ -261,7 +261,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param get_sub bool : If True leo is the superior and we want subordinates, else its the opposite
     # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
     def get_related(self, leo, letype, get_sub=True):
-        if leobject.letype.LeType not in letype.__bases__:
+        if leapi.letype.LeType not in letype.__bases__:
             raise ValueError("letype argument should be a LeType child class, but got %s"%type(letype))
         if not isinstance(leo, LeType):
             raise ValueError("leo argument should be a LeType child class instance but got %s"%type(leo))
@@ -331,7 +331,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param id_relation int : relation ID
     # @param rank int|str : 'first', 'last', or an integer value
     # @throw ValueError if rank is not valid
-    # @throw leobject.leobject.LeObjectQueryError if id_relation don't exists
+    # @throw leapi.leapi.LeObjectQueryError if id_relation don't exists
     def set_relation_rank(self, id_relation, rank):
         self._check_rank(rank)
         self._set_relation_rank(id_relation, rank)
@@ -343,11 +343,11 @@ class LeDataSourceSQL(DummyDatasource):
     # @warning there is no way to fail on rank parameters even giving very bad parameters, if you want a method that may fail on rank use set_relation_rank() instead
     # @param id_relation int : relation ID
     # @param rank int|str : 'first', 'last', or an integer value
-    # @throw leobject.leobject.LeObjectQueryError if id_relation don't exists
+    # @throw leapi.leapi.LeObjectQueryError if id_relation don't exists
     def _set_relation_rank(self, id_relation, rank):
         ret = self.get_relation(id_relation, no_attr = True)
         if not ret:
-            raise leobject.leobject.LeObjectQueryError("No relation with id_relation = %d"%id_relation)
+            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d"%id_relation)
         lesup = ret['lesup']
         lesub = ret['lesup']
         cur_rank = ret['rank']
@@ -447,7 +447,7 @@ class LeDataSourceSQL(DummyDatasource):
             if res['nature'] != None:
                 raise ValueError("The relation with id %d is not a rel2type relation"%id_relation)
 
-            leobj = leobject.lefactory.LeFactory.leobj_from_name('LeObject')
+            leobj = leapi.lefactory.LeFactory.leobj_from_name('LeObject')
             lesup = leobj.uid2leobj(res['id_sup'])
             lesub = leobj.uid2leobj(res['id_sub'])
 
@@ -558,7 +558,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return A list of LeType ordered by rank that are subordinates of lesup in a "nature" relation
     def get_subordinates(self, lesup, nature):
         with self.connection as cur:
-            id_sup = lesup.lodel_id if isinstance(lesup, leobject.letype.LeType) else MySQL.leroot_lodel_id
+            id_sup = lesup.lodel_id if isinstance(lesup, leapi.letype.LeType) else MySQL.leroot_lodel_id
             sql = select(
                 MySQL.relations_table_name,
                 columns=('id_sup',),

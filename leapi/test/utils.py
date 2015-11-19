@@ -3,10 +3,10 @@ import shutil
 import sys
 
 import EditorialModel
-import leobject
+import leapi
 from EditorialModel.backend.json_backend import EmBackendJson
-from leobject.datasources.dummy import DummyDatasource
-from leobject.lefactory import LeFactory
+from leapi.datasources.dummy import DummyDatasource
+from leapi.lefactory import LeFactory
 
 
 

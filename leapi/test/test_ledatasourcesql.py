@@ -4,7 +4,7 @@ import unittest
 import sqlite3
 import pymysql
 from unittest import TestCase
-from leobject.datasources.ledatasourcesql import LeDataSourceSQL
+from leapi.datasources.ledatasourcesql import LeDataSourceSQL
 from mosql.db import Database
 
 

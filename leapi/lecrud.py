@@ -32,16 +32,6 @@ class _LeCrud(object):
     def fieldtypes_internal(self):
         return { fname: ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
     
-    ## @brief Given a ME uid return the corresponding LeClass or LeType class
-    # @return a LeType or LeClass child class
-    # @throw KeyError if no corresponding child classes
-    @classmethod
-    def uid2leobj(cls, uid):
-        uid = int(uid)
-        if uid not in cls._me_uid:
-            raise KeyError("No LeType or LeClass child classes with uid '%d'"%uid)
-        return cls._me_uid[uid]
-    
     ## @brief Check fields values
     # @param complete bool : If True expect that datas contains all fieldtypes with no default values
     # @param allow_internal bool : If False consider datas as invalid if a value is given for an internal fieldtype

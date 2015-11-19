@@ -24,7 +24,7 @@ class LeFactory(object):
     @staticmethod
     def leobj_from_name(name):
         if LeFactory.modname is None:
-            modname = 'leobject.' + LeFactory.output_file.split('.')[0]
+            modname = 'leapi.' + LeFactory.output_file.split('.')[0]
         else:
             modname = LeFactory.modname
         mod = importlib.import_module(modname)
@@ -141,10 +141,10 @@ class LeFactory(object):
         #Putting import directives in result
         result += """## @author LeFactory
 
-from leobject.lecrud import _LeCrud
-from leobject.leobject import _LeObject
-from leobject.leclass import LeClass
-from leobject.letype import LeType
+from leapi.lecrud import _LeCrud
+from leapi.leobject import _LeObject
+from leapi.leclass import LeClass
+from leapi.letype import LeType
 import EditorialModel.fieldtypes
 """
 
@@ -162,12 +162,12 @@ import %s
 
         result += """
 ## @brief _LeCrud concret class
-# @see leobject.lecrud._LeCrud
+# @see leapi.lecrud._LeCrud
 class LeCrud(_LeCrud):
     _datasource = {ds_classname}(**{ds_kwargs})
 
 ## @brief _LeObject concret class
-# @see leobject.leobject._LeObject
+# @see leapi.leapi._LeObject
 class LeObject(_LeObject, LeCrud):
     _me_uid = {me_uid_l}
 

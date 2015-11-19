@@ -7,26 +7,26 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import EditorialModel
-import leobject
-import leobject.test.utils
+import leapi
+import leapi.test.utils
 
 class LeTypeTestCase(TestCase):
     
     @classmethod
     def setUpClass(cls):
         """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+        cls.tmpdir = leapi.test.utils.tmp_load_factory_code()
     @classmethod
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+        leapi.test.utils.cleanup(cls.tmpdir)
  
     def test_init(self):
         """ testing the constructor """
         from dyncode import Publication, Numero, LeObject
         
         with self.assertRaises(NotImplementedError):
-            leobject.letype.LeType(42)
+            leapi.letype.LeType(42)
 
         badargs = [
             {'class_id':Numero._class_id + 1},
@@ -52,10 +52,10 @@ class LeTypeTestCase(TestCase):
         datas = { 'titre':'foobar' }
         Numero.check_datas(datas, False)
         Numero.check_datas(datas, True)
-        with self.assertRaises(leobject.leobject.LeObjectError):
+        with self.assertRaises(leapi.leobject.LeObjectError):
             Numero.check_datas_or_raise({}, True)
 
-    @patch('leobject.letype.LeType.populate')
+    @patch('leapi.letype.LeType.populate')
     def test_datas(self, dsmock):
         """ Testing the datas @property method """
         from dyncode import Publication, Numero, LeObject
@@ -70,13 +70,13 @@ class LeTypeMockDsTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+        cls.tmpdir = leapi.test.utils.tmp_load_factory_code()
     @classmethod
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+        leapi.test.utils.cleanup(cls.tmpdir)
 
-    @patch('leobject.datasources.dummy.DummyDatasource.get')
+    @patch('leapi.datasources.dummy.DummyDatasource.get')
     @unittest.skip('Dummy datasource doesn\'t fit anymore')
     def test_populate(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -86,7 +86,7 @@ class LeTypeMockDsTestCase(TestCase):
         num.populate()
         dsmock.assert_called_once_with(Publication, Numero, missing_fields, [('lodel_id','=','1')],[])
 
-    @patch('leobject.datasources.dummy.DummyDatasource.update')
+    @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -95,14 +95,14 @@ class LeTypeMockDsTestCase(TestCase):
         Numero.update(['lodel_id = 1'], datas)
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [], datas)
 
-    @patch('leobject.datasources.dummy.DummyDatasource.delete')
+    @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
         Numero.delete(['lodel_id = 1'])
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [])
 
-    @patch('leobject.datasources.dummy.DummyDatasource.update')
+    @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_db_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -110,7 +110,7 @@ class LeTypeMockDsTestCase(TestCase):
         num.db_update()
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [], num.datas)
 
-    @patch('leobject.datasources.dummy.DummyDatasource.delete')
+    @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_db_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 

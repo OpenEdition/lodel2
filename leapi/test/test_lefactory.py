@@ -6,14 +6,14 @@ import sys
 import shutil
 
 import EditorialModel
-import leobject
-import leobject.test.utils
-from leobject.lefactory import LeFactory
+import leapi
+import leapi.test.utils
+from leapi.lefactory import LeFactory
 
 class TestLeFactorySyntax(TestCase):
 
     def test_generated_code_syntax(self):
-        py = LeFactory.generate_python(**leobject.test.utils.genepy_args)
+        py = LeFactory.generate_python(**leapi.test.utils.genepy_args)
         pyc = compile(py, "dyn.py", 'exec')
         exec(pyc, globals())
 
@@ -22,14 +22,14 @@ class TestLeFactory(TestCase):
     @classmethod
     def setUpClass(cls):
         """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+        cls.tmpdir = leapi.test.utils.tmp_load_factory_code()
     @classmethod
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+        leapi.test.utils.cleanup(cls.tmpdir)
 
     def setUp(self):
-        backend=leobject.test.utils.genepy_args['backend_cls'](**leobject.test.utils.genepy_args['backend_args'])
+        backend=leapi.test.utils.genepy_args['backend_cls'](**leapi.test.utils.genepy_args['backend_args'])
         self.model = EditorialModel.model.Model(backend = backend)
 
     def test_leobject(self):
@@ -38,11 +38,11 @@ class TestLeFactory(TestCase):
         self.assertTrue(hasattr(dyncode, 'LeObject'))
 
         for uid, cls in dyncode.LeObject._me_uid.items():
-            if leobject.letype.LeType in cls.__bases__:
-                self.assertNotEqual(cls, leobject.letype.LeType)
+            if leapi.letype.LeType in cls.__bases__:
+                self.assertNotEqual(cls, leapi.letype.LeType)
                 self.assertEqual(cls._type_id, uid)
-            elif leobject.leclass.LeClass in cls.__bases__:
-                self.assertNotEqual(cls, leobject.leclass.LeClass)
+            elif leapi.leclass.LeClass in cls.__bases__:
+                self.assertNotEqual(cls, leapi.leclass.LeClass)
                 self.assertEqual(cls._class_id, uid)
             else:
                 self.fail("Bad instance type for _me_uid values : %s"%type(cls))
@@ -60,7 +60,7 @@ class TestLeFactory(TestCase):
             self.assertEqual(leclass._class_id, emclass.uid)
             
             #Testing inheritance
-            self.assertEqual(set(leclass.__bases__), set([dyncode.LeObject, leobject.leclass.LeClass]))
+            self.assertEqual(set(leclass.__bases__), set([dyncode.LeObject, leapi.leclass.LeClass]))
             
             #Testing _linked_types attr
             self.assertEqual(
@@ -95,7 +95,7 @@ class TestLeFactory(TestCase):
             #Testing inheritance
             self.assertEqual(
                 set(letype.__bases__),
-                set([leobject.letype.LeType, letype._leclass])
+                set([leapi.letype.LeType, letype._leclass])
             )
 
             #Testing _fields
