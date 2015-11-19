@@ -5,6 +5,8 @@ import importlib
 
 
 ## @brief Abstract class representing a fieldtype
+# 
+# Important notes on datas checking :
 class GenericFieldType(object):
 
     ## @brief Text describing the fieldtype
@@ -63,7 +65,7 @@ class GenericFieldType(object):
 
     ## @brief Check if a value is correct
     # @param value * : The value
-    # @throw TypeError if not valid
+    # @return Exception instance if not valid
     @staticmethod
     def dummy_check(value):
         pass
@@ -105,20 +107,38 @@ class GenericFieldType(object):
     # @param value * : The value to check
     # @return True if valid else False
     def check(self, value):
-        try:
-            self.check_or_raise(value)
-        except TypeError as e:
-            return False
-        return True
+        return len(self.check_or_raise(value)) == 0
+    
+    ## @brief Check if a Value is correct else return a check fail reason
+    # @param value * : The value to check
+    # @return None if check succeded else return an instance from a class derivated from Exception 
+    def check_error(self, value):
+        if value is None and not self.nullable:
+            return TypeError("'None' value but field is not nullable")
+        return self.check_function(value)
 
     ## @brief Check if a value is correct
     # @param value * : The value
-    # @throw TypeError if not valid
+    # @throw FieldTypeDataCheckError if not valid
     def check_or_raise(self, value):
-        if value is None and not self.nullable:
-            raise TypeError("Not nullable field")
-        self.check_function(value)
-
+        ret = self.check_error(value)
+        if not (ret is None):
+            raise FieldTypeDataCheckError(ret)
 
 class FieldTypeError(Exception):
     pass
+
+class FieldTypeDataCheckError(FieldTypeError):
+    
+    ## @brief Instanciate a new data check error
+    # @param expt_l list : A list of data check Exception
+    def __init__(self, expt_l):
+        self._expt_l = expt_l
+
+    def __str__(self):
+        msg = "Data check errors : "
+        for expt in self._expt_l:
+            msg += "{expt_name}:{expt_msg}; ".format(expt_name=expt.__class__.__name__, expt_msg=str(expt))
+        return msg
+
+

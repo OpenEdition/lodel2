@@ -15,8 +15,8 @@ class EmFieldType(EditorialModel.fieldtypes.char.EmFieldType):
     def __init__(self, regex='', max_length=10, **kwargs):
         self.regex = regex
         v_re = re.compile(regex)  # trigger an error if invalid regex
-
+        
         def re_match(value):
             if not v_re.match(regex, value):
-                raise TypeError('"%s" don\'t match the regex "%s"' % (value, regex))
+                return TypeError('"%s" don\'t match the regex "%s"' % (value, regex))
         super(EmFieldType, self).__init__(check_function=re_match, max_length=max_length, **kwargs)
