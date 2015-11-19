@@ -18,6 +18,17 @@ class MySQL(object):
     ## @brief Lodel_id for the hierachy root
     leroot_lodel_id = 0
 
+    @staticmethod
+    ## @brief Exec a query
+    # @param query str : SQL query
+    def query(connection, query):
+        with connection as cur:
+            try:
+                cur.execute(query)
+            except Exception as err:
+                raise err
+            return cur
+
     @classmethod
     ## @brief gets the table name from class name
     # @param class_name str

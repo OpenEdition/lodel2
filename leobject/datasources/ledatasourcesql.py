@@ -46,19 +46,14 @@ class LeDataSourceSQL(DummyDatasource):
             return res if len(res)>1 else res[0]
         elif isinstance(datas, dict):
 
-            with self.connection as cur:
-                object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
-                if cur.execute(insert(self.datasource_utils.objects_table_name, object_datas)) != 1:
-                    raise RuntimeError('SQL error')
+            object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
 
-                lodel_id = cur.lastrowid
+            cur = self.datasource_utils.query(self.connection, insert(self.datasource_utils.objects_table_name, object_datas))
+            lodel_id = cur.lastrowid
 
-                datas[self.datasource_utils.field_lodel_id] = lodel_id
-                query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
-                query = insert(query_table_name, datas)
-
-                if cur.execute(query) != 1:
-                    raise RuntimeError('SQL error')
+            datas[self.datasource_utils.field_lodel_id] = lodel_id
+            query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+            self.datasource_utils.query(self.connection, insert(query_table_name, datas))
 
             return lodel_id
 
@@ -95,9 +90,8 @@ class LeDataSourceSQL(DummyDatasource):
             query = select(query_table_name, where=where_filters, select=field_list)
 
         # Executing the query
-        with self.connection as cur:
-            cur.execute(query)
-            results = all_to_dicts(cur)
+        cur = self.datasource_utils.query(self.connection, query)
+        results = all_to_dicts(cur)
 
         return results
 
