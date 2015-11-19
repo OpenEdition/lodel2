@@ -74,7 +74,6 @@ class LeDataSourceSQL(DummyDatasource):
     # @param filters list : List of filters (see @ref leobject_filters)
     # @param rel_filters list : List of relational filters (see @ref leobject_filters)
     # @return the number of deleted components
-    # TODO Retourner le nombre de lignes supprimées
     def delete(self, target_cls, filters, rel_filters):
         query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
         prep_filters = self._prepare_filters(filters, query_table_name)
@@ -107,10 +106,10 @@ class LeDataSourceSQL(DummyDatasource):
 
         query_delete_from_object = delete(self.datasource_utils.objects_table_name, {'lodel_id': filters['lodel_id']})
         with self.connection as cur:
-            cur.execute(query)
+            result = cur.execute(query)
             cur.execute(query_delete_from_object)
 
-        return True
+        return result
 
     ## @brief update an existing lodel editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the update (a LeCrud child class (not instance !) )
