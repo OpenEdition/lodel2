@@ -23,8 +23,6 @@ REL_SUB = 1
 ## @brief Main class to handle objects defined by the types of an Editorial Model
 class _LeObject(object):
     
-    ## @brief The editorial model
-    _model = None
     ## @brief The datasource
     _datasource = None
     ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
