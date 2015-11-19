@@ -17,6 +17,7 @@ import mosql.mysql
 from DataSource.MySQL.MySQL import MySQL
 from EditorialModel.classtypes import EmNature
 
+
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
 
@@ -32,62 +33,35 @@ class LeDataSourceSQL(DummyDatasource):
             del conn_args['module']
         self.connection = Database(self.module, **conn_args)
 
-    ## @brief inserts a new object
-    # @param letype LeType
-    # @param leclass LeClass
-    # @param datas dict : dictionnary of field:value pairs to save
-    # @return int : lodel_id of the created object
-    # @todo add the returning clause and the insertion in "object"
-    def insert(self, letype, leclass, datas):
-        if isinstance(datas, list):
-            res = list()
-            for data in datas:
-                res.append(self.insert(letype, leclass, data))
-            return res if len(res)>1 else res[0]
-        elif isinstance(datas, dict):
-
-            object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
-
-            cur = self.datasource_utils.query(self.connection, insert(self.datasource_utils.objects_table_name, object_datas))
-            lodel_id = cur.lastrowid
-
-            datas[self.datasource_utils.field_lodel_id] = lodel_id
-            query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
-            self.datasource_utils.query(self.connection, insert(query_table_name, datas))
-
-            return lodel_id
-
-    ## @brief search for a collection of objects
-    # @param leclass LeClass
-    # @param letype LeType
-    # @field_list list
-    # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
-    # @param relation_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    # @return list
-    def get(self, leclass, letype, field_list, filters, relational_filters=None):
-
-        if leclass is None:
+    ## @brief select lodel editorial components using given filters
+    # @param target_cls LeCrud(class): The component class concerned by the select (a LeCrud child class (not instance !) )
+    # @param filters list: List of filters (see @ref leobject_filters)
+    # @param rel_filters list: List of relational filters (see @ref leobject_filters)
+    # @return a list of LeCrud child classes
+    def select(self, target_cls, filters, rel_filters=None):
+        if target_cls is None:
             query_table_name = self.datasource_utils.objects_table_name
         else:
-            query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+            query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
+
         where_filters = self._prepare_filters(filters, query_table_name)
         join_fields = {}
 
-        if relational_filters is not None and len(relational_filters) > 0:
-            rel_filters = self._prepare_rel_filters(relational_filters)
+        if rel_filters is not None and len(rel_filters) > 0:
+            rel_filters = self._prepare_rel_filters(rel_filters)
             for rel_filter in rel_filters:
                 # join condition
                 relation_table_join_field = "%s.%s" % (self.datasource_utils.relations_table_name, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
-                query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils.field_lodel_id)
+                query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils.relations_field_nature)
                 join_fields[query_table_join_field] = relation_table_join_field
-                # Adding "where" filters
+                # adding "where" filters
                 where_filters['%s.%s' % (self.datasource_utils.relations_table_name, self.datasource_utils.relations_field_nature)] = rel_filter['nature']
                 where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
 
             # building the query
-            query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.datasource_utils.relations_table_name, join_fields))
+            query = select(query_table_name, where=where_filters, joins=join(self.datasource_utils.relations_table_name, join_fields))
         else:
-            query = select(query_table_name, where=where_filters, select=field_list)
+            query = select(query_table_name, where=where_filters)
 
         # Executing the query
         cur = self.datasource_utils.query(self.connection, query)
@@ -95,20 +69,19 @@ class LeDataSourceSQL(DummyDatasource):
 
         return results
 
-    ## @brief delete an existing object
-    # @param letype LeType
-    # @param leclass LeClass
-    # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
-    # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    # @return bool : True on success
-    def delete(self, letype, leclass, filters, relational_filters):
-        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    ## @brief delete lodel editorial components given filters
+    # @param target_cls LeCrud(class): The component class concerned by the delete (a LeCrud child class (not instance !) )
+    # @param filters list : List of filters (see @ref leobject_filters)
+    # @param rel_filters list : List of relational filters (see @ref leobject_filters)
+    # @return the number of deleted components
+    # TODO Retourner le nombre de lignes supprimées
+    def delete(self, target_cls, filters, rel_filters):
+        query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
         prep_filters = self._prepare_filters(filters, query_table_name)
-        prep_rel_filters = self._prepare_rel_filters(relational_filters)
+        prep_rel_filters = self._prepare_rel_filters(rel_filters)
 
         if len(prep_rel_filters) > 0:
-            query = "DELETE %s FROM " % query_table_name
-
+            query = "DELETE %s FROM" % query_table_name
             for prep_rel_filter in prep_rel_filters:
                 query += "%s INNER JOIN %s ON (%s.%s = %s.%s)" % (
                     self.datasource_utils.relations_table_name,
@@ -139,28 +112,51 @@ class LeDataSourceSQL(DummyDatasource):
 
         return True
 
-    ## @brief update an existing object's data
-    # @param letype LeType
-    # @param leclass LeClass
-    # @param  filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
-    # @param rel_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
-    # @param data dict
-    # @return bool
-    # @todo prendre en compte les rel_filters
-    def update(self, letype, leclass, filters, rel_filters, data):
-
-        query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    ## @brief update an existing lodel editorial component
+    # @param target_cls LeCrud(class) : The component class concerned by the update (a LeCrud child class (not instance !) )
+    # @param filters list : List of filters (see @ref leobject_filters)
+    # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
+    # @param **datas : Datas in kwargs
+    # @return the number of updated components
+    # @TODO Retourner le nombre de lignes modifiées
+    # @TODO Prendre en charge les rel_filters
+    def update(self, target_cls, filters, rel_filters, **datas):
+        query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
         where_filters = filters
-        set_data = data
-
-        prepared_rel_filters = self._prepare_rel_filters(rel_filters)
-
-        # Building the query
+        set_data = datas
+        if rel_filters is not None:
+            prep_rel_filters = self._prepare_rel_filters(rel_filters)
         query = update(table=query_table_name, where=where_filters, set=set_data)
-        # Executing the query
         with self.connection as cur:
             cur.execute(query)
         return True
+
+    ## @brief inserts a new lodel editorial component
+    # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
+    # @param **datas : The datas to insert
+    # @return The inserted component's id
+    def insert(self, target_cls, **datas):
+        class_id = ''
+        type_id = ''
+        object_datas = {'class_id': class_id, 'type_id': type_id}
+        cur = self.datasource_utils.query(self.connection, insert(self.datasource_utils.objects_table_name, object_datas))
+        lodel_id = cur.lastrowid
+
+        datas[self.datasource_utils.field_lodel_id] = lodel_id
+        query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
+        self.datasource_utils.query(self.connection, insert(query_table_name, datas))
+
+        return lodel_id
+
+    ## @brief insert multiple editorial component
+    # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
+    # @param datas_list list : A list of dict representing the datas to insert
+    # @return int the number of inserted component
+    def insert_multi(self, target_cls, datas_list):
+        res = list()
+        for data in datas_list:
+            res.append(self.insert(target_cls, data))
+        return len(res)
 
     ## @brief prepares the relational filters
     # @params rel_filters : (("superior"|"subordinate"), operator, value)
@@ -196,6 +192,9 @@ class LeDataSourceSQL(DummyDatasource):
 
         return prepared_filters
 
+    # ================================================================================================================ #
+    # FONCTIONS A DEPLACER                                                                                             #
+    # ================================================================================================================ #
 
     ## @brief Make a relation between 2 LeType
     # @note rel2type relations. Superior is the LeType from the EmClass and subordinate the LeType for the EmType
@@ -205,14 +204,13 @@ class LeDataSourceSQL(DummyDatasource):
     def add_related(self, lesup, lesub, rank, **rel_attr):
         with self.connection as cur:
             #First step : relation table insert
-            sql = insert(MySQL.relations_table_name,{
-                        'id_sup': lesup.lodel_id, 
-                        'id_sub': lesub.lodel_id,
-                        'rank': 0, #default value that will be set latter
-                    })
+            sql = insert(MySQL.relations_table_name, {
+                'id_sup': lesup.lodel_id,
+                'id_sub': lesub.lodel_id,
+                'rank': 0,  # default value that will be set latter
+            })
             cur.execute(sql)
             relation_id = cur.lastrowid
-
 
             if len(rel_attr) > 0:
                 #There is some relation attribute to add in another table
@@ -244,7 +242,6 @@ class LeDataSourceSQL(DummyDatasource):
             else:
                 delete_params = del_params
 
-
             sql = delete(
                 self.datasource_utils.relations_table_name,
                 delete_params
@@ -262,20 +259,21 @@ class LeDataSourceSQL(DummyDatasource):
     # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
     def get_related(self, leo, letype, get_sub=True):
         if leapi.letype.LeType not in letype.__bases__:
-            raise ValueError("letype argument should be a LeType child class, but got %s"%type(letype))
+            raise ValueError("letype argument should be a LeType child class, but got %s" % type(letype))
+
         if not isinstance(leo, LeType):
-            raise ValueError("leo argument should be a LeType child class instance but got %s"%type(leo))
+            raise ValueError("leo argument should be a LeType child class instance but got %s" % type(leo))
         with self.connection as cur:
             id_leo, id_type = 'id_sup', 'id_sub' if get_sub else 'id_sub', 'id_sup'
-            
+
             joins = [
                 join(
                     (MySQL.objects_table_name, 'o'),
-                    on={'r.'+id_type: 'o.'+MySQL.field_lodel_id}
+                    on={'r.' + id_type: 'o.' + MySQL.field_lodel_id}
                 ),
                 join(
                     (MySQL.objects_table_name, 'p'),
-                    on={'r.'+id_leo: 'p.'+MySQL.field_lodel_id}
+                    on={'r.' + id_leo: 'p.' + MySQL.field_lodel_id}
                 ),
             ]
 
@@ -284,14 +282,14 @@ class LeDataSourceSQL(DummyDatasource):
             if len(lesup._linked_types[lesub]) > 0:
                 #relationnal attributes, need to join with r2t table
                 cls_name = leo.__class__.__name__ if get_sub else letype.__name__
-                type_name =  letype.__name__ if get_sub else leo.__class__.__name__
+                type_name = letype.__name__ if get_sub else leo.__class__.__name__
                 joins.append(
                     join(
                         (MySQL.get_r2t2table_name(cls_name, type_name), 'r2t'),
-                        on={'r.'+MySQL.relations_pkname: 'r2t'+MySQL.relations_pkname}
+                        on={'r.' + MySQL.relations_pkname: 'r2t' + MySQL.relations_pkname}
                     )
                 )
-                select=('r.id_relation', 'r.id_sup', 'r.id_sub', 'r.rank', 'r.depth', 'r2t.*')
+                select = ('r.id_relation', 'r.id_sup', 'r.id_sub', 'r.rank', 'r.depth', 'r2t.*')
             else:
                 select = common_infos
 
@@ -307,13 +305,13 @@ class LeDataSourceSQL(DummyDatasource):
 
             cur.execute(sql)
             res = all_to_dicts(cur)
-            
+
             #Building result
             ret = list()
             for datas in res:
-                r_letype = letype(res['r.'+id_type])
+                r_letype = letype(res['r.' + id_type])
                 ret_item = {
-                    'id_relation':+datas[MySQL.relations_pkname],
+                    'id_relation': +datas[MySQL.relations_pkname],
                     'lesup': r_leo if get_sub else r_letype,
                     'lesub': r_letype if get_sub else r_leo,
                     'rank': res['rank']
@@ -321,12 +319,12 @@ class LeDataSourceSQL(DummyDatasource):
 
                 rel_attr = copy.copy(datas)
                 for todel in common_infos:
-                    del(rel_attr[todel])
+                    del rel_attr[todel]
                 ret_item['rel_attrs'] = rel_attr
                 ret.append(ret_item)
 
             return ret
-    
+
     ## @brief Set the rank of a relation identified by its ID
     # @param id_relation int : relation ID
     # @param rank int|str : 'first', 'last', or an integer value
@@ -345,9 +343,9 @@ class LeDataSourceSQL(DummyDatasource):
     # @param rank int|str : 'first', 'last', or an integer value
     # @throw leapi.leapi.LeObjectQueryError if id_relation don't exists
     def _set_relation_rank(self, id_relation, rank):
-        ret = self.get_relation(id_relation, no_attr = True)
+        ret = self.get_relation(id_relation, no_attr=True)
         if not ret:
-            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d"%id_relation)
+            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d" % id_relation)
         lesup = ret['lesup']
         lesub = ret['lesup']
         cur_rank = ret['rank']
@@ -361,27 +359,26 @@ class LeDataSourceSQL(DummyDatasource):
             rank = len(relations)
             if cur_rank == rank:
                 return True
-        
+
         #insert the relation at the good position
         our_relation = relations.pop(cur_rank)
         relations.insert(our_relation, rank)
 
         #gathering (relation_id, new_rank)
-        rdatas = [ (attrs['relation_id'], new_rank+1) for new_rank,(sup, sub, attrs) in enumerate(relations) ]
-        sql = insert(MySQL.relations_table_name, columns=(MySQL.relations_pkname, 'rank'), values = rdatas, on_duplicate_key_update={'rank',mosql.util.raw('VALUES(`rank`)')})
+        rdatas = [(attrs['relation_id'], new_rank + 1) for new_rank, (sup, sub, attrs) in enumerate(relations)]
+        sql = insert(MySQL.relations_table_name, columns=(MySQL.relations_pkname, 'rank'), values=rdatas, on_duplicate_key_update={'rank', mosql.util.raw('VALUES(`rank`)')})
 
-    
     ## @brief Check a rank value
     # @param rank int | str : Can be an integer >= 1 , 'first' or 'last'
     # @throw ValueError if the rank is not valid
     def _check_rank(self, rank):
         if isinstance(rank, str) and rank != 'first' and rank != 'last':
-            raise ValueError("Invalid rank value : %s"%rank)
+            raise ValueError("Invalid rank value : %s" % rank)
         elif isinstance(rank, int) and rank < 1:
-            raise ValueError("Invalid rank value : %d"%rank)
+            raise ValueError("Invalid rank value : %d" % rank)
         else:
-            raise ValueError("Invalid rank type : %s"%type(rank))
-    
+            raise ValueError("Invalid rank type : %s" % type(rank))
+
     ## @brief Link two object given a relation nature, depth and rank
     # @param lesup LeObject : a LeObject
     # @param lesub LeObject : a LeObject
@@ -404,17 +401,17 @@ class LeDataSourceSQL(DummyDatasource):
                 raise NotImplementedError()
 
         return True
-    
+
     ## @brief Delete a relation
     # @warning this method may not be efficient
     # @param id_relation int : The relation identifier
     # @return bool
     def del_relation(self, id_relation):
         with self.connection as cur:
-            pk_where = {MySQL.relations_pkname:id_relation}
+            pk_where = {MySQL.relations_pkname: id_relation}
             if not MySQL.fk_on_delete_cascade and len(lesup._linked_types[lesub.__class__]) > 0:
                 #Delete the row in the relation attribute table
-                ret = self.get_relation(id_relation, no_attr = False)
+                ret = self.get_relation(id_relation, no_attr=False)
                 lesup = ret['lesup']
                 lesub = ret['lesub']
                 sql = delete(MySQL.relations_table_name, pk_where)
@@ -425,14 +422,14 @@ class LeDataSourceSQL(DummyDatasource):
                 raise RuntimeError("Unknown SQL Error")
 
         return True
-    
+
     ## @brief Fetch a relation
     # @param id_relation int : The relation identifier
     # @param no_attr bool : If true dont fetch rel_attr
     # @return a dict{'id_relation':.., 'lesup':.., 'lesub':..,'rank':.., 'depth':.., #if not none#'nature':.., #if exists#'dict_attr':..>}
     #
     # @todo TESTS
-    def get_relation(self, id_relation, no_attr = False):
+    def get_relation(self, id_relation, no_attr=False):
         relation = dict()
         with self.connection as cur:
             sql = select(MySQL.relation_table_name, {MySQL.relations_pkname: id_relation})
@@ -444,8 +441,8 @@ class LeDataSourceSQL(DummyDatasource):
             if len(res) > 1:
                 raise RuntimeError("When selecting on primary key, get more than one result. Bailout")
 
-            if res['nature'] != None:
-                raise ValueError("The relation with id %d is not a rel2type relation"%id_relation)
+            if res['nature'] is not None:
+                raise ValueError("The relation with id %d is not a rel2type relation" % id_relation)
 
             leobj = leapi.lefactory.LeFactory.leobj_from_name('LeObject')
             lesup = leobj.uid2leobj(res['id_sup'])
@@ -456,9 +453,9 @@ class LeDataSourceSQL(DummyDatasource):
             relation['lesub'] = lesub
             relation['rank'] = rank
             relation['depth'] = depth
-            if not (res['nature'] is None):
+            if res['nature'] is not None:
                 relation['nature'] = res['nature']
-            
+
             if not no_attr and res['nature'] is None and len(lesup._linked_types[lesub.__class__]) != 0:
                 #Fetch relation attributes
                 rel_attr_table = MySQL.get_r2t2table_name(lesup.__class__.__name__, lesub.__class__.__name__)
@@ -482,7 +479,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return a list of tuple (lesup, lesub, dict_attr)
     def get_relations(self, leo):
 
-        sql = select(self.datasource_utils.relations_table_name, where=or_(({'id_sub':leo.lodel_id},{'id_sup':leo.lodel_id})))
+        sql = select(self.datasource_utils.relations_table_name, where=or_(({'id_sub': leo.lodel_id}, {'id_sup': leo.lodel_id})))
 
         with self.connection as cur:
             results = all_to_dicts(cur.execute(sql))
@@ -510,10 +507,9 @@ class LeDataSourceSQL(DummyDatasource):
     # @return The relation ID or False if fails
     def add_superior(self, lesup, lesub, nature, rank, depth=None):
 
-        params = {'id_sup': lesup.lodel_id,'id_sub': lesub.lodel_id,'nature': nature,'rank': rank}
+        params = {'id_sup': lesup.lodel_id, 'id_sub': lesub.lodel_id, 'nature': nature, 'rank': rank}
         if depth is not None:
             params['depth'] = depth
-
 
         sql_insert = insert(self.datasource_utils.relations_table_name, params)
         with self.connection as cur:
@@ -551,7 +547,7 @@ class LeDataSourceSQL(DummyDatasource):
         superiors = [LeType(result['id_sup']) for result in results]
 
         return superiors
-    
+
     ## @brief Fetch the list of the subordinates given a nature
     # @param lesup LeType : superior LeType child class instance
     # @param nature str : A relation nature @ref EditorialModel.classtypes
@@ -569,3 +565,137 @@ class LeDataSourceSQL(DummyDatasource):
             res = all_to_dicts(cur)
 
             return [LeType(r['id_sup']) for r in res]
+
+    # ================================================================================================================ #
+    # FONCTIONS A SUPPRIMER                                                                                            #
+    # ================================================================================================================ #
+
+    ## @brief inserts a new object
+    # @param letype LeType
+    # @param leclass LeClass
+    # @param datas dict : dictionnary of field:value pairs to save
+    # @return int : lodel_id of the created object
+    # @todo add the returning clause and the insertion in "object"
+    # def insert(self, letype, leclass, datas):
+    #     if isinstance(datas, list):
+    #         res = list()
+    #         for data in datas:
+    #             res.append(self.insert(letype, leclass, data))
+    #         return res if len(res)>1 else res[0]
+    #     elif isinstance(datas, dict):
+    #
+    #         object_datas = {'class_id': leclass._class_id, 'type_id': letype._type_id}
+    #
+    #         cur = self.datasource_utils.query(self.connection, insert(self.datasource_utils.objects_table_name, object_datas))
+    #         lodel_id = cur.lastrowid
+    #
+    #         datas[self.datasource_utils.field_lodel_id] = lodel_id
+    #         query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    #         self.datasource_utils.query(self.connection, insert(query_table_name, datas))
+    #
+    #         return lodel_id
+
+    ## @brief search for a collection of objects
+    # @param leclass LeClass
+    # @param letype LeType
+    # @field_list list
+    # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
+    # @param relation_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
+    # @return list
+    # def get(self, leclass, letype, field_list, filters, relational_filters=None):
+    #
+    #     if leclass is None:
+    #         query_table_name = self.datasource_utils.objects_table_name
+    #     else:
+    #         query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    #     where_filters = self._prepare_filters(filters, query_table_name)
+    #     join_fields = {}
+    #
+    #     if relational_filters is not None and len(relational_filters) > 0:
+    #         rel_filters = self._prepare_rel_filters(relational_filters)
+    #         for rel_filter in rel_filters:
+    #           # join condition
+    #           relation_table_join_field = "%s.%s" % (self.datasource_utils.relations_table_name, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
+    #            query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils.field_lodel_id)
+    #            join_fields[query_table_join_field] = relation_table_join_field
+    #           # Adding "where" filters
+    #            where_filters['%s.%s' % (self.datasource_utils.relations_table_name, self.datasource_utils.relations_field_nature)] = rel_filter['nature']
+    #            where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
+            #
+    #       # building the query
+            # query = select(query_table_name, where=where_filters, select=field_list, joins=join(self.datasource_utils.relations_table_name, join_fields))
+        # else:
+        #     query = select(query_table_name, where=where_filters, select=field_list)
+        #
+        # Executing the query
+        # cur = self.datasource_utils.query(self.connection, query)
+        # results = all_to_dicts(cur)
+        #
+        # return results
+
+    ## @brief delete an existing object
+    # @param letype LeType
+    # @param leclass LeClass
+    # @param filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
+    # @param relational_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
+    # @return bool : True on success
+    # def delete(self, letype, leclass, filters, relational_filters):
+    #     query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    #     prep_filters = self._prepare_filters(filters, query_table_name)
+    #     prep_rel_filters = self._prepare_rel_filters(relational_filters)
+    #
+    #     if len(prep_rel_filters) > 0:
+    #         query = "DELETE %s FROM " % query_table_name
+    #
+    #         for prep_rel_filter in prep_rel_filters:
+    #             query += "%s INNER JOIN %s ON (%s.%s = %s.%s)" % (
+    #                 self.datasource_utils.relations_table_name,
+    #                 query_table_name,
+    #                 self.datasource_utils.relations_table_name,
+    #                 prep_rel_filter['position'],
+    #                 query_table_name,
+    #                 self.datasource_utils.field_lodel_id
+    #             )
+    #
+    #             if prep_rel_filter['condition_key'][0] is not None:
+    #                 prep_filters[("%s.%s" % (self.datasource_utils.relations_table_name, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
+    #
+    #         if prep_filters is not None and len(prep_filters) > 0:
+    #             query += " WHERE "
+    #             filter_counter = 0
+    #             for filter_item in prep_filters:
+    #                 if filter_counter > 1:
+    #                     query += " AND "
+    #                 query += "%s %s %s" % (filter_item[0][0], filter_item[0][1], filter_item[1])
+    #     else:
+    #         query = delete(query_table_name, filters)
+    #
+    #     query_delete_from_object = delete(self.datasource_utils.objects_table_name, {'lodel_id': filters['lodel_id']})
+    #     with self.connection as cur:
+    #         cur.execute(query)
+    #         cur.execute(query_delete_from_object)
+    #
+    #     return True
+
+    ## @brief update an existing object's data
+    # @param letype LeType
+    # @param leclass LeClass
+    # @param  filters list : list of tuples formatted as (FIELD, OPERATOR, VALUE)
+    # @param rel_filters list : list of tuples formatted as (('superior'|'subordinate', FIELD), OPERATOR, VALUE)
+    # @param data dict
+    # @return bool
+    # @todo prendre en compte les rel_filters
+    # def update(self, letype, leclass, filters, rel_filters, data):
+    #
+    #     query_table_name = self.datasource_utils.get_table_name_from_class(leclass.__name__)
+    #     where_filters = filters
+    #     set_data = data
+    #
+    #     prepared_rel_filters = self._prepare_rel_filters(rel_filters)
+    #
+        # Building the query
+        # query = update(table=query_table_name, where=where_filters, set=set_data)
+        # Executing the query
+        # with self.connection as cur:
+        #     cur.execute(query)
+        # return True
