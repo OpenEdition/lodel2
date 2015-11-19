@@ -77,6 +77,7 @@ class LeTypeMockDsTestCase(TestCase):
         leobject.test.utils.cleanup(cls.tmpdir)
 
     @patch('leobject.datasources.dummy.DummyDatasource.get')
+    @unittest.skip('Dummy datasource doesn\'t fit anymore')
     def test_populate(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
