@@ -33,7 +33,7 @@ class DummyDatasource(object):
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters )
     # @param **datas : Datas in kwargs
     # @return The number of updated components
-    def update(self, lec_id, filters, rel_filters, **datas):
+    def update(self, target_cls, filters, rel_filters, **datas):
         pass
     
     ## @brief insert a new lodel editorial component
@@ -45,8 +45,8 @@ class DummyDatasource(object):
     
     ## @brief insert multiple editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
-    # @param datas list : A list of dict representing the datas to insert
+    # @param datas_list list : A list of dict representing the datas to insert
     # @return int the number of inserted component
-    def batch_insert(self, target_cls, datas):
+    def insert_multi(self, target_cls, datas_list):
         pass
 
