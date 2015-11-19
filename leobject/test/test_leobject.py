@@ -11,11 +11,21 @@ import leobject
 import leobject.test.utils
 from leobject.leobject import _LeObject
 
-## Testing static methods that don't need the generated code
-class _LeObjectTestCase(TestCase):
-    
+## Testing methods that need the generated code
+class LeObjectTestCase(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """ Write the generated code in a temporary directory and import it """
+        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
+    @classmethod
+    def tearDownClass(cls):
+        """ Remove the temporary directory created at class setup """
+        leobject.test.utils.cleanup(cls.tmpdir)
+
     def test_split_query_filter(self):
         """ Tests the _split_filter() classmethod """
+        import dyncode
         query_results = {
             'Hello = world' : ('Hello', '=', 'world'),
             'hello <= "world"': ('hello', '<=', '"world"'),
@@ -32,11 +42,12 @@ class _LeObjectTestCase(TestCase):
             'superior.parent = 13': ('superior.parent', '=', '13'),
         }
         for query, result in query_results.items():
-            res = _LeObject._split_filter(query)
+            res = dyncode.LeObject._split_filter(query)
             self.assertEqual(res, result, "When parsing the query : '%s' the returned value is different from the expected '%s'"%(query, result))
 
     def test_invalid_split_query_filter(self):
         """ Testing the _split_filter() method with invalid queries """
+        import dyncode
         invalid_queries = [
             '42 = 42',
             '4hello = foo',
@@ -51,19 +62,7 @@ class _LeObjectTestCase(TestCase):
         ]
         for query in invalid_queries:
             with self.assertRaises(ValueError, msg='But the query was not valid : "%s"'%query):
-                _LeObject._split_filter(query)
-
-## Testing methods that need the generated code
-class LeObjectTestCase(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        """ Write the generated code in a temporary directory and import it """
-        cls.tmpdir = leobject.test.utils.tmp_load_factory_code()
-    @classmethod
-    def tearDownClass(cls):
-        """ Remove the temporary directory created at class setup """
-        leobject.test.utils.cleanup(cls.tmpdir)
+                dyncode.LeObject._split_filter(query)
 
     def test_uid2leobj(self):
         """ Testing _Leobject.uid2leobj() """

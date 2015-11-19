@@ -23,14 +23,9 @@ REL_SUB = 1
 ## @brief Main class to handle objects defined by the types of an Editorial Model
 class _LeObject(object):
     
-    ## @brief The datasource
-    _datasource = None
     ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
     _me_uid = dict()
 
-    _query_re = None
-    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ']
-    
     ## @brief Instantiate with a Model and a DataSource
     # @param **kwargs dict : datas usefull to instanciate a _LeObject
     def __init__(self, **kwargs):
@@ -89,7 +84,7 @@ class _LeObject(object):
     @classmethod
     def delete(cls, letype, filters):
         letype, leclass = cls._prepare_targets(letype)
-        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, letype, leclass)
+        filters,relationnal_filters = cls._prepare_filters(filters, letype, leclass)
         return cls._datasource.delete(letype, leclass, filters, relationnal_filters)
     
     ## @brief Update LeObjects given filters and datas
@@ -99,7 +94,7 @@ class _LeObject(object):
     @classmethod
     def update(cls, letype, filters, datas):
         letype, leclass = cls._prepare_targets(letype)
-        filters,relationnal_filters = leobject.leobject._LeObject._prepare_filters(filters, letype, leclass)
+        filters,relationnal_filters = cls._prepare_filters(filters, letype, leclass)
         if letype is None:
             raise ValueError("Argument letype cannot be None")
         letype.check_datas_or_raise(datas, False)
@@ -398,20 +393,20 @@ class _LeObject(object):
     # @return a tuple(FILTERS, RELATIONNAL_FILTERS
     #
     # @see @ref datasource_side
-    @staticmethod
-    def _prepare_filters(filters_l, letype = None, leclass = None):
+    @classmethod
+    def _prepare_filters(cls, filters_l, letype = None, leclass = None):
         filters = list()
         for fil in filters_l:
             if len(fil) == 3 and not isinstance(fil, str):
                 filters.append(tuple(fil))
             else:
-                filters.append(_LeObject._split_filter(fil))
+                filters.append(cls._split_filter(fil))
 
         #Checking relational filters (for the moment fields like superior.NATURE)
-        relational_filters = [ (_LeObject._prepare_relational_field(field), operator, value) for field, operator, value in filters if _LeObject._field_is_relational(field)]
-        filters = [f for f in filters if not _LeObject._field_is_relational(f[0])]
+        relational_filters = [ (cls._prepare_relational_field(field), operator, value) for field, operator, value in filters if cls._field_is_relational(field)]
+        filters = [f for f in filters if not cls._field_is_relational(f[0])]
         #Checking the rest of the fields
-        _LeObject._check_fields(letype, leclass, [ f[0] for f in filters ])
+        cls._check_fields(letype, leclass, [ f[0] for f in filters ])
         
         return (filters, relational_filters)
 

@@ -141,6 +141,7 @@ class LeFactory(object):
         #Putting import directives in result
         result += """## @author LeFactory
 
+from leobject.lecrud import _LeCrud
 from leobject.leobject import _LeObject
 from leobject.leclass import LeClass
 from leobject.letype import LeType
@@ -160,13 +161,21 @@ import %s
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
 
         result += """
-## @brief _LeObject concret class
-# @see leobject::leobject::_LeObject
-class LeObject(_LeObject):
-    _datasource = %s(**%s)
-    _me_uid = %s
+## @brief _LeCrud concret class
+# @see leobject.lecrud._LeCrud
+class LeCrud(_LeCrud):
+    _datasource = {ds_classname}(**{ds_kwargs})
 
-""" % ( datasource_cls.__module__ + '.' + datasource_cls.__name__, repr(datasource_args), repr(leobj_me_uid))
+## @brief _LeObject concret class
+# @see leobject.leobject._LeObject
+class LeObject(_LeObject, LeCrud):
+    _me_uid = {me_uid_l}
+
+""".format(
+            ds_classname = datasource_cls.__module__ + '.' + datasource_cls.__name__,
+            ds_kwargs = repr(datasource_args),
+            me_uid_l = repr(leobj_me_uid),
+        )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)
         emtype_l = model.components(EditorialModel.types.EmType)

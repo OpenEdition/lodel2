@@ -4,12 +4,12 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
+import EditorialModel.fieldtypes
+
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object):
     ## @brief The datasource
     _datasource = None
-    ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
-    _me_uid = dict()
 
     ## @brief abstract property to store the fieldtype representing the component identifier
     _uid_fieldtype = None
@@ -30,7 +30,7 @@ class _LeCrud(object):
     ## @return A dict with fieldtypes marked as internal
     @classmethod
     def fieldtypes_internal(self):
-        return { fname, ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
+        return { fname: ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
     
     ## @brief Given a ME uid return the corresponding LeClass or LeType class
     # @return a LeType or LeClass child class
@@ -64,7 +64,7 @@ class _LeCrud(object):
 
         if complete:
             #mandatory are fields with no default values
-            mandatory_fields = set([ ft for fname, ft in fieldtypes.items() if not hasattr(ft, 'default'))
+            mandatory_fields = set([ ft for fname, ft in fieldtypes.items() if not hasattr(ft, 'default')])
             #internal fields are considered as having default values (or calculated values)
             mandatory_fields -= intern_fields_name
 
@@ -86,6 +86,6 @@ class _LeCrud(object):
         if not(ret is None):
             raise LeApiDataCheckError(ret)
 
-def LeApiDataCheckError(EditorialMode.fieldtypes.generic.FieldTypeDataCheckError):
+class LeApiDataCheckError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError):
     pass
     
