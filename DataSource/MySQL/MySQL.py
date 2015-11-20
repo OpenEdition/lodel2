@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-import settings
+from Lodel.settings import Settings
 
 ## @brief Manages the accesses to a MySQL datasource
 class MySQL(object):
@@ -11,7 +11,7 @@ class MySQL(object):
     field_lodel_id = 'lodel_id'
     class_table_prefix = 'class_'
     objects_table_name = 'object'
-    connections = settings.DATABASE_CONNECTIONS
+    connections = Settings.get("datasource")
     ## @brief indicates if we want ON DELETE CASCADE on foreign keys
     # @todo implementation in migration handler
     fk_on_delete_cascade = False

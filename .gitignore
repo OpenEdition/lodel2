@@ -2,6 +2,6 @@
 .venv
 .git
 .idea
-settings.py
+settings_local.py
 doc
 .*.swp

@@ -2,7 +2,7 @@
 
 import pymysql
 
-DATABASE_CONNECTIONS = {
+datasource = {
     'default': {
         'module': pymysql,
         'host': '127.0.0.1',
