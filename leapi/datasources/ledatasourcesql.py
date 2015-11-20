@@ -102,7 +102,7 @@ class LeDataSourceSQL(DummyDatasource):
                         query += " AND "
                     query += "%s %s %s" % (filter_item[0][0], filter_item[0][1], filter_item[1])
         else:
-            query = delete(query_table_name, filters)
+            query = delete(query_table_name, prep_filters)
 
         query_delete_from_object = delete(self.datasource_utils.objects_table_name, {'lodel_id': filters['lodel_id']})
         with self.connection as cur:
@@ -117,14 +117,26 @@ class LeDataSourceSQL(DummyDatasource):
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
     # @return the number of updated components
-    # @TODO Prendre en charge les rel_filters
     def update(self, target_cls, filters, rel_filters, **datas):
         query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
-        where_filters = filters
+        prep_filters = self._prepare_filters(filters, query_table_name)
         set_data = datas
         if rel_filters is not None:
             prep_rel_filters = self._prepare_rel_filters(rel_filters)
-        query = update(table=query_table_name, where=where_filters, set=set_data)
+            for prep_rel_filter in prep_rel_filters:
+                query += "%s INNER JOIN  %s ON (%s.%s = %s.%s)" % (
+                    self.datasource_utils.relations_table_name,
+                    query_table_name,
+                    self.datasource_utils.relations_table_name,
+                    prep_rel_filter['position'],
+                    query_table_name,
+                    self.datasource_utils.field_lodel_id
+                )
+
+                if prep_rel_filter['condition_key'][0] is not None:
+                    prep_filters[("%s.%s" % (self.datasource_utils.relations_table_name, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
+
+        query = update(table=query_table_name, where=prep_filters, set=set_data)
         with self.connection as cur:
             result = cur.execute(query)
         return result
