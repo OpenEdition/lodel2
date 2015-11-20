@@ -117,7 +117,6 @@ class LeDataSourceSQL(DummyDatasource):
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
     # @return the number of updated components
-    # @TODO Retourner le nombre de lignes modifiées
     # @TODO Prendre en charge les rel_filters
     def update(self, target_cls, filters, rel_filters, **datas):
         query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
