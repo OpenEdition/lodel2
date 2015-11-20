@@ -1,10 +1,10 @@
 #-*- coding: utf-8 -*-
 
-import EditorialModel.fieldtypes.integer
+from . import integer
 
 
 ## @todo This EmFieldType is a bit dirty....
-class EmFieldType(EditorialModel.fieldtypes.integer.EmFieldType):
+class EmFieldType(integer.EmFieldType):
 
     help = 'Integer primary key fieldtype'
 

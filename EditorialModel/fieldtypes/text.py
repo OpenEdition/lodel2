@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from EditorialModel.fieldtypes.generic import GenericFieldType
+from .generic import GenericFieldType
 
 
 class EmFieldType(GenericFieldType):

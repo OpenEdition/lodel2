@@ -1,10 +1,10 @@
 #-*- coding: utf-8 -*-
 
 import re
-import EditorialModel
+from . import char
 
 
-class EmFieldType(EditorialModel.fieldtypes.char.EmFieldType):
+class EmFieldType(char.EmFieldType):
 
     help = 'String field validated with a regex. Take two options : max_length and regex'
 
