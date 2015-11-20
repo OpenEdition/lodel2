@@ -13,8 +13,8 @@
 import re
 
 import leapi
-from .lefactory import LeFactory
 import EditorialModel
+from leapi.lefactory import LeFactory
 from EditorialModel.types import EmType
 
 REL_SUP = 0
@@ -26,6 +26,9 @@ class _LeObject(object):
     ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
     # @todo check if this attribute shouldn't be in _LeCrud
     _me_uid = dict()
+    
+    ## @brief Stores the fields name associated with fieldtype of the fields that are common to every LeObject
+    _leo_fieldtypes = dict()
 
     ## @brief Instantiate with a Model and a DataSource
     # @param **kwargs dict : datas usefull to instanciate a _LeObject
@@ -43,6 +46,10 @@ class _LeObject(object):
             raise KeyError("No LeType or LeClass child classes with uid '%d'"%uid)
         return cls._me_uid[uid]
     
+    @classmethod
+    def fieldtypes(cls):
+        return super(_LeObject, cls).fieldtypes().update(EditorialModel.classtypes.common_fields)
+
     ## @brief Creates new entries in the datasource
     # @param datas list : A list a dict with fieldname as key
     # @param cls

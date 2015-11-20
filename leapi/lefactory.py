@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import importlib
+import copy
 
 import EditorialModel
 from EditorialModel.model import Model
@@ -141,11 +142,13 @@ class LeFactory(object):
         #Putting import directives in result
         result += """## @author LeFactory
 
-from leapi.lecrud import _LeCrud
-from leapi.leobject import _LeObject
+import leapi
+import leapi.lecrud
+import leapi.leobject
 from leapi.leclass import LeClass
 from leapi.letype import LeType
 import EditorialModel.fieldtypes
+from EditorialModel.fieldtypes import *
 """
 
         result += """
@@ -159,22 +162,48 @@ import %s
         leobj_me_uid = dict()
         for comp in model.components('EmType') + model.components('EmClass'):
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
+        
+        #Building the fieldtypes dict of LeObject
+        leobj_fieldtypes = list()
+        leobj_uid_fieldtype = None
+        for fname, ftargs in EditorialModel.classtypes.common_fields.items():
+            ftargs = copy.copy(ftargs)
+            fieldtype = ftargs['fieldtype']
+            del(ftargs['fieldtype'])
+
+            constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
+                ftname = GenericFieldType.module_name(fieldtype),
+                ftargs = ftargs,
+            )
+            if fieldtype == 'pk':
+                #
+                #       WARNING multiple PK not supported
+                #
+                leobj_uid_fieldtype = constructor
+            else:
+                leobj_fieldtypes.append( '%s: %s'%(repr(fname), constructor) )
+            
 
         result += """
 ## @brief _LeCrud concret class
 # @see leapi.lecrud._LeCrud
-class LeCrud(_LeCrud):
+class LeCrud(leapi.lecrud._LeCrud):
     _datasource = {ds_classname}(**{ds_kwargs})
+    _uid_fieldtype = None
 
 ## @brief _LeObject concret class
-# @see leapi.leapi._LeObject
-class LeObject(_LeObject, LeCrud):
+# @see leapi.leobject._LeObject
+class LeObject(leapi.leobject._LeObject, LeCrud):
     _me_uid = {me_uid_l}
+    _uid_fieldtype = {leo_uid_fieldtype}
+    _leo_fieldtypes = {leo_fieldtypes}
 
 """.format(
             ds_classname = datasource_cls.__module__ + '.' + datasource_cls.__name__,
             ds_kwargs = repr(datasource_args),
             me_uid_l = repr(leobj_me_uid),
+            leo_uid_fieldtype = leobj_uid_fieldtype,
+            leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)
@@ -184,7 +213,7 @@ class LeObject(_LeObject, LeCrud):
         for emclass in emclass_l:
             result += """
 ## @brief EmClass {name} LeClass child class
-# @see leobject::leclass::LeClass
+# @see leapi.leclass.LeClass
 class {name}(LeObject, LeClass):
     _class_id = {uid}
 

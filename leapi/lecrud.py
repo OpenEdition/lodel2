@@ -4,7 +4,7 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
-import EditorialModel.fieldtypes
+import EditorialModel
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object):
