@@ -127,8 +127,8 @@ class LeDataSourceSQL(DummyDatasource):
             prep_rel_filters = self._prepare_rel_filters(rel_filters)
         query = update(table=query_table_name, where=where_filters, set=set_data)
         with self.connection as cur:
-            cur.execute(query)
-        return True
+            result = cur.execute(query)
+        return result
 
     ## @brief inserts a new lodel editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
