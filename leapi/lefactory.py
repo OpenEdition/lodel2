@@ -2,6 +2,7 @@
 
 import importlib
 import copy
+import os.path
 
 import EditorialModel
 from EditorialModel.model import Model
@@ -17,27 +18,11 @@ class LeFactory(object):
     output_file = 'dyn.py'
     modname = None
 
-    def __init__(self):
-        raise NotImplementedError("Not designed (yet?) to be implemented")
 
-    ## @brief Return a LeObject child class given its name
-    # @return a python class or False
-    @staticmethod
-    def leobj_from_name(name):
-        if LeFactory.modname is None:
-            modname = 'leapi.' + LeFactory.output_file.split('.')[0]
-        else:
-            modname = LeFactory.modname
-        mod = importlib.import_module(modname)
-        try:
-            res = getattr(mod, name)
-        except AttributeError:
-            return False
-        return res
-
-    @classmethod
-    def leobject(cls):
-        return cls.leobj_from_name('LeObject')
+    def __init__(self, code_filename = 'leapi/dyn.py'):
+        self._code_filename = code_filename
+        self._dyn_file = os.path.basename(code_filename)
+        self._modname = os.path.dirname(code_filename).strip('/').replace('/', '.') #Warning Windaube compatibility
 
     ## @brief Convert an EmType or EmClass name in a python class name
     # @param name str : The name
@@ -57,13 +42,19 @@ class LeFactory(object):
             GenericFieldType.module_name(emfield.fieldtype),
             repr(emfield._fieldtype_args),
         )
+    
+    ## @brief Write generated code to a file
+    # @todo better options/params for file creation
+    def create_pyfile(self, model, datasource_cls, datasource_args):
+        with open(self._code_filename, "w+") as dynfp:
+            dynfp.write(self.generate_python(model, datasource_cls, datasource_args))
 
     ## @brief Given a Model and an EmClass instances generate python code for corresponding LeClass
     # @param model Model : A Model instance
     # @param emclass EmClass : An EmClass instance from model
     # @return A string representing the python code for the corresponding LeClass child class
-    @staticmethod
-    def emclass_pycode(model, emclass):
+    def emclass_pycode(self, model, emclass):
+
         cls_fields = dict()
         cls_linked_types = dict() #keys are LeType classnames and values are tuples (attr_fieldname, attr_fieldtype)
         #Populating linked_type attr
@@ -74,6 +65,7 @@ class LeFactory(object):
             ]
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
+            self.needed_fieldtypes |= set([field.fieldtype])
             cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
             fti = field.fieldtype_instance()
 
@@ -102,8 +94,7 @@ class LeFactory(object):
     # @param model Model : A Model instance
     # @param emtype EmType : An EmType instance from model
     # @return A string representing the python code for the corresponding LeType child class
-    @staticmethod
-    def emtype_pycode(model, emtype):
+    def emtype_pycode(self, model, emtype):
         type_fields = list()
         type_superiors = list()
         for field in emtype.fields(relational=False):
@@ -128,37 +119,37 @@ class LeFactory(object):
         )
 
     ## @brief Generate python code containing the LeObject API
-    # @param backend_cls Backend : A model backend class
-    # @param backend_args dict : A dict representing arguments for backend_cls instanciation
+    # @param model EditorialModel.model.Model : An editorial model instance
     # @param datasource_cls Datasource : A datasource class
     # @param datasource_args dict : A dict representing arguments for datasource_cls instanciation
     # @return A string representing python code
-    @staticmethod
-    def generate_python(backend_cls, backend_args, datasource_cls, datasource_args):
-        model = Model(backend=backend_cls(**backend_args))
+    def generate_python(self, model, datasource_cls, datasource_args):
+        self.needed_fieldtypes = set() #Stores the list of fieldtypes that will be used by generated code
+
+        model = model
 
         result = ""
         #result += "#-*- coding: utf-8 -*-\n"
         #Putting import directives in result
-        result += """## @author LeFactory
+        heading = """## @author LeFactory
+
+import EditorialModel
+from EditorialModel import fieldtypes
+from EditorialModel.fieldtypes import {needed_fieldtypes_list}
 
 import leapi
 import leapi.lecrud
 import leapi.leobject
 from leapi.leclass import LeClass
 from leapi.letype import LeType
-import EditorialModel.fieldtypes
-from EditorialModel.fieldtypes import *
 """
 
         result += """
 import %s
-import %s
 
-""" % (backend_cls.__module__, datasource_cls.__module__)
+""" % (datasource_cls.__module__)
 
         #Generating the code for LeObject class
-        backend_constructor = '%s.%s(**%s)' % (backend_cls.__module__, backend_cls.__name__, repr(backend_args))
         leobj_me_uid = dict()
         for comp in model.components('EmType') + model.components('EmClass'):
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
@@ -169,6 +160,7 @@ import %s
         for fname, ftargs in EditorialModel.classtypes.common_fields.items():
             ftargs = copy.copy(ftargs)
             fieldtype = ftargs['fieldtype']
+            self.needed_fieldtypes |= set([fieldtype])
             del(ftargs['fieldtype'])
 
             constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
@@ -237,9 +229,9 @@ class {name}(LeType, {leclass}):
 
         #Set attributes of created LeClass and LeType child classes
         for emclass in emclass_l:
-            result += LeFactory.emclass_pycode(model, emclass)
+            result += self.emclass_pycode(model, emclass)
         for emtype in emtype_l:
-            result += LeFactory.emtype_pycode(model, emtype)
+            result += self.emtype_pycode(model, emtype)
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
         me_uid = {comp.uid: LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l}
@@ -247,4 +239,9 @@ class {name}(LeType, {leclass}):
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
 LeObject._me_uid = %s""" % "{" + (', '.join(['%s: %s' % (k, v) for k, v in me_uid.items()])) + "}"
         result += "\n"
+        
+        heading = heading.format(needed_fieldtypes_list = ', '.join(self.needed_fieldtypes))
+        result = heading + result
+
+        del(self.needed_fieldtypes)
         return result

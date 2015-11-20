@@ -4,7 +4,8 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
-import EditorialModel
+import EditorialModel.fieldtypes.generic
+import importlib
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object):
@@ -22,6 +23,22 @@ class _LeCrud(object):
     def __init__(self):
         raise NotImplementedError("Abstract class")
  
+    ## @brief Given a dynamically generated class name return the corresponding python Class
+    # @param name str : a concrete class name
+    # @return False if no such component
+    @classmethod
+    def name2class(cls, name):
+        #print(dir(cls.__module__))
+        mod = importlib.import_module(cls.__module__)
+        try:
+            return getattr(mod, name)
+        except AttributeError:
+            return False
+
+    @classmethod
+    def leobject(cls):
+        return cls.name2class('LeObject')
+
     ## @return A dict with key field name and value a fieldtype instance
     @classmethod
     def fieldtypes(cls):

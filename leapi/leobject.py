@@ -334,19 +334,21 @@ class _LeObject(object):
     # @param letype LeType|str|None : LeType child instant or its name
     # @param leclass LeClass|str|None : LeClass child instant or its name
     # @return a tuple with 2 python classes (LeTypeChild, LeClassChild)
-    @staticmethod
-    def _prepare_targets(letype = None , leclass = None):
+    @classmethod
+    def _prepare_targets(cls, letype = None , leclass = None):
 
         if not(leclass is None):
             if isinstance(leclass, str):
-                leclass = LeFactory.leobj_from_name(leclass)
+                leclass = cls.name2class(leclass)
+                #leclass = LeFactory.leobj_from_name(leclass)
             
             if not isinstance(leclass, type) or not (leapi.leclass.LeClass in leclass.__bases__) or leclass.__class__ == leapi.leclass.LeClass:
                 raise ValueError("None | str | LeType child class excpected, but got : '%s' %s"%(leclass,type(leclass)))
 
         if not(letype is None):
             if isinstance(letype, str):
-                letype = LeFactory.leobj_from_name(letype)
+                letype = cls.name2class(letype)
+                #letype = LeFactory.leobj_from_name(letype)
 
             if not isinstance(letype, type) or not leapi.letype.LeType in letype.__bases__ or letype.__class__ == leapi.letype.LeType:
                 raise ValueError("None | str | LeType child class excpected, but got : %s"%type(letype))

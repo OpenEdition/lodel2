@@ -13,7 +13,8 @@ from leapi.lefactory import LeFactory
 class TestLeFactorySyntax(TestCase):
 
     def test_generated_code_syntax(self):
-        py = LeFactory.generate_python(**leapi.test.utils.genepy_args)
+        fact = LeFactory('leapi/dyn.py')
+        py = fact.generate_python(**leapi.test.utils.genepy_args)
         pyc = compile(py, "dyn.py", 'exec')
         exec(pyc, globals())
 
@@ -29,8 +30,7 @@ class TestLeFactory(TestCase):
         leapi.test.utils.cleanup(cls.tmpdir)
 
     def setUp(self):
-        backend=leapi.test.utils.genepy_args['backend_cls'](**leapi.test.utils.genepy_args['backend_args'])
-        self.model = EditorialModel.model.Model(backend = backend)
+        self.model = leapi.test.utils.genepy_args['model']
 
     def test_leobject(self):
         """ Testing the generated LeObject class """

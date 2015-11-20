@@ -170,7 +170,7 @@ class LeType(object):
     # @throw Leo exception if the lodel_id identify an object from another type
     @classmethod
     def delete(cls, filters):
-        return leapi.lefactory.LeFactory.leobject().delete(cls, filters)
+        return cls.name2class('LeObject').delete(cls, filters)
         
     ## @brief Update a LeType in db
     def db_update(self):
@@ -183,7 +183,7 @@ class LeType(object):
     # @param cls
     # return bool
     def update(cls, filters, datas):
-        return leapi.lefactory.LeFactory.leobject().update(letype = cls, filters = filters, datas = datas)
+        return cls.leobject().update(letype = cls, filters = filters, datas = datas)
         
     ## @brief Insert a new LeType in the datasource
     # @param **datas list : A list of dict containing the datas
