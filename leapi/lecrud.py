@@ -102,7 +102,7 @@ class _LeCrud(object):
     # @param complete bool : if True expect that datas provide values for all non internal fields
     # @param allow_internal bool : if True don't raise an error if a field is internal
     # @return Checked datas
-    # @throw LeObjectError if errors reported during check
+    # @throw LeApiDataCheckError if errors reported during check
     @classmethod
     def check_datas_value(cls, datas, complete = False, allow_internal = True):
         err_l = [] #Stores errors
@@ -133,8 +133,8 @@ class _LeCrud(object):
             if err:
                 err_l.append(err)
 
-        if len(missing_data) > 0:
-            raise LeObjectError("The argument complete was True but some fields are missing : %s" % (missing_data))
+        if len(err_l) > 0:
+            raise LeApiDataCheckError("The argument complete was %s but some fields are missing : %s" % (complete, err_l))
         return checked_datas
 
     ## @brief Retrieve a collection of lodel editorial components
