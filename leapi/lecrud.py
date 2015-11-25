@@ -106,39 +106,29 @@ class _LeCrud(object):
     @classmethod
     def check_datas_value(cls, datas, complete = False, allow_internal = True):
         err_l = [] #Stores errors
-        excepted = set()
-        internal = set() #Only used if not allow_internal
-        if not allow_internal:
-            internal = list()
-            excepted = list()
-            for ftn, ftt in cls.fieldtypes().items():
-                if ftt.is_internal():
-                    internal.append(ftn)
-                else:
-                    excepted.append(ftn)
-            excepted =  set(excepted)
-            internal = set(internal)
-        else:
-            excepted = set( cls.fieldtypes().keys() )
+        correct = [] #Valid fields name
+        mandatory = [] #mandatory fields name
+        for fname, ftt in cls.fieldtypes().items():
+            if allow_internal and not ftt.is_internal():
+                correct.append(fname)
+                if complete and not hasattr(ftt, 'default'):
+                    mandatory.append(fname)
+        mandatory = set(mandatory)
+        correct = set(correct)
         provided = set(datas.keys())
 
-        #Searching unknown fields
-        unknown = provided - (excepted | internal)
+        #searching unknow fields
+        unknown = provided - correct
         for u_f in unknown:
-            err_l.append(AttributeError("Unknown field '%s'"%u_f))
-        #Checks for missing fields
-        if complete:
-            missings = excepted - provided
-            for miss_field in missings:
-                err_l.append(AttributeError("The data for field '%s' is missing"%miss_field))
-        #Checks for internal fields if not allowe
-        if not allow_internal:
-            wrong_internal = provided & internal
-            for wint in wrong_internal:
-                err_l.append(AttributeError("A value was provided for the field '%s' but it is marked as internal"%wint))
-        #Datas check
+            #here we can check if the field is unknown or rejected because it is internal
+            err_l.append(AttributeError("Unknown or unauthorized field '%s'"%u_f))
+        #searching missings fields
+        missings = mandatory - provided
+        for miss_field in missings:
+            err_l.append(AttributeError("The data for field '%s' is missing"%miss_field))
+        #Checks datas
         checked_datas = dict()
-        for name, value in [ (name, value) for name, value in datas.items() if name in (excepted | internal) ]:
+        for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
             checked_datas[name], err = cls.fieldtypes()[name].check_data_value(value)
             if err:
                 err_l.append(err)
