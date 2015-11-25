@@ -53,49 +53,59 @@ class _LeCrud(object):
     def fieldtypes_internal(self):
         return { fname: ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
     
-    ## @brief Check fields values
-    # @param complete bool : If True expect that datas contains all fieldtypes with no default values
-    # @param allow_internal bool : If False consider datas as invalid if a value is given for an internal fieldtype
-    # @return None if no errors, else returns a list of Exception instances that occurs during the check
+    ## @brief Check that datas are valid for this type
+    # @param datas dict : key == field name value are field values
+    # @param complete bool : if True expect that datas provide values for all non internal fields
+    # @param allow_internal bool : if True don't raise an error if a field is internal
+    # @throw AttributeError if datas provides values for automatic fields
+    # @throw AttributeError if datas provides values for fields that doesn't exists
     @classmethod
-    def check_datas_errors(cls, complete = False, allow_internal = False, **datas):
-        intern_fields_name = cls.fieldtypes_internal().keys()
-        fieldtypes = cls.fieldtypes()
+    def check_datas_value(cls, datas, complete = False, allow_internal = True):
 
-        err_l = list()
+        err_l = []
+        excepted = set()
+        internal = set() #Only used if not allow_internal
+        if not allow_internal:
+            internal = list()
+            excepted = list()
+            for ftn, ftt in cls.fieldtypes().items():
+                if ftt.is_internal():
+                    internal.append(ftn)
+                else:
+                    excepted.append(ftn)
+            excepted =  set(excepted)
+            internal = set(internal)
+        else:
+            excepted = set( cls.fieldtypes().keys() )
 
-        for dname, dval in datas.items():
-            if not allow_internal and dname in intern_fields_name:
-                err_l.append(AttributeError("The field '%s' is internal"%dname))
-            if dname not in fieldtypes.keys():
-                err_l.append(AttributeError("No field named '%s' in %s"%(dname, cls.__name__)))
-            check_ret = cls.fieldtypes[dname].check_error(dval)
-            if not(ret is None):
-                err_l += check_ret
+        provided = set(datas.keys())
 
+        #Searching unknown fields
+        unknown = provided - (excepted | internal)
+        for u_f in unknown:
+            err_l.append(AttributeError("Unknown field '%s'"%u_f))
+        #Checks for missing fields
         if complete:
-            #mandatory are fields with no default values
-            mandatory_fields = set([ ft for fname, ft in fieldtypes.items() if not hasattr(ft, 'default')])
-            #internal fields are considered as having default values (or calculated values)
-            mandatory_fields -= intern_fields_name
+            missings = excepted - provided
+            for miss_field in missings:
+                err_l.append(AttributeError("The data for field '%s' is missing"%miss_field))
+        #Checks for internal fields if not allowe
+        if not allow_internal:
+            wrong_internal = provided & internal
+            for wint in wrong_internal:
+                err_l.append(AttributeError("A value was provided for the field '%s' but it is marked as internal"%wint))
+        
+        #Datas check
+        checked_datas = dict()
+        for name, value in [ (name, value) for name, value in datas.items() if name in (excepted | internal) ]:
+            checked_datas[name], err = cls.fieldtypes()[name].check_data_value(value)
+            if err:
+                err_l.append(err)
 
-            missing = mandatory_fields - set(datas.keys())
-            if len(missing) > 0:
-                for missing_field_name in missing:
-                    err_l.append(AttributeError("Value for field '%s' is missing"%missing_field_name))
+        if len(missing_data) > 0:
+            raise LeObjectError("The argument complete was True but some fields are missing : %s" % (missing_data))
 
-        return None if len(err_l) == 0 else err_l
-    
-    ## @brief Check fields values
-    # @param complete bool : If True expect that datas contains all fieldtypes with no default values
-    # @param allow_internal bool : If False consider datas as invalid if a value is given for an internal fieldtype
-    # @throw LeApiDataCheckError if checks fails
-    # @return None
-    @classmethod
-    def check_datas_or_raises(cls, complete = False, allow_internal = False, **datas):
-        ret = cls.check_datas_errors(complete, allow_internal, **datas)
-        if not(ret is None):
-            raise LeApiDataCheckError(ret)
+        return checked_datas
 
     @classmethod
     def fieldlist(cls):

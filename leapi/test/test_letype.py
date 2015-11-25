@@ -50,10 +50,10 @@ class LeTypeTestCase(TestCase):
         from dyncode import Publication, Numero, LeObject
 
         datas = { 'titre':'foobar' }
-        Numero.check_datas(datas, False)
-        Numero.check_datas(datas, True)
+        Numero.check_datas_value(datas, False, False)
+        Numero.check_datas_value(datas, True, False)
         with self.assertRaises(leapi.leobject.LeObjectError):
-            Numero.check_datas_or_raise({}, True)
+            Numero.check_datas_value({}, True)
 
     @patch('leapi.letype.LeType.populate')
     def test_datas(self, dsmock):

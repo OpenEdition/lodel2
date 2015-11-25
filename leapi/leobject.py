@@ -73,7 +73,7 @@ class _LeObject(object):
             raise ValueError("letype argument cannot be None")
 
         for data in datas:
-            letype.check_datas_or_raise(data, complete = True)
+            letype.prepare_data(data, complete = True)
         return cls._datasource.insert(letype, leclass, datas)
     
     ## @brief Check if a LeType is a hierarchy root
@@ -111,7 +111,7 @@ class _LeObject(object):
         filters,relationnal_filters = cls._prepare_filters(filters, letype, leclass)
         if letype is None:
             raise ValueError("Argument letype cannot be None")
-        letype.check_datas_or_raise(datas, False)
+        letype.prepare_data(datas, False)
         return cls._datasource.update(letype, leclass, filters, relationnal_filters, datas)
 
     ## @brief Link two leobject together using a rel2type field
@@ -283,20 +283,18 @@ class _LeObject(object):
     # @return a tuple with 2 python classes (LeTypeChild, LeClassChild)
     @classmethod
     def _prepare_targets(cls, letype = None , leclass = None):
-        raise ValueError()
         warnings.warn("_LeObject._prepare_targets is deprecated", DeprecationWarning)
+        raise ValueError()
         if not(leclass is None):
             if isinstance(leclass, str):
-                leclass = cls.name2class(leclass)
-                #leclass = LeFactory.leobj_from_name(leclass)
+                leclass = LeFactory.leobj_from_name(leclass)
             
             if not isinstance(leclass, type) or not (leapi.leclass.LeClass in leclass.__bases__) or leclass.__class__ == leapi.leclass.LeClass:
                 raise ValueError("None | str | LeType child class excpected, but got : '%s' %s"%(leclass,type(leclass)))
 
         if not(letype is None):
             if isinstance(letype, str):
-                letype = cls.name2class(letype)
-                #letype = LeFactory.leobj_from_name(letype)
+                letype = LeFactory.leobj_from_name(letype)
 
             if not isinstance(letype, type) or not leapi.letype.LeType in letype.__bases__ or letype.__class__ == leapi.letype.LeType:
                 raise ValueError("None | str | LeType child class excpected, but got : %s"%type(letype))

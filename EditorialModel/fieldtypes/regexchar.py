@@ -19,4 +19,4 @@ class EmFieldType(char.EmFieldType):
         def re_match(value):
             if not v_re.match(regex, value):
                 return TypeError('"%s" don\'t match the regex "%s"' % (value, regex))
-        super(EmFieldType, self).__init__(check_function=re_match, max_length=max_length, **kwargs)
+        super(EmFieldType, self).__init__(check_data_value=re_match, max_length=max_length, **kwargs)
