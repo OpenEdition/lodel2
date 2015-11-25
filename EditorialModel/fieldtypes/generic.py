@@ -39,8 +39,8 @@ class GenericFieldType(object):
 
         if check_data_value is None:
             check_data_value = self.dummy_check_data_value
-        elif not isinstance(check_data_value, types.FunctionType):
-            raise AttributeError("check_data_value argument has to be a function")
+        elif not callable(check_data_value):
+            raise AttributeError("check_data_value argument has to be a function it is a %s" % type(check_data_value))
 
         if ftype != self.__class__.ftype:
             raise RuntimeError("The ftype is not the same for the instance and the class. Maybe %s reimplement ftype at class level but shouldn't" % self.name)
@@ -51,8 +51,9 @@ class GenericFieldType(object):
         self.uniq = bool(uniq)
 
         if 'default' in kwargs:
-            self.check_data_value(kwargs['default'])
-            self.default = kwargs['default']
+            self.default, error = self.check_data_value(kwargs['default'])
+            if error:
+                raise error
             del kwargs['default']
 
         for argname, argvalue in kwargs.items():
@@ -63,12 +64,19 @@ class GenericFieldType(object):
     def name(self):
         return self.__module__.split('.')[-1]
 
+    ## @brief Check if a Value is correct else return a check fail reason
+    # @param value * : The value to check
+    # @return (checked_and_casted_value, Exception|None)
+    def check_data_value(self, value):
+        if value is None and not self.nullable:
+            return (None, TypeError("'None' value but field is not nullable"))
+        return self._check_data_value(value)
+
     ## @brief Check if a value is correct
     # @param value * : The value
-    # @return Exception instance if not valid
-    @staticmethod
-    def dummy_check_data_value(value):
-        return None
+    # @return (checked_and_casted_value, Exception|None)
+    def dummy_check_data_value(self, value):
+        return (value, None)
 
     ## @brief Given a fieldtype name return the associated python class
     # @param fieldtype_name str : A fieldtype name
@@ -91,10 +99,6 @@ class GenericFieldType(object):
         for kdic in sorted([k for k in self.__dict__.keys() if not k.startswith('_')]):
             hash_dats.append((kdic, getattr(self, kdic)))
         return hash(tuple(hash_dats))
-    
-    ## @return True if the fieldtype is internal
-    def is_internal(self):
-        return hasattr(self, 'internal') and self.internal
 
     ## @brief Transform a value into a valid python representation according to the fieldtype
     # @param value ? : The value to cast
@@ -107,20 +111,12 @@ class GenericFieldType(object):
             raise AttributeError("No optionnal argument allowed for %s cast method" % self.__class__.__name__)
         return value
 
-    ## @brief Check if a Value is correct else return a check fail reason
-    # @param value * : The value to check
-    # @return None if check succeded else return an instance from a class derivated from Exception 
-    def check_data_value(self, value):
-        if value is None and not self.nullable:
-            return TypeError("'None' value but field is not nullable")
-        return self._check_data_value(value)
-
 
 class FieldTypeError(Exception):
     pass
 
 class FieldTypeDataCheckError(FieldTypeError):
-    
+
     ## @brief Instanciate a new data check error
     # @param expt_l list : A list of data check Exception
     def __init__(self, expt_l):

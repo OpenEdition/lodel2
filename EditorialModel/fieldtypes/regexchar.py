@@ -14,9 +14,14 @@ class EmFieldType(char.EmFieldType):
     # @param **kwargs
     def __init__(self, regex='', max_length=10, **kwargs):
         self.regex = regex
-        v_re = re.compile(regex)  # trigger an error if invalid regex
-        
-        def re_match(value):
-            if not v_re.match(regex, value):
-                return TypeError('"%s" don\'t match the regex "%s"' % (value, regex))
-        super(EmFieldType, self).__init__(check_data_value=re_match, max_length=max_length, **kwargs)
+        self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
+
+
+        super(EmFieldType, self).__init__(check_data_value=check_value, max_length=max_length, **kwargs)
+
+    def check_value(value):
+        error = None
+        if not self.compiled_re.match(value):
+            value = ''
+            error = TypeError('"%s" don\'t match the regex "%s"' % (value, self.regex))
+        return (value, error)

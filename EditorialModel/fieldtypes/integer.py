@@ -9,14 +9,15 @@ class EmFieldType(GenericFieldType):
 
     ftype = 'int'
 
-    @staticmethod
-    def check_fun(value):
-        try:
-            int(value)
-        except ValueError:
-            raise TypeError("the value '%s' is not, and will never be an integer" % value)
-
     def __init__(self, **kwargs):
         if 'check_data_value' not in kwargs:
-            kwargs['check_data_value'] = self.check_fun
+            kwargs['check_data_value'] = self.check_value
         super(EmFieldType, self).__init__(ftype='int', **kwargs)
+
+    def check_value(self, value):
+        error = None
+        try:
+            value = int(value)
+        except ValueError:
+            error = TypeError("the value '%s' is not, and will never be an integer" % value)
+        return (value, error)
