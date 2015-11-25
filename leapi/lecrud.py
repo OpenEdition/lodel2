@@ -9,13 +9,29 @@ import importlib
 import re
 
 import leapi.leobject
-import EditorialModel.fieldtypes.generic
+
+class LeApiErrors(Exception):
+    ## @brief Instanciate a new exceptions handling multiple exceptions
+    # @param expt_l list : A list of data check Exception
+    def __init__(self, msg = "Unknow error", exceptions = None):
+        self._msg = msg
+        self._exceptions = list() if exceptions is None else exceptions
+
+    def __str__(self):
+        msg = self._msg
+        for expt in self._exceptions:
+            msg += " {expt_name}:{expt_msg}; ".format(expt_name=expt.__class__.__name__, expt_msg=str(expt))
+        return msg
+
+    def __repr__(self):
+        return str(self)
+
 
 ## @brief When an error concern a query
-class LeApiQueryError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError): pass
+class LeApiQueryError(LeApiErrors): pass
 
 ## @brief When an error concerns a datas
-class LeApiDataCheckError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError): pass
+class LeApiDataCheckError(LeApiErrors): pass
     
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
@@ -109,7 +125,7 @@ class _LeCrud(object):
         correct = [] #Valid fields name
         mandatory = [] #mandatory fields name
         for fname, ftt in cls.fieldtypes().items():
-            if allow_internal and not ftt.is_internal():
+            if allow_internal or not ftt.is_internal():
                 correct.append(fname)
                 if complete and not hasattr(ftt, 'default'):
                     mandatory.append(fname)
@@ -118,6 +134,7 @@ class _LeCrud(object):
         provided = set(datas.keys())
 
         #searching unknow fields
+        print("provided", provided, "correct", correct)
         unknown = provided - correct
         for u_f in unknown:
             #here we can check if the field is unknown or rejected because it is internal
@@ -134,7 +151,7 @@ class _LeCrud(object):
                 err_l.append(err)
 
         if len(err_l) > 0:
-            raise LeApiDataCheckError("The argument complete was %s but some fields are missing : %s" % (complete, err_l))
+            raise LeApiDataCheckError("Error while checking datas", err_l)
         return checked_datas
 
     ## @brief Retrieve a collection of lodel editorial components

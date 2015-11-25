@@ -45,18 +45,6 @@ class LeTypeTestCase(TestCase):
             with self.assertRaises(expect_e, msg="Invalid argument given %s"%badarg):
                 Numero(**badarg)
     
-    ## @todo when we will have a field in a type that has a check_function try to make check_datas_or_raise raise with invalid value
-    @unittest.skip("Waiting for EmFieldType full implementation")
-    def test_check_datas(self):
-        """ testing the check_datas* methods """
-        from dyncode import Publication, Numero, LeObject
-
-        datas = { 'titre':'foobar' }
-        Numero.check_datas_value(datas, False, False)
-        Numero.check_datas_value(datas, True, False)
-        with self.assertRaises(leapi.leobject.LeObjectError):
-            Numero.check_datas_value({}, True)
-
     @patch('leapi.letype.LeType.populate')
     def test_datas(self, dsmock):
         """ Testing the datas @property method """

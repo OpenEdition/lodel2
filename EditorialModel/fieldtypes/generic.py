@@ -63,6 +63,10 @@ class GenericFieldType(object):
     @property
     def name(self):
         return self.__module__.split('.')[-1]
+    
+    ## @return True if a field is internal, else returns False
+    def is_internal(self):
+        return hasattr(self, 'internal') and self.internal
 
     ## @brief Check if a Value is correct else return a check fail reason
     # @param value * : The value to check

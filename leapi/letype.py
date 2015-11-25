@@ -55,7 +55,7 @@ class LeType(object):
 
     @classmethod
     def fieldtypes(cls):
-        return { fname: ftype for fname,ftype in [ (fname, cls._fieldtypes[fname]) for fname in cls._fieldtypes if fname in cls._fields ] }
+        return { fname: cls._fieldtypes[fname] for fname in cls._fieldtypes if fname in cls._fields }
 
     ## @brief Populate the LeType wih datas from DB
     # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
