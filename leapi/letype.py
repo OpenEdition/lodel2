@@ -170,7 +170,7 @@ class LeType(object):
     # @throw Leo exception if the lodel_id identify an object from another type
     @classmethod
     def delete(cls, filters):
-        return cls.name2class('LeObject').delete(cls, filters)
+        return leapi.lefactory.LeFactory.leobject().delete(cls, filters)
         
     ## @brief Update a LeType in db
     def db_update(self):
@@ -183,7 +183,7 @@ class LeType(object):
     # @param cls
     # return bool
     def update(cls, filters, datas):
-        return cls.leobject().update(letype = cls, filters = filters, datas = datas)
+        return leapi.lefactory.LeFactory.leobject().update(letype = cls, filters = filters, datas = datas)
         
     ## @brief Insert a new LeType in the datasource
     # @param **datas list : A list of dict containing the datas
@@ -193,47 +193,29 @@ class LeType(object):
     @classmethod
     def insert(cls, datas):
         return super(LeType, cls).insert(letype=cls, datas=datas)
-    
+
+    @classmethod
+    def prepare_data(cls, datas, complete = False, allow_internal = True):
+        self.check_data_value(cls, datas, complete, allow_internal)
+        self.construct_data(cls, datas)
+        self.check_data_consistency(cls, datas)
+
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
     # @param complete bool : if True expect that datas provide values for all non internal fields
     # @param allow_internal bool : if True don't raise an error if a field is internal
-    # @throw TypeError If the datas are not valids
     # @throw AttributeError if datas provides values for automatic fields
     # @throw AttributeError if datas provides values for fields that doesn't exists
     @classmethod
-    def check_datas_or_raise(cls, datas, complete = False, allow_internal = True):
-        autom_fields = [f for f, ft in cls._fieldtypes.items() if hasattr(ft,'internal') and ft.internal]
-        for dname, dval in datas.items():
-            if not allow_internal and dname in autom_fields:
-                raise AttributeError("The field '%s' is internal"%(dname))
-            if dname not in cls._fields:
-                raise AttributeError("No such field '%s' for %s"%(dname, cls.__name__))
-            cls._fieldtypes[dname].check_or_raise(dval)
-        
-        fields = [f for f, ft in cls._fieldtypes.items() if not hasattr(ft,'internal') or not ft.internal and f in cls._fields]
-        if complete and len(datas) < len(fields):
-            raise LeObjectError("The argument complete was True but some fields are missing : %s"%(set(fields) - set(datas.keys())))
-        
-    
-    ## @brief Check that datas are valid for this type
-    # @param datas dict : key == field name value are field values
-    # @param complete bool : if True expect that datas provide values for all non internal fields
-    # @param cls
-    # @return True if check pass else False
-    def check_datas(cls, datas, complete = False):
-        try:
-            cls.check_datas_or_raise(datas, complete)
-        except (TypeError, AttributeError, LeObjectError):
-            return False
-        return True
+    def check_data_value(cls, datas, complete = False, allow_internal = True):
+        missing_data = []
+        for field_name, field in cls._fieldtypes.items():
+            if not allow_internal and field_name in datas:
+                raise AttributeError("The field '%s' is internal" % (dname))
+            if field_name in datas:
+                field.check_data_value(datas[field_name])
+            elif complete:
+                missing_data.append(field_name)
 
-    ## @brief Implements the automatic checks of attributes
-    # @note Run data check from fieldtypes if we try to modify an field attribute of the LeType
-    # @param name str : The attribute name
-    # @param value * : The value
-    def __setattr__(self, name, value):
-        if name in self._fields:
-            self._fieldtypes[name].check_or_raise(value)
-        return super(LeType, self).__setattr__(name, value)
-    
+        if len(missing_data) > 0:
+            raise LeObjectError("The argument complete was True but some fields are missing : %s" % (missing_data))

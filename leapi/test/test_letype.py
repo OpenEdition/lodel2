@@ -53,7 +53,7 @@ class LeTypeTestCase(TestCase):
         Numero.check_datas(datas, False)
         Numero.check_datas(datas, True)
         with self.assertRaises(leapi.leobject.LeObjectError):
-            Numero.check_datas_or_raise({}, True)
+            Numero.check_data_value({}, True)
 
     @patch('leapi.letype.LeType.populate')
     def test_datas(self, dsmock):
