@@ -15,7 +15,6 @@ import warnings
 
 import leapi
 import EditorialModel
-from leapi.lecrud import _LeCrud
 from leapi.lefactory import LeFactory
 from EditorialModel.types import EmType
 

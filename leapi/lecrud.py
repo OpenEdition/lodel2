@@ -4,10 +4,19 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
+import warnings
 import importlib
 import re
 
+import leapi.leobject
 import EditorialModel.fieldtypes.generic
+
+## @brief When an error concern a query
+class LeApiQueryError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError): pass
+
+## @brief When an error concerns a datas
+class LeApiDataCheckError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError): pass
+    
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object):
@@ -38,7 +47,8 @@ class _LeCrud(object):
             return getattr(mod, name)
         except AttributeError:
             return False
-
+    
+    ## @return LeObject class
     @classmethod
     def leobject(cls):
         return cls.name2class('LeObject')
@@ -53,16 +63,49 @@ class _LeCrud(object):
     def fieldtypes_internal(self):
         return { fname: ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
     
+    ## @return A list of field name
+    @classmethod
+    def fieldlist(cls):
+        return cls.fieldtypes().keys()
+    
+    ## @brief Update a component in DB
+    # @param datas dict : If None use instance attributes to update de DB
+    # @return True if success
+    # @todo better error handling
+    def update(self, datas = None):
+        datas = self.datas(internal=False) if datas is None else datas
+        upd_datas = self.prepare_datas(datas, complete = False, allow_internal = False)
+        filters = [self._id_filter()]
+        rel_filters = []
+        ret = self._datasource.update(self.__class__, filters, rel_filters, upd_datas)
+        if ret == 1:
+            return True
+        else:
+            #ERROR HANDLING
+            return False
+    
+    ## @brief Delete a component
+    # @return True if success
+    # @todo better error handling
+    def delete(self):
+        filters = [self._id_filter()]
+        rel_filters = []
+        ret = self._datasource.delete(self.__class__, filters, rel_filters)
+        if ret == 1:
+            return True
+        else:
+            #ERROR HANDLING
+            return False
+
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
     # @param complete bool : if True expect that datas provide values for all non internal fields
     # @param allow_internal bool : if True don't raise an error if a field is internal
-    # @throw AttributeError if datas provides values for automatic fields
-    # @throw AttributeError if datas provides values for fields that doesn't exists
+    # @return Checked datas
+    # @throw LeObjectError if errors reported during check
     @classmethod
     def check_datas_value(cls, datas, complete = False, allow_internal = True):
-
-        err_l = []
+        err_l = [] #Stores errors
         excepted = set()
         internal = set() #Only used if not allow_internal
         if not allow_internal:
@@ -77,7 +120,6 @@ class _LeCrud(object):
             internal = set(internal)
         else:
             excepted = set( cls.fieldtypes().keys() )
-
         provided = set(datas.keys())
 
         #Searching unknown fields
@@ -94,7 +136,6 @@ class _LeCrud(object):
             wrong_internal = provided & internal
             for wint in wrong_internal:
                 err_l.append(AttributeError("A value was provided for the field '%s' but it is marked as internal"%wint))
-        
         #Datas check
         checked_datas = dict()
         for name, value in [ (name, value) for name, value in datas.items() if name in (excepted | internal) ]:
@@ -104,13 +145,8 @@ class _LeCrud(object):
 
         if len(missing_data) > 0:
             raise LeObjectError("The argument complete was True but some fields are missing : %s" % (missing_data))
-
         return checked_datas
 
-    @classmethod
-    def fieldlist(cls):
-        return cls.fieldtypes().keys()
-    
     ## @brief Retrieve a collection of lodel editorial components
     #
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
@@ -135,7 +171,84 @@ class _LeCrud(object):
         db_datas = cls._datasource.get(cls, filters, relational_filters)
 
         return [ cls(**datas) for datas in db_datas]
-            
+    
+    ## @brief Given filters delete components
+    # @param filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
+    # @return the number of deleted components
+    # @todo Check for Abstract calls (with cls == LeCrud)
+    @classmethod
+    def delete_multi(cls, filters):
+        filters, rel_filters = cls._prepare_filters(filters)
+        return cls._datasource.delete(cls, filters, rel_filters)
+    
+    ## @brief Insert a new component
+    # @param datas dict : The value of object we want to insert
+    # @return A new id if success else False
+    @classmethod
+    def insert(cls, datas):
+        insert_datas = self.prepare_datas(datas, complete = True, allow_internal = False)
+        return cls._datasource.insert(cls, insert_datas)
+    
+    ## @brief Check and prepare datas
+    # 
+    # @warning when complete = False we are not able to make construct_datas() and _check_data_consistency()
+    # 
+    # @param datas dict : {fieldname : fieldvalue, ...}
+    # @param complete bool : If True you MUST give all the datas
+    # @param allow_internal : Wether or not interal fields are expected in datas
+    # @return Datas ready for use
+    @classmethod
+    def prepare_datas(cls, datas, complete = False, allow_internal = True):
+        if not complete:
+            warnings.warn("Actual implementation can make datas construction and consitency checks fails when datas are not complete")
+        ret_dats = self.check_datas_value(cls, datas, complete, allow_internal)
+        ret_datas = self._construct_datas(cls, ret_datas)
+        ret_datas = self._check_data_consistency(cls, ret_datas)
+        return ret_datas
+
+    #-###################-#
+    #   Private methods   #
+    #-###################-#
+    
+    ## @brief Build a filter to select an object with a specific ID
+    # @warning assert that the uid is not composed with multiple fieldtypes
+    # @return A filter of the form tuple(UID, '=', self.UID)
+    def _id_filter(self):
+        id_name = self._uid_fieldtype.keys()[0]
+        return ( id_name, '=', getattr(self, id_name) )
+
+    ## @brief Construct datas values
+    #
+    # @warning assert that datas is complete
+    #
+    # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
+    # @return A new dict of datas
+    # @todo Decide wether or not the datas are modifed inplace or returned in a new dict (second solution for the moment)
+    @classmethod
+    def _construct_datas(cls, datas):
+        res_datas = dict()
+        for fname, ftype in cls.fieldtypes().items():
+            if fname in datas:
+                res_datas[fname] = ftype.construct_data(datas)
+        return res_datas
+    ## @brief Check datas consistency
+    # 
+    # @warning assert that datas is complete
+    #
+    # @param datas dict : Datas that have been returned by LeCrud._construct_datas() method
+    # @throw LeApiDataCheckError if fails
+    @classmethod
+    def _check_datas_consistency(cls, datas):
+        err_l = []
+        for fname, ftype in cls.fieldtypes().items():
+            ret = ftype.check_data_consistency(datas)
+            if isinstance(ret, Exception):
+                err_l.append(ret)
+
+        if len(err_l) > 0:
+            raise LeApiDataCheckError("Datas consistency checks fails", err_l)
+        
+
     ## @brief Prepare a field_list
     # @param field_list list : List of string representing fields
     # @return A well formated field list
@@ -174,13 +287,6 @@ class _LeCrud(object):
             return ValueError("No such field '%s' in %s"%(field, cls.__name__))
         return field
 
-    ## @brief Check if a field is relational or not
-    # @param field str : the field to test
-    # @return True if the field is relational else False
-    @staticmethod
-    def _field_is_relational(field):
-        return field.startswith('superior.') or field.startswith('subordinate')
-
     ## @brief Prepare filters for datasource
     # 
     # This method divide filters in two categories :
@@ -193,7 +299,6 @@ class _LeCrud(object):
     # @return a tuple(FILTERS, RELATIONNAL_FILTERS
     #
     # @see @ref datasource_side
-
     @classmethod
     def _prepare_filters(cls, filters_l):
         filters = list()
@@ -258,11 +363,12 @@ class _LeCrud(object):
         cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
         pass
     
+    ## @brief Check if a field is relational or not
+    # @param field str : the field to test
+    # @return True if the field is relational else False
+    @staticmethod
+    def _field_is_relational(field):
+        return field.startswith('superior.') or field.startswith('subordinate')
 
-            
-class LeApiQueryError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError):
-    pass
 
-class LeApiDataCheckError(EditorialModel.fieldtypes.generic.FieldTypeDataCheckError):
-    pass
-    
+

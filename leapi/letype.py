@@ -204,7 +204,8 @@ class LeType(object):
 
     @classmethod
     def prepare_datas(cls, datas, complete = False, allow_internal = True):
-        self.check_data_value(cls, datas, complete, allow_internal)
-        self.construct_data(cls, datas)
-        self.check_data_consistency(cls, datas)
+        ret_dats = self.check_datas_value(cls, datas, complete, allow_internal)
+        ret_datas = self.construct_data(cls, ret_datas)
+        ret_datas = self.check_data_consistency(cls, ret_datas)
+        return ret_datas
 
