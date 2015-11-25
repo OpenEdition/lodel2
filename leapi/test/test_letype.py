@@ -20,7 +20,8 @@ class LeTypeTestCase(TestCase):
     def tearDownClass(cls):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
- 
+
+    @unittest.skip("Waiting for EmFieldType full implementation")
     def test_init(self):
         """ testing the constructor """
         from dyncode import Publication, Numero, LeObject
@@ -45,6 +46,7 @@ class LeTypeTestCase(TestCase):
                 Numero(**badarg)
     
     ## @todo when we will have a field in a type that has a check_function try to make check_datas_or_raise raise with invalid value
+    @unittest.skip("Waiting for EmFieldType full implementation")
     def test_check_datas(self):
         """ testing the check_datas* methods """
         from dyncode import Publication, Numero, LeObject

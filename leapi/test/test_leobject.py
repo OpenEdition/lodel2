@@ -23,47 +23,6 @@ class LeObjectTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
 
-    def test_split_query_filter(self):
-        """ Tests the _split_filter() classmethod """
-        import dyncode
-        query_results = {
-            'Hello = world' : ('Hello', '=', 'world'),
-            'hello <= "world"': ('hello', '<=', '"world"'),
-            '_he42_ll-o >= \'world"': ('_he42_ll-o', '>=', '\'world"'),
-            'foo in ["foo", 42, \'bar\']': ('foo', ' in ', '["foo", 42, \'bar\']'),
-            ' bar42              < 42': ('bar42', '<', '42'),
-            ' _hidden > 1337': ('_hidden', '>', '1337'),
-            '_42 not in foobar': ('_42', ' not in ', 'foobar'),
-            'hello                       in      foo':('hello', ' in ', 'foo'),
-            "\t\t\thello\t\t\nin\nfoo\t\t\n\t":('hello', ' in ', 'foo'),
-            "hello \nnot\tin \nfoo":('hello', ' not in ', 'foo'),
-            'hello != bar':('hello', '!=', 'bar'),
-            'hello = "world>= <= != in not in"': ('hello', '=', '"world>= <= != in not in"'),
-            'superior.parent = 13': ('superior.parent', '=', '13'),
-        }
-        for query, result in query_results.items():
-            res = dyncode.LeObject._split_filter(query)
-            self.assertEqual(res, result, "When parsing the query : '%s' the returned value is different from the expected '%s'"%(query, result))
-
-    def test_invalid_split_query_filter(self):
-        """ Testing the _split_filter() method with invalid queries """
-        import dyncode
-        invalid_queries = [
-            '42 = 42',
-            '4hello = foo',
-            'foo == bar',
-            'hello >> world',
-            'hello =    ',
-            ' = world',
-            '=',
-            '42',
-            '"hello" = world',
-            'foo.bar = 15',
-        ]
-        for query in invalid_queries:
-            with self.assertRaises(ValueError, msg='But the query was not valid : "%s"'%query):
-                dyncode.LeObject._split_filter(query)
-
     def test_uid2leobj(self):
         """ Testing _Leobject.uid2leobj() """
         import dyncode
@@ -104,6 +63,7 @@ class LeObjectTestCase(TestCase):
         for (leclass, letype), (rleclass, rletype) in test_v.items():
             self.assertEqual((rletype,rleclass), LeObject._prepare_targets(letype, leclass))
 
+    @unittest.skip("Obsolete but may be usefull for datasources tests")
     def test_invalid_prepare_targets(self):
         """ Testing _prepare_targets() method with invalid arguments """
         from dyncode import Publication, Numero, LeObject, Personnes
@@ -129,7 +89,7 @@ class LeObjectTestCase(TestCase):
         for (leclass, letype) in test_v:
             with self.assertRaises(ValueError):
                 LeObject._prepare_targets(letype, leclass)
-
+    @unittest.skip("Obsolete, the method should be deleted soon")
     def test_check_fields(self):
         """ Testing the _check_fields() method """
         from dyncode import Publication, Numero, LeObject, Personnes
@@ -147,26 +107,6 @@ class LeObjectTestCase(TestCase):
         with self.assertRaises(leapi.leobject.LeObjectQueryError):
             LeObject._check_fields(None, None, Numero._fields)
 
-
-    def test_prepare_filters_invalid(self):
-        """ Testing the _prepare_filters() method """
-        from dyncode import Publication, Numero, LeObject, Personnes
-
-        #Numero fields filters but no letype nor leclass given
-        filters = []
-        res_filt = []
-        for field in Numero._fields:
-            filters.append('%s=1'%field)
-            res_filt.append((field, '=', '1'))
-        
-        with self.assertRaises(leapi.lecrud.LeApiDataCheckError):
-            LeObject._prepare_filters(filters)
-
-
-        #simply invalid filters
-        filters = ['hello world !']
-        with self.assertRaises(ValueError):
-            LeObject._prepare_filters(filters)
 
 class LeObjectMockDatasourceTestCase(TestCase):
     """ Testing _LeObject using a mock on the datasource """

@@ -316,6 +316,7 @@ class _LeObject(object):
     # @todo Delete the checks of letype and leclass and ensure that this method is called with letype and leclass arguments from _prepare_targets()
     #
     # @see @ref leobject_filters
+    # @todo delete me
     @staticmethod
     def _check_fields(letype, leclass, fields):
         warnings.warn("deprecated", DeprecationWarning)
