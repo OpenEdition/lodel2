@@ -171,7 +171,7 @@ import %s
                 #
                 #       WARNING multiple PK not supported
                 #
-                leobj_uid_fieldtype = constructor
+                leobj_uid_fieldtype = "{ 'lodel_id': %s }"%constructor
             else:
                 leobj_fieldtypes.append( '%s: %s'%(repr(fname), constructor) )
             
@@ -206,7 +206,7 @@ class LeObject(leapi.leobject._LeObject, LeCrud):
             result += """
 ## @brief EmClass {name} LeClass child class
 # @see leapi.leclass.LeClass
-class {name}(LeObject, LeClass):
+class {name}(LeClass, LeObject):
     _class_id = {uid}
 
 """.format(
