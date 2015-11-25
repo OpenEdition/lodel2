@@ -76,8 +76,8 @@ class LeTypeMockDsTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
 
-    @patch('leapi.datasources.dummy.DummyDatasource.get')
     @unittest.skip('Dummy datasource doesn\'t fit anymore')
+    @patch('leapi.datasources.dummy.DummyDatasource.get')
     def test_populate(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
@@ -86,6 +86,7 @@ class LeTypeMockDsTestCase(TestCase):
         num.populate()
         dsmock.assert_called_once_with(Publication, Numero, missing_fields, [('lodel_id','=','1')],[])
 
+    @unittest.skip("Waiting for reimplementation in LeCrud")
     @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -94,7 +95,8 @@ class LeTypeMockDsTestCase(TestCase):
 
         Numero.update(['lodel_id = 1'], datas)
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [], datas)
-
+    
+    @unittest.skip("Waiting for reimplementation in LeCrud")
     @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -102,6 +104,7 @@ class LeTypeMockDsTestCase(TestCase):
         Numero.delete(['lodel_id = 1'])
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [])
 
+    @unittest.skip("Waiting for reimplementation in LeCrud")
     @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_db_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -110,6 +113,7 @@ class LeTypeMockDsTestCase(TestCase):
         num.db_update()
         dsmock.assert_called_once_with(Numero, Publication, [('lodel_id','=','1')], [], num.datas)
 
+    @unittest.skip("Waiting for reimplementation in LeCrud")
     @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_db_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject

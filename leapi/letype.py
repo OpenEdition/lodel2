@@ -49,6 +49,14 @@ class LeType(object):
                 raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
             setattr(self, name, value)
     
+    @classmethod
+    def fieldlist(cls):
+        return cls._fields
+
+    @classmethod
+    def fieldtypes(cls):
+        return { fname: ftype for fname,ftype in [ (fname, cls._fieldtypes[fname]) for fname in cls._fieldtypes if fname in cls._fields ] }
+
     ## @brief Populate the LeType wih datas from DB
     # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
     def populate(self, field_list=None):

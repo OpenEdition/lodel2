@@ -25,3 +25,14 @@ class LeClass(object):
     def __init__(self, **kwargs):
         raise NotImplementedError("Abstract class")
 
+    @classmethod
+    def fieldtypes(cls):
+        ret = dict()
+        ret.update(super(LeClass,cls).fieldtypes())
+        ret.update(cls._fieldtypes)
+        return ret
+
+    @classmethod
+    def fieldlist(cls):
+        return cls.fieldtypes().keys()
+

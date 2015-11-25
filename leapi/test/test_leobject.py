@@ -81,6 +81,7 @@ class LeObjectTestCase(TestCase):
         with self.assertRaises(KeyError):
             dyncode.LeObject.uid2leobj(i)
     
+    @unittest.skip("Obsolete but may be usefull for datasources tests")
     def test_prepare_targets(self):
         """ Testing _prepare_targets() method """
         from dyncode import Publication, Numero, LeObject
@@ -146,40 +147,6 @@ class LeObjectTestCase(TestCase):
         with self.assertRaises(leapi.leobject.LeObjectQueryError):
             LeObject._check_fields(None, None, Numero._fields)
 
-    def test_prepare_filters(self):
-        """ Testing the _prepare_filters() method """
-        from dyncode import Publication, Numero, LeObject, Personnes
-        
-        #Simple filters
-        filters = [
-            'lodel_id = 1',
-            'superior.parent  > 2'
-        ]
-
-        filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
-        self.assertEqual(filt, [('lodel_id', '=', '1')])
-        self.assertEqual(rfilt, [((leapi.leobject.REL_SUP,'parent'), '>', '2')])
-        
-        #All fields, no relationnal and class given
-        filters = []
-        res_filt = []
-        for field in Numero._fields:
-            filters.append('%s=1'%field)
-            res_filt.append((field, '=', '1'))
-
-        filt, rfilt = LeObject._prepare_filters(filters, None, Publication)
-        self.assertEqual(rfilt, [])
-        self.assertEqual(filt, res_filt)
-        
-        #Mixed type filters (tuple and string)
-        filters = [
-            ('lodel_id', '<=', '0'),
-            'subordinate.parent = 2',
-        ]
-        
-        filt, rfilt = LeObject._prepare_filters(filters, Numero, None)
-        self.assertEqual(filt, [('lodel_id', '<=', '0')])
-        self.assertEqual(rfilt, [((leapi.leobject.REL_SUB,'parent'), '=', '2')])
 
     def test_prepare_filters_invalid(self):
         """ Testing the _prepare_filters() method """
@@ -192,14 +159,14 @@ class LeObjectTestCase(TestCase):
             filters.append('%s=1'%field)
             res_filt.append((field, '=', '1'))
         
-        with self.assertRaises(leapi.leobject.LeObjectQueryError):
-            LeObject._prepare_filters(filters, None, None)
+        with self.assertRaises(leapi.lecrud.LeApiDataCheckError):
+            LeObject._prepare_filters(filters)
 
 
         #simply invalid filters
         filters = ['hello world !']
         with self.assertRaises(ValueError):
-            LeObject._prepare_filters(filters, None, None)
+            LeObject._prepare_filters(filters)
 
 class LeObjectMockDatasourceTestCase(TestCase):
     """ Testing _LeObject using a mock on the datasource """
@@ -213,6 +180,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
     
+    @unittest.skip("Wait reimplementation in lecrud")
     @patch('leapi.datasources.dummy.DummyDatasource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -229,6 +197,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, Publication, ndats)
             dsmock.reset_mock()
 
+    @unittest.skip("Wait reimplementation in lecrud")
     @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
@@ -254,7 +223,8 @@ class LeObjectMockDatasourceTestCase(TestCase):
             LeObject.update('Numero', filters, datas)
             dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
             dsmock.reset_mock()
-
+    
+    @unittest.skip("Wait reimplementation in lecrud")
     @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
