@@ -15,7 +15,7 @@ from mosql.util import raw, or_
 import mosql.mysql
 
 from DataSource.MySQL.MySQL import MySQL
-from EditorialModel.classtypes import EmNature
+from EditorialModel.classtypes import EmNature, common_fields
 
 
 ## MySQL DataSource for LeObject
@@ -145,16 +145,27 @@ class LeDataSourceSQL(DummyDatasource):
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
     # @param **datas : The datas to insert
     # @return The inserted component's id
+    # @todo should work with LeType, LeClass, and Relations
     def insert(self, target_cls, **datas):
         class_id = ''
         type_id = ''
-        object_datas = {'class_id': class_id, 'type_id': type_id}
-        cur = self.datasource_utils.query(self.connection, insert(self.datasource_utils.objects_table_name, object_datas))
-        lodel_id = cur.lastrowid
+        # it is a LeType
+        if (hasattr(target_cls, '_leclass')):
+            # find main table and main table datas
+            main_table = self.datasource_utils.objects_table_name
+            main_datas = {'class_id':target_cls._leclass._class_id, 'type_id':target_cls._type_id}
+            for main_column_name in common_fields:
+                if main_column_name in datas:
+                    main_datas[main_column_name] = datas[main_column_name]
+                    unset(datas[main_column_name])
 
-        datas[self.datasource_utils.field_lodel_id] = lodel_id
-        query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
-        self.datasource_utils.query(self.connection, insert(query_table_name, datas))
+            cur = self.datasource_utils.query(self.connection, insert(main_table, main_datas))
+            lodel_id = cur.lastrowid
+
+            # insert in class_table
+            datas[self.datasource_utils.field_lodel_id] = lodel_id
+            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
+            self.datasource_utils.query(self.connection, insert(class_table, datas))
 
         return lodel_id
 
