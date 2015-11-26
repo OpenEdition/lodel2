@@ -181,11 +181,11 @@ class _LeCrud(object):
         #preparing filters
         filters, relational_filters = cls._prepare_filters(query_filters)
 
-        #Fetching datas from datasource
-        db_datas = cls._datasource.select(cls, field_list, filters, relational_filters)
+        #Fetching editorial components from datasource
+        results = cls._datasource.select(cls, field_list, filters, relational_filters)
 
-        return [ cls(**datas) for datas in db_datas]
-    
+        return results
+
     ## @brief Insert a new component
     # @param datas dict : The value of object we want to insert
     # @return A new id if success else False

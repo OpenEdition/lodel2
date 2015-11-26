@@ -16,7 +16,7 @@ class DummyDatasource(object):
     # @param filters list : List of filters (see @ref leobject_filters )
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters )
     # @return a list of LeCrud child classes
-    def select(self, target_cls, filters, rel_filters):
+    def select(self, target_cls, field_list, filters, rel_filters):
         pass
 
     ## @brief delete lodel editorial components given filters

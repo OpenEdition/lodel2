@@ -10,7 +10,7 @@ from leapi.leobject import REL_SUB, REL_SUP
 from leapi.lecrud import _LeCrud
 
 from mosql.db import Database, all_to_dicts, one_to_dict
-from mosql.query import select, insert, update, delete, join
+from mosql.query import select, insert, update, delete, join, left_join
 from mosql.util import raw, or_
 import mosql.mysql
 
@@ -35,17 +35,24 @@ class LeDataSourceSQL(DummyDatasource):
 
     ## @brief select lodel editorial components using given filters
     # @param target_cls LeCrud(class): The component class concerned by the select (a LeCrud child class (not instance !) )
+    # @param field_list list: List of field to fetch
     # @param filters list: List of filters (see @ref leobject_filters)
     # @param rel_filters list: List of relational filters (see @ref leobject_filters)
     # @return a list of LeCrud child classes
-    def select(self, target_cls, filters, rel_filters=None):
-        if target_cls is None:
-            query_table_name = self.datasource_utils.objects_table_name
-        else:
-            query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
+    # @todo this only works with LeObject.get()
+    # @todo for speed get rid of all_to_dicts
+    def select(self, target_cls, field_list, filters, rel_filters=None):
 
-        where_filters = self._prepare_filters(filters, query_table_name)
-        join_fields = {}
+        joins = []
+        # it is a LeObject, query only on main table
+        if target_cls.__name__ == 'LeObject':
+            main_table = self.datasource_utils.objects_table_name
+        # it is a LeType, query on main and class table
+        elif (hasattr(target_cls, '_leclass')):
+            # find main table and main table datas
+            main_table = self.datasource_utils.objects_table_name
+            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
+            joins = [left_join(class_table, self.datasource_utils.field_lodel_id)]
 
         if rel_filters is not None and len(rel_filters) > 0:
             rel_filters = self._prepare_rel_filters(rel_filters)
@@ -59,13 +66,20 @@ class LeDataSourceSQL(DummyDatasource):
                 where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
 
             # building the query
-            query = select(query_table_name, where=where_filters, joins=join(self.datasource_utils.relations_table_name, join_fields))
-        else:
-            query = select(query_table_name, where=where_filters)
+            #query = select(query_table_name, where=where_filters, joins=join(self.datasource_utils.relations_table_name, join_fields))
+        #else:
+            #query = select(query_table_name, where=where_filters)
+
+        wheres = {(name, op):value for name,op,value in filters}
+        query = select(main_table, select=field_list, where=wheres, joins=joins)
+        #print ('SQL', query)
 
         # Executing the query
         cur = self.datasource_utils.query(self.connection, query)
         results = all_to_dicts(cur)
+
+        results = [target_cls.uid2leobj(datas['type_id'])(**datas) for datas in results]
+        #print('results', results)
 
         return results
 
@@ -147,8 +161,6 @@ class LeDataSourceSQL(DummyDatasource):
     # @return The inserted component's id
     # @todo should work with LeType, LeClass, and Relations
     def insert(self, target_cls, **datas):
-        class_id = ''
-        type_id = ''
         # it is a LeType
         if (hasattr(target_cls, '_leclass')):
             # find main table and main table datas
