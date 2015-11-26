@@ -82,6 +82,13 @@ class _LeCrud(object):
     def fieldlist(cls):
         return cls.fieldtypes().keys()
     
+    ## @return a dict of fieldname : value
+    def datas(self):
+        res = dict()
+        for fname in self.fieldtypes().keys():
+            if hasattr(self, fname):
+                res[fname] = getattr(self, fname)
+    
     ## @brief Update a component in DB
     # @param datas dict : If None use instance attributes to update de DB
     # @return True if success
@@ -191,7 +198,7 @@ class _LeCrud(object):
     @classmethod
     def insert(cls, datas):
         insert_datas = cls.prepare_datas(datas, complete = True, allow_internal = False)
-        return cls._datasource.insert(cls, insert_datas)
+        return cls._datasource.insert(cls, **insert_datas)
     
     ## @brief Check and prepare datas
     # 

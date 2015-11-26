@@ -158,11 +158,11 @@ class LeCrudTestCase(TestCase):
         ]
         for lecclass, ndats in ndatas:
             lecclass.insert(ndats)
-            dsmock.assert_called_once_with(lecclass, ndats)
+            dsmock.assert_called_once_with(lecclass, **ndats)
             dsmock.reset_mock()
 
             lecclass.insert(ndats)
-            dsmock.assert_called_once_with(lecclass, ndats)
+            dsmock.assert_called_once_with(lecclass, **ndats)
             dsmock.reset_mock()
     
     ## @todo try failing on inserting from LeClass child or LeObject
