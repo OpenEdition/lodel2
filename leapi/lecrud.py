@@ -8,8 +8,6 @@ import warnings
 import importlib
 import re
 
-import leapi.leobject
-
 class LeApiErrors(Exception):
     ## @brief Instanciate a new exceptions handling multiple exceptions
     # @param expt_l list : A list of data check Exception
@@ -134,7 +132,6 @@ class _LeCrud(object):
         provided = set(datas.keys())
 
         #searching unknow fields
-        print("provided", provided, "correct", correct)
         unknown = provided - correct
         for u_f in unknown:
             #here we can check if the field is unknown or rejected because it is internal
@@ -193,7 +190,7 @@ class _LeCrud(object):
     # @return A new id if success else False
     @classmethod
     def insert(cls, datas):
-        insert_datas = self.prepare_datas(datas, complete = True, allow_internal = False)
+        insert_datas = cls.prepare_datas(datas, complete = True, allow_internal = False)
         return cls._datasource.insert(cls, insert_datas)
     
     ## @brief Check and prepare datas
@@ -208,9 +205,9 @@ class _LeCrud(object):
     def prepare_datas(cls, datas, complete = False, allow_internal = True):
         if not complete:
             warnings.warn("Actual implementation can make datas construction and consitency checks fails when datas are not complete")
-        ret_dats = self.check_datas_value(cls, datas, complete, allow_internal)
-        ret_datas = self._construct_datas(cls, ret_datas)
-        ret_datas = self._check_data_consistency(cls, ret_datas)
+        ret_datas = cls.check_datas_value(datas, complete, allow_internal)
+        ret_datas = cls._construct_datas(ret_datas)
+        cls._check_datas_consistency(ret_datas)
         return ret_datas
 
     #-###################-#
@@ -236,7 +233,7 @@ class _LeCrud(object):
         res_datas = dict()
         for fname, ftype in cls.fieldtypes().items():
             if fname in datas:
-                res_datas[fname] = ftype.construct_data(datas)
+                res_datas[fname] = ftype.construct_data(cls, fname, datas)
         return res_datas
     ## @brief Check datas consistency
     # 
@@ -248,7 +245,7 @@ class _LeCrud(object):
     def _check_datas_consistency(cls, datas):
         err_l = []
         for fname, ftype in cls.fieldtypes().items():
-            ret = ftype.check_data_consistency(datas)
+            ret = ftype.check_data_consistency(cls, fname, datas)
             if isinstance(ret, Exception):
                 err_l.append(ret)
 

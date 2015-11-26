@@ -11,6 +11,8 @@ import leapi
 import leapi.test.utils
 from leapi.lecrud import _LeCrud
 
+## @brief Test LeCrud methods
+# @note those tests need the full dynamically generated code
 class LeCrudTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -139,4 +141,43 @@ class LeCrudTestCase(TestCase):
         filters = ['hello world !']
         with self.assertRaises(ValueError):
             Personnes._prepare_filters(filters)
+    
+
+    # 
+    #   Tests mocking the datasource
+    # 
+
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_insert(self, dsmock):
+        from dyncode import Publication, Numero, LeObject, Personne, Article
+        ndatas = [
+            (Numero, {'titre' : 'FooBar'}),
+            (Numero, {'titre':'hello'}),
+            (Personne, {'nom':'world', 'prenom':'hello'}),
+            (Article, {'titre': 'Ar Boof', 'soustitre': 'Wow!'}),
+        ]
+        for lecclass, ndats in ndatas:
+            lecclass.insert(ndats)
+            dsmock.assert_called_once_with(lecclass, ndats)
+            dsmock.reset_mock()
+
+            lecclass.insert(ndats)
+            dsmock.assert_called_once_with(lecclass, ndats)
+            dsmock.reset_mock()
+    
+    ## @todo try failing on inserting from LeClass child or LeObject
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_insert_fails(self, dsmock):
+        from dyncode import Publication, Numero, LeObject, Personne, Article
+        ndatas = [
+            (Numero, dict()),
+            (Numero, {'titre':'hello', 'lodel_id':42}),
+            (Numero, {'tititre': 'hehello'}),
+            (Personne, {'titre':'hello'}),
+            (Article, {'titre': 'hello'}),
+        ]
+        for lecclass, ndats in ndatas:
+            with self.assertRaises(leapi.lecrud.LeApiDataCheckError, msg="But trying to insert %s as %s"%(ndats, lecclass.__name__)):
+                lecclass.insert(ndats)
+        pass
 

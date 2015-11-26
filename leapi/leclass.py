@@ -2,11 +2,11 @@
 
 import leapi
 
-
+from leapi.leobject import _LeObject
 
 ## @brief Represent an EmClass data instance
 # @note Is not a derivated class of LeObject because the concrete class will be a derivated class from LeObject
-class _LeClass(object):
+class _LeClass(_LeObject):
 
     ## @brief Stores fieldtypes by field name
     _fieldtypes = dict()
@@ -28,7 +28,7 @@ class _LeClass(object):
     @classmethod
     def fieldtypes(cls):
         ret = dict()
-        ret.update(super(LeClass,cls).fieldtypes())
+        ret.update(super(_LeClass,cls).fieldtypes())
         ret.update(cls._fieldtypes)
         return ret
 

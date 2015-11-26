@@ -35,14 +35,16 @@ class TestLeFactory(TestCase):
     def test_leobject(self):
         """ Testing the generated LeObject class """
         import dyncode
+        from dyncode import LeType, LeClass
+
         self.assertTrue(hasattr(dyncode, 'LeObject'))
 
         for uid, cls in dyncode.LeObject._me_uid.items():
-            if leapi.letype.LeType in cls.__bases__:
-                self.assertNotEqual(cls, leapi.letype.LeType)
+            if LeType in cls.__bases__:
+                self.assertNotEqual(cls, LeType)
                 self.assertEqual(cls._type_id, uid)
-            elif leapi.leclass.LeClass in cls.__bases__:
-                self.assertNotEqual(cls, leapi.leclass.LeClass)
+            elif LeClass in cls.__bases__:
+                self.assertNotEqual(cls, LeClass)
                 self.assertEqual(cls._class_id, uid)
             else:
                 self.fail("Bad instance type for _me_uid values : %s"%type(cls))
@@ -51,6 +53,7 @@ class TestLeFactory(TestCase):
     def test_leclass(self):
         """ Testing generated LeClass childs classes """
         import dyncode
+        from dyncode import LeType, LeClass
 
         for emclass in self.model.components(EditorialModel.classes.EmClass):
             leclass_name = LeFactory.name2classname(emclass.name)
@@ -60,7 +63,7 @@ class TestLeFactory(TestCase):
             self.assertEqual(leclass._class_id, emclass.uid)
             
             #Testing inheritance
-            self.assertEqual(set(leclass.__bases__), set([dyncode.LeObject, leapi.leclass.LeClass]))
+            self.assertEqual(set(leclass.__bases__), set([dyncode.LeObject, dyncode.LeClass]))
             
             #Testing _linked_types attr
             self.assertEqual(
@@ -83,6 +86,7 @@ class TestLeFactory(TestCase):
     def test_letype(self):
         """ Testing generated LeType childs classes """
         import dyncode
+        from dyncode import LeType, LeClass
 
         for emtype in self.model.components(EditorialModel.types.EmType):
             letype_name = LeFactory.name2classname(emtype.name)
@@ -95,7 +99,7 @@ class TestLeFactory(TestCase):
             #Testing inheritance
             self.assertEqual(
                 set(letype.__bases__),
-                set([leapi.letype.LeType, letype._leclass])
+                set([LeType, letype._leclass])
             )
 
             #Testing _fields

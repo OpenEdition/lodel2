@@ -225,7 +225,7 @@ class {name}(LeClass, LeObject):
             result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
-class {name}({leclass}, LeType):
+class {name}(LeType, {leclass}):
     _type_id = {uid}
 
 """.format(

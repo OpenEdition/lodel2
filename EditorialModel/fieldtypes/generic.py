@@ -75,6 +75,22 @@ class GenericFieldType(object):
         if value is None and not self.nullable:
             return (None, TypeError("'None' value but field is not nullable"))
         return self._check_data_value(value)
+    
+    ## @brief Build automatic fields values
+    # @param lec LeCrud : A LeCrud child class
+    # @param fname str : The field name
+    # @param datas dict : dict storing fields values
+    # @return constructed datas
+    def construct_data(self, lec, fname, datas):
+        return datas[fname]
+    
+    ## @brief Check datas consistency
+    # @param leo LeCrud : A LeCrud child class instance
+    # @param fname str : The field name
+    # @param datas dict : dict storing fields values
+    # @return an Exception instance if fails else True
+    def check_data_consistency(self, lec, fname, datas):
+        return True
 
     ## @brief Check if a value is correct
     # @param value * : The value

@@ -26,11 +26,12 @@ class LeObjectTestCase(TestCase):
     def test_uid2leobj(self):
         """ Testing _Leobject.uid2leobj() """
         import dyncode
+        from dyncode import LeType, LeClass
         for i in dyncode.LeObject._me_uid.keys():
             cls = dyncode.LeObject.uid2leobj(i)
-            if leapi.letype.LeType in cls.__bases__:
+            if LeType in cls.__bases__:
                 self.assertEqual(i, cls._type_id)
-            elif leapi.leclass.LeClass in cls.__bases__:
+            elif LeClass in cls.__bases__:
                 self.assertEqual(i, cls._class_id)
             else:
                 self.fail("Bad value returned : '%s'"%cls)

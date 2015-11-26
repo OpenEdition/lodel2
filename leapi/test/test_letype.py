@@ -24,10 +24,10 @@ class LeTypeTestCase(TestCase):
     @unittest.skip("Waiting for EmFieldType full implementation")
     def test_init(self):
         """ testing the constructor """
-        from dyncode import Publication, Numero, LeObject
+        from dyncode import Publication, Numero, LeObject, LeType
         
         with self.assertRaises(NotImplementedError):
-            leapi.letype.LeType(42)
+            LeType(42)
 
         badargs = [
             {'class_id':Numero._class_id + 1},
@@ -45,7 +45,7 @@ class LeTypeTestCase(TestCase):
             with self.assertRaises(expect_e, msg="Invalid argument given %s"%badarg):
                 Numero(**badarg)
     
-    @patch('leapi.letype.LeType.populate')
+    @patch('leapi.letype._LeType.populate')
     def test_datas(self, dsmock):
         """ Testing the datas @property method """
         from dyncode import Publication, Numero, LeObject

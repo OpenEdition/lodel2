@@ -14,15 +14,16 @@ import re
 import warnings
 
 import leapi
-import EditorialModel
+from leapi.lecrud import _LeCrud
 from leapi.lefactory import LeFactory
+import EditorialModel
 from EditorialModel.types import EmType
 
 REL_SUP = 0
 REL_SUB = 1
 
 ## @brief Main class to handle objects defined by the types of an Editorial Model
-class _LeObject(object):
+class _LeObject(_LeCrud):
     
     ## @brief maps em uid with LeType or LeClass keys are uid values are LeObject childs classes
     # @todo check if this attribute shouldn't be in _LeCrud
@@ -55,26 +56,6 @@ class _LeObject(object):
             cls._fieldtypes_all.update(cls._leo_fieldtypes)
         return cls._fieldtypes_all
 
-    ## @brief Creates new entries in the datasource
-    # @param datas list : A list a dict with fieldname as key
-    # @param cls
-    # @return a list of inserted lodel_id
-    # @see leapi.datasources.dummy.DummyDatasource.insert(), leapi.letype.LeType.insert()
-    @classmethod
-    def insert(cls, letype, datas):
-        if isinstance(datas, dict):
-            datas = [datas]
-
-        if cls == _LeObject:
-            raise NotImplementedError("Abstract method")
-        letype,leclass = cls._prepare_targets(letype)
-        if letype is None:
-            raise ValueError("letype argument cannot be None")
-
-        for data in datas:
-            letype.prepare_data(data, complete = True)
-        return cls._datasource.insert(letype, leclass, datas)
-    
     ## @brief Check if a LeType is a hierarchy root
     @staticmethod
     def is_root(leo):
