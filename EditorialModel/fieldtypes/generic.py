@@ -37,16 +37,10 @@ class GenericFieldType(object):
         if ftype not in self._allowed_ftype:
             raise AttributeError("Ftype '%s' not known" % ftype)
 
-        if check_data_value is None:
-            check_data_value = self.dummy_check_data_value
-        elif not callable(check_data_value):
-            raise AttributeError("check_data_value argument has to be a function it is a %s" % type(check_data_value))
-
         if ftype != self.__class__.ftype:
             raise RuntimeError("The ftype is not the same for the instance and the class. Maybe %s reimplement ftype at class level but shouldn't" % self.name)
 
         self.ftype = ftype
-        self._check_data_value = check_data_value
         self.nullable = bool(nullable)
         self.uniq = bool(uniq)
 
@@ -92,10 +86,10 @@ class GenericFieldType(object):
     def check_data_consistency(self, lec, fname, datas):
         return True
 
-    ## @brief Check if a value is correct
+    ## @brief Dummy check, designed to be implemented in child classes
     # @param value * : The value
     # @return (checked_and_casted_value, Exception|None)
-    def dummy_check_data_value(self, value):
+    def _check_data_value(self, value):
         return (value, None)
 
     ## @brief Given a fieldtype name return the associated python class

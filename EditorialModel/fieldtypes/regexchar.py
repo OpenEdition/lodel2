@@ -19,7 +19,7 @@ class EmFieldType(char.EmFieldType):
 
         super(EmFieldType, self).__init__(check_data_value=check_value, max_length=max_length, **kwargs)
 
-    def check_value(value):
+    def _check_data_value(self,value):
         error = None
         if not self.compiled_re.match(value):
             value = ''

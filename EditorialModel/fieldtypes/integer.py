@@ -10,11 +10,9 @@ class EmFieldType(GenericFieldType):
     ftype = 'int'
 
     def __init__(self, **kwargs):
-        if 'check_data_value' not in kwargs:
-            kwargs['check_data_value'] = self.check_value
         super(EmFieldType, self).__init__(ftype='int', **kwargs)
 
-    def check_value(self, value):
+    def _check_data_value(self, value):
         error = None
         try:
             value = int(value)
