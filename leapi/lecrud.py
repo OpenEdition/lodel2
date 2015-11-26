@@ -70,6 +70,7 @@ class _LeCrud(object):
         raise NotImplementedError("Abstract method") #child classes should return their uid fieldtype
     
     ## @return A dict with fieldtypes marked as internal
+    # @todo check if this method is in use, else delete it
     @classmethod
     def fieldtypes_internal(self):
         return { fname: ft for fname, ft in cls.fieldtypes().items() if hasattr(ft, 'internal') and ft.internal }
@@ -78,6 +79,15 @@ class _LeCrud(object):
     @classmethod
     def fieldlist(cls):
         return cls.fieldtypes().keys()
+    
+    ## @return The name of the uniq id field
+    # @todo test for abstract method !!!
+    @classmethod
+    def uidname(cls):
+        if len(cls._uid_fieldtype) == 0:
+            raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
+        return list(cls._uid_fieldtype.keys())[0]
+        
     
     ## @brief Returns object datas
     # @param
@@ -222,7 +232,7 @@ class _LeCrud(object):
     # @warning assert that the uid is not composed with multiple fieldtypes
     # @return A filter of the form tuple(UID, '=', self.UID)
     def _id_filter(self):
-        id_name = list(self._uid_fieldtype.keys())[0]
+        id_name = self.uidname()
         return ( id_name, '=', getattr(self, id_name) )
 
     ## @brief Construct datas values
