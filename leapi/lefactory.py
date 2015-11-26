@@ -49,6 +49,32 @@ class LeFactory(object):
         with open(self._code_filename, "w+") as dynfp:
             dynfp.write(self.generate_python(model, datasource_cls, datasource_args))
 
+    ## @brief Generate fieldtypes for concret classes
+    # @param ft_dict dict : key = fieldname value = fieldtype __init__ args
+    # @return (uid_fieldtypes, fieldtypes) designed to be printed in generated code
+    def concret_fieldtypes(self, ft_dict):
+        res_ft_l = list()
+        res_uid_ft = None
+        for fname, ftargs in ft_dict.items():
+            ftargs = copy.copy(ftargs)
+            fieldtype = ftargs['fieldtype']
+            self.needed_fieldtypes |= set([fieldtype])
+            del(ftargs['fieldtype'])
+
+            constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
+                ftname = GenericFieldType.module_name(fieldtype),
+                ftargs = ftargs,
+            )
+
+            if fieldtype == 'pk':
+                #
+                #       WARNING multiple PK not supported
+                #
+                res_uid_ft = "{ %s: %s }"%(repr(fname),constructor)
+            else:
+                res_ft_l.append( '%s: %s'%(repr(fname), constructor) )
+        return (res_uid_ft, res_ft_l)
+
     ## @brief Given a Model and an EmClass instances generate python code for corresponding LeClass
     # @param model Model : A Model instance
     # @param emclass EmClass : An EmClass instance from model
@@ -140,6 +166,7 @@ from EditorialModel.fieldtypes import {needed_fieldtypes_list}
 import leapi
 import leapi.lecrud
 import leapi.leobject
+import leapi.lerelation
 from leapi.leclass import _LeClass
 from leapi.letype import _LeType
 """
@@ -155,6 +182,8 @@ import %s
             leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
         
         #Building the fieldtypes dict of LeObject
+        (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.common_fields)
+        """
         leobj_fieldtypes = list()
         leobj_uid_fieldtype = None
         for fname, ftargs in EditorialModel.classtypes.common_fields.items():
@@ -171,10 +200,23 @@ import %s
                 #
                 #       WARNING multiple PK not supported
                 #
-                leobj_uid_fieldtype = "{ 'lodel_id': %s }"%constructor
+                leobj_uid_fieldtype = "{ %s: %s }"%(repr(fname),constructor)
             else:
                 leobj_fieldtypes.append( '%s: %s'%(repr(fname), constructor) )
-            
+        """
+        #Building the fieldtypes dict for LeRelation
+        (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.relations_common_fields)
+        """
+        lerel_fieldtypes = list()
+        lerel_uid_fieldtype = None
+        for fname, ftargs in EditorialModel.classtypes.relations_common_fields.items():
+            ftargs = copy.copy(ftargs)
+            fieldtype = ftargs['fieldtype']
+            self.needed_fieldtypes |= set([fieldtype])
+            del(ftargs['fieldtype'])
+
+            constructor
+        """ 
 
         result += """
 ## @brief _LeCrud concret class
@@ -190,10 +232,21 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
     _uid_fieldtype = {leo_uid_fieldtype}
     _leo_fieldtypes = {leo_fieldtypes}
 
+## @brief _LeRelation concret class
+# @see leapi.lerelation._LeRelation
+class LeRelation(LeCrud, leapi.lerelation._LeRelation):
+    _uid_fieldtype = {lerel_uid_fieldtype}
+    _rel_fieldtypes = {lerel_fieldtypes}
+    _rel_attr_fieldtypes = dict()
+
+class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
+    _rel_attr_fieldtypes = dict()
+
+class LeRel2Type(LeRelation, leapi.lerelation._LeRel2Type):
+    pass
 
 class LeClass(LeObject, _LeClass):
     pass
-
 
 class LeType(LeClass, _LeType):
     pass
@@ -203,6 +256,8 @@ class LeType(LeClass, _LeType):
             me_uid_l = repr(leobj_me_uid),
             leo_uid_fieldtype = leobj_uid_fieldtype,
             leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
+            lerel_fieldtypes = '{\n\t' + (',\n\t'.join(lerel_fieldtypes))+ '\n\t}',
+            lerel_uid_fieldtype = lerel_uid_fieldtype,
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)

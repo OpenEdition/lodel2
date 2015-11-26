@@ -18,9 +18,7 @@ class EmFieldType(integer.EmFieldType):
         }
         # Checking args
         for name, value in kwargs.items():
-            if name not in allowed:
-                raise TypeError("Got an unexpected argument '%s' for pk EmFieldType" % name)
-            if value != allowed[name]:
+            if name in allowed and value != allowed[name]:
                 raise ValueError("The value '%s' for argument '%s' for pk EmFieldType is not allowed" % (value, name))
 
         kwargs.update(allowed)

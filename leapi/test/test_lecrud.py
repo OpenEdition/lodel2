@@ -1,5 +1,5 @@
 """
-    Tests for _LeObject and LeObject
+    Tests for _LeCrud and LeCrud
 """
 
 import unittest

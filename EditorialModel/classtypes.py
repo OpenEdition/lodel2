@@ -32,6 +32,25 @@ common_fields = {
     }
 }
 
+relations_common_fields = {
+    'id_relation': {
+        'fieldtype': 'pk',
+        'internal': 'automatic',
+    },
+    'nature': {
+        'fieldtype': 'naturerelation',
+        'internal': 'automatic',
+    },
+    'depth': {
+        'fieldtype': 'integer',
+        'internal': 'automatic',
+    },
+    'rank': {
+        'fieldtype': 'integer',
+        'internal': 'automatic',
+    },
+}
+
 
 def pk_name():
     for name, option in common_fields.items():

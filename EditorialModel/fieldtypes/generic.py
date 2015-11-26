@@ -12,7 +12,7 @@ class GenericFieldType(object):
     ## @brief Text describing the fieldtype
     help = 'Generic field type : abstract class for every fieldtype'
     ## @brief Allowed type for handled datas
-    _allowed_ftype = ['char', 'str', 'int', 'bool', 'datetime', 'text', 'rel2type']
+    _allowed_ftype = ['char', 'str', 'int', 'bool', 'datetime', 'text', 'rel2type', 'leobject']
 
     ## @brief The basic lowlevel value type
     ftype = None
