@@ -182,6 +182,26 @@ class LeCrudTestCase(TestCase):
                 assert not dsmock.called
         pass
     
+    @patch('leapi.datasources.dummy.DummyDatasource.update')
+    def test_update(self, dsmock):
+        from dyncode import Publication, Numero, LeObject
+        
+        args_l = [
+            (
+                Numero,
+                {'lodel_id':'1'},
+                {'titre': 'foobar'},
+
+                [('lodel_id', '=', 1)],
+                []
+            ),
+        ]
+
+        for ccls, initarg, qdatas, efilters, erelfilters in args_l:
+            obji = ccls(**initarg)
+            obji.update(qdatas)
+            dsmock.assert_called_once_with(ccls, efilters, erelfilters, qdatas)
+    
     ## @todo test invalid get
     @patch('leapi.datasources.dummy.DummyDatasource.select')
     def test_get(self, dsmock):

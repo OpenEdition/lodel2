@@ -380,5 +380,3 @@ class _LeCrud(object):
     def _field_is_relational(field):
         return field.startswith('superior.') or field.startswith('subordinate')
 
-
-
