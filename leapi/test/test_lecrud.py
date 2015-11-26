@@ -179,5 +179,65 @@ class LeCrudTestCase(TestCase):
         for lecclass, ndats in ndatas:
             with self.assertRaises(leapi.lecrud.LeApiDataCheckError, msg="But trying to insert %s as %s"%(ndats, lecclass.__name__)):
                 lecclass.insert(ndats)
+                assert not dsmock.called
         pass
+    
+    ## @todo test invalid get
+    @patch('leapi.datasources.dummy.DummyDatasource.select')
+    def test_get(self, dsmock):
+        from dyncode import Publication, Numero, LeObject, Textes
+        
+        args = [
+            (
+                Numero,
+                ['lodel_id', 'superior.parent'],
+                ['titre != "foobar"'],
+
+                ['lodel_id', (leapi.leobject.REL_SUP, 'parent')],
+                [('titre','!=', '"foobar"')],
+                []
+            ),
+            (
+                Numero,
+                ['lodel_id', 'titre', 'superior.parent', 'subordinate.translation'],
+                ['superior.parent in  [1,2,3,4,5]'],
+
+                ['lodel_id', 'titre', (leapi.leobject.REL_SUP,'parent'), (leapi.leobject.REL_SUB, 'translation')],
+                [],
+                [( (leapi.leobject.REL_SUP, 'parent'), ' in ', '[1,2,3,4,5]')]
+            ),
+            (
+                Numero,
+                [],
+                [],
+
+                Numero._fields,
+                [],
+                []
+            ),
+            (
+                Textes,
+                ['lodel_id', 'titre', 'soustitre', 'superior.parent'],
+                ['titre != "foobar"'],
+
+                ['lodel_id', 'titre', 'soustitre', (leapi.leobject.REL_SUP, 'parent')],
+                [('titre','!=', '"foobar"')],
+                [],
+            ),
+            (
+                LeObject,
+                ['lodel_id'],
+                [],
+
+                ['lodel_id'],
+                [],
+                [],
+            ),
+        ]
+
+        for callcls, field_list, filters, fl_ds, filters_ds, rfilters_ds in args:
+            callcls.get(filters, field_list)
+            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds)
+            dsmock.reset_mock()
+
 

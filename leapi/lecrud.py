@@ -21,9 +21,6 @@ class LeApiErrors(Exception):
             msg += " {expt_name}:{expt_msg}; ".format(expt_name=expt.__class__.__name__, expt_msg=str(expt))
         return msg
 
-    def __repr__(self):
-        return str(self)
-
 
 ## @brief When an error concern a query
 class LeApiQueryError(LeApiErrors): pass
@@ -82,11 +79,13 @@ class _LeCrud(object):
     def fieldlist(cls):
         return cls.fieldtypes().keys()
     
-    ## @return a dict of fieldname : value
-    def datas(self):
+    ## @brief Returns object datas
+    # @param
+    # @return a dict of fieldname : value
+    def datas(self, internal = False):
         res = dict()
-        for fname in self.fieldtypes().keys():
-            if hasattr(self, fname):
+        for fname, ftt in self.fieldtypes().items():
+            if (internal or (not internal and ftt.is_internal)) and hasattr(self, fname):
                 res[fname] = getattr(self, fname)
     
     ## @brief Update a component in DB
@@ -105,13 +104,12 @@ class _LeCrud(object):
             #ERROR HANDLING
             return False
     
-    ## @brief Delete a component
+    ## @brief Delete a component (instance method)
     # @return True if success
     # @todo better error handling
-    def delete(self):
+    def _delete(self):
         filters = [self._id_filter()]
-        rel_filters = []
-        ret = self._datasource.delete(self.__class__, filters, rel_filters)
+        ret = _LeCrud.delete(self.__class__, filters)
         if ret == 1:
             return True
         else:
@@ -157,6 +155,14 @@ class _LeCrud(object):
         if len(err_l) > 0:
             raise LeApiDataCheckError("Error while checking datas", err_l)
         return checked_datas
+    
+    ## @brief Given filters delete editorial components
+    # @param filters list : 
+    # @return The number of deleted components
+    @staticmethod
+    def delete(cls, filters):
+        filters, rel_filters = cls._prepare_filters(filters)
+        return cls._datasource.delete(cls, filters, rel_filters)
 
     ## @brief Retrieve a collection of lodel editorial components
     #
@@ -166,39 +172,28 @@ class _LeCrud(object):
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
     def get(cls, query_filters, field_list = None):
-        if not(isinstance(cls, cls.name2class('LeObject'))) and not(isinstance(cls, cls.name2class('LeRelation'))):
-            raise NotImplementedError("Cannot call get with LeCrud")
-
         if field_list is None or len(field_list) == 0:
             #default field_list
-            field_list = cls.default_fieldlist()
+            field_list = cls.fieldlist()
 
-        field_list = cls.prepare_field_list(field_list) #Can raise LeApiDataCheckError
+        field_list = cls._prepare_field_list(field_list) #Can raise LeApiDataCheckError
 
         #preparing filters
-        filters, relational_filters = cls._prepare_filters(field_list)
+        filters, relational_filters = cls._prepare_filters(query_filters)
 
         #Fetching datas from datasource
-        db_datas = cls._datasource.get(cls, filters, relational_filters)
+        db_datas = cls._datasource.select(cls, field_list, filters, relational_filters)
 
         return [ cls(**datas) for datas in db_datas]
-    
-    ## @brief Given filters delete components
-    # @param filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
-    # @return the number of deleted components
-    # @todo Check for Abstract calls (with cls == LeCrud)
-    @classmethod
-    def delete_multi(cls, filters):
-        filters, rel_filters = cls._prepare_filters(filters)
-        return cls._datasource.delete(cls, filters, rel_filters)
     
     ## @brief Insert a new component
     # @param datas dict : The value of object we want to insert
     # @return A new id if success else False
     @classmethod
-    def insert(cls, datas):
-        insert_datas = cls.prepare_datas(datas, complete = True, allow_internal = False)
-        return cls._datasource.insert(cls, **insert_datas)
+    def insert(cls, datas = datas, classname = None):
+        callcls = cls if classname is None else cls.name2class(classname)
+        insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
+        return callcls._datasource.insert(callcls, **insert_datas)
     
     ## @brief Check and prepare datas
     # 
@@ -213,6 +208,8 @@ class _LeCrud(object):
         if not complete:
             warnings.warn("Actual implementation can make datas construction and consitency checks fails when datas are not complete")
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
+        if isinstance(ret_datas, Exception):
+            raise ret_datas
         ret_datas = cls._construct_datas(ret_datas)
         cls._check_datas_consistency(ret_datas)
         return ret_datas
@@ -225,7 +222,7 @@ class _LeCrud(object):
     # @warning assert that the uid is not composed with multiple fieldtypes
     # @return A filter of the form tuple(UID, '=', self.UID)
     def _id_filter(self):
-        id_name = self._uid_fieldtype.keys()[0]
+        id_name = list(self._uid_fieldtype.keys())[0]
         return ( id_name, '=', getattr(self, id_name) )
 
     ## @brief Construct datas values
@@ -266,6 +263,7 @@ class _LeCrud(object):
     # @throw LeApiDataCheckError if invalid field given
     @classmethod
     def _prepare_field_list(cls, field_list):
+        err_l = list()
         ret_field_list = list()
         for field in field_list:
             if cls._field_is_relational(field):
@@ -316,6 +314,7 @@ class _LeCrud(object):
         res_filters = list()
         rel_filters = list()
         err_l = list()
+        #Splitting in tuple if necessary
         for fil in filters_l:
             if len(fil) == 3 and not isinstance(fil, str):
                 filters.append(tuple(fil))
