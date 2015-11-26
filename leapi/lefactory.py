@@ -140,8 +140,8 @@ from EditorialModel.fieldtypes import {needed_fieldtypes_list}
 import leapi
 import leapi.lecrud
 import leapi.leobject
-from leapi.leclass import LeClass
-from leapi.letype import LeType
+from leapi.leclass import _LeClass
+from leapi.letype import _LeType
 """
 
         result += """
@@ -185,11 +185,18 @@ class LeCrud(leapi.lecrud._LeCrud):
 
 ## @brief _LeObject concret class
 # @see leapi.leobject._LeObject
-class LeObject(leapi.leobject._LeObject, LeCrud):
+class LeObject(LeCrud, leapi.leobject._LeObject):
     _me_uid = {me_uid_l}
     _uid_fieldtype = {leo_uid_fieldtype}
     _leo_fieldtypes = {leo_fieldtypes}
 
+
+class LeClass(LeObject, _LeClass):
+    pass
+
+
+class LeType(LeClass, _LeType):
+    pass
 """.format(
             ds_classname = datasource_cls.__module__ + '.' + datasource_cls.__name__,
             ds_kwargs = repr(datasource_args),
@@ -218,7 +225,7 @@ class {name}(LeClass, LeObject):
             result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
-class {name}(LeType, {leclass}):
+class {name}({leclass}, LeType):
     _type_id = {uid}
 
 """.format(

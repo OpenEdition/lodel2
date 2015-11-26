@@ -6,7 +6,7 @@ import leapi
 
 ## @brief Represent an EmClass data instance
 # @note Is not a derivated class of LeObject because the concrete class will be a derivated class from LeObject
-class LeClass(object):
+class _LeClass(object):
 
     ## @brief Stores fieldtypes by field name
     _fieldtypes = dict()

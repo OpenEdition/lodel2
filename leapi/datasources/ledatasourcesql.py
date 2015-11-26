@@ -7,7 +7,7 @@ import leapi
 from leapi.datasources.dummy import DummyDatasource
 from leapi.leobject import REL_SUB, REL_SUP
 
-from leapi.letype import LeType
+from leapi.lecrud import _LeCrud
 
 from mosql.db import Database, all_to_dicts, one_to_dict
 from mosql.query import select, insert, update, delete, join
@@ -268,7 +268,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param get_sub bool : If True leo is the superior and we want subordinates, else its the opposite
     # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
     def get_related(self, leo, letype, get_sub=True):
-        if leapi.letype.LeType not in letype.__bases__:
+        if LeCrud.name2class('LeType') not in letype.__bases__:
             raise ValueError("letype argument should be a LeType child class, but got %s" % type(letype))
 
         if not isinstance(leo, LeType):
