@@ -32,11 +32,36 @@ class _LeObject(_LeCrud):
     
     ## @brief Stores the fields name associated with fieldtype of the fields that are common to every LeObject
     _leo_fieldtypes = dict()
+    
+    ## @brief Instanciate a partial LeObject with a lodel_id
+    # @note use the get_instance method to fetch datas and instanciate a concret LeObject
+    def __init__(self, lodel_id):
+        #Warning ! Handles only single pk
+        uid_fname, uid_ft = list(self._uid_fieldtype.items())[0]
+        new_id, err = uid_ft.check_data_value(lodel_id)
+        if not (err is None):
+            raise err
+        setattr(self, uid_fname, lodel_id)
+    
+    ## @return Corresponding populated LeObject
+    def get_instance(self):
+        uid_fname = self.uidname()
+        qfilter = '{uid_fname} = {uid}'.format(uid_fname = uid_fname, uid = getattr(self, uid_fname))
+        return leobject.get([qfilter])[0]
+    
+    ## @brief Dirty & quick comparison implementation
+    def __cmp__(self, other):
+        uid_fname = self.uidname()
+        if not hasattr(other, uid_fname):
+            return False
+        return getattr(self, uid_fname) == getattr(other, uid_fname)
+        
+    ## @brief Quick str cast method implementation
+    def __str__(self):
+        return "<%s lodel_id=%d>"%(self.__class__, getattr(self, self.uidname()))
 
-    ## @brief Instantiate with a Model and a DataSource
-    # @param **kwargs dict : datas usefull to instanciate a _LeObject
-    def __init__(self, **kwargs):
-        raise NotImplementedError("Abstract constructor")
+    def __repr__(self):
+        return self.__str__()
     
     ## @brief Given a ME uid return the corresponding LeClass or LeType class
     # @return a LeType or LeClass child class

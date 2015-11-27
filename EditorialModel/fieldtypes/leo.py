@@ -20,16 +20,13 @@ class EmFieldType(GenericFieldType):
             if not hasattr(value, 'lodel_id'):
                 return (None, ValueError("The LeType instance given has no lodel_id !"))
         return (value, None)
-
+    
+    ## @brief If field value is an integer, returns a partially instanciated LeObject (only with an ID)
     def construct_data(self, lec, fname, datas):
+        import leapi.lecrud as lecrud
         if isinstance(datas[fname], int):
             leobject = lecrud._LeCrud.name2class('LeObject')
-            qfilter = '{uid_name} = {uid}'.format(
-                uid_name = leobject.uidname(),
-                uid = datas[fname],
-            )
-
-            return leobject.get([qfilter])
+            return leobject.get(datas[fname])
         else:
             return datas[fname]
     

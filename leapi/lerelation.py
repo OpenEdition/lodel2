@@ -21,6 +21,17 @@ class _LeRelation(lecrud._LeCrud):
        pass 
  
     @classmethod
+    def sup_filter(self, leo):
+        if isinstance(leo, _LeObject):
+            return ('lesup', '=', leo)
+
+    @classmethod
+    def sub_filter(self, leo):
+        if isinstance(leo, _LeObject):
+            return ('lesub', '=', leo)
+
+
+    @classmethod
     def fieldtypes(cls):
         rel_ft = dict()
         rel_ft.update(cls._lesup_fieldtype)
@@ -32,6 +43,7 @@ class _LeRelation(lecrud._LeCrud):
     @classmethod
     def _prepare_relational_fields(cls, field):
         return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject"%(field,cls.__name__))
+
 
             
 
