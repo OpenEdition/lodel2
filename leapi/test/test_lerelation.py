@@ -9,6 +9,7 @@ from unittest.mock import patch
 import EditorialModel
 import leapi
 import leapi.test.utils
+import leapi.lecrud as lecrud
 from leapi.lecrud import _LeCrud
 
 class LeRelationTestCase(TestCase):
@@ -224,4 +225,71 @@ class LeRel2TypeTestCase(LeRelationTestCase):
             eres.uopdate(query)
 
             dsmock.assert_called_once_with(Rel_textes2personne, **eres)
+            dsmock.reset_mock()
 
+            LeRel2Type.insert(query, "Rel_textes2personne")
+
+            dsmock.assert_called_once_with(Rel_textes2personne, **eres)
+            dsmock.reset_mock()
+
+    @unittest.skip("Wait implementation to unskip")
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_insert_fails(self, dsmock):
+        """ test LeHierach update method"""
+        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne
+
+        queries = [
+            {
+                'lesup': Rubrique(42),
+                'lesub': Personne(24),
+                'adresse': None,
+            },
+            {
+                'adresse': None,
+            },
+            {
+                'lesup': Rubrique(42),
+                'lesub': LeObject(24),
+                'adresse': None,
+            },
+            {
+                'lesup': Article(42),
+                'lesub': Numero(24),
+                'adresse': 'foo',
+            },
+            {
+                'lesup': 42,
+                'lesub': 24,
+            },
+            {
+                'lesup': 42,
+                'lesub': 24,
+                'adresse': None,
+                'nature': "parent",
+            },
+            {
+                'lesup': 42,
+                'lesub': 24,
+                'adresse': None,
+                'nature': None,
+            },
+            {
+                'lesup': 42,
+                'lesub': 24,
+                'adresse': None,
+                'foofield': None,
+            },
+            {
+                'lesup': 42,
+                'lesub': 24,
+                'id_relation': 1337,
+                'adresse': None,
+            },
+        ]
+
+        for query in queries:
+            with self.assertRaises(lecrud.LeApiQueryError):
+                LeRel2Type.insert(query, 'Rel_textes2personne')
+            
+            with self.assertRaises(lecrud.LeApiQueryError):
+                Rel_textes2personne.insert(query)
