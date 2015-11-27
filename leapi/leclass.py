@@ -22,8 +22,8 @@ class _LeClass(_LeObject):
     ## @brief Instanciate a new LeClass
     # @note Abstract method
     # @param **kwargs
-    def __init__(self, **kwargs):
-        raise NotImplementedError("Abstract class")
+    def __init__(self, lodel_id, **kwargs):
+        _LeObject.__init__(self, lodel_id, **kwargs)
 
     @classmethod
     def fieldtypes(cls):

@@ -171,7 +171,7 @@ class LeHierarch(LeRelationTestCase):
         
     
     @unittest.skip("Wait for LeRelation.update() to unskip")
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('leapi.datasources.dummy.DummyDatasource.update')
     def test_update(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeHierarch
@@ -181,5 +181,47 @@ class LeHierarch(LeRelationTestCase):
     
 
 class LeRel2TypeTestCase(LeRelationTestCase):
-    pass
+    
+    @unittest.skip("Wait implementation to unskip")
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_insert(self, dsmock):
+        """ test LeHierach update method"""
+        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne
+
+        queries = [
+            {
+                'lesup': Article(42),
+                'lesub': Personne(24),
+                'adresse': None,
+            },
+            {
+                'lesup': Textes(42),
+                'lesub': Personne(24),
+                'adresse': None,
+            },
+            {
+                'lesup': 42,
+                'lesub': Personne(24),
+                'adresse': None,
+            },
+
+            {
+                'lesup': Article(42),
+                'lesub': Personnes(24),
+                'adresse': "bar",
+            },
+            {
+                'lesup': Textes(42),
+                'lesub': Personnes(24),
+                'adresse': "foo",
+            },
+        ]
+
+        for query in queries:
+            Rel_textes2personne.insert(query)
+
+            eres = {'nature': None}
+            eres.uopdate(query)
+
+            dsmock.assert_called_once_with(Rel_textes2personne, **eres)
 
