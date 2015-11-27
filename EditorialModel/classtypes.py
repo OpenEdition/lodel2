@@ -39,7 +39,6 @@ relations_common_fields = {
     },
     'nature': {
         'fieldtype': 'naturerelation',
-        'internal': 'automatic',
     },
     'depth': {
         'fieldtype': 'integer',
