@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
-
-import settings_local
+try:
+    import settings_local
+except ImportError:
+    settings_local = None
 
 class Settings:
     # List of accepted settings
