@@ -87,8 +87,19 @@ class _LeCrud(object):
         if len(cls._uid_fieldtype) == 0:
             raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
         return list(cls._uid_fieldtype.keys())[0]
-        
-    
+
+    ## @return maybe Bool: True if cls is a LeType or an instance of LeType
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def is_letype(cls):
+        return hasattr(cls, '_leclass')
+
+    ## @return maybe Bool: True if cls is a LeClass or an instance of LeClass
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def is_leclass(cls):
+        return hasattr(cls, '_class_id') and not cls.is_letype()
+
     ## @brief Returns object datas
     # @param
     # @return a dict of fieldname : value
