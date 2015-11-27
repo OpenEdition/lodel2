@@ -92,3 +92,20 @@ class MySQL(object):
             raise ValueError("Unsupported fieldtype ftype : %s" % ftype)
 
         return res
+
+    ## Brief add table prefix to a column name
+    # @param name string: column name to prefix
+    # @param prefixes dict(prefix:list(name,))
+    # @return prefixed_name string: the name prefixed
+    # find the same name in some list of names, prepend the key of the dict to the name
+    @staticmethod
+    def find_prefix(name, prefixes):
+        for prefix, names in prefixes:
+            if name in names:
+                return MySQL.column_prefix(prefix, name)
+        return name
+
+    ## prefix a column name with the table name
+    @staticmethod
+    def column_prefix(table, column):
+        return '%s.%s' % (table, column)

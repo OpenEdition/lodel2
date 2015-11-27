@@ -36,48 +36,56 @@ class LeDataSourceSQL(DummyDatasource):
     ## @brief select lodel editorial components using given filters
     # @param target_cls LeCrud(class): The component class concerned by the select (a LeCrud child class (not instance !) )
     # @param field_list list: List of field to fetch
-    # @param filters list: List of filters (see @ref leobject_filters)
-    # @param rel_filters list: List of relational filters (see @ref leobject_filters)
+    # @param filters list: List of filters (see @ref lecrud_filters)
+    # @param rel_filters list: List of relational filters (see @ref lecrud_filters)
     # @return a list of LeCrud child classes
-    # @todo this only works with LeObject.get()
+    # @todo this only works with LeObject.get(), LeClass.get() and LeType.get()
     # @todo for speed get rid of all_to_dicts
+    # @todo filters: all use cases are not implemented
     def select(self, target_cls, field_list, filters, rel_filters=None):
 
         joins = []
         # it is a LeObject, query only on main table
         if target_cls.__name__ == 'LeObject':
             main_table = self.datasource_utils.objects_table_name
-        # it is a LeType, query on main and class table
-        elif (hasattr(target_cls, '_leclass')):
+            fields = [(main_table, common_fields)]
+
+        # it is a LeType or a LeClass, query on main table left join class table on lodel_id
+        elif hasattr(target_cls, '_leclass') or hasattr(target_cls, '_class_id'):
             # find main table and main table datas
             main_table = self.datasource_utils.objects_table_name
-            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
-            joins = [left_join(class_table, self.datasource_utils.field_lodel_id)]
+            main_class = target_cls._leclass if hasattr(target_cls, '_leclass') else target_cls
+            class_table = self.datasource_utils.get_table_name_from_class(main_class.__name__)
+            main_lodel_id = self.datasource_utils.column_prefix(main_table, self.datasource_utils.field_lodel_id)
+            class_lodel_id = self.datasource_utils.column_prefix(class_table, self.datasource_utils.field_lodel_id)
+            joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
+            fields = [(main_table, common_fields), (class_table, main_class.fieldlist())]
 
-        if rel_filters is not None and len(rel_filters) > 0:
-            rel_filters = self._prepare_rel_filters(rel_filters)
-            for rel_filter in rel_filters:
-                # join condition
-                relation_table_join_field = "%s.%s" % (self.datasource_utils.relations_table_name, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
-                query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils.relations_field_nature)
-                join_fields[query_table_join_field] = relation_table_join_field
-                # adding "where" filters
-                where_filters['%s.%s' % (self.datasource_utils.relations_table_name, self.datasource_utils.relations_field_nature)] = rel_filter['nature']
-                where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
+        # prefix column name in field list
+        prefixed_field_list = [self.datasource_utils.find_prefix(name, fields) for name in field_list]
 
-            # building the query
-            #query = select(query_table_name, where=where_filters, joins=join(self.datasource_utils.relations_table_name, join_fields))
-        #else:
-            #query = select(query_table_name, where=where_filters)
+        # @todo implement that
+        #if rel_filters is not None and len(rel_filters) > 0:
+            #rel_filters = self._prepare_rel_filters(rel_filters)
+            #for rel_filter in rel_filters:
+                ## join condition
+                #relation_table_join_field = "%s.%s" % (self.datasource_utils.relations_table_name, self.RELATIONS_POSITIONS_FIELDS[rel_filter['position']])
+                #query_table_join_field = "%s.%s" % (query_table_name, self.datasource_utils.relations_field_nature)
+                #join_fields[query_table_join_field] = relation_table_join_field
+                ## adding "where" filters
+                #where_filters['%s.%s' % (self.datasource_utils.relations_table_name, self.datasource_utils.relations_field_nature)] = rel_filter['nature']
+                #where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
 
-        wheres = {(name, op):value for name,op,value in filters}
-        query = select(main_table, select=field_list, where=wheres, joins=joins)
+        # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
+        wheres = {(self.datasource_utils.find_prefix(name, fields), op):value for name,op,value in filters}
+        query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins)
         #print ('SQL', query)
 
         # Executing the query
         cur = self.datasource_utils.query(self.connection, query)
         results = all_to_dicts(cur)
 
+        # instanciate each row to editorial components
         results = [target_cls.uid2leobj(datas['type_id'])(**datas) for datas in results]
         #print('results', results)
 
