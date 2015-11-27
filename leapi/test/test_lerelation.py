@@ -63,9 +63,9 @@ class LeRelationTestCase(TestCase):
             self.assertEqual(len(res), 1)
             self.assertEqual(len(rel_res), 0)
             res = res[0]
-            
+
             for i in range(3):
-               self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
+                self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
     @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.delete')
