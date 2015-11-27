@@ -66,6 +66,16 @@ class LeRelationTestCase(TestCase):
             for i in range(3):
                self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
+    @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
+    @patch('leapi.datasources.dummy.DummyDatasource.delete')
+    def test_delete(self, dsmock):
+        """ Testing LeHierarch insert method """
+        from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
+        
+        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], 'LeHierarch')
+        dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','parent')])
+        dsmock.reset_mock()
+
 
 class LeHierarch(LeRelationTestCase):
     
@@ -116,6 +126,7 @@ class LeHierarch(LeRelationTestCase):
     @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.insert')
     def test_insert(self, dsmock):
+        """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         queries = [
             {
@@ -147,6 +158,27 @@ class LeHierarch(LeRelationTestCase):
             LeRelation.insert(query, 'LeHierarch')
             dsmock.assert_called_once_with(LeHierarch, **query)
             dsmock.reset_mock()
+    
+
+    @unittest.skip("Wait for LeRelation.delete()")
+    @patch('leapi.datasources.dummy.DummyDatasource.delete')
+    def test_delete(self, dsmock):
+        """ Testing LeHierarch insert method """
+        from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
+        rel = LeHierarch(10)
+        rel.delete()
+        dsmock.assert_called_once_with(LeHierarch, [(LeHierarch.uidname(), '=', 10)], [])
+        
+    
+    @unittest.skip("Wait for LeRelation.update() to unskip")
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_update(self, dsmock):
+        """ test LeHierach update method"""
+        from dyncode import LeHierarch
+        with self.assertRaises(NotImplementedError):
+            LeHierarch.update({})
+            
+    
 
 class LeRel2TypeTestCase(LeRelationTestCase):
     pass
