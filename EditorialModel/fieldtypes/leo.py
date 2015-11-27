@@ -12,7 +12,7 @@ class EmFieldType(GenericFieldType):
     ftype = 'leobject'
 
     def __init__(self, superior=True, **kwargs):
-        super(EmFieldType, self).__init__(ftype = 'leobject', **kwargs)
+        super(EmFieldType, self).__init__(ftype = 'leobject', superior = superior, **kwargs)
 
     def _check_data_value(self, value):
         err = None
@@ -25,18 +25,17 @@ class EmFieldType(GenericFieldType):
     
     ## @brief If field value is an integer, returns a partially instanciated LeObject (only with an ID)
     def construct_data(self, lec, fname, datas):
-        import leapi.lecrud as lecrud
         if isinstance(datas[fname], int):
-            leobject = lecrud._LeCrud.name2class('LeObject')
-            return leobject.get(datas[fname])
+            leobject = lec.name2class('LeObject')
+            return leobject(datas[fname])
         else:
             return datas[fname]
     
     def check_data_consistency(self, lec, fname, datas):
         if self.superior:
-            return self.check_sup_consistency()
+            return self.check_sup_consistency(lec, fname, datas)
         else:
-            return self.check_sub_consistency()
+            return self.check_sub_consistency(lec, fname, datas)
 
     def check_sup_consistency(self, lec, fname, datas):
         pass

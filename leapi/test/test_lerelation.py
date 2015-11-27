@@ -72,6 +72,7 @@ class LeHierarch(LeRelationTestCase):
     @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.select')
     def test_get(self, dsmock):
+        """ Tests the LeHierarch.get() method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
 
         queries = [
@@ -111,7 +112,41 @@ class LeHierarch(LeRelationTestCase):
             self.assertEqual(cargs[3], rfilters_ds, "%s != %s"%(cargs, eargs))
 
             dsmock.reset_mock()
-        
+    
+    @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
+    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    def test_insert(self, dsmock):
+        from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
+        queries = [
+            {
+                'lesup': Rubrique(7),
+                'lesub': Numero(42),
+                'nature': 'parent',
+            },
+            {
+                'lesup': 7,
+                'lesub': 42,
+                'nature': 'parent',
+            },
+            {
+                'lesup': LeObject(7),
+                'lesub': LeObject(42),
+                'nature': 'parent',
+            },
+            {
+                'lesup': LeObject(7),
+                'lesub': 42,
+                'nature': 'parent',
+            }
+        ]
+        for query in queries:
+            LeHierarch.insert(query)
+            dsmock.assert_called_once_with(LeHierarch, **query)
+            dsmock.reset_mock()
+
+            LeRelation.insert(query, 'LeHierarch')
+            dsmock.assert_called_once_with(LeHierarch, **query)
+            dsmock.reset_mock()
 
 class LeRel2TypeTestCase(LeRelationTestCase):
     pass

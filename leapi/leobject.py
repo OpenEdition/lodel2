@@ -49,6 +49,15 @@ class _LeObject(_LeCrud):
         qfilter = '{uid_fname} = {uid}'.format(uid_fname = uid_fname, uid = getattr(self, uid_fname))
         return leobject.get([qfilter])[0]
     
+    ## @return True if the LeObject is partially instanciated
+    def is_partial(self):
+        return not hasattr(self, '_classtype')
+
+    ## @brief Check if a LeObject is the relation tree Root
+    # @todo implementation
+    def is_root(self):
+        return False
+
     ## @brief Dirty & quick comparison implementation
     def __cmp__(self, other):
         return 0 if self == other else 1

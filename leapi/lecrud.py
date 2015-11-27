@@ -169,7 +169,11 @@ class _LeCrud(object):
         #Checks datas
         checked_datas = dict()
         for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
-            checked_datas[name], err = cls.fieldtypes()[name].check_data_value(value)
+            ft = cls.fieldtypes()
+            ft = ft[name]
+            r = ft.check_data_value(value)
+            checked_datas[name], err = r
+            #checked_datas[name], err = cls.fieldtypes()[name].check_data_value(value)
             if err:
                 err_l.append(err)
 

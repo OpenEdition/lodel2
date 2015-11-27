@@ -31,7 +31,6 @@ class _LeRelation(lecrud._LeCrud):
         if isinstance(leo, leobject._LeObject):
             return ('lesub', '=', leo)
 
-
     @classmethod
     def fieldtypes(cls):
         rel_ft = dict()
@@ -44,8 +43,6 @@ class _LeRelation(lecrud._LeCrud):
     @classmethod
     def _prepare_relational_fields(cls, field):
         return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject"%(field,cls.__name__))
-
-
             
 
 ## @brief Abstract class to handle hierarchy relations
