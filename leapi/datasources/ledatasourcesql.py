@@ -139,29 +139,34 @@ class LeDataSourceSQL(DummyDatasource):
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
     # @return the number of updated components
+    # @todo implement other filters than lodel_id
     def update(self, target_cls, filters, rel_filters, **datas):
-        query_table_name = self.datasource_utils.get_table_name_from_class(target_cls.__name__)
-        prep_filters = self._prepare_filters(filters, query_table_name)
-        set_data = datas
-        if rel_filters is not None:
-            prep_rel_filters = self._prepare_rel_filters(rel_filters)
-            for prep_rel_filter in prep_rel_filters:
-                query += "%s INNER JOIN  %s ON (%s.%s = %s.%s)" % (
-                    self.datasource_utils.relations_table_name,
-                    query_table_name,
-                    self.datasource_utils.relations_table_name,
-                    prep_rel_filter['position'],
-                    query_table_name,
-                    self.datasource_utils.field_lodel_id
-                )
+        print(target_cls, filters, rel_filters, datas)
+        # it is a LeType
+        if not target_cls.is_letype():
+            raise AttributeError("'%s' is not a LeType, it is not possible to update it" % target_cls)
 
-                if prep_rel_filter['condition_key'][0] is not None:
-                    prep_filters[("%s.%s" % (self.datasource_utils.relations_table_name, prep_rel_filter['condition_key'][0]), prep_rel_filter['condition_key'][1])] = prep_rel_filter['condition_value']
+        # find main table and main table datas
+        main_table = self.datasource_utils.objects_table_name
+        main_datas = {self.datasource_utils.field_lodel_id: raw(self.datasource_utils.field_lodel_id)} #  be sure to have one SET clause
+        for main_column_name in common_fields:
+            if main_column_name in datas:
+                main_datas[main_column_name] = datas[main_column_name]
+                del(datas[main_column_name])
 
-        query = update(table=query_table_name, where=prep_filters, set=set_data)
-        with self.connection as cur:
-            result = cur.execute(query)
-        return result
+        wheres = {(name, op):value for name,op,value in filters}
+        query = update(main_table, wheres, main_datas)
+        #print(query)
+        self.datasource_utils.query(self.connection, query)
+
+        # update on class table
+        if datas:
+            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
+            query = update(class_table, wheres, datas)
+            #print(query)
+            self.datasource_utils.query(self.connection, query)
+
+        return True
 
     ## @brief inserts a new lodel editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )

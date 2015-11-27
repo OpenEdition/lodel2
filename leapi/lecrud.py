@@ -166,7 +166,7 @@ class _LeCrud(object):
         upd_datas = self.prepare_datas(datas, complete = False, allow_internal = False)
         filters = [self._id_filter()]
         rel_filters = []
-        ret = self._datasource.update(self.__class__, filters, rel_filters, upd_datas)
+        ret = self._datasource.update(self.__class__, filters, rel_filters, **upd_datas)
         if ret == 1:
             return True
         else:
