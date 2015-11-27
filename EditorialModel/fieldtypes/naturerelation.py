@@ -14,7 +14,7 @@ class EmFieldType(EmFieldType):
         super(EmFieldType, self).__init__(**kwargs)
 
     def check_data_value(self, value):
-        return value is None or ( value in classtypes.getall())
+        return value is None or ( value in classtypes.EmNature.getall())
 
     def check_data_consistency(self, lec, fname, datas):
         #Checking given component

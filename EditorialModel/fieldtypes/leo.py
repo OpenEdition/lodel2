@@ -1,5 +1,8 @@
 #-*- coding: utf-8 -*-
 
+import leapi.letype as letype
+import leapi.leclass as leclass
+
 from .generic import GenericFieldType
 
 class EmFieldType(GenericFieldType):
@@ -12,10 +15,9 @@ class EmFieldType(GenericFieldType):
         super(EmFieldType, self).__init__(ftype = 'leobject', **kwargs)
 
     def _check_data_value(self, value):
-        import leapi.lecrud as lecrud
         err = None
         if not isinstance(value, int):
-            if not isinstance(value, lecrud._LeCrud.name2class('LeType')):
+            if not isinstance(value, letype._LeType):
                 return (None, ValueError("An instance of a child class of LeType was expected"))
             if not hasattr(value, 'lodel_id'):
                 return (None, ValueError("The LeType instance given has no lodel_id !"))
