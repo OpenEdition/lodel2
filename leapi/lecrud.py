@@ -87,18 +87,66 @@ class _LeCrud(object):
         if len(cls._uid_fieldtype) == 0:
             raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
         return list(cls._uid_fieldtype.keys())[0]
+    
+    ## @return maybe Bool: True if cls implements LeType
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def implements_letype(cls):
+        return hasattr(cls, '_leclass')
+
+    ## @return maybe Bool: True if cls implements LeClass
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def implements_leclass(cls):
+        return hasattr(cls, '_class_id')
+
+    ## @return maybe Bool: True if cls implements LeObject
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def implements_leobject(cls):
+        return hasattr(cls, '_me_uid')
 
     ## @return maybe Bool: True if cls is a LeType or an instance of LeType
     # @param cls Class: a Class or instanciated object
     @classmethod
     def is_letype(cls):
-        return hasattr(cls, '_leclass')
+        return cls.implements_letype()
 
     ## @return maybe Bool: True if cls is a LeClass or an instance of LeClass
     # @param cls Class: a Class or instanciated object
     @classmethod
     def is_leclass(cls):
-        return hasattr(cls, '_class_id') and not cls.is_letype()
+        return cls.implements_leclass() and not cls.implements_letype()
+
+    ## @return maybe Bool: True if cls is a LeClass or an instance of LeClass
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def is_leobject(cls):
+        return cls.implements_leobject() and not cls.implements_leclass()
+
+    ## @return maybe Bool: True if cls implements LeRelation
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def implements_lerelation(cls):
+        return hasattr(cls, '_lesup_fieldtype')
+    
+    ## @return maybe Bool: True if cls implements LeRel2Type
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def implements_lerel2type(cls):
+        return hasattr(cls, '_rel_attr_fieldtypes')
+    
+    ## @return maybe Bool: True if cls is a LeHierarch or an instance of LeHierarch
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def is_lehierarch(cls):
+        return cls.implements_lerelation() and not cls.implements_lerel2type()
+
+    ## @return maybe Bool: True if cls is a LeRel2Type or an instance of LeRel2Type
+    # @param cls Class: a Class or instanciated object
+    @classmethod
+    def is_lerel2type(cls):
+        return cls.implements_lerel2type()
 
     ## @brief Returns object datas
     # @param
@@ -217,6 +265,8 @@ class _LeCrud(object):
     @classmethod
     def insert(cls, datas = datas, classname = None):
         callcls = cls if classname is None else cls.name2class(classname)
+        if not callcls.is_letype() and not callcls.implements_lerelation():
+            raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
         insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
         return callcls._datasource.insert(callcls, **insert_datas)
     

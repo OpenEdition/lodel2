@@ -15,8 +15,6 @@ class _LeRelation(lecrud._LeCrud):
     _lesub_fieldtype = {'lesub': ft_leo.EmFieldType(False) }
     ## @brief Stores the list of fieldtypes that are common to all relations
     _rel_fieldtypes = dict()
-    ## @brief Stores the list of fieldtypes handling relations attributes
-    _rel_attr_fieldtypes = dict()
 
     def __init__(self, rel_id, **kwargs):
        pass 
@@ -37,7 +35,8 @@ class _LeRelation(lecrud._LeCrud):
         rel_ft.update(cls._lesup_fieldtype)
         rel_ft.update(cls._lesub_fieldtype)
         rel_ft.update(cls._rel_fieldtypes)
-        rel_ft.update(cls._rel_attr_fieldtypes)
+        if cls.implements_lerel2type():
+            rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
 
     @classmethod
@@ -52,5 +51,7 @@ class _LeHierarch(_LeRelation):
 
 ## @brief Abstract class to handle rel2type relations
 class _LeRel2Type(_LeRelation):
+    ## @brief Stores the list of fieldtypes handling relations attributes
+    _rel_attr_fieldtypes = dict()
     pass
     
