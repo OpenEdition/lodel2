@@ -32,3 +32,15 @@ class EmFieldType(GenericFieldType):
             return leobject.get([qfilter])
         else:
             return datas[fname]
+    
+    def check_data_consistency(self, lec, fname, datas):
+        if self.superior:
+            return self.check_sup_consistency()
+        else:
+            return self.check_sub_consistency()
+
+    def check_sup_consistency(self, lec, fname, datas):
+        pass
+
+    def check_sub_consistency(self, lec, fname, datas):
+        pass
