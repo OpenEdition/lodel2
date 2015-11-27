@@ -31,7 +31,7 @@ class _LeRelation(lecrud._LeCrud):
 
     @classmethod
     def _prepare_relational_fields(cls, field):
-        return LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject"%(field,cls.__name__))
+        return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject"%(field,cls.__name__))
 
             
 
