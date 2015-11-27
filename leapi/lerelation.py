@@ -9,9 +9,9 @@ from . import lecrud
 class _LeRelation(lecrud._LeCrud):
     
     ## @brief Handles the superior
-    _lesup_fieldtype = ft_leo.EmFieldType(True)
+    _lesup_fieldtype = {'lesup': ft_leo.EmFieldType(True)}
     ## @brief Handles the subordinate
-    _lesub_fieldtype = ft_leo.EmFieldType(False)
+    _lesub_fieldtype = {'lesub': ft_leo.EmFieldType(False) }
     ## @brief Stores the list of fieldtypes that are common to all relations
     _rel_fieldtypes = dict()
     ## @brief Stores the list of fieldtypes handling relations attributes

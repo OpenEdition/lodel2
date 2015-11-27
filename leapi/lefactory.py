@@ -75,6 +75,31 @@ class LeFactory(object):
                 res_ft_l.append( '%s: %s'%(repr(fname), constructor) )
         return (res_uid_ft, res_ft_l)
 
+    ## @brief Given a Model generate concrete instances of LeRel2Type classes to represent relations
+    # @param model : the EditorialModel
+    # @return python code
+    def emrel2type_pycode(self, model):
+        res_code = ""
+        for field in [ f for f in model.components('EmField') if f.fieldtype == 'rel2type']:
+            related = model.component(field.rel_to_type_id)
+            src = field.em_class
+            cls_name = "Rel_%s2%s"%(src.name, related.name)
+
+            attr_l = dict()
+            for attr in [ f for f in model.components('EmField') if f.rel_field_id == field.uid]:
+                attr_l[attr.name] = LeFactory.fieldtype_construct_from_field(attr)
+
+            rel_code = """
+class {classname}(LeRel2Type):
+    _rel_attr_fieldtypes = {attr_dict}
+
+""".format(
+    classname = cls_name,
+    attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}"
+)
+            res_code += rel_code
+        return res_code
+
     ## @brief Given a Model and an EmClass instances generate python code for corresponding LeClass
     # @param model Model : A Model instance
     # @param emclass EmClass : An EmClass instance from model
@@ -82,13 +107,11 @@ class LeFactory(object):
     def emclass_pycode(self, model, emclass):
 
         cls_fields = dict()
-        cls_linked_types = dict() #keys are LeType classnames and values are tuples (attr_fieldname, attr_fieldtype)
+        cls_linked_types = list() #Stores authorized LeObject for rel2type
         #Populating linked_type attr
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
-            cls_linked_types[LeFactory.name2classname(model.component(fti.rel_to_type_id).name)] = [
-                (f.name, LeFactory.fieldtype_construct_from_field(f)) for f in model.components('EmField') if f.rel_field_id == rfield.uid 
-            ]
+            cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
             self.needed_fieldtypes |= set([field.fieldtype])
@@ -104,15 +127,7 @@ class LeFactory(object):
             name = LeFactory.name2classname(emclass.name),
             ftypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
 
-            ltypes = '{'+ (','.join(
-                [
-                    '\n    {ltname}: {ltattr_list}'.format(
-                        ltname = lt,
-                        ltattr_list = '['+(', '.join([
-                            '(%s, %s)'%(repr(ltname), ltftype) for ltname, ltftype in ltattr
-                        ]))+']'
-                    ) for lt, ltattr in cls_linked_types.items()
-                ]))+'}',
+            ltypes = "[" + (','.join(cls_linked_types))+"]",
             classtype = repr(emclass.classtype)
         )
 
@@ -289,11 +304,15 @@ class {name}(LeType, {leclass}):
                 uid=emtype.uid
             )
 
+        #Generating concret class of LeRel2Type
+        result += self.emrel2type_pycode(model)
+
         #Set attributes of created LeClass and LeType child classes
         for emclass in emclass_l:
             result += self.emclass_pycode(model, emclass)
         for emtype in emtype_l:
             result += self.emtype_pycode(model, emtype)
+
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
         me_uid = {comp.uid: LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l}

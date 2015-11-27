@@ -10,8 +10,8 @@ class _LeClass(_LeObject):
 
     ## @brief Stores fieldtypes by field name
     _fieldtypes = dict()
-    ## @brief Stores relation with some LeType using rel2type fields. Key = rel2type fieldname value = LeType class
-    _linked_types = dict()
+    ## @brief Stores authorized link2type
+    _linked_types = list()
     ## @brief Stores fieldgroups and the fields they contains
     _fieldgroups = dict()
     ## @brief Stores the EM uid
