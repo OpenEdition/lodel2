@@ -179,7 +179,7 @@ class LeDataSourceSQL(DummyDatasource):
         for main_column_name in common_fields:
             if main_column_name in datas:
                 main_datas[main_column_name] = datas[main_column_name]
-                unset(datas[main_column_name])
+                del(datas[main_column_name])
 
         cur = self.datasource_utils.query(self.connection, insert(main_table, main_datas))
         lodel_id = cur.lastrowid
