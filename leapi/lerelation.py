@@ -4,6 +4,7 @@ import copy
 
 import EditorialModel.fieldtypes.leo as ft_leo
 from . import lecrud
+from . import leobject
 
 ## @brief Main class for relations
 class _LeRelation(lecrud._LeCrud):
@@ -22,12 +23,12 @@ class _LeRelation(lecrud._LeCrud):
  
     @classmethod
     def sup_filter(self, leo):
-        if isinstance(leo, _LeObject):
+        if isinstance(leo, leobject._LeObject):
             return ('lesup', '=', leo)
 
     @classmethod
     def sub_filter(self, leo):
-        if isinstance(leo, _LeObject):
+        if isinstance(leo, leobject._LeObject):
             return ('lesub', '=', leo)
 
 

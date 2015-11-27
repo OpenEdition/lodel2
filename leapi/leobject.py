@@ -51,10 +51,15 @@ class _LeObject(_LeCrud):
     
     ## @brief Dirty & quick comparison implementation
     def __cmp__(self, other):
+        return 0 if self == other else 1
+    ## @brief Dirty & quick equality implementation
+    # @todo check class
+    def __eq__(self, other):
         uid_fname = self.uidname()
         if not hasattr(other, uid_fname):
             return False
         return getattr(self, uid_fname) == getattr(other, uid_fname)
+        
         
     ## @brief Quick str cast method implementation
     def __str__(self):
