@@ -22,7 +22,7 @@ class LeRelationTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
     
-    @unittest.skip("Wating LeRelation._prepare_filters() to unskip")
+    # @unittest.skip("Wating LeRelation._prepare_filters() to unskip")
     def test_prepare_filters(self):
         """ Testing the _prepare_filters() method """
         from dyncode import Numero, LeObject, LeRelation
