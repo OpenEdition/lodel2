@@ -80,7 +80,7 @@ class LeRelationTestCase(TestCase):
 
 class LeHierarch(LeRelationTestCase):
     
-    @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
+    # @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.select')
     def test_get(self, dsmock):
         """ Tests the LeHierarch.get() method """
