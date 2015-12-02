@@ -10,15 +10,19 @@ import re
 
 class LeApiErrors(Exception):
     ## @brief Instanciate a new exceptions handling multiple exceptions
-    # @param expt_l list : A list of data check Exception
+    # @param exptexptions dict : A list of data check Exception with concerned field (or stuff) as key
     def __init__(self, msg = "Unknow error", exceptions = None):
         self._msg = msg
         self._exceptions = list() if exceptions is None else exceptions
 
     def __str__(self):
         msg = self._msg
-        for expt in self._exceptions:
-            msg += " {expt_name}:{expt_msg}; ".format(expt_name=expt.__class__.__name__, expt_msg=str(expt))
+        for obj, expt in self._exceptions.items():
+            msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
+                    expt_obj = obj,
+                    expt_name=expt.__class__.__name__,
+                    expt_msg=str(expt)
+            )
         return msg
 
 
@@ -193,7 +197,7 @@ class _LeCrud(object):
     # @throw LeApiDataCheckError if errors reported during check
     @classmethod
     def check_datas_value(cls, datas, complete = False, allow_internal = True):
-        err_l = [] #Stores errors
+        err_l = dict() #Stores errors
         correct = [] #Valid fields name
         mandatory = [] #mandatory fields name
         for fname, ftt in cls.fieldtypes().items():
@@ -209,11 +213,11 @@ class _LeCrud(object):
         unknown = provided - correct
         for u_f in unknown:
             #here we can check if the field is unknown or rejected because it is internal
-            err_l.append(AttributeError("Unknown or unauthorized field '%s'"%u_f))
+            err_l[u_f] = AttributeError("Unknown or unauthorized field '%s'"%u_f)
         #searching missings fields
         missings = mandatory - provided
         for miss_field in missings:
-            err_l.append(AttributeError("The data for field '%s' is missing"%miss_field))
+            err_l[miss_field] = AttributeError("The data for field '%s' is missing"%miss_field)
         #Checks datas
         checked_datas = dict()
         for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
@@ -223,7 +227,7 @@ class _LeCrud(object):
             checked_datas[name], err = r
             #checked_datas[name], err = cls.fieldtypes()[name].check_data_value(value)
             if err:
-                err_l.append(err)
+                err_l[name] = err
 
         if len(err_l) > 0:
             raise LeApiDataCheckError("Error while checking datas", err_l)
@@ -323,10 +327,11 @@ class _LeCrud(object):
     @classmethod
     def _check_datas_consistency(cls, datas):
         err_l = []
+        err_l = dict()
         for fname, ftype in cls.fieldtypes().items():
             ret = ftype.check_data_consistency(cls, fname, datas)
             if isinstance(ret, Exception):
-                err_l.append(ret)
+                err_l[fname] = ret
 
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
@@ -338,7 +343,7 @@ class _LeCrud(object):
     # @throw LeApiDataCheckError if invalid field given
     @classmethod
     def _prepare_field_list(cls, field_list):
-        err_l = list()
+        err_l = dict()
         ret_field_list = list()
         for field in field_list:
             if cls._field_is_relational(field):
@@ -347,7 +352,7 @@ class _LeCrud(object):
                 ret = cls._check_field(field)
 
             if isinstance(ret, Exception):
-                err_l.append(ret)
+                err_l[field] = ret
             else:
                 ret_field_list.append(ret)
 
@@ -366,7 +371,6 @@ class _LeCrud(object):
     # @return None if no problem, else returns a list of exceptions that occurs during the check
     @classmethod
     def _check_field(cls, field):
-        err_l = list()
         if field not in cls.fieldlist():
             return ValueError("No such field '%s' in %s"%(field, cls.__name__))
         return field
@@ -388,7 +392,7 @@ class _LeCrud(object):
         filters = list()
         res_filters = list()
         rel_filters = list()
-        err_l = list()
+        err_l = dict()
         #Splitting in tuple if necessary
         for fil in filters_l:
             if len(fil) == 3 and not isinstance(fil, str):
@@ -401,14 +405,14 @@ class _LeCrud(object):
                 #Checks relational fields
                 ret = cls._prepare_relational_field(field)
                 if isinstance(ret, Exception):
-                    err_l.append(ret)
+                    err_l[field] = ret
                 else:
                     rel_filters.append((ret, operator, value))
             else:
                 #Checks other fields
                 ret = cls._check_field(field)
                 if isinstance(ret, Exception):
-                    err_l.append(ret)
+                    err_l[field] = ret
                 else:
                     res_filters.append((field,operator, value))
 

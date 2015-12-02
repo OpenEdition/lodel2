@@ -47,16 +47,16 @@ class _LeType(_LeClass):
                 raise RuntimeError("Trying to instanciate a %s with a clas_id that is not correct"%self.__class__.__name__)
 
         ## Populate the object from the datas received in kwargs
-        err_l = list()
+        err_l = dict()
         for name, value in kwargs.items():
             if name not in self._fields:
-                raise AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
-
-            cvalue, err =  self.fieldtypes()[name].check_data_value(value)
-            if isinstance(err, Exception):
-                err_l.append(err)
+                err_l[name] = AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
             else:
-                setattr(self, name, value)
+                cvalue, err =  self.fieldtypes()[name].check_data_value(value)
+                if isinstance(err, Exception):
+                    err_l[name] = err
+                else:
+                    setattr(self, name, value)
         if len(err_l) > 0:
             raise LeApiDataCheckError("Invalid arguments given to constructor", err_l)
 

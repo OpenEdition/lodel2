@@ -38,7 +38,7 @@ class LeTypeTestCase(TestCase):
 
         badargs = [
             ({'lodel_id':'foobar'}, TypeError),
-            ({'lodel_id': 42, 'titre_mais_qui_existe_pas':'hello'}, AttributeError),
+            ({'lodel_id': 42, 'titre_mais_qui_existe_pas':'hello'}, leapi.lecrud.LeApiDataCheckError),
         ]
         for badarg, expect_e in badargs:
             with self.assertRaises(expect_e, msg="Invalid argument given %s"%badarg):
