@@ -1,3 +1,13 @@
+Creating a Lodel "instance":
+
+use the lodel_init.sh script :
+	lodel_init.sh INSTANCE_NAME INSTANCE_WANTED_PATH [LODEL2_LIB_PATH]
+
+Once the instance is created you can run an interactive python interpreter using :
+	cd INSTANCE_PATH; python loader.py
+
+If you want to write a script that run is the instance env you have to from loader import *
+
 First test installation :
 
 - use python 3.4
