@@ -4,7 +4,6 @@ import pymysql
 import copy
 
 import leapi
-from leapi.datasources.dummy import DummyDatasource
 from leapi.leobject import REL_SUB, REL_SUP
 
 from leapi.lecrud import _LeCrud
@@ -14,7 +13,8 @@ from mosql.query import select, insert, update, delete, join, left_join
 from mosql.util import raw, or_
 import mosql.mysql
 
-from DataSource.MySQL.MySQL import MySQL
+from DataSource.dummy.leapidatasource import DummyDatasource
+from DataSource.MySQL.common_utils import MySQL
 from EditorialModel.classtypes import EmNature, common_fields
 
 

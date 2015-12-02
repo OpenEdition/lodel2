@@ -5,7 +5,7 @@ import sys
 from EditorialModel.model import Model
 import leapi
 from EditorialModel.backend.json_backend import EmBackendJson
-from leapi.datasources.dummy import DummyDatasource
+from DataSource.MySQL.leapidatasource import DummyDatasource
 from leapi.lefactory import LeFactory
 
 

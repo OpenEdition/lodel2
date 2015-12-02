@@ -15,7 +15,7 @@ from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')

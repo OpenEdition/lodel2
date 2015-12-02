@@ -7,6 +7,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import EditorialModel
+import DataSource.dummy
 import leapi
 import leapi.test.utils
 from leapi.lecrud import _LeCrud
@@ -147,7 +148,7 @@ class LeCrudTestCase(TestCase):
     #   Tests mocking the datasource
     # 
 
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Personne, Article
         ndatas = [
@@ -166,7 +167,7 @@ class LeCrudTestCase(TestCase):
             dsmock.reset_mock()
     
     ## @todo try failing on inserting from LeClass child or LeObject
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert_fails(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Personne, Article
         ndatas = [
@@ -182,7 +183,7 @@ class LeCrudTestCase(TestCase):
                 assert not dsmock.called
         pass
     
-    @patch('leapi.datasources.dummy.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -203,7 +204,7 @@ class LeCrudTestCase(TestCase):
             dsmock.assert_called_once_with(ccls, efilters, erelfilters, **qdatas)
     
     ## @todo test invalid get
-    @patch('leapi.datasources.dummy.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
     def test_get(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Textes
         

@@ -9,7 +9,7 @@ from EditorialModel.fields import EmField
 from Lodel.utils.mlstring import MlString
 
 from EditorialModel.backend.json_backend import EmBackendJson
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
 
 class TestEmComponent(unittest.TestCase):

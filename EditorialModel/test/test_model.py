@@ -11,7 +11,7 @@ from Lodel.utils.mlstring import MlString
 
 from EditorialModel.backend.json_backend import EmBackendJson
 from EditorialModel.backend.dummy_backend import EmBackendDummy
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
 
 class TestModel(unittest.TestCase):

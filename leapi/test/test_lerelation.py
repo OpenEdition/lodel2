@@ -7,6 +7,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import EditorialModel
+import DataSource.dummy
 import leapi
 import leapi.test.utils
 import leapi.lecrud as lecrud
@@ -67,7 +68,7 @@ class LeRelationTestCase(TestCase):
                 self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
     @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
-    @patch('leapi.datasources.dummy.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -79,7 +80,7 @@ class LeRelationTestCase(TestCase):
 
 class LeHierarch(LeRelationTestCase):
     
-    @patch('leapi.datasources.dummy.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
     def test_get(self, dsmock):
         """ Tests the LeHierarch.get() method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -122,7 +123,7 @@ class LeHierarch(LeRelationTestCase):
 
             dsmock.reset_mock()
     
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -187,7 +188,7 @@ class LeHierarch(LeRelationTestCase):
     
 
     @unittest.skip("Wait for LeRelation.delete()")
-    @patch('leapi.datasources.dummy.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -197,7 +198,7 @@ class LeHierarch(LeRelationTestCase):
         
     
     @unittest.skip("Wait for LeRelation.update() to unskip")
-    @patch('leapi.datasources.dummy.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeHierarch
@@ -209,7 +210,7 @@ class LeHierarch(LeRelationTestCase):
 class LeRel2TypeTestCase(LeRelationTestCase):
     
     @unittest.skip("Wait implementation to unskip")
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne
@@ -261,7 +262,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
             dsmock.reset_mock()
 
     @unittest.skip("Wait implementation to unskip")
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert_fails(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne

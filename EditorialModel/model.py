@@ -4,10 +4,9 @@
 # Contains the class managing and editorial model
 
 import EditorialModel
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import DummyMigrationHandler
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.classes import EmClass
-#from EditorialModel.fieldgroups import EmFieldGroup
 from EditorialModel.fields import EmField
 from EditorialModel.types import EmType
 from EditorialModel.exceptions import EmComponentCheckError, EmComponentNotExistError, MigrationHandlerChangeError

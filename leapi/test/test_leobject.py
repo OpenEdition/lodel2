@@ -7,6 +7,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import EditorialModel
+import DataSource.dummy
 import leapi
 import leapi.test.utils
 from leapi.leobject import _LeObject
@@ -104,7 +105,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
     
-    @patch('leapi.datasources.dummy.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         ndatas = [
@@ -122,7 +123,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.reset_mock()
 
     @unittest.skip("Wait FieldTypes modification (cf. #90) and classmethod capabilities for update")
-    @patch('leapi.datasources.dummy.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
@@ -148,7 +149,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
             dsmock.reset_mock()
     
-    @patch('leapi.datasources.dummy.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject, LeType
 

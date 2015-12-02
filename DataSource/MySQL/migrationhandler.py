@@ -7,7 +7,7 @@
 #
 
 import EditorialModel
-from EditorialModel.migrationhandler.dummy import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import DummyMigrationHandler
 from EditorialModel.fieldtypes.generic import GenericFieldType
 from EditorialModel.model import Model
 from mosql.db import Database
