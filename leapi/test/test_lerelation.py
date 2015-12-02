@@ -67,14 +67,14 @@ class LeRelationTestCase(TestCase):
             for i in range(3):
                 self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
-    @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
+    # @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         
-        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], 'LeHierarch')
-        dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','parent')])
+        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], LeHierarch)
+        dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','"parent"')])
         dsmock.reset_mock()
 
 

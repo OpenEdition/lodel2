@@ -79,6 +79,15 @@ class _LeRelation(lecrud._LeCrud):
 
         return (res, rel)
 
+    @classmethod
+    ## @brief deletes a relation between two objects
+    # @param filters_list list
+    # @param target_class str
+    def delete(cls, filters_list, target_class):
+        filters, rel_filters = cls._prepare_filters(filters_list)
+        ret = cls._datasource.delete(target_class, filters)
+        return True if ret == 1 else False
+
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
     def __init__(self, rel_id):
