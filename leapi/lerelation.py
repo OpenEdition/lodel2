@@ -111,5 +111,3 @@ class _LeRel2Type(_LeRelation):
         subname = lesubclass.__name__
 
         return "Rel_%s2%s" % (supname, subname)
-    pass
-    
