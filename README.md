@@ -19,6 +19,8 @@ Copy settings.py.example to settings.py, change the conf to your local settings
 
 ** Generate the code for LeObject API
 
+use refreshdyn.py or :
+
 ```python
 # -*- coding: utf-8 -*-
 
@@ -38,3 +40,12 @@ print(pycode)
 with open(OUTPUT, 'w+') as fp:
     fp.write(pycode)
 ```
+
+** Tools
+
+  A Makefile is written with common operations :
+  - make clean : cleans doc and python pycache (and .pyc files)
+  - make pip : upgrade python libs according to requirements.txt
+  - make doc : generate the doxygen documentation
+  - make check : run the unit tests
+  - make : run check doc and pip
