@@ -22,7 +22,6 @@ class LeRelationTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
     
-    # @unittest.skip("Wating LeRelation._prepare_filters() to unskip")
     def test_prepare_filters(self):
         """ Testing the _prepare_filters() method """
         from dyncode import Numero, LeObject, LeRelation
@@ -80,7 +79,6 @@ class LeRelationTestCase(TestCase):
 
 class LeHierarch(LeRelationTestCase):
     
-    # @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.select')
     def test_get(self, dsmock):
         """ Tests the LeHierarch.get() method """
@@ -124,40 +122,67 @@ class LeHierarch(LeRelationTestCase):
 
             dsmock.reset_mock()
     
-    @unittest.skip("Wait for  LeRelation._prepare_filters() to unskip")
     @patch('leapi.datasources.dummy.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         queries = [
-            {
-                'lesup': Rubrique(7),
-                'lesub': Numero(42),
-                'nature': 'parent',
-            },
-            {
-                'lesup': 7,
-                'lesub': 42,
-                'nature': 'parent',
-            },
-            {
-                'lesup': LeObject(7),
-                'lesub': LeObject(42),
-                'nature': 'parent',
-            },
-            {
-                'lesup': LeObject(7),
-                'lesub': 42,
-                'nature': 'parent',
-            }
+            (
+                {
+                    'lesup': Rubrique(7),
+                    'lesub': Numero(42),
+                    'nature': 'parent',
+                },
+                {
+                    'lesup': Rubrique(7),
+                    'lesub': Numero(42),
+                    'nature': 'parent',
+                }
+            ),
+            (
+                {
+                    'lesup': 7,
+                    'lesub': 42,
+                    'nature': 'parent',
+                },
+                {
+                    'lesup': LeObject(7),
+                    'lesub': LeObject(42),
+                    'nature': 'parent',
+                }
+            ),
+            (
+                {
+                    'lesup': LeObject(7),
+                    'lesub': LeObject(42),
+                    'nature': 'parent',
+                },
+                {
+                    'lesup': LeObject(7),
+                    'lesub': LeObject(42),
+                    'nature': 'parent',
+                }
+            ),
+            (
+                {
+                    'lesup': LeObject(7),
+                    'lesub': 42,
+                    'nature': 'parent',
+                },
+                {
+                    'lesup': LeObject(7),
+                    'lesub': LeObject(42),
+                    'nature': 'parent',
+                }
+            )
         ]
-        for query in queries:
+        for query, equery in queries:
             LeHierarch.insert(query)
-            dsmock.assert_called_once_with(LeHierarch, **query)
+            dsmock.assert_called_once_with(LeHierarch, **equery)
             dsmock.reset_mock()
 
             LeRelation.insert(query, 'LeHierarch')
-            dsmock.assert_called_once_with(LeHierarch, **query)
+            dsmock.assert_called_once_with(LeHierarch, **equery)
             dsmock.reset_mock()
     
 
@@ -223,6 +248,9 @@ class LeRel2TypeTestCase(LeRelationTestCase):
 
             eres = {'nature': None}
             eres.uopdate(query)
+            for fname in ('lesup', 'lesub'):
+                if isinstance(eres[fname], int):
+                    eres[fname] = LeObject(eres[fname])
 
             dsmock.assert_called_once_with(Rel_textes2personne, **eres)
             dsmock.reset_mock()

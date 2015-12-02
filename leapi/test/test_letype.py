@@ -21,7 +21,6 @@ class LeTypeTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
 
-    @unittest.skip("Waiting for EmFieldType full implementation")
     def test_init(self):
         """ testing the constructor """
         from dyncode import Publication, Numero, LeObject, LeType

@@ -17,7 +17,7 @@ class EmFieldType(GenericFieldType):
     def _check_data_value(self, value):
         err = None
         if not isinstance(value, int):
-            if not isinstance(value, letype._LeType):
+            if not letype._LeType.implements_leobject():
                 return (None, ValueError("An instance of a child class of LeType was expected"))
             if not hasattr(value, 'lodel_id'):
                 return (None, ValueError("The LeType instance given has no lodel_id !"))
