@@ -83,7 +83,7 @@ class LeFactory(object):
         for field in [ f for f in model.components('EmField') if f.fieldtype == 'rel2type']:
             related = model.component(field.rel_to_type_id)
             src = field.em_class
-            cls_name = "Rel_%s2%s"%(src.name, related.name)
+            cls_name = "Rel_%s2%s"%(self.name2classname(src.name), self.name2classname(related.name))
 
             attr_l = dict()
             for attr in [ f for f in model.components('EmField') if f.rel_field_id == field.uid]:

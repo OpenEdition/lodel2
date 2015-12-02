@@ -100,5 +100,16 @@ class _LeHierarch(_LeRelation):
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes
     _rel_attr_fieldtypes = dict()
+    
+    ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
+    # @param lesupclass LeClass : LeClass child class (can be a LeType or a LeClass child)
+    # @param lesubclass LeType : A LeType child class
+    # @return a name as string
+    @staticmethod
+    def relname(lesupclass, lesubclass):
+        supname = lesupclass._leclass.__name__ if lesupclass.implements_letype() else lesupclass.__name__
+        subname = lesubclass.__name__
+
+        return "Rel_%s2%s" % (supname, subname)
     pass
     

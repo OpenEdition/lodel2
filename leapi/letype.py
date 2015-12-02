@@ -95,6 +95,40 @@ class _LeType(_LeClass):
     ## @brief Delete current instance from DB
     def delete(self):
         _LeCrud._delete(self)
+    
+    ## @brief Add a superior
+    # @param lesup LeObject : LeObject child class instance
+    # @param nature str : Relation nature
+    # @param del_if_exists bool : If true delete the superior if any before setting the new one
+    # @return relation id if successfully created else returns false
+    def add_superior(self, lesup, nature, del_if_exists = False):
+        lehierarch = self.name2class('LeHierarch')
+        if del_if_exists:
+            prev_sup = lehierarch.get(
+                [('lesub', '=', self), ('nature', '=', nature)],
+                [ lehierarch.uidname() ]
+            )
+            if len(prev_sup) > 0:
+                for todel_sup in prev_sup: #This loop shoud be useless...but we never know
+                    todel_sup.delete()
+
+        return lehierarch.insert(lesup = lesup, lesub = self, nature = nature)
+    
+    ## @brief Link the LeObject with another one (rel2type relations)
+    #
+    # @note This methods asser that self is the superior and leo_tolink the subordinate
+    #
+    # @param leo_tolink LeObject : LeObject child instance to link with
+    # @param **datas : Relation attributes (if any)
+    # @return a relation id if success
+    def link_with(self, leo_tolink, **datas):
+        # Fetch rel2type leapi class
+        r2t = self.name2class('LeRel2Type')
+        r2tcls = self.name2class(r2t.relname(self, leo_tolink))
+        if not r2tcls:
+            raise ValueError("No rel2type possible between a '%s' as superior and a '%s' as subordinate" % (self._leclass.__name__, leo_tolink.__class__.__name__))
+        return r2tcls.insert(lesup = self, lesub = leo_tolink, **datas)
+        
 
     ## @brief Get the linked objects lodel_id
     # @param letype LeType : Filter the result with LeType child class (not instance) 

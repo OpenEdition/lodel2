@@ -4,7 +4,7 @@ import sys
 from EditorialModel.model import Model
 from leapi.lefactory import LeFactory
 from EditorialModel.backend.json_backend import EmBackendJson
-from leapi.datasources.ledatasourcesql import LeDataSourceSQL
+from DataSource.MySQL.leapidatasource import LeDataSourceSQL
 
 OUTPUT = 'leapi/dyn.py' if len(sys.argv) == 1 else sys.argv[1]
 EMJSON = 'EditorialModel/test/me.json' if len(sys.argv) < 3 else sys.argv[2]
