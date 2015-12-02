@@ -84,7 +84,7 @@ class LeTypeMockDsTestCase(TestCase):
         #Testing as instance method
         num = Numero(lodel_id = 1)
         num.update(datas)
-        dsmock.assert_called_once_with(Numero, [('lodel_id','=',1)], [], datas)
+        dsmock.assert_called_once_with(Numero, [('lodel_id','=',1)], [], **datas)
     
     @patch('leapi.datasources.dummy.DummyDatasource.delete')
     def test_delete(self, dsmock):

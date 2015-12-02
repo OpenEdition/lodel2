@@ -200,7 +200,7 @@ class LeCrudTestCase(TestCase):
         for ccls, initarg, qdatas, efilters, erelfilters in args_l:
             obji = ccls(**initarg)
             obji.update(qdatas)
-            dsmock.assert_called_once_with(ccls, efilters, erelfilters, qdatas)
+            dsmock.assert_called_once_with(ccls, efilters, erelfilters, **qdatas)
     
     ## @todo test invalid get
     @patch('leapi.datasources.dummy.DummyDatasource.select')
