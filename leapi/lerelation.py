@@ -85,6 +85,9 @@ class _LeRelation(lecrud._LeCrud):
     # @param target_class str
     def delete(cls, filters_list, target_class):
         filters, rel_filters = cls._prepare_filters(filters_list)
+        if isinstance(target_class, str):
+            target_class = cls.name2class(target_class)
+
         ret = cls._datasource.delete(target_class, filters)
         return True if ret == 1 else False
 

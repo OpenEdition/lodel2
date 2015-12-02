@@ -73,7 +73,7 @@ class LeRelationTestCase(TestCase):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         
-        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], LeHierarch)
+        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], 'LeHierarch')
         dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','"parent"')])
         dsmock.reset_mock()
 
