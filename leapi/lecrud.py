@@ -272,7 +272,9 @@ class _LeCrud(object):
     @classmethod
     def insert(cls, datas, classname = None):
         callcls = cls if classname is None else cls.name2class(classname)
-        if not callcls.is_letype() and not callcls.implements_lerelation():
+        if not callcls:
+            raise LeApiErrors("Error when inserting",[ValueError("The class '%s' was not found"%classname)])
+        if not callcls.implements_letype() and not callcls.implements_lerelation():
             raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
         insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
         return callcls._datasource.insert(callcls, **insert_datas)
@@ -303,6 +305,7 @@ class _LeCrud(object):
     ## @brief Build a filter to select an object with a specific ID
     # @warning assert that the uid is not composed with multiple fieldtypes
     # @return A filter of the form tuple(UID, '=', self.UID)
+    # @todo This method should not be private
     def _id_filter(self):
         id_name = self.uidname()
         return ( id_name, '=', getattr(self, id_name) )

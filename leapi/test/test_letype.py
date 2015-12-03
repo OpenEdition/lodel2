@@ -72,8 +72,9 @@ class LeTypeMockDsTestCase(TestCase):
 
         num = Numero(1, type_id = Numero._type_id)
         missing_fields = [f for f in Numero._fields if not (f in ['lodel_id', 'type_id'])]
-        num.populate()
-        dsmock.assert_called_once_with(Numero, missing_fields, [('lodel_id','=',1)],[])
+        with self.assertRaises(leapi.lecrud.LeApiQueryError):
+            num.populate()
+            dsmock.assert_called_once_with(Numero, missing_fields, [('lodel_id','=',1)],[])
 
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):

@@ -3,7 +3,7 @@
 import leapi.letype as letype
 import leapi.leclass as leclass
 
-from .generic import GenericFieldType
+from .generic import GenericFieldType, FieldTypeError
 
 class EmFieldType(GenericFieldType):
     
@@ -24,13 +24,30 @@ class EmFieldType(GenericFieldType):
         return (value, None)
     
     ## @brief If field value is an integer, returns a partially instanciated LeObject (only with an ID)
+    # @todo what should we do if the get fails ? Raise ?
     def construct_data(self, lec, fname, datas):
+        if isinstance(datas[fname], str):
+            # Cast to int
+            try:
+                datas[fname] = int(datas[fname])
+            except ValueError as e:
+                raise e # Raise Here !?
+        if datas[fname].is_leobject():
+            # Its an object not populated (we dont now its type)
+            datas[fname] = datas[fname].lodel_id #Optimize here giving only class_id and type_id to populate ?
         if isinstance(datas[fname], int):
-            leobject = lec.name2class('LeObject')
-            return leobject(datas[fname])
-        else:
-            return datas[fname]
+            # Get instance with id
+            resget = lec.name2class('LeObject').get(['lodel_id = %d' % datas[fname]])
+            if resget is None or len(resget) != 1:
+                # Bad filter or bad id... raise ?
+                raise Exception("BAAAAAD")
+        return datas[fname]
     
+    ## @brief checks datas consistency
+    # @param lec LeCrud : A LeCrud child instance
+    # @param fname str : concerned field name
+    # @param datas dict : Datas of lec
+    # @return True if ok else an Exception instance
     def check_data_consistency(self, lec, fname, datas):
         if self.superior:
             return self.check_sup_consistency(lec, fname, datas)
@@ -38,7 +55,14 @@ class EmFieldType(GenericFieldType):
             return self.check_sub_consistency(lec, fname, datas)
 
     def check_sup_consistency(self, lec, fname, datas):
+        if lec.implements_lerel2type():
+            # Checking consistency for a rel2type relation
+            lesup = datas['lesup']
+            lesub = datas['lesub']
+            if lesub.__class__ not in lesup._linked_types:
+                return FieldTypeError("Rel2type not authorized between %s and %s"%(lesup, lesub))
         pass
+            
 
     def check_sub_consistency(self, lec, fname, datas):
         pass

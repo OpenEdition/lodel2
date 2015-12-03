@@ -55,38 +55,19 @@ class _LeRelation(lecrud._LeCrud):
     # @return prepared and checked filters
     @classmethod
     def _prepare_filters(cls, filters_l):
-        filters = list()
-        res = list()
-        rel = list()
-
-        for filter_item in filters_l:
-            if isinstance(filter_item, tuple):
-                filters.append(filter_item)
-            else:
-                filter_item_data = filter_item.split(" ")
-                if len(filter_item_data) == 3:
-                    if filter_item_data[0] in cls._lesub_fieldtype.keys():
-                        filter_item_data[2] = cls._lesub_fieldtype[filter_item_data[0]].construct_data(
-                            cls,
-                            filter_item_data[0],
-                            {filter_item_data[0]: int(filter_item_data[2])}
-                        )
-                    elif filter_item_data[0] in cls._lesup_fieldtype.keys():
-                        filter_item_data[2] = cls._lesup_fieldtype[filter_item_data[0]].construct_data(
-                            cls,
-                            filter_item_data[0],
-                            {filter_item_data[0]: int(filter_item_data[2])}
-                        )
-
-                filters.append(tuple(filter_item_data))
-
-        for field, operator, value in filters:
-            if field.startswith('superior') or field.startswith('subordinate'):
-                rel.append((field, operator, value))
-            else:
-                res.append((field, operator, value))
-
-        return (res, rel)
+        filters, rel_filters = super()._prepare_filters(filters_l)
+        res_filters = list()
+        for field, op, value in filters:
+            if field in ['lesup', 'lesub']:
+                if isinstance(value, str):
+                    try:
+                        value = int(value)
+                    except ValueError as e:
+                        raise LeApiDataCheckError("Wrong value given for '%s'"%field)
+                if isinstance(value, int):
+                    value = cls.name2class('LeObject')(value)
+            res_filters.append( (field, op, value) )
+        return res_filters, rel_filters
 
     @classmethod
     ## @brief deletes a relation between two objects
@@ -115,12 +96,18 @@ class _LeRel2Type(_LeRelation):
     ## @brief Delete current instance from DB
     def delete(self):
         lecrud._LeCrud._delete(self)
-
+    
+    ## @brief Implements insert for rel2type
+    # @todo checks when autodetecing the rel2type class
     @classmethod
-    def insert(cls, datas, classname):
+    def insert(cls, datas, classname = None):
+        #Set the nature
         if 'nature' not in datas:
             datas['nature'] = None
-        cls.name2class('LeCrud').insert(datas, classname)
+        if cls == cls.name2class('LeRel2Type') and classname is None:
+            # autodetect the rel2type child class
+            classname = relname(datas['lesup'], datas['lesub'])
+        super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (can be a LeType or a LeClass child)
