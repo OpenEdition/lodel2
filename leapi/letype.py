@@ -65,6 +65,11 @@ class _LeType(_LeClass):
         return cls._fields
 
     @classmethod
+    def get(cls, query_filters, field_list = None):
+        query_filters.append(('type_id', '=', cls._type_id))
+        return cls._leclass.get(query_filters, field_list)
+
+    @classmethod
     def fieldtypes(cls):
         return { fname: cls._fieldtypes[fname] for fname in cls._fieldtypes if fname in cls._fields }
 

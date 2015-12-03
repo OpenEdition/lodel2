@@ -36,3 +36,7 @@ class _LeClass(_LeObject):
     def fieldlist(cls):
         return cls.fieldtypes().keys()
 
+    @classmethod
+    def get(cls, query_filters, field_list = None):
+        query_filters.append(('class_id', '=', cls._class_id))
+        return cls.name2class('LeObject').get(query_filters, field_list)
