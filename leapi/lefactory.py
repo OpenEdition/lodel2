@@ -252,10 +252,9 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
-    _rel_attr_fieldtypes = dict()
 
 class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
-    _rel_attr_fieldtypes = dict()
+    pass
 
 class LeRel2Type(LeRelation, leapi.lerelation._LeRel2Type):
     pass
