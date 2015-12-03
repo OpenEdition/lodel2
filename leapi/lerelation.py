@@ -17,33 +17,42 @@ class _LeRelation(lecrud._LeCrud):
     _rel_fieldtypes = dict()
 
     def __init__(self, rel_id, **kwargs):
-       pass
-
+        self.id_relation = rel_id
+    
+    ## @brief Forge a filter to match the superior
     @classmethod
     def sup_filter(self, leo):
         if isinstance(leo, leobject._LeObject):
             return ('lesup', '=', leo)
 
+    ## @brief Forge a filter to match the superior
     @classmethod
     def sub_filter(self, leo):
         if isinstance(leo, leobject._LeObject):
             return ('lesub', '=', leo)
 
+    ## @return a dict with field name as key and fieldtype instance as value
     @classmethod
     def fieldtypes(cls):
         rel_ft = dict()
+        rel_ft.update(cls._uid_fieldtype)
+
         rel_ft.update(cls._lesup_fieldtype)
         rel_ft.update(cls._lesub_fieldtype)
+
         rel_ft.update(cls._rel_fieldtypes)
         if cls.implements_lerel2type():
             rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
-
+    
     @classmethod
     def _prepare_relational_fields(cls, field):
         return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject" % (field,
                                                                                                         cls.__name__))
-
+    ## @brief Prepare filters before sending them to the datasource
+    # @param cls : Concerned class
+    # @param filters_l list : List of filters
+    # @return prepared and checked filters
     @classmethod
     def _prepare_filters(cls, filters_l):
         filters = list()
@@ -93,14 +102,20 @@ class _LeRelation(lecrud._LeCrud):
 
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
-    def __init__(self, rel_id):
-        pass
+    
+    ## @brief Delete current instance from DB
+    def delete(self):
+        lecrud._LeCrud._delete(self)
 
 ## @brief Abstract class to handle rel2type relations
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes
     _rel_attr_fieldtypes = dict()
     
+    ## @brief Delete current instance from DB
+    def delete(self):
+        lecrud._LeCrud._delete(self)
+
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (can be a LeType or a LeClass child)
     # @param lesubclass LeType : A LeType child class

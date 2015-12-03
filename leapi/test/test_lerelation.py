@@ -67,7 +67,6 @@ class LeRelationTestCase(TestCase):
             for i in range(3):
                 self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
-    # @unittest.skip("Wait LeRelation._prepare_filters() and LeRelation.delete() to unskip")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch insert method """
@@ -101,7 +100,7 @@ class LeHierarch(LeRelationTestCase):
                 [],
 
                 LeHierarch,
-                [ 'nature', 'rank', 'lesub', 'depth', 'lesup'],
+                [ 'nature', 'rank', 'lesub', 'depth', 'lesup', 'id_relation'],
                 [('lesup', '=', Numero(42))],
                 [],
             ),
@@ -187,10 +186,9 @@ class LeHierarch(LeRelationTestCase):
             dsmock.reset_mock()
     
 
-    @unittest.skip("Wait for LeRelation.delete()")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
-        """ Testing LeHierarch insert method """
+        """ Testing LeHierarch delete method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         rel = LeHierarch(10)
         rel.delete()
@@ -209,11 +207,11 @@ class LeHierarch(LeRelationTestCase):
 
 class LeRel2TypeTestCase(LeRelationTestCase):
     
-    @unittest.skip("Wait implementation to unskip")
+    @unittest.skip("Wait for implmentation (mainly implements nature = none for non hierarch)")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne
+        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
 
         queries = [
             {
@@ -245,7 +243,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
         ]
 
         for query in queries:
-            Rel_textes2personne.insert(query)
+            Rel_Textes2Personne.insert(query)
 
             eres = {'nature': None}
             eres.uopdate(query)
@@ -253,19 +251,19 @@ class LeRel2TypeTestCase(LeRelationTestCase):
                 if isinstance(eres[fname], int):
                     eres[fname] = LeObject(eres[fname])
 
-            dsmock.assert_called_once_with(Rel_textes2personne, **eres)
+            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
             dsmock.reset_mock()
 
             LeRel2Type.insert(query, "Rel_textes2personne")
 
-            dsmock.assert_called_once_with(Rel_textes2personne, **eres)
+            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
             dsmock.reset_mock()
 
     @unittest.skip("Wait implementation to unskip")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert_fails(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_textes2personne
+        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
 
         queries = [
             {
@@ -321,4 +319,4 @@ class LeRel2TypeTestCase(LeRelationTestCase):
                 LeRel2Type.insert(query, 'Rel_textes2personne')
             
             with self.assertRaises(lecrud.LeApiQueryError):
-                Rel_textes2personne.insert(query)
+                Rel_Textes2Personne.insert(query)
