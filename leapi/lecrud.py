@@ -13,7 +13,10 @@ class LeApiErrors(Exception):
     # @param exptexptions dict : A list of data check Exception with concerned field (or stuff) as key
     def __init__(self, msg = "Unknow error", exceptions = None):
         self._msg = msg
-        self._exceptions = list() if exceptions is None else exceptions
+        self._exceptions = dict() if exceptions is None else exceptions
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         msg = self._msg
@@ -257,7 +260,7 @@ class _LeCrud(object):
 
         #preparing filters
         filters, relational_filters = cls._prepare_filters(query_filters)
-
+        
         #Fetching editorial components from datasource
         results = cls._datasource.select(cls, field_list, filters, relational_filters)
 
@@ -267,7 +270,7 @@ class _LeCrud(object):
     # @param datas dict : The value of object we want to insert
     # @return A new id if success else False
     @classmethod
-    def insert(cls, datas = datas, classname = None):
+    def insert(cls, datas, classname = None):
         callcls = cls if classname is None else cls.name2class(classname)
         if not callcls.is_letype() and not callcls.implements_lerelation():
             raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
@@ -285,7 +288,7 @@ class _LeCrud(object):
     @classmethod
     def prepare_datas(cls, datas, complete = False, allow_internal = True):
         if not complete:
-            warnings.warn("Actual implementation can make datas construction and consitency checks fails when datas are not complete")
+            warnings.warn("\nActual implementation can make datas construction and consitency checks fails when datas are not complete\n")
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
         if isinstance(ret_datas, Exception):
             raise ret_datas
@@ -417,7 +420,7 @@ class _LeCrud(object):
                     res_filters.append((field,operator, value))
 
         if len(err_l) > 0:
-            raise LeApiDataCheckError(err_l)
+            raise LeApiDataCheckError("Error while preparing filters : ", err_l)
         return (res_filters, rel_filters)
 
 

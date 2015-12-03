@@ -215,7 +215,10 @@ class LeCrudTestCase(TestCase):
                 ['titre != "foobar"'],
 
                 ['lodel_id', (leapi.leobject.REL_SUP, 'parent')],
-                [('titre','!=', '"foobar"')],
+                [   ('titre','!=', '"foobar"'),
+                    ('type_id', '=', Numero._type_id),
+                    ('class_id', '=', Numero._class_id),
+                ],
                 []
             ),
             (
@@ -224,7 +227,10 @@ class LeCrudTestCase(TestCase):
                 ['superior.parent in  [1,2,3,4,5]'],
 
                 ['lodel_id', 'titre', (leapi.leobject.REL_SUP,'parent'), (leapi.leobject.REL_SUB, 'translation')],
-                [],
+                [
+                    ('type_id', '=', Numero._type_id),
+                    ('class_id', '=', Numero._class_id),
+                ],
                 [( (leapi.leobject.REL_SUP, 'parent'), ' in ', '[1,2,3,4,5]')]
             ),
             (
@@ -233,7 +239,10 @@ class LeCrudTestCase(TestCase):
                 [],
 
                 Numero._fields,
-                [],
+                [
+                    ('type_id', '=', Numero._type_id),
+                    ('class_id', '=', Numero._class_id),
+                ],
                 []
             ),
             (
@@ -242,7 +251,9 @@ class LeCrudTestCase(TestCase):
                 ['titre != "foobar"'],
 
                 ['lodel_id', 'titre', 'soustitre', (leapi.leobject.REL_SUP, 'parent')],
-                [('titre','!=', '"foobar"')],
+                [   ('titre','!=', '"foobar"'),
+                    ('class_id', '=', Textes._class_id),
+                ],
                 [],
             ),
             (

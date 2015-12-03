@@ -39,4 +39,4 @@ class _LeClass(_LeObject):
     @classmethod
     def get(cls, query_filters, field_list = None):
         query_filters.append(('class_id', '=', cls._class_id))
-        return cls.name2class('LeObject').get(query_filters, field_list)
+        return super().get(query_filters, field_list)

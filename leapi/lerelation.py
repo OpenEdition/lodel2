@@ -116,6 +116,12 @@ class _LeRel2Type(_LeRelation):
     def delete(self):
         lecrud._LeCrud._delete(self)
 
+    @classmethod
+    def insert(cls, datas, classname):
+        if 'nature' not in datas:
+            datas['nature'] = None
+        cls.name2class('LeCrud').insert(datas, classname)
+
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (can be a LeType or a LeClass child)
     # @param lesubclass LeType : A LeType child class
@@ -126,3 +132,4 @@ class _LeRel2Type(_LeRelation):
         subname = lesubclass.__name__
 
         return "Rel_%s2%s" % (supname, subname)
+
