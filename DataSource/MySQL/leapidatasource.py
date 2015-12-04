@@ -15,7 +15,7 @@ import mosql.mysql
 
 from DataSource.dummy.leapidatasource import DummyDatasource
 from DataSource.MySQL.common_utils import MySQL
-from EditorialModel.classtypes import EmNature, common_fields
+from EditorialModel.classtypes import EmNature, common_fields, relations_common_fields
 
 
 ## MySQL DataSource for LeObject
@@ -175,24 +175,39 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo should work with LeType, LeClass, and Relations
     def insert(self, target_cls, **datas):
         # it is a LeType
-        if not target_cls.is_letype():
-            raise AttributeError("'%s' is not a LeType, it is not possible to insert it" % target_cls)
+        if target_cls.is_letype():
+            main_table = self.datasource_utils.objects_table_name
+            main_datas = {'class_id':target_cls._leclass._class_id, 'type_id':target_cls._type_id}
+            main_fields = common_fields
+            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
+        # it is a hierarchy
+        elif target_cls.is_lehierarch():
+            main_table = self.datasource_utils.relations_table_name
+            main_datas = {'id_sup':datas['lesup'].lodel_id, 'id_sub':datas['lesub'].lodel_id}
+            main_fields = relations_common_fields
+            class_table = False
+        # it is a relation
+        elif target_cls.is_lerel2type():
+            print('TODO', datas)
+            pass
+        else:
+            raise AttributeError("'%s' is not a LeType or a LeRelation, it is not possible to insert it" % target_cls)
 
         # find main table and main table datas
-        main_table = self.datasource_utils.objects_table_name
-        main_datas = {'class_id':target_cls._leclass._class_id, 'type_id':target_cls._type_id}
-        for main_column_name in common_fields:
+        for main_column_name in main_fields:
             if main_column_name in datas:
                 main_datas[main_column_name] = datas[main_column_name]
                 del(datas[main_column_name])
 
-        cur = self.datasource_utils.query(self.connection, insert(main_table, main_datas))
+        sql = insert(main_table, main_datas)
+        #print (sql)
+        cur = self.datasource_utils.query(self.connection, sql)
         lodel_id = cur.lastrowid
 
-        # insert in class_table
-        datas[self.datasource_utils.field_lodel_id] = lodel_id
-        class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
-        self.datasource_utils.query(self.connection, insert(class_table, datas))
+        if class_table:
+            # insert in class_table
+            datas[self.datasource_utils.field_lodel_id] = lodel_id
+            self.datasource_utils.query(self.connection, insert(class_table, datas))
 
         return lodel_id
 

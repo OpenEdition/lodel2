@@ -120,8 +120,8 @@ class _LeType(_LeClass):
                 for todel_sup in prev_sup: #This loop shoud be useless...but we never know
                     todel_sup.delete()
 
-        return lehierarch.insert(lesup = lesup, lesub = self, nature = nature)
-    
+        return lehierarch.insert({'lesup':lesup, 'lesub':self, 'nature':nature})
+
     ## @brief Link the LeObject with another one (rel2type relations)
     #
     # @note This methods asser that self is the superior and leo_tolink the subordinate
