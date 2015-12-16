@@ -77,6 +77,12 @@ class LeRelationTestCase(TestCase):
         dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','"parent"')])
         dsmock.reset_mock()
 
+    def test_check_rank(self):
+        """ Testing set_rank method """
+        from dyncode import LeRelation
+        self.assertEqual(LeRelation._parse_rank('+2'), ('+', '2'))
+        self.assertTrue(LeRelation._parse_rank(3), 3)
+        self.assertRaises(ValueError,LeRelation._parse_rank, 'print')
 
 class LeHierarch(LeRelationTestCase):
     

@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import copy
+import re
 
 import EditorialModel.fieldtypes.leo as ft_leo
 from . import lecrud
@@ -80,6 +81,31 @@ class _LeRelation(lecrud._LeCrud):
 
         ret = cls._datasource.delete(target_class, filters)
         return True if ret == 1 else False
+
+    @classmethod
+    ## @brief checks if a rank value is valid
+    # @param rank str|int
+    # @return tuple|str|int The tuple is for the case using an operator and a step (i.e. '+x' => ('+','x'))
+    # @throw ValueError if the rank value or type is not valid
+    def _parse_rank(cls, rank):
+        if isinstance(rank, str):
+            if rank == 'first' or rank == 'last':
+                return rank
+            else:
+                compiled_regular_expression = re.compile('([+]?)([0-9]+)')
+                matching_groups = compiled_regular_expression.search(rank)
+                if matching_groups:
+                    return (matching_groups.group(1), matching_groups.group(2))
+                else:
+                    raise ValueError("Invalid rank value : %s" % rank)
+        elif isinstance(rank, int):
+            if rank < 1:
+                raise ValueError("Invalid rank value : %d" % rank)
+            else:
+                return rank
+        else:
+            raise ValueError("Invalid rank type : %s" % type(rank))
+
 
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
