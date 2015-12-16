@@ -6,6 +6,7 @@ import re
 import EditorialModel.fieldtypes.leo as ft_leo
 from . import lecrud
 from . import leobject
+from . import lefactory
 
 ## @brief Main class for relations
 class _LeRelation(lecrud._LeCrud):
@@ -81,6 +82,30 @@ class _LeRelation(lecrud._LeCrud):
 
         ret = cls._datasource.delete(target_class, filters)
         return True if ret == 1 else False
+
+    ## @brief move to the first rank
+    # @return True in case of success, False in case of failure
+    def move_first(self):
+        return self.set_rank('first')
+
+    ## @brief move to the last rank
+    # @return True in case of success, False in case of failure
+    def move_last(self):
+        return self.set_rank('last')
+
+    ## @brief move to the given rank defined by a shift step
+    # @param step str|int Step of the rank shift. Can be a string containing an operator and the value (i.e. "+6"
+    #                                               or "-6"), or can be an integer (the operator will then be "+")
+    # @return True in case of success, False in case of failure
+    def shift_rank(self, step):
+        return self.set_rank(step)
+
+    ## @brief sets a new rank
+    # @return True in case of success, False in case of failure
+    def set_rank(self, rank):
+        parsed_rank = self.__class__._parse_rank(rank)
+        return self._datasource.update_rank(self.id_relation, rank)
+
 
     @classmethod
     ## @brief checks if a rank value is valid

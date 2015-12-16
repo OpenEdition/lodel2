@@ -320,6 +320,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param letype LeType(class) : We want related LeObject of this LeType child class (not instance)
     # @param get_sub bool : If True leo is the superior and we want subordinates, else its the opposite
     # @return a list of dict { 'id_relation':.., 'rank':.., 'lesup':.., 'lesub'.., 'rel_attrs': dict() }
+    # TODO A conserver , utilisé par la nouvelle méthode update_rank
     def get_related(self, leo, letype, get_sub=True):
         if LeCrud.name2class('LeType') not in letype.__bases__:
             raise ValueError("letype argument should be a LeType child class, but got %s" % type(letype))
@@ -396,6 +397,47 @@ class LeDataSourceSQL(DummyDatasource):
     def set_relation_rank(self, id_relation, rank):
         self._check_rank(rank)
         self._set_relation_rank(id_relation, rank)
+
+    ## @brief Sets a new rank on a relation
+    # @param id_relation int: relation ID
+    # @param rank int|str|tuple : 'first', 'last', an integer value or a (operator, value) tuple (for the shifting)
+    # @throw leapi.leapi.LeObjectQueryError if id_relation doesn't exist
+    #
+    # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
+    def update_rank(self, id_relation, rank):
+        ret = self.get_relation(id_relation, no_attr=True)
+        if not ret:
+            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d" % id_relation)
+        lesup = ret['lesup']
+        lesub = ret['lesub']
+        current_rank = ret['rank']
+
+        # In case we passed an (operator, value) tuple, we will recalculate the new rank
+        if isinstance(rank, tuple):
+            operator = rank[0]
+            step_value = rank[1]
+            rank = current_rank + step_value if operator == '+' else current_rank - step_value
+
+        rank = 1 if rank == 'first' or rank < 1 else rank
+        if current_rank == rank:
+            return True
+
+        relations = self.get_related(lesup, lesub.__class__, get_sub=True)
+
+        if rank == 'last' or rank > len(relations):
+            rank = len(relations)
+            if current_rank == rank:
+                return True
+
+        # insert the relation at the right position considering its new rank
+        our_relation = relations.pop(current_rank)
+        relations.insert(our_relation, rank)
+
+        # rebuild now the list of relations from the resorted list and recalculating the ranks
+        rdatas = [(attrs['relation_id'], new_rank+1) for new_rank, (sup, sub, attrs) in enumerate(relations)]
+
+        sql = insert(MySQL.relations_table_name, columns=(MySQL.relations_pkname, 'rank'), values=rdatas, on_duplicate_key_update={'rank', mosql.util.raw('VALUES(`rank`)')})
+
 
     ## @brief Set the rank of a relation identified by its ID
     #
@@ -492,6 +534,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @return a dict{'id_relation':.., 'lesup':.., 'lesub':..,'rank':.., 'depth':.., #if not none#'nature':.., #if exists#'dict_attr':..>}
     #
     # @todo TESTS
+    # TODO conserver, appelé par la méthode update_rank
     def get_relation(self, id_relation, no_attr=False):
         relation = dict()
         with self.connection as cur:
