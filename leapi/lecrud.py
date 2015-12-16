@@ -60,6 +60,8 @@ class _LeCrud(object):
     # @return False if no such component
     @classmethod
     def name2class(cls, name):
+        if not isinstance(name, str):
+            raise ValueError("Expected name argument as a string but got %s instead"%(type(name)))
         mod = importlib.import_module(cls.__module__)
         try:
             return getattr(mod, name)
@@ -91,7 +93,7 @@ class _LeCrud(object):
     # @todo test for abstract method !!!
     @classmethod
     def uidname(cls):
-        if len(cls._uid_fieldtype) == 0:
+        if cls._uid_fieldtype is None or len(cls._uid_fieldtype) == 0:
             raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
         return list(cls._uid_fieldtype.keys())[0]
     

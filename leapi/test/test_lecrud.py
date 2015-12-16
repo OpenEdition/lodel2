@@ -271,5 +271,59 @@ class LeCrudTestCase(TestCase):
             callcls.get(filters, field_list)
             dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds)
             dsmock.reset_mock()
+    
+    #
+    # Utils methods check
+    #
 
+    def test_name2class(self):
+        """ Testing name2class method """
+        from dyncode import LeCrud, LeObject, LeRel2Type
+        # Fetch all leapi dyn classes
+        cls_lst = ['LeCrud', 'LeObject', 'LeRelation', 'LeHierarch', 'LeRel2Type', 'LeClass', 'LeType']
+        leo_lst = LeObject._me_uid.values()
+        
+        r2t_lst = list()
+        for leo in leo_lst:
+            if leo.is_leclass() and hasattr(leo, '_linked_types'):
+                for relleo in leo._linked_types:
+                    r2t_lst.append(LeRel2Type.relname(leo, relleo))
+        leo_lst = [cls.__name__ for cls in leo_lst]
 
+        # Begin test
+        for clsname in cls_lst + leo_lst + r2t_lst:
+            cls = LeCrud.name2class(clsname)
+            self.assertEqual(cls.__name__, clsname)
+
+        #Testing bad name or type
+        badnames = ['_LeObject', 'foobar']
+        for badname in badnames:
+            self.assertFalse(LeCrud.name2class(badname))
+        badnames = [int, LeObject]
+        for badname in badnames:
+            with self.assertRaises(ValueError):
+                LeCrud.name2class(badname)
+
+    def test_leobject(self):
+        """ Test the LeObject shortcut getter """
+        from dyncode import LeObject, LeCrud
+        self.assertEqual(LeObject, LeCrud.leobject())
+
+    def test_uidname(self):
+        """ Tests the uid name getter """
+        from dyncode import LeCrud, LeObject, LeRelation, Article, LeRel2Type
+
+        with self.assertRaises(NotImplementedError):
+            LeCrud.uidname()
+        
+        for lec in [LeObject, LeRelation, Article, LeRel2Type]:        
+            self.assertIn(lec.uidname(), lec._uid_fieldtype.keys())
+
+        self.assertEqual(LeObject.uidname(), 'lodel_id')
+        self.assertEqual(LeRelation.uidname(), 'id_relation')
+
+    def test_typeasserts(self):
+        """ Tests te implements_le* and is_le* methods """
+        from dyncode import LeObject, LeCrud, LeRelation, LeHierarch, LeRel2Type, Article, Textes, Rel_Textes2Personne
+
+        self.assertTrue(LeObject.is_leobject())
