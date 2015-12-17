@@ -406,35 +406,19 @@ class LeDataSourceSQL(DummyDatasource):
         self._set_relation_rank(id_relation, rank)
 
     ## @brief Sets a new rank on a relation
-    # @param id_relation int: relation ID
-    # @param rank int|str|tuple : 'first', 'last', an integer value or a (operator, value) tuple (for the shifting)
-    # @throw leapi.leapi.LeObjectQueryError if id_relation doesn't exist
-    #
+    # @param le_relation LeRelation
+    # @param new_rank int: integer representing the absolute new rank
+    # @return True if success, False if failure
     # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
-    def update_rank(self, id_relation, rank):
-        ret = self.get_relation(id_relation, no_attr=True)
+    def update_rank(self, le_relation, rank):
+        ret = self.get_relation(le_relation.id_relation, no_attr=True)
         if not ret:
-            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d" % id_relation)
+            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d" % le_relation.id_relation)
         lesup = ret['lesup']
         lesub = ret['lesub']
         current_rank = ret['rank']
 
-        # In case we passed an (operator, value) tuple, we will recalculate the new rank
-        if isinstance(rank, tuple):
-            operator = rank[0]
-            step_value = rank[1]
-            rank = current_rank + step_value if operator == '+' else current_rank - step_value
-
-        rank = 1 if rank == 'first' or rank < 1 else rank
-        if current_rank == rank:
-            return True
-
         relations = self.get_related(lesup, lesub.__class__, get_sub=True)
-
-        if rank == 'last' or rank > len(relations):
-            rank = len(relations)
-            if current_rank == rank:
-                return True
 
         # insert the relation at the right position considering its new rank
         our_relation = relations.pop(current_rank)
