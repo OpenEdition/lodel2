@@ -124,7 +124,7 @@ class DataSourceTestCase(TestCase):
 
     def test_select_leobject(self):
         """ Test select method on leobject without relational filters """
-        from dyncode import Article, Personne, Rubrique, LeObject
+        from dyncode import LeObject, Article, Textes
         
         # Utils var and stuff to make tests queries write easier
         
@@ -134,6 +134,7 @@ class DataSourceTestCase(TestCase):
         table_names = {
             LeObject: db_utils.objects_table_name,
             Article: db_utils.get_table_name_from_class(Article._leclass.__name__),
+            Textes: db_utils.get_table_name_from_class(Textes.__name__),
         }
         # lodel_id name to be use in joins (leobject side)
         join_lodel_id = db_utils.column_prefix(table_names[LeObject], lodel_id)
@@ -245,6 +246,37 @@ class DataSourceTestCase(TestCase):
                     'joins': call(
                         table_names[Article],
                         {join_lodel_id: cls_lodel_id(Article)}
+                    ),
+                }
+            ),
+            # call Textes.select(fields = ['lodel_id', 'titre'], filters = ['lodel_id = 42', 'soustitre = "foobar"'])
+            (
+                {
+                    'leobject': [lodel_id],
+                    'leclass': ['titre'],
+                },
+                {
+                    'target_cls': Article,
+                    'filters': [
+                        (lodel_id, '=', 42),
+                        ('soustitre', '=', 'foobar'),
+                    ],
+                    'rel_filters': [],
+                },
+                {
+                    'where': {
+                        (
+                            db_utils.column_prefix(table_names[LeObject], lodel_id),
+                            '=',
+                        ): 42,
+                        (
+                            db_utils.column_prefix(table_names[Textes], 'soustitre'),
+                            '=',
+                        ): 'foobar',
+                    },
+                    'joins': call(
+                        table_names[Textes],
+                        {join_lodel_id: cls_lodel_id(Textes)}
                     ),
                 }
             ),
