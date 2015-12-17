@@ -250,10 +250,14 @@ class _LeCrud(object):
     #
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
     # @param field_list list|None : list of string representing fields see @ref leobject_filters
+    # @param order list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
+    # @param groups list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
+    # @param limit int : The maximum number of returned results
+    # @param offset int : offset
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
-    def get(cls, query_filters, field_list = None):
+    def get(cls, query_filters, field_list = None, order = None, groups = None, limit = None, offset = 0):
         if field_list is None or len(field_list) == 0:
             #default field_list
             field_list = cls.fieldlist()
@@ -263,8 +267,32 @@ class _LeCrud(object):
         #preparing filters
         filters, relational_filters = cls._prepare_filters(query_filters)
         
+        #preparing order
+        if order is None:
+            order = []
+        else:
+            order = self._prepare_order_fields(order)
+            if isinstance(order, Exception):
+                raise order #can be buffered and raised later, but _prepare_filters raise when fails
+
+        #preparing groups
+        if groups is None:
+            groups = []
+        else:
+            groups = cls._order_fields(groups)
+            if isinstance(groups, Exception):
+                raise groups # can also be buffered and raised later
+
+        #checking limit and offset values
+        if not (limit is None):
+            if limit <= 0:
+                raise ValueError("Invalid limit given : %d"%limit)
+        if not (offset is None):
+            if offset < 0:
+                raise ValueError("Invalid offset given : %d"%offset)
+
         #Fetching editorial components from datasource
-        results = cls._datasource.select(cls, field_list, filters, relational_filters)
+        results = cls._datasource.select(cls, field_list, filters, relational_filters, order, groups, limit, offset)
 
         return results
 
@@ -382,6 +410,28 @@ class _LeCrud(object):
         if field not in cls.fieldlist():
             return ValueError("No such field '%s' in %s"%(field, cls.__name__))
         return field
+    
+    ## @brief Prepare the order parameter for the get method
+    # @note if an item in order_list is just a str it is considered as ASC by default
+    # @param order_list list : A list of field name or tuple (FIELDNAME, [ASC|DESC])
+    # @return a list of tuple (FIELDNAME, [ASC|DESC] )
+    @classmethod
+    def _prepare_order_fields(cls, order_field_list):
+        errors = dict()
+        result = []
+        for order_field in order_field_list:
+            if not isinstance(order_field, tuple):
+                order_field = (order_field, 'ASC')
+            if len(order_field) != 2 or order_field[1].upper() not in ['ASC', 'DESC']:
+                errors[order_field] = ValueError("Expected a string or a tuple with (FIELDNAME, ['ASC'|'DESC']) but got : %s"%order_field)
+            else:
+                ret = self._check_field(order_field[0])
+                if isinstance(ret, Exception):
+                    errors[order_field] = ret
+            result.append(order_field)
+        if len(errors) > 0:
+            return LeApiErrors("Errors when preparing ordering fields", errors)
+        return result
 
     ## @brief Prepare filters for datasource
     # 
