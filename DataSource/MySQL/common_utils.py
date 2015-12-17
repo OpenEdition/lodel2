@@ -43,7 +43,7 @@ class MySQL(object):
     # @param field_name str
     # @return str
     def get_r2t2table_name(cls, class_name, type_name):
-        return "r2t_%s_%s" % (class_name, type_name)
+        return ("r2t_%s_%s" % (class_name, type_name)).lower()
 
     @classmethod
     ## @brief gets the fk name between two tables
