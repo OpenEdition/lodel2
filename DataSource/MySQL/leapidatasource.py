@@ -180,6 +180,7 @@ class LeDataSourceSQL(DummyDatasource):
             main_datas = {'class_id':target_cls._leclass._class_id, 'type_id':target_cls._type_id}
             main_fields = common_fields
             class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
+            fk_name = self.datasource_utils.field_lodel_id
         # it is a hierarchy
         elif target_cls.is_lehierarch():
             main_table = self.datasource_utils.relations_table_name
@@ -188,8 +189,12 @@ class LeDataSourceSQL(DummyDatasource):
             class_table = False
         # it is a relation
         elif target_cls.is_lerel2type():
-            print('TODO', datas)
-            pass
+            main_table = self.datasource_utils.relations_table_name
+            main_datas = {'id_sup':datas['lesup'].lodel_id, 'id_sub':datas['lesub'].lodel_id}
+            main_fields = relations_common_fields
+            class_table = self.datasource_utils.get_r2t2table_name(datas['lesup']._leclass.__name__, datas['lesub'].__class__.__name__)
+            del(datas['lesup'], datas['lesub'])
+            fk_name = self.datasource_utils.relations_pkname
         else:
             raise AttributeError("'%s' is not a LeType or a LeRelation, it is not possible to insert it" % target_cls)
 
@@ -206,8 +211,10 @@ class LeDataSourceSQL(DummyDatasource):
 
         if class_table:
             # insert in class_table
-            datas[self.datasource_utils.field_lodel_id] = lodel_id
-            self.datasource_utils.query(self.connection, insert(class_table, datas))
+            datas[fk_name] = lodel_id
+            sql = insert(class_table, datas)
+            #print (sql)
+            self.datasource_utils.query(self.connection, sql)
 
         return lodel_id
 

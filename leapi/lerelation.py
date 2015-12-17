@@ -143,11 +143,11 @@ class _LeHierarch(_LeRelation):
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes
     _rel_attr_fieldtypes = dict()
-    
+
     ## @brief Delete current instance from DB
     def delete(self):
         lecrud._LeCrud._delete(self)
-    
+
     ## @brief Implements insert for rel2type
     # @todo checks when autodetecing the rel2type class
     @classmethod
@@ -161,8 +161,8 @@ class _LeRel2Type(_LeRelation):
         super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
-    # @param lesupclass LeClass : LeClass child class (can be a LeType or a LeClass child)
-    # @param lesubclass LeType : A LeType child class
+    # @param lesupclass LeClass : LeClass child class (not an instance) (can be a LeType or a LeClass child)
+    # @param lesubclass LeType : A LeType child class (not an instance)
     # @return a name as string
     @staticmethod
     def relname(lesupclass, lesubclass):

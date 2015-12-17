@@ -129,14 +129,16 @@ class _LeType(_LeClass):
     # @param leo_tolink LeObject : LeObject child instance to link with
     # @param **datas : Relation attributes (if any)
     # @return a relation id if success
-    def link_with(self, leo_tolink, **datas):
+    def link_with(self, leo_tolink, datas):
         # Fetch rel2type leapi class
         r2t = self.name2class('LeRel2Type')
-        r2tcls = self.name2class(r2t.relname(self, leo_tolink))
+        class_name = r2t.relname(self, leo_tolink.__class__)
+        r2tcls = self.name2class(class_name)
         if not r2tcls:
             raise ValueError("No rel2type possible between a '%s' as superior and a '%s' as subordinate" % (self._leclass.__name__, leo_tolink.__class__.__name__))
-        return r2tcls.insert(lesup = self, lesub = leo_tolink, **datas)
-        
+        datas['lesup'] = self
+        datas['lesub'] = leo_tolink
+        return r2tcls.insert(datas, class_name)
 
     ## @brief Get the linked objects lodel_id
     # @param letype LeType : Filter the result with LeType child class (not instance) 
