@@ -89,9 +89,6 @@ class DataSourceTestCase(TestCase):
 
             with patch.object(mosql_Query, '__call__', return_value=sql_query) as mock_insert:
                 with patch.object(db_utils, 'query', return_value=cursor_mock) as mock_utils_query:
-                    #mock_utils_query = Mock()
-                    #db_utils.query = mock_utils_query
-
                     # call the insert() method
                     datasource.insert(letype, **insert_datas)
 

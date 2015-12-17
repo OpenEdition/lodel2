@@ -94,18 +94,46 @@ class _LeRelation(lecrud._LeCrud):
         return self.set_rank('last')
 
     ## @brief move to the given rank defined by a shift step
-    # @param step str|int Step of the rank shift. Can be a string containing an operator and the value (i.e. "+6"
-    #                                               or "-6"), or can be an integer (the operator will then be "+")
+    # @param step int : The step
     # @return True in case of success, False in case of failure
+    # @throw ValueError if step is not castable into an integer
     def shift_rank(self, step):
-        return self.set_rank(step)
-
-    ## @brief sets a new rank
+        step = int(step)
+        return self.set_rank(self.rank + step)
+    
+    ## @brief modify a relation rank
+    # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
     # @return True in case of success, False in case of failure
-    def set_rank(self, rank):
-        parsed_rank = self.__class__._parse_rank(rank)
-        return self._datasource.update_rank(self.id_relation, rank)
+    # @throw ValueError if step is not castable into an integer
+    def set_rank(self, new_rank):
+        max_rank = self.get_max_rank()
+        try:
+            new_rank = int(new_rank)
+        except ValueError:
+            if new_rank == 'first':
+                new_rank = 1
+            elif new_rank == 'last':
+                new_rank = max_rank
+            else:
+                raise ValueError("The new rank can be an integer > 1 or strings 'first' or 'last', but %s given"%new_rank)
 
+        if self.rank == new_rank:
+            return True
+
+        if new_rank < 1:
+            if strict:
+                raise ValueError("Rank must be >= 1, but %d given"%rank)
+            new_rank = 1
+        elif new_rank > max_rank:
+            if strict:
+                raise ValueError("Rank is too big (max_rank = %d), but %d given"%(max_rank,rank))
+            new_rank = max_rank
+        self._datasource.update_rank(self, new_rank)
+    
+    ## @returns The maximum assignable rank for this relation
+    # @todo implementation
+    def get_max_rank(self):
+        pass
 
     @classmethod
     ## @brief checks if a rank value is valid

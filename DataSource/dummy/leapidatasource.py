@@ -49,4 +49,10 @@ class DummyDatasource(object):
     # @return int the number of inserted component
     def insert_multi(self, target_cls, datas_list):
         pass
-
+    
+    ## @brief Update a rank for a relation (and shift properly every concerned relations)
+    # @param le_relation LeRelation : A LeRelation instance
+    # @param new_rank int : An integer representing the absolute new rank
+    # @return ???
+    def update_rank(self, le_relation, new_rank):
+        pass
