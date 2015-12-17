@@ -425,9 +425,10 @@ class _LeCrud(object):
             if len(order_field) != 2 or order_field[1].upper() not in ['ASC', 'DESC']:
                 errors[order_field] = ValueError("Expected a string or a tuple with (FIELDNAME, ['ASC'|'DESC']) but got : %s"%order_field)
             else:
-                ret = self._check_field(order_field[0])
+                ret = cls._check_field(order_field[0])
                 if isinstance(ret, Exception):
                     errors[order_field] = ret
+            order_field = (order_field[0], order_field[1].upper())
             result.append(order_field)
         if len(errors) > 0:
             return LeApiErrors("Errors when preparing ordering fields", errors)

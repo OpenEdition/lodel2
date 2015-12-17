@@ -145,6 +145,33 @@ class LeCrudTestCase(TestCase):
         with self.assertRaises(ValueError):
             Personnes._prepare_filters(filters)
     
+    def test_prepare_order_fields(self):
+        """ Testing the _prepare_order_fields """
+        from dyncode import Article
+        
+        order_fields_list = [
+            (
+                ['titre'],
+                [('titre', 'ASC')]
+            ),
+            (
+                [('titre', 'asc')],
+                [('titre', 'ASC')]
+            ),
+            (
+                ['lodel_id', ('titre', 'asc')],
+                [('lodel_id', 'ASC'), ('titre', 'ASC')]
+            ),
+            (
+                [('titre', 'desc')],
+                [('titre', 'DESC')]
+            ),
+        ]
+
+        for fields_arg, expected_result in order_fields_list:
+            result = Article._prepare_order_fields(fields_arg)
+            self.assertEqual(result, expected_result)
+        
 
     # 
     #   Tests mocking the datasource
@@ -208,6 +235,7 @@ class LeCrudTestCase(TestCase):
     ## @todo test invalid get
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
     def test_get(self, dsmock):
+        """ Test the get method without group, limit, sort or offset """
         from dyncode import Publication, Numero, LeObject, Textes
         
         args = [
@@ -271,7 +299,7 @@ class LeCrudTestCase(TestCase):
 
         for callcls, field_list, filters, fl_ds, filters_ds, rfilters_ds in args:
             callcls.get(filters, field_list)
-            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds)
+            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds, [], [], None, 0)
             dsmock.reset_mock()
     
     #
