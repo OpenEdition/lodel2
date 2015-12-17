@@ -50,7 +50,7 @@ class _LeCrud(object):
     ## @brief Stores a regular expression to parse query filters strings
     _query_re = None
     ## @brief Stores Query filters operators
-    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ']
+    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
     def __init__(self):
         raise NotImplementedError("Abstract class")

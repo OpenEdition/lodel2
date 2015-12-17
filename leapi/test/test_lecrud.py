@@ -41,6 +41,8 @@ class LeCrudTestCase(TestCase):
             'hello != bar':('hello', '!=', 'bar'),
             'hello = "world>= <= != in not in"': ('hello', '=', '"world>= <= != in not in"'),
             'superior.parent = 13': ('superior.parent', '=', '13'),
+            'hello like "%world%"': ('hello', ' like ', '"%world%"'),
+            'world not like "foo%bar"': ('world', ' not like ', '"foo%bar"'),
         }
         for query, result in query_results.items():
             res = dyncode.LeCrud._split_filter(query)
