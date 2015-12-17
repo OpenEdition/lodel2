@@ -411,12 +411,10 @@ class LeDataSourceSQL(DummyDatasource):
     # @return True if success, False if failure
     # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
     def update_rank(self, le_relation, rank):
-        ret = self.get_relation(le_relation.id_relation, no_attr=True)
-        if not ret:
-            raise leapi.leapi.LeObjectQueryError("No relation with id_relation = %d" % le_relation.id_relation)
-        lesup = ret['lesup']
-        lesub = ret['lesub']
-        current_rank = ret['rank']
+
+        lesup = le_relation.lesup
+        lesub = le_relation.lesub
+        current_rank = le_relation.rank
 
         relations = self.get_related(lesup, lesub.__class__, get_sub=True)
 

@@ -133,7 +133,7 @@ class _LeRelation(lecrud._LeCrud):
     ## @returns The maximum assignable rank for this relation
     # @todo implementation
     def get_max_rank(self):
-        pass
+        return self._datasource.select(self.__class__, ['rank'])
 
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):

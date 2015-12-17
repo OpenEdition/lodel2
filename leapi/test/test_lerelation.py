@@ -77,7 +77,7 @@ class LeRelationTestCase(TestCase):
         dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','"parent"')])
         dsmock.reset_mock()
 
-    
+
 class LeHierarch(LeRelationTestCase):
     
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
