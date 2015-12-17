@@ -409,6 +409,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @param id_relation int: relation ID
     # @param rank int|str|tuple : 'first', 'last', an integer value or a (operator, value) tuple (for the shifting)
     # @throw leapi.leapi.LeObjectQueryError if id_relation doesn't exist
+    # @throw RuntimeError if the query failed
     #
     # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
     def update_rank(self, id_relation, rank):
@@ -444,6 +445,11 @@ class LeDataSourceSQL(DummyDatasource):
         rdatas = [(attrs['relation_id'], new_rank+1) for new_rank, (sup, sub, attrs) in enumerate(relations)]
 
         sql = insert(MySQL.relations_table_name, columns=(MySQL.relations_pkname, 'rank'), values=rdatas, on_duplicate_key_update={'rank', mosql.util.raw('VALUES(`rank`)')})
+        with self.connection as cur:
+            if cur.execute(sql) != 1:
+                raise RuntimeError("Unknow SQL error")
+            else:
+                return True
 
 
     ## @brief Set the rank of a relation identified by its ID
