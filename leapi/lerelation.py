@@ -161,7 +161,7 @@ class _LeRel2Type(_LeRelation):
         if cls == cls.name2class('LeRel2Type') and classname is None:
             # autodetect the rel2type child class
             classname = relname(datas['lesup'], datas['lesub'])
-        super().insert(datas, classname)
+        return super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (not an instance) (can be a LeType or a LeClass child)
