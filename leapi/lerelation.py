@@ -134,7 +134,7 @@ class _LeRelation(lecrud._LeCrud):
     # @todo implementation
     def get_max_rank(self):
         max_rank_result = self.__class__.get(field_list=['rank'], order=[('rank', 'DESC')], limit=1)
-        max_rank = max_rank_result[0].rank
+        max_rank = int(max_rank_result[0].rank)
         return max_rank+1
 
 ## @brief Abstract class to handle hierarchy relations
