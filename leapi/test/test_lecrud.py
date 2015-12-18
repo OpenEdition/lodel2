@@ -299,7 +299,7 @@ class LeCrudTestCase(TestCase):
 
         for callcls, field_list, filters, fl_ds, filters_ds, rfilters_ds in args:
             callcls.get(filters, field_list)
-            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds, [], [], None, 0)
+            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds, order=None, group=None, limit=None, offset=0)
             dsmock.reset_mock()
     
     #

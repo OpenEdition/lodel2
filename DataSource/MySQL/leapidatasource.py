@@ -42,7 +42,8 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo this only works with LeObject.get(), LeClass.get() and LeType.get()
     # @todo for speed get rid of all_to_dicts
     # @todo filters: all use cases are not implemented
-    def select(self, target_cls, field_list, filters, rel_filters=None):
+    # @todo group: mosql does not permit direction in group_by clause, it should, so for now we don't use direction in group clause
+    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=None):
 
         joins = []
         # it is a LeObject, query only on main table
@@ -61,10 +62,20 @@ class LeDataSourceSQL(DummyDatasource):
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
             fields = [(main_table, common_fields), (class_table, main_class.fieldlist())]
 
-        # prefix column name in field list
+        # prefix column name in fields list
         prefixed_field_list = [self.datasource_utils.find_prefix(name, fields) for name in field_list]
 
-        # @todo implement that
+        kwargs = {}
+        if group:
+            kwargs['group_by'] = (self.datasource_utils.find_prefix(column, fields) for column, direction in group)
+        if order:
+            kwargs['order_by'] = (self.datasource_utils.find_prefix(column, fields) + ' ' + direction for column, direction in order)
+        if limit:
+            kwargs['limit'] = limit
+        if offset:
+            kwargs['offset'] = offset
+
+       # @todo implement that
         #if rel_filters is not None and len(rel_filters) > 0:
             #rel_filters = self._prepare_rel_filters(rel_filters)
             #for rel_filter in rel_filters:
@@ -78,7 +89,7 @@ class LeDataSourceSQL(DummyDatasource):
 
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
         wheres = {(self.datasource_utils.find_prefix(name, fields), op):value for name,op,value in filters}
-        query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins)
+        query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins, **kwargs)
         #print ('SQL', query)
 
         # Executing the query

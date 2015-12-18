@@ -10,13 +10,17 @@ class DummyDatasource(object):
         self.module = module
         self.conn_args = conn_args
         self.conn_kargs = conn_kargs
-    
+
     ## @brief select lodel editorial components given filters
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
     # @param filters list : List of filters (see @ref leobject_filters )
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters )
+    # @param group list of tupple: List of column to group together.  group = [('titre', 'ASC'), ]
+    # @param order list of tupple : List of column to order.  order = [('titre', 'ASC'), ]
+    # @param limit int : Number of row to be returned
+    # @param offset int : Used with limit to choose the start row
     # @return a list of LeCrud child classes
-    def select(self, target_cls, field_list, filters, rel_filters):
+    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0):
         pass
 
     ## @brief delete lodel editorial components given filters
