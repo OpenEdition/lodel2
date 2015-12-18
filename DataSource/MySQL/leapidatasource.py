@@ -423,11 +423,12 @@ class LeDataSourceSQL(DummyDatasource):
     # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
     def update_rank(self, le_relation, rank):
 
-        lesup = le_relation.lesup
-        lesub = le_relation.lesub
+        lesup = le_relation.id_sup
+        lesub = le_relation.id_sub
         current_rank = le_relation.rank
 
-        relations = self.get_related(lesup, lesub.__class__, get_sub=True)
+        relations = le_relation.__class__.get(query_filters=[('id_sup', '=', lesup)], order=[('rank', 'ASC')])
+        # relations = self.get_related(lesup, lesub.__class__, get_sub=True)
 
         # insert the relation at the right position considering its new rank
         our_relation = relations.pop(current_rank)
