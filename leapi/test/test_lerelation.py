@@ -82,7 +82,7 @@ class LeHierarch(LeRelationTestCase):
     
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
     def test_get(self, dsmock):
-        """ Tests the LeHierarch.get() method """
+        """ Tests the LeHierarch.get() method without limit group order etc."""
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
 
         queries = [
@@ -114,12 +114,11 @@ class LeHierarch(LeRelationTestCase):
             cargs = dsmock.call_args
 
             self.assertEqual(len(cargs), 2)
-            cargs=cargs[0]
-
-            self.assertEqual(cargs[0], target, "%s != %s"%(cargs, eargs))
-            self.assertEqual(set(cargs[1]), set(field_ds), "%s != %s"%(cargs, eargs))
-            self.assertEqual(cargs[2], filters_ds, "%s != %s"%(cargs, eargs))
-            self.assertEqual(cargs[3], rfilters_ds, "%s != %s"%(cargs, eargs))
+            cargs=cargs[1]
+            self.assertEqual(cargs['target_cls'], target, "%s != %s"%(cargs, eargs))
+            self.assertEqual(set(cargs['field_list']), set(field_ds), "%s != %s"%(cargs, eargs))
+            self.assertEqual(cargs['filters'], filters_ds, "%s != %s"%(cargs, eargs))
+            self.assertEqual(cargs['rel_filters'], rfilters_ds, "%s != %s"%(cargs, eargs))
 
             dsmock.reset_mock()
     

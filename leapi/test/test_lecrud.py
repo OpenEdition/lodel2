@@ -235,7 +235,7 @@ class LeCrudTestCase(TestCase):
     ## @todo test invalid get
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
     def test_get(self, dsmock):
-        """ Test the get method without group, limit, sort or offset """
+        """ Test the select method without group, limit, sort or offset """
         from dyncode import Publication, Numero, LeObject, Textes
         
         args = [
@@ -299,9 +299,97 @@ class LeCrudTestCase(TestCase):
 
         for callcls, field_list, filters, fl_ds, filters_ds, rfilters_ds in args:
             callcls.get(filters, field_list)
-            dsmock.assert_called_with(callcls, fl_ds, filters_ds, rfilters_ds, order=None, group=None, limit=None, offset=0)
+            dsmock.assert_called_with(
+                                        target_cls = callcls,
+                                        field_list = fl_ds,
+                                        filters = filters_ds,
+                                        rel_filters = rfilters_ds,
+                                        order=None,
+                                        groups=None,
+                                        limit=None,
+                                        offset=0
+                                    )
             dsmock.reset_mock()
     
+    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
+    def test_get_complete(self, dsmock):
+        """ Test the select method with group limit sort and offset arguments """
+        from dyncode import Numero
+
+        args = [
+            (
+                Numero,
+                {
+                    'query_filters': [],
+                    'field_list': ['lodel_id'],
+                    'groups': ['titre'],
+                    'limit': 10,
+
+                },
+                {
+                    'target_cls': Numero,
+                    'field_list': ['lodel_id'],
+                    'filters': [],
+                    'rel_filters': [],
+                    'groups': [('titre', 'ASC')],
+                    'order': None,
+                    'limit': 10,
+                    'offset': 0,
+                },
+            ),
+            (
+                Numero,
+                {
+                    'query_filters': ['superior.parent = 20'],
+                    'field_list': ['lodel_id'],
+                    'offset': 1024,
+                    'order': ['titre', ('lodel_id', 'desc')]
+
+                },
+                {
+                    'target_cls': Numero,
+                    'field_list': ['lodel_id'],
+                    'filters': [],
+                    'rel_filters': [((leapi.lecrud.REL_SUP, 'parent'), '=', '20')],
+                    'groups': None,
+                    'order': [('titre', 'ASC'), ('lodel_id', 'DESC')],
+                    'limit': None,
+                    'offset': 1024,
+                },
+            ),
+            (
+                Numero,
+                {
+                    'query_filters': ['superior.parent = 20'],
+                    'field_list': ['lodel_id'],
+                    'offset': 1024,
+                    'limit': 2,
+                    'order': ['titre', ('lodel_id', 'desc')],
+                    'groups': ['titre'],
+
+                },
+                {
+                    'target_cls': Numero,
+                    'field_list': ['lodel_id'],
+                    'filters': [],
+                    'rel_filters': [((leapi.lecrud.REL_SUP, 'parent'), '=', '20')],
+                    'groups': [('titre', 'ASC')],
+                    'order': [('titre', 'ASC'), ('lodel_id', 'DESC')],
+                    'limit': 2,
+                    'offset': 1024,
+                },
+            ),
+        ]
+
+        for callcls, getargs, exptargs in args:
+            if callcls.implements_letype:
+                exptargs['filters'].append( ('type_id', '=', callcls._type_id) )
+            if callcls.implements_leclass:
+                exptargs['filters'].append( ('class_id', '=', callcls._class_id) )
+            callcls.get(**getargs) 
+            dsmock.assert_called_once_with(**exptargs)
+            dsmock.reset_mock()
+                
     #
     # Utils methods check
     #

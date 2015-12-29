@@ -15,13 +15,10 @@ import copy
 import warnings
 
 import leapi
-from leapi.lecrud import _LeCrud
+from leapi.lecrud import _LeCrud, REL_SUP, REL_SUB
 from leapi.lefactory import LeFactory
 import EditorialModel
 from EditorialModel.types import EmType
-
-REL_SUP = 0
-REL_SUB = 1
 
 ## @brief Main class to handle objects defined by the types of an Editorial Model
 class _LeObject(_LeCrud):

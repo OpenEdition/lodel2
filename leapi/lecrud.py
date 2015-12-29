@@ -8,6 +8,9 @@ import warnings
 import importlib
 import re
 
+REL_SUP = 0
+REL_SUB = 1
+
 class LeApiErrors(Exception):
     ## @brief Instanciate a new exceptions handling multiple exceptions
     # @param exptexptions dict : A list of data check Exception with concerned field (or stuff) as key
@@ -257,7 +260,7 @@ class _LeCrud(object):
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
+    def get(cls, query_filters, field_list=None, order=None, groups=None, limit=None, offset=0):
         if field_list is None or len(field_list) == 0:
             #default field_list
             field_list = cls.fieldlist()
@@ -273,11 +276,11 @@ class _LeCrud(object):
             if isinstance(order, Exception):
                 raise order #can be buffered and raised later, but _prepare_filters raise when fails
 
-        #preparing group
-        if group:
-            group = cls._prepare_order_fields(group)
-            if isinstance(group, Exception):
-                raise group # can also be buffered and raised later
+        #preparing groups
+        if groups:
+            groups = cls._prepare_order_fields(groups)
+            if isinstance(groups, Exception):
+                raise groups # can also be buffered and raised later
 
         #checking limit and offset values
         if not (limit is None):
@@ -288,7 +291,16 @@ class _LeCrud(object):
                 raise ValueError("Invalid offset given : %d"%offset)
 
         #Fetching editorial components from datasource
-        results = cls._datasource.select(cls, field_list, filters, relational_filters, order=order, group=group, limit=limit, offset=offset)
+        results = cls._datasource.select(
+                                            target_cls = cls,
+                                            field_list = field_list,
+                                            filters = filters,
+                                            rel_filters = relational_filters,
+                                            order=order,
+                                            groups=groups,
+                                            limit=limit,
+                                            offset=offset
+                                        )
 
         return results
 
@@ -553,7 +565,7 @@ class _LeCrud(object):
 # ( RELATION, NATURE ) where NATURE is a string ( see EditorialModel.classtypes ) and RELATION is one of
 # the defined constant : 
 #
-# - leapi.leapi.REL_SUB for "subordinates"
-# - leapi.leapi.REL_SUP for "superiors"
+# - leapi.lecrud.REL_SUB for "subordinates"
+# - leapi.lecrud.REL_SUP for "superiors"
 #
 # @note The filters translation process also check if given field are valids compared to the concerned letype and/or the leclass
