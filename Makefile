@@ -14,8 +14,8 @@ pip: cleanpycache
 cleandoc:
 	-rm -Rv ./doc/
 cleanpyc:
-	-find ./ |grep -E "\.pyc$$" |xargs rm -v 2>/dev/nulla
+	-find ./ |grep -E "\.pyc$$" |xargs rm -v 2>/dev/null
 cleanpycache: cleanpyc
-	-find ./ |grep '__pycache__' | xargs rmdir -v 2>/dev/null
+	-find ./ -type d |grep '__pycache__' | xargs rmdir -v 2>/dev/null
 
 clean: cleanpyc cleandoc cleanpycache
