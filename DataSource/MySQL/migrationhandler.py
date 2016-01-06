@@ -42,27 +42,22 @@ from DataSource.dummy.migrationhandler import DummyMigrationHandler
 class MysqlMigrationHandler(DummyMigrationHandler):
 
     ## @brief Construct a MysqlMigrationHandler
-    # @param host str : The db host
-    # @param user str : The db user
-    # @param password str : The db password
-    # @param db str : The db name
-    def __init__(self, module = pymysql, conn_args = None, db_engine='InnoDB', foreign_keys=True, debug=None, dryrun=False, drop_if_exists=False):
-        
+    # @param module : sql module
+    # @param conn_args dict : A dict containing connection options
+    def __init__(self, module=pymysql, conn_args=None, db_engine='InnoDB', foreign_keys=True, debug=None, dryrun=False, drop_if_exists=False):
         # Database connection
         self._dbmodule = module
         if conn_args is None:
             conn_args = copy.copy(Settings.get('datasource')['default'])
             self._dbmodule = conn_args['module']
             del conn_args['module']
-        self.db = self._dbmodule.connect(**conn_args)
-        
+        self.db_conn = self._dbmodule.connect(**conn_args)
         # Fetch options
         self.debug = Settings.get('debug') if debug is None else debug
         self.dryrun = dryrun
         self.db_engine = db_engine
         self.foreign_keys = foreign_keys if db_engine == 'InnoDB' else False
         self.drop_if_exists = drop_if_exists
-
         #Create default tables
         self._create_default_tables(self.drop_if_exists)
 
@@ -93,7 +88,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
                 elif new_state is None:
                     #non relationnal EmField deletion
                     if emfield.name not in EditorialModel.classtypes.common_fields.keys():
-                        self.del_col_from_emfield(em, uid)
+                        self.delete_col_from_emfield(em, uid)
             else:
                 #relationnal field
                 if initial_state is None:
@@ -113,13 +108,13 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @note this function handles the table creation
     # @param em Model : EditorialModel.model.Model instance
     # @param rfuid int : Relationnal field uid
-    def add_relationnal_field(self, em, rfuid):
-        emfield = em.component(rfuid)
+    def add_relationnal_field(self, edmod, rfuid):
+        emfield = edmod.component(rfuid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
 
-        r2tf = em.component(emfield.rel_field_id)
-        tname = self._r2t2table_name(em, r2tf)
+        r2tf = edmod.component(emfield.rel_field_id)
+        tname = self._r2t2table_name(edmod, r2tf)
         pkname, pkftype = self._relation_pk
 
         #If not exists create a relational table
@@ -130,7 +125,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         #Add the column
         self._add_column(tname, emfield.name, emfield.fieldtype_instance())
         #Update table triggers
-        self._generate_triggers(tname, self._r2type2cols(em, r2tf))
+        self._generate_triggers(tname, self._r2type2cols(edmod, r2tf))
 
     ## @brief Delete a rel2type attribute
     #
@@ -138,27 +133,27 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @note this method handles the table deletion
     # @param em Model : EditorialModel.model.Model instance
     # @param rfuid int : Relationnal field uid
-    def del_relationnal_field(self, em, rfuid):
-        emfield = em.component(rfuid)
+    def del_relationnal_field(self, edmod, rfuid):
+        emfield = edmod.component(rfuid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
 
-        r2tf = em.component(emfield.rel_field_id)
-        tname = self._r2t2table_name(em, r2tf)
+        r2tf = edmod.component(emfield.rel_field_id)
+        tname = self._r2t2table_name(edmod, r2tf)
 
-        if len(self._r2type2cols(em, r2tf)) == 1:
+        if len(self._r2type2cols(edmod, r2tf)) == 1:
             #The table can be deleted (no more attribute for this rel2type)
             self._query("""DROP TABLE {table_name}""".format(table_name=tname))
         else:
             self._del_column(tname, emfield.name)
             #Update table triggers
-            self._generate_triggers(tname, self._r2type2cols(em, r2tf))
+            self._generate_triggers(tname, self._r2type2cols(edmod, r2tf))
 
     ## @brief Given an EmField uid add a column to the corresponding table
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
-    def add_col_from_emfield(self, em, uid):
-        emfield = em.component(uid)
+    def add_col_from_emfield(self, edmod, uid):
+        emfield = edmod.component(uid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
 
@@ -172,8 +167,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     ## @brief Given a class uid create the coressponding table
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
-    def create_emclass_table(self, em, uid, engine):
-        emclass = em.component(uid)
+    def create_emclass_table(self, edmod, uid, engine):
+        emclass = edmod.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The given uid is not an EmClass uid")
         pkname, pktype = self._object_pk
@@ -187,8 +182,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     ## @brief Given an EmClass uid delete the corresponding table
     # @param em Model : A Model instance
     # @param uid int : An EmField uid
-    def delete_emclass_table(self, em, uid):
-        emclass = em.component(uid)
+    def delete_emclass_table(self, edmod, uid):
+        emclass = edmod.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The give uid is not an EmClass uid")
         tname = utils.object_table_name(emclass.name)
@@ -202,8 +197,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     ## @brief Given an EmField delete the corresponding column
     # @param em Model : an @ref EditorialModel.model.Model instance
     # @param uid int : an EmField uid
-    def delete_col_from_emfield(self, em, uid):
-        emfield = em.component(uid)
+    def delete_col_from_emfield(self, edmod, uid):
+        emfield = edmod.component(uid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
 
@@ -214,7 +209,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
 
         self._del_column(tname, emfield.name)
         # Refresh the table triggers
-        cols_ls = self._class2cols(emclass)
+        cols_l = self._class2cols(emclass)
         self._generate_triggers(tname, cols_l)
 
     ## @brief Delete a column from a table
@@ -230,16 +225,16 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param em Model : A Model instance
     # @param emfield EmField : An EmField instance
     # @return a table name
-    def _r2t2table_name(self, em, emfield):
+    def _r2t2table_name(self, edmod, emfield):
         emclass = emfield.em_class
-        emtype = em.component(emfield.rel_to_type_id)
+        emtype = edmod.component(emfield.rel_to_type_id)
         return utils.r2t_table_name(emclass.name, emtype.name)
 
     ## @brief Generate a columns_fieldtype dict given a rel2type EmField
     # @param em Model : an @ref EditorialModel.model.Model instance
     # @param emfield EmField : and @ref EditorialModel.fields.EmField instance
-    def _r2type2cols(self, em, emfield):
-        return {f.name: f.fieldtype_instance() for f in em.components('EmField') if f.rel_field_id == emfield.uid}
+    def _r2type2cols(self, edmod, emfield):
+        return {f.name: f.fieldtype_instance() for f in edmod.components('EmField') if f.rel_field_id == emfield.uid}
 
     ## @brief Generate a columns_fieldtype dict given an EmClass
     # @param emclass EmClass : An EmClass instance
@@ -280,7 +275,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         sup_cname, sub_cname = self.get_sup_and_sub_cols()
         self._add_fk(tname, object_tname, sup_cname, self._object_pk[0], 'fk_relations_superiors')
         self._add_fk(tname, object_tname, sub_cname, self._object_pk[0], 'fk_relations_subordinate')
-    
+
     ## @brief Returns the fieldname for superior and subordinate in relation table
     # @return a tuple (superior_name, subordinate_name)
     @classmethod
@@ -293,7 +288,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
                     sup = fname
                 else:
                     sub = fname
-        return utils.column_name(sup),utils.column_name(sub)
+        return utils.column_name(sup), utils.column_name(sub)
 
     ## @brief Create a table with primary key
     # @param table_name str : table name
@@ -355,7 +350,7 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         )
         try:
             self._query(add_col)
-        except self._dbmodule.err.InternalError as e:
+        except self._dbmodule.err.InternalError:
             if drop_if_exists:
                 self._del_column(table_name, col_name)
                 self._add_column(table_name, col_name, col_fieldtype, drop_if_exists)
@@ -370,7 +365,7 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
     # @param dst_table_name str : The name of the table the FK will point on
     # @param src_col_name str : The name of the concerned column in the src_table
     # @param dst_col_name str : The name of the concerned column in the dst_table
-    def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name, fk_name = None):
+    def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name, fk_name=None):
         stname = utils.escape_idname(src_table_name)
         dtname = utils.escape_idname(dst_table_name)
         scname = utils.escape_idname(src_col_name)
@@ -384,26 +379,26 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
 FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
-            fk_name=utils.escape_idname(fk_name),
-            src_table=stname,
-            src_col=scname,
-            dst_table=dtname,
-            dst_col=dcname
-        ))
+    fk_name=utils.escape_idname(fk_name),
+    src_table=stname,
+    src_col=scname,
+    dst_table=dtname,
+    dst_col=dcname
+))
 
     ## @brief Given a source and a destination table, delete the corresponding FK
     # @param src_table_name str : The name of the table where the FK is
     # @param dst_table_name str : The name of the table the FK point on
     # @warning fails silently
-    def _del_fk(self, src_table_name, dst_table_name, fk_name = None):
+    def _del_fk(self, src_table_name, dst_table_name, fk_name=None):
         if fk_name is None:
             fk_name = utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
-                src_table=utils.escape_idname(src_table_name),
-                fk_name=fk_name
-            ))
+    src_table=utils.escape_idname(src_table_name),
+    fk_name=fk_name
+))
         except self._dbmodule.err.InternalError:
             # If the FK don't exists we do not care
             pass
@@ -448,10 +443,10 @@ DROP FOREIGN KEY {fk_name}""".format(
         if len(col_val_l) > 0:
             trig_q = """CREATE TRIGGER {trigger_name} BEFORE {moment} ON {table_name}
 FOR EACH ROW SET {col_val_list};""".format(
-                trigger_name=trigger_name,
-                table_name=utils.escape_idname(table_name),
-                moment=moment, col_val_list=col_val_l
-            )
+    trigger_name=trigger_name,
+    table_name=utils.escape_idname(table_name),
+    moment=moment, col_val_list=col_val_l
+)
             self._query(trig_q)
 
     ## @brief Identifier escaping
@@ -519,20 +514,20 @@ FOR EACH ROW SET {col_val_list};""".format(
         for uid in [c.uid for c in model.components('EmClass')]:
             try:
                 self.delete_emclass_table(model, uid)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
+            except self._dbmodule.err.InternalError as expt:
+                print(expt)
 
-        for tname in [MySQL.get_r2t2table_name(f.em_class.name, model.component(f.rel_to_type_id).name) for f in model.components('EmField') if f.fieldtype == 'rel2type']:
+        for tname in [utils.r2t_table_name(f.em_class.name, model.component(f.rel_to_type_id).name) for f in model.components('EmField') if f.fieldtype == 'rel2type']:
             try:
                 self._query("DROP TABLE %s;" % tname)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
+            except self._dbmodule.err.InternalError as expt:
+                print(expt)
 
-        for tname in [MySQL.relations_table_name, MySQL.objects_table_name]:
+        for tname in [utils.common_tables['relation'], utils.common_tables['relation']]:
             try:
                 self._query("DROP TABLE %s;" % tname)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
+            except self._dbmodule.err.InternalError as expt:
+                print(expt)
 
     ## @brief Return primary key name & fieldtype for relation or object
     @classmethod
@@ -543,7 +538,7 @@ FOR EACH ROW SET {col_val_list};""".format(
                 finfo_cp = copy.copy(finfo)
                 del(finfo_cp['fieldtype'])
                 return (utils.column_name(fname), fto(**finfo_cp))
-        raise RuntimeError("No primary key found in common fields : %s"%common_fields)
+        raise RuntimeError("No primary key found in common fields : %s" % common_fields)
 
     ## @brief Exec a query
     # @param query str : SQL query
@@ -551,9 +546,9 @@ FOR EACH ROW SET {col_val_list};""".format(
         if self.debug:
             print(query + "\n")
         if not self.dryrun:
-            with self.db.cursor() as cur:
+            with self.db_conn.cursor() as cur:
                 cur.execute(query)
-        self.db.commit()  # autocommit
+        self.db_conn.commit()  # autocommit
 
     ## @brief Given a common field name return an EmFieldType instance
     # @param cname str : Common field name
@@ -578,7 +573,6 @@ FOR EACH ROW SET {col_val_list};""".format(
     ## @brief Returns a dict { colname:fieldtype } of relation table columns
     @property
     def _relation_cols(self):
-        from_name = EditorialModel.fieldtypes.generic.GenericFieldType.from_name
         res = dict()
         for fieldname, fieldinfo in EditorialModel.classtypes.relations_common_fields.items():
             finfo = copy.copy(fieldinfo)
