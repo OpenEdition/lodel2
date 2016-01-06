@@ -17,10 +17,10 @@ import pymysql
 
 import leapi.test.utils #Code generation functions
 
-import Lodel.settings
+from Lodel.settings import Settings
 import DataSource.MySQL
 from DataSource.MySQL.leapidatasource import LeDataSourceSQL as DataSource
-from DataSource.MySQL.common_utils import MySQL as db_utils
+import DataSource.MySQL.utils as db_utils
 from EditorialModel.classtypes import common_fields, relations_common_fields
 
 class DataSourceTestCase(TestCase):
@@ -39,7 +39,7 @@ class DataSourceTestCase(TestCase):
         with patch.object(mosql.db.Database, '__init__', return_value=None) as mock_db:
             #Test __init__ without arguments
             DataSource()
-            conn_args = db_utils.connections['default']
+            conn_args = Settings.get('datasource')['default']
             db_module = conn_args['module']
             del(conn_args['module'])
             mock_db.assert_called_once_with(db_module, **conn_args)

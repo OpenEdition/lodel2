@@ -57,8 +57,8 @@ class EmFieldType(GenericFieldType):
     def check_sup_consistency(self, lec, fname, datas):
         if lec.implements_lerel2type():
             # Checking consistency for a rel2type relation
-            lesup = datas['lesup']
-            lesub = datas['lesub']
+            lesup = datas[lec._lesup_name]
+            lesub = datas[lec._lesub_name]
             if lesub.__class__ not in lesup._linked_types:
                 return FieldTypeError("Rel2type not authorized between %s and %s"%(lesup, lesub))
         pass

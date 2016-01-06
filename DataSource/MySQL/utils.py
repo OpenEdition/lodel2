@@ -60,37 +60,6 @@ def escape_idname(idname):
         raise ValueError("Invalid name : '%s'" % idname)
     return '`%s`' % idname
 
-## @brief Given a fieldtype, returns a MySQL type specifier
-# @param emfieldType EmFieldType : A fieldtype
-# @return str
-def get_type_spec_from_fieldtype(emfieldtype):
-
-    ftype = emfieldtype.ftype
-
-    if ftype == 'char' or ftype == 'str':
-        res = "VARCHAR(%d)" % emfieldtype.max_length
-    elif ftype == 'text':
-        res = 'TEXT'
-    elif ftype == 'datetime':
-        res = "DATETIME"
-        # client side workaround for only one column with CURRENT_TIMESTAMP : giving NULL to timestamp that don't allows NULL
-        # cf. https://dev.mysql.com/doc/refman/5.0/en/timestamp-initialization.html#idm139961275230400
-        # The solution for the migration handler is to create triggers :
-        # CREATE TRIGGER trigger_name BEFORE INSERT ON `my_super_table`
-        # FOR EACH ROW SET NEW.my_date_column = NOW();
-        # and
-        # CREATE TRIGGER trigger_name BEFORE UPDATE ON
-    elif ftype == 'bool':
-        res = "BOOL"
-    elif ftype == 'int':
-        res = "INT"
-    elif ftype == 'rel2type':
-        res = "INT"
-    else:
-        raise ValueError("Unsupported fieldtype ftype : %s" % ftype)
-
-    return res
-
 ## Brief add table prefix to a column name
 # @param name string: column name to prefix
 # @param prefixes dict(prefix:list(name,))

@@ -140,7 +140,7 @@ class _LeCrud(object):
     # @param cls Class: a Class or instanciated object
     @classmethod
     def implements_lerelation(cls):
-        return hasattr(cls, '_lesup_fieldtype')
+        return hasattr(cls, '_lesup_name')
     
     ## @return maybe Bool: True if cls implements LeRel2Type
     # @param cls Class: a Class or instanciated object
@@ -391,7 +391,7 @@ class _LeCrud(object):
         ret_field_list = list()
         for field in field_list:
             if cls._field_is_relational(field):
-                ret = cls._prepare_relational_field(field)
+                ret = cls._prepare_relational_fields(field)
             else:
                 ret = cls._check_field(field)
 
@@ -470,7 +470,7 @@ class _LeCrud(object):
         for field, operator, value in filters:
             if cls._field_is_relational(field):
                 #Checks relational fields
-                ret = cls._prepare_relational_field(field)
+                ret = cls._prepare_relational_fields(field)
                 if isinstance(ret, Exception):
                     err_l[field] = ret
                 else:
@@ -524,7 +524,7 @@ class _LeCrud(object):
     # @return True if the field is relational else False
     @staticmethod
     def _field_is_relational(field):
-        return field.startswith('superior.') or field.startswith('subordinate')
+        return field.startswith('superior.') or field.startswith('subordinate.')
 
 ## @page leobject_filters LeObject query filters
 # The LeObject API provide methods that accept filters allowing the user

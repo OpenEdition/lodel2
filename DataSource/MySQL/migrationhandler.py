@@ -366,6 +366,7 @@ PRIMARY KEY({pk_name})
     # @param table_name str : The table name
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
+    # @return True if the column was added else return False
     def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False):
 
         col_name = utils.column_name(col_name)
@@ -391,6 +392,8 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
             else:
                 #LOG
                 print("Aborded, column `%s` exists" % col_name)
+                return False
+        return True
 
     ## @brief Add a foreign key
     # @param src_table_name str : The name of the table where we will add the FK
@@ -406,7 +409,7 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         if fk_name is None:
             fk_name = utils.get_fk_name(src_table_name, dst_table_name)
 
-        self._del_fk(src_table_name, dst_table_name)
+        self._del_fk(src_table_name, dst_table_name, fk_name)
 
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
@@ -422,12 +425,14 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
     # @param src_table_name str : The name of the table where the FK is
     # @param dst_table_name str : The name of the table the FK point on
     # @warning fails silently
-    def _del_fk(self, src_table_name, dst_table_name):
+    def _del_fk(self, src_table_name, dst_table_name, fk_name = None):
+        if fk_name is None:
+            fk_name = utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
                 src_table=utils.escape_idname(src_table_name),
-                fk_name=utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
+                fk_name=fk_name
             ))
         except self._dbmodule.err.InternalError:
             # If the FK don't exists we do not care

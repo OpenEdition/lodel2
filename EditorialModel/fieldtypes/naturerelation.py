@@ -26,8 +26,8 @@ class EmFieldType(EmFieldType):
         #if not isinstance(lec, lerelation._LeRelation):
         #    return ValueError("A field naturerelation has to be in a LeRelation object, but this one is in a '%s'"%lec.__name__)
         nature = datas[fname]
-        lesup = datas['lesup']
-        lesub = datas['lesub']
+        lesup = datas[lec._lesup_name]
+        lesub = datas[lec._lesub_name]
         if nature is None:
             #if not isinstance(lec, lerelation.LeRel2Type):
             #Replace with a test from _LeCrud

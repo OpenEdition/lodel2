@@ -38,24 +38,24 @@ class LeRelationTestCase(TestCase):
                 ('nature', '=', '"parent"')
             ),
             (
-                'lesup = 21',
-                ('lesup', '=', LeObject(21))
+                'superior = 21',
+                ('superior', '=', LeObject(21))
             ),
             (
-                'lesub = 22',
-                ('lesub', '=', LeObject(22))
+                'subordinate = 22',
+                ('subordinate', '=', LeObject(22))
             ),
             (
                 ('rank', '=', '1'),
                 ('rank', '=', '1'),
             ),
             (
-                ('lesup', '=', LeObject(21)),
-                ('lesup', '=', LeObject(21)),
+                ('superior', '=', LeObject(21)),
+                ('superior', '=', LeObject(21)),
             ),
             (
-                ('lesub', '=', Numero(42)),
-                ('lesub', '=', Numero(42)),
+                ('subordinate', '=', Numero(42)),
+                ('subordinate', '=', Numero(42)),
             ),
         ]
         
@@ -74,7 +74,7 @@ class LeRelationTestCase(TestCase):
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         
         LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], 'LeHierarch')
-        dsmock.assert_called_once_with(LeHierarch, [('lesup', '=', Numero(42)), ('nature','=','"parent"')])
+        dsmock.assert_called_once_with(LeHierarch, [('superior', '=', Numero(42)), ('nature','=','"parent"')])
         dsmock.reset_mock()
 
 
@@ -87,12 +87,12 @@ class LeHierarch(LeRelationTestCase):
 
         queries = [
             (
-                ['lesup = 42', 'lesub = 24'], #filters
-                ['lesup', 'lesub', 'nature', 'rank'], #field_l
+                ['superior = 42', 'subordinate = 24'], #filters
+                ['superior', 'subordinate', 'nature', 'rank'], #field_l
 
                 LeHierarch, #target
-                ['lesup', 'lesub', 'nature', 'rank'], #field_ds
-                [('lesup','=',LeObject(42)), ('lesub', '=', LeObject(24))], #filters_ds
+                ['superior', 'subordinate', 'nature', 'rank'], #field_ds
+                [('superior','=',LeObject(42)), ('subordinate', '=', LeObject(24))], #filters_ds
                 [], #rfilters_ds
 
             ),
@@ -101,8 +101,8 @@ class LeHierarch(LeRelationTestCase):
                 [],
 
                 LeHierarch,
-                [ 'nature', 'rank', 'lesub', 'depth', 'lesup', 'id_relation'],
-                [('lesup', '=', Numero(42))],
+                [ 'nature', 'rank', 'subordinate', 'depth', 'superior', 'id_relation'],
+                [('superior', '=', Numero(42))],
                 [],
             ),
         ]
@@ -129,13 +129,13 @@ class LeHierarch(LeRelationTestCase):
         queries = [
             (
                 {
-                    'lesup': Rubrique(7, class_id = Rubrique._class_id, type_id = Rubrique._type_id),
-                    'lesub': Numero(42, class_id = Numero._class_id, type_id = Numero._type_id),
+                    'superior': Rubrique(7, class_id = Rubrique._class_id, type_id = Rubrique._type_id),
+                    'subordinate': Numero(42, class_id = Numero._class_id, type_id = Numero._type_id),
                     'nature': 'parent',
                 },
                 {
-                    'lesup': Rubrique(7),
-                    'lesub': Numero(42),
+                    'superior': Rubrique(7),
+                    'subordinate': Numero(42),
                     'nature': 'parent',
                 },
             ),
@@ -143,37 +143,37 @@ class LeHierarch(LeRelationTestCase):
         """ # Those tests are not good
             (
                 {
-                    'lesup': 7,
-                    'lesub': 42,
+                    'superior': 7,
+                    'subordinate': 42,
                     'nature': 'parent',
                 },
                 {
-                    'lesup': LeObject(7),
-                    'lesub': LeObject(42),
+                    'superior': LeObject(7),
+                    'subordinate': LeObject(42),
                     'nature': 'parent',
                 }
             ),
             (
                 {
-                    'lesup': LeObject(7),
-                    'lesub': LeObject(42),
+                    'superior': LeObject(7),
+                    'subordinate': LeObject(42),
                     'nature': 'parent',
                 },
                 {
-                    'lesup': LeObject(7),
-                    'lesub': LeObject(42),
+                    'superior': LeObject(7),
+                    'subordinate': LeObject(42),
                     'nature': 'parent',
                 }
             ),
             (
                 {
-                    'lesup': LeObject(7),
-                    'lesub': 42,
+                    'superior': LeObject(7),
+                    'subordinate': 42,
                     'nature': 'parent',
                 },
                 {
-                    'lesup': LeObject(7),
-                    'lesub': LeObject(42),
+                    'superior': LeObject(7),
+                    'subordinate': LeObject(42),
                     'nature': 'parent',
                 }
             )
@@ -217,23 +217,23 @@ class LeRel2TypeTestCase(LeRelationTestCase):
 
         queries = [
             {
-                'lesup': Article(42),
-                'lesub': Personne(24),
+                'superior': Article(42),
+                'subordinate': Personne(24),
                 'adresse': None,
             },
             {
-                'lesup': Textes(42),
-                'lesub': Personne(24),
+                'superior': Textes(42),
+                'subordinate': Personne(24),
                 'adresse': None,
             },
             {
-                'lesup': Article(42),
-                'lesub': Personne(24),
+                'superior': Article(42),
+                'subordinate': Personne(24),
                 'adresse': "bar",
             },
             {
-                'lesup': Textes(42),
-                'lesub': Personne(24),
+                'superior': Textes(42),
+                'subordinate': Personne(24),
                 'adresse': "foo",
             },
         ]
@@ -243,7 +243,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
 
             eres = {'nature': None}
             eres.update(query)
-            for fname in ('lesup', 'lesub'):
+            for fname in ('superior', 'subordinate'):
                 if isinstance(eres[fname], int):
                     eres[fname] = LeObject(eres[fname])
 
@@ -262,27 +262,27 @@ class LeRel2TypeTestCase(LeRelationTestCase):
 
         queries = [
             {
-                'lesup': Rubrique(42),
-                'lesub': Personne(24),
+                'superior': Rubrique(42),
+                'subordinate': Personne(24),
                 'adresse': None,
             },
             {
                 'adresse': None,
             },
             {
-                'lesup': Rubrique(42),
-                'lesub': Rubrique(24),
+                'superior': Rubrique(42),
+                'subordinate': Rubrique(24),
                 'adresse': None,
             },
             {
-                'lesup': Article(42),
-                'lesub': Numero(24),
+                'superior': Article(42),
+                'subordinate': Numero(24),
                 'adresse': 'foo',
             },
             {
                 'id_relation': 1337,
-                'lesup': Article(42),
-                'lesub': Numero(24),
+                'superior': Article(42),
+                'subordinate': Numero(24),
                 'adresse': 'foo',
             },
         ]

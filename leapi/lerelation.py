@@ -37,9 +37,6 @@ class _LeRelation(lecrud._LeCrud):
         rel_ft = dict()
         rel_ft.update(cls._uid_fieldtype)
 
-        rel_ft.update(cls._lesup_fieldtype)
-        rel_ft.update(cls._lesub_fieldtype)
-
         rel_ft.update(cls._rel_fieldtypes)
         if cls.implements_lerel2type():
             rel_ft.update(cls._rel_attr_fieldtypes)
@@ -58,7 +55,7 @@ class _LeRelation(lecrud._LeCrud):
         filters, rel_filters = super()._prepare_filters(filters_l)
         res_filters = list()
         for field, op, value in filters:
-            if field in [self._lesup_name, self._lesub_name]:
+            if field in [cls._lesup_name, cls._lesub_name]:
                 if isinstance(value, str):
                     try:
                         value = int(value)
