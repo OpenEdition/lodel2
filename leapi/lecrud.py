@@ -90,7 +90,7 @@ class _LeCrud(object):
     ## @return A list of field name
     @classmethod
     def fieldlist(cls):
-        return cls.fieldtypes().keys()
+        return list(cls.fieldtypes().keys())
     
     ## @return The name of the uniq id field
     # @todo test for abstract method !!!
