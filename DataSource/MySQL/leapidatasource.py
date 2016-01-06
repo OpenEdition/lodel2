@@ -62,6 +62,17 @@ class LeDataSourceSQL(DummyDatasource):
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
             fields = [(main_table, common_fields), (class_table, main_class.fieldlist())]
 
+        elif target_cls.is_lehierarch():
+            main_table = self.datasource_utils.relations_table_name
+            print(field_list)
+            field_list = target_cls.name2class('LeRelation').fieldlist()
+            print(field_list)
+            fields = [(main_table, relations_common_fields)]
+        elif target_cls.is_lerel2type():
+            pass
+        else:
+            raise AttributeError("Target class '%s' in get() is not a Lodel Editorial Object !" % target_cls)
+
         # prefix column name in fields list
         prefixed_field_list = [self.datasource_utils.find_prefix(name, fields) for name in field_list]
 
@@ -90,7 +101,7 @@ class LeDataSourceSQL(DummyDatasource):
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
         wheres = {(self.datasource_utils.find_prefix(name, fields), op):value for name,op,value in filters}
         query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins, **kwargs)
-        #print ('SQL', query)
+        print ('SQL', query)
 
         # Executing the query
         cur = self.datasource_utils.query(self.connection, query)

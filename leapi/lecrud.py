@@ -260,7 +260,7 @@ class _LeCrud(object):
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, groups=None, limit=None, offset=0):
+    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
         if field_list is None or len(field_list) == 0:
             #default field_list
             field_list = cls.fieldlist()
@@ -277,10 +277,10 @@ class _LeCrud(object):
                 raise order #can be buffered and raised later, but _prepare_filters raise when fails
 
         #preparing groups
-        if groups:
-            groups = cls._prepare_order_fields(groups)
-            if isinstance(groups, Exception):
-                raise groups # can also be buffered and raised later
+        if group:
+            group = cls._prepare_order_fields(group)
+            if isinstance(group, Exception):
+                raise group # can also be buffered and raised later
 
         #checking limit and offset values
         if not (limit is None):
@@ -297,7 +297,7 @@ class _LeCrud(object):
                                             filters = filters,
                                             rel_filters = relational_filters,
                                             order=order,
-                                            groups=groups,
+                                            group=group,
                                             limit=limit,
                                             offset=offset
                                         )

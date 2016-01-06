@@ -65,9 +65,9 @@ class _LeType(_LeClass):
         return cls._fields
 
     @classmethod
-    def get(cls, query_filters, field_list = None, order = None, groups = None, limit = None, offset = 0):
+    def get(cls, query_filters, field_list = None, order = None, group = None, limit = None, offset = 0):
         query_filters.append(('type_id', '=', cls._type_id))
-        return super().get(query_filters, field_list, order, groups, limit, offset)
+        return super().get(query_filters, field_list, order, group, limit, offset)
 
     @classmethod
     def fieldtypes(cls):

@@ -37,6 +37,6 @@ class _LeClass(_LeObject):
         return cls.fieldtypes().keys()
 
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, groups=None, limit=None, offset=0):
+    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
         query_filters.append(('class_id', '=', cls._class_id))
-        return super().get(query_filters, field_list, order=order, groups=groups, limit=limit, offset=offset)
+        return super().get(query_filters, field_list, order=order, group=group, limit=limit, offset=offset)

@@ -305,7 +305,7 @@ class LeCrudTestCase(TestCase):
                                         filters = filters_ds,
                                         rel_filters = rfilters_ds,
                                         order=None,
-                                        groups=None,
+                                        group=None,
                                         limit=None,
                                         offset=0
                                     )
@@ -322,7 +322,7 @@ class LeCrudTestCase(TestCase):
                 {
                     'query_filters': [],
                     'field_list': ['lodel_id'],
-                    'groups': ['titre'],
+                    'group': ['titre'],
                     'limit': 10,
 
                 },
@@ -331,7 +331,7 @@ class LeCrudTestCase(TestCase):
                     'field_list': ['lodel_id'],
                     'filters': [],
                     'rel_filters': [],
-                    'groups': [('titre', 'ASC')],
+                    'group': [('titre', 'ASC')],
                     'order': None,
                     'limit': 10,
                     'offset': 0,
@@ -351,7 +351,7 @@ class LeCrudTestCase(TestCase):
                     'field_list': ['lodel_id'],
                     'filters': [],
                     'rel_filters': [((leapi.lecrud.REL_SUP, 'parent'), '=', '20')],
-                    'groups': None,
+                    'group': None,
                     'order': [('titre', 'ASC'), ('lodel_id', 'DESC')],
                     'limit': None,
                     'offset': 1024,
@@ -365,7 +365,7 @@ class LeCrudTestCase(TestCase):
                     'offset': 1024,
                     'limit': 2,
                     'order': ['titre', ('lodel_id', 'desc')],
-                    'groups': ['titre'],
+                    'group': ['titre'],
 
                 },
                 {
@@ -373,7 +373,7 @@ class LeCrudTestCase(TestCase):
                     'field_list': ['lodel_id'],
                     'filters': [],
                     'rel_filters': [((leapi.lecrud.REL_SUP, 'parent'), '=', '20')],
-                    'groups': [('titre', 'ASC')],
+                    'group': [('titre', 'ASC')],
                     'order': [('titre', 'ASC'), ('lodel_id', 'DESC')],
                     'limit': 2,
                     'offset': 1024,
