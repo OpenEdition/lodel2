@@ -197,7 +197,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         emclass = em.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The given uid is not an EmClass uid")
-        pkname, pktype = self._common_field_pk
+        pkname, pktype = self._object_pk
         table_name = self._emclass2table_name(emclass)
         self._create_table(table_name, pkname, pktype, engine=engine)
 
@@ -281,7 +281,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         if_exists = 'drop' if drop_if_exist else 'nothing'
         #Object table
         tname = utils.common_tables['object']
-        pk_name, pk_ftype = self._common_field_pk
+        pk_name, pk_ftype = self._object_pk
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists=if_exists)
         #Adding columns
         cols = {fname: self._common_field_to_ftype(fname) for fname in EditorialModel.classtypes.common_fields}
@@ -290,6 +290,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
                 self._add_column(tname, fname, ftype)
         #Creating triggers
         self._generate_triggers(tname, cols)
+        object_tname = tname
 
         #Relation table
         tname = utils.common_tables['relation']
@@ -300,6 +301,25 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             self._add_column(tname, fname, ftype)
         #Creating triggers
         self._generate_triggers(tname, self._relation_cols)
+
+        # Creating foreign keys between relation and object table
+        sup_cname, sub_cname = self.get_sup_and_sub_cols()
+        self._add_fk(tname, object_tname, sup_cname, self._object_pk[0], 'fk_relations_superiors')
+        self._add_fk(tname, object_tname, sub_cname, self._object_pk[0], 'fk_relations_subordinate')
+    
+    ## @brief Returns the fieldname for superior and subordinate in relation table
+    # @return a tuple (superior_name, subordinate_name)
+    @classmethod
+    def get_sup_and_sub_cols(cls):
+        sup = None
+        sub = None
+        for fname, finfo in EditorialModel.classtypes.relations_common_fields.items():
+            if finfo['fieldtype'] == 'leo':
+                if finfo['superior']:
+                    sup = fname
+                else:
+                    sub = fname
+        return utils.column_name(sup),utils.column_name(sub)
 
     ## @return true if the name changes
     def _name_change(self, initial_state, new_state):
@@ -377,13 +397,14 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
     # @param dst_table_name str : The name of the table the FK will point on
     # @param src_col_name str : The name of the concerned column in the src_table
     # @param dst_col_name str : The name of the concerned column in the dst_table
-    def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name):
+    def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name, fk_name = None):
         stname = utils.escape_idname(src_table_name)
         dtname = utils.escape_idname(dst_table_name)
         scname = utils.escape_idname(src_col_name)
         dcname = utils.escape_idname(dst_col_name)
 
-        fk_name = utils.get_fk_name(src_table_name, dst_table_name)
+        if fk_name is None:
+            fk_name = utils.get_fk_name(src_table_name, dst_table_name)
 
         self._del_fk(src_table_name, dst_table_name)
 
@@ -530,7 +551,7 @@ FOR EACH ROW SET {col_val_list};""".format(
 
     ## @brief Returns a tuple (pkname, pk_ftype)
     @property
-    def _common_field_pk(self):
+    def _object_pk(self):
         return self.extract_pk(EditorialModel.classtypes.common_fields)
 
     ## @brief Returns a tuple (rel_pkname, rel_ftype)

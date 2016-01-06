@@ -221,6 +221,15 @@ import %s
         """
         #Building the fieldtypes dict for LeRelation
         (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.relations_common_fields)
+        # Fetching superior and subordinate fieldname for LeRelation
+        lesup = None
+        lesub = None
+        for fname, finfo in EditorialModel.classtypes.relations_common_fields.items():
+            if finfo['fieldtype'] == 'leo':
+                if finfo['superior']:
+                    lesup = fname
+                else:
+                    lesub = fname
         """
         lerel_fieldtypes = list()
         lerel_uid_fieldtype = None
@@ -252,6 +261,8 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
+    _lesup_name = {lesup_name}
+    _lesub_name = {lesub_name}
 
 class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
     pass
@@ -272,6 +283,8 @@ class LeType(LeClass, _LeType):
             leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
             lerel_fieldtypes = '{\n\t' + (',\n\t'.join(lerel_fieldtypes))+ '\n\t}',
             lerel_uid_fieldtype = lerel_uid_fieldtype,
+            lesup_name = repr(lesup),
+            lesub_name = repr(lesub),
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)

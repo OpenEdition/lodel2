@@ -11,10 +11,8 @@ from . import lefactory
 ## @brief Main class for relations
 class _LeRelation(lecrud._LeCrud):
 
-    ## @brief Handles the superior
-    _lesup_fieldtype = {'lesup': ft_leo.EmFieldType(True)}
-    ## @brief Handles the subordinate
-    _lesub_fieldtype = {'lesub': ft_leo.EmFieldType(False) }
+    _lesup_name = None
+    _lesub_name = None
     ## @brief Stores the list of fieldtypes that are common to all relations
     _rel_fieldtypes = dict()
 
@@ -25,13 +23,13 @@ class _LeRelation(lecrud._LeCrud):
     @classmethod
     def sup_filter(self, leo):
         if isinstance(leo, leobject._LeObject):
-            return ('lesup', '=', leo)
+            return (self._lesup_name, '=', leo)
 
     ## @brief Forge a filter to match the superior
     @classmethod
     def sub_filter(self, leo):
         if isinstance(leo, leobject._LeObject):
-            return ('lesub', '=', leo)
+            return (self._lesub_name, '=', leo)
 
     ## @return a dict with field name as key and fieldtype instance as value
     @classmethod
@@ -60,7 +58,7 @@ class _LeRelation(lecrud._LeCrud):
         filters, rel_filters = super()._prepare_filters(filters_l)
         res_filters = list()
         for field, op, value in filters:
-            if field in ['lesup', 'lesub']:
+            if field in [self._lesup_name, self._lesub_name]:
                 if isinstance(value, str):
                     try:
                         value = int(value)
@@ -162,7 +160,7 @@ class _LeRel2Type(_LeRelation):
             datas['nature'] = None
         if cls == cls.name2class('LeRel2Type') and classname is None:
             # autodetect the rel2type child class
-            classname = relname(datas['lesup'], datas['lesub'])
+            classname = relname(datas[self._lesup_name], datas[self._lesub_name])
         return super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
