@@ -102,7 +102,7 @@ def get_type_spec_from_fieldtype(cls, emfieldtype):
 def find_prefix(name, prefixes):
     for prefix, names in prefixes:
         if name in names:
-            return MySQL.column_prefix(prefix, name)
+            return column_prefix(prefix, name)
     return name
 
 ## prefix a column name with the table name
