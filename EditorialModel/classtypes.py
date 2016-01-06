@@ -48,6 +48,14 @@ relations_common_fields = {
         'fieldtype': 'integer',
         'internal': 'automatic',
     },
+    'superior': {
+        'fieldtype': 'leo',
+        'superior': True,
+    },
+    'subordinate': {
+        'fieldtype': 'leo',
+        'superior': False,
+    }
 }
 
 

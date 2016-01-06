@@ -4,7 +4,11 @@ import copy
 import pymysql
 
 import EditorialModel
-from DataSource.MySQL.common_utils import MySQL
+import EditorialModel.classtypes
+import EditorialModel.fieldtypes
+import EditorialModel.fieldtypes.generic
+
+from DataSource.MySQL import utils
 from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
 # The global MH algorithm is as follow :
@@ -41,7 +45,6 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param password str : The db password
     # @param db str : The db name
     def __init__(self, host, user, passwd, db, module=pymysql, db_engine='InnoDB', foreign_keys=True, debug=False, dryrun=False, drop_if_exists=False):
-        self.datasource = MySQL
         self._dbmodule = module
         #Connect to MySQL
         self.db = self._dbmodule.connect(host=host, user=user, passwd=passwd, db=db)
@@ -144,7 +147,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_table(tname, pkname, pkftype, self.db_engine, if_exists='nothing')
         #Add a foreign key if wanted
         if self.foreign_keys:
-            self._add_fk(tname, self.datasource.relations_table_name, pkname, pkname)
+            self._add_fk(tname, utils.common_tables['relation'], pkname, pkname)
         #Add the column
         self._add_column(tname, emfield.name, emfield.fieldtype_instance())
         #Update table triggers
@@ -199,7 +202,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_table(table_name, pkname, pktype, engine=engine)
 
         if self.foreign_keys:
-            self._add_fk(table_name, self.datasource.objects_table_name, pkname, pkname)
+            self._add_fk(table_name, utils.common_tables['object'], pkname, pkname)
 
     ## @brief Given an EmClass uid delete the corresponding table
     # @param em Model : A Model instance
@@ -212,7 +215,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         # Delete the table triggers to prevent errors
         self._generate_triggers(tname, dict())
 
-        tname = self.datasource.escape_idname(tname)
+        tname = utils.escape_idname(tname)
 
         self._query("""DROP TABLE {table_name};""".format(table_name=tname))
 
@@ -238,8 +241,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param tname str : The table name
     # @param fname str : The column name
     def _del_column(self, tname, fname):
-        tname = self.datasource.escape_idname(tname)
-        fname = self.datasource.escape_idname(fname)
+        tname = utils.escape_idname(tname)
+        fname = utils.escape_idname(fname)
 
         self._query("""ALTER TABLE {table_name} DROP COLUMN {col_name};""".format(table_name=tname, col_name=fname))
 
@@ -247,8 +250,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param emclass EmClass : An EmClass instance
     # @return a table name
     def _emclass2table_name(self, emclass):
-        return self.datasource.get_table_name_from_class(emclass.name)
-        #return "class_%s"%emclass.name
+        return utils.object_table_name(emclass.name)
 
     ## @brief Construct a table name given a rela2type EmField instance
     # @param em Model : A Model instance
@@ -257,8 +259,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     def _r2t2table_name(self, em, emfield):
         emclass = emfield.em_class
         emtype = em.component(emfield.rel_to_type_id)
-        return self.datasource.get_r2t2table_name(emclass.name, emtype.name)
-        #return "%s_%s_%s"%(emclass.name, emtype.name, emfield.name)
+        return utils.r2t_table_name(emclass.name, emtype.name)
 
     ## @brief Generate a columns_fieldtype dict given a rel2type EmField
     # @param em Model : an @ref EditorialModel.model.Model instance
@@ -278,8 +279,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param drop_if_exist bool : If true drop tables if exists
     def _create_default_tables(self, drop_if_exist=False):
         if_exists = 'drop' if drop_if_exist else 'nothing'
-        #Object tablea
-        tname = self.datasource.objects_table_name
+        #Object table
+        tname = utils.common_tables['object']
         pk_name, pk_ftype = self._common_field_pk
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists=if_exists)
         #Adding columns
@@ -291,7 +292,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._generate_triggers(tname, cols)
 
         #Relation table
-        tname = self.datasource.relations_table_name
+        tname = utils.common_tables['relation']
         pk_name, pk_ftype = self._relation_pk
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists=if_exists)
         #Adding columns
@@ -313,7 +314,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param if_exist str : takes values in ['nothing', 'drop']
     def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing'):
         #Escaped table name
-        etname = self.datasource.escape_idname(table_name)
+        etname = utils.escape_idname(table_name)
         pk_type = self._field_to_type(pk_ftype)
         pk_specs = self._field_to_specs(pk_ftype)
 
@@ -333,8 +334,8 @@ PRIMARY KEY({pk_name})
             raise ValueError("Unexpected value for argument if_exists '%s'." % if_exists)
 
         self._query(qres.format(
-            table_name=self.datasource.escape_idname(table_name),
-            pk_name=self.datasource.escape_idname(pk_name),
+            table_name=utils.escape_idname(table_name),
+            pk_name=utils.escape_idname(pk_name),
             pk_type=pk_type,
             pk_specs=pk_specs,
             engine=engine,
@@ -346,11 +347,14 @@ PRIMARY KEY({pk_name})
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
     def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False):
+
+        col_name = utils.column_name(col_name)
+
         add_col = """ALTER TABLE {table_name}
 ADD COLUMN {col_name} {col_type} {col_specs};"""
 
-        etname = self.datasource.escape_idname(table_name)
-        ecname = self.datasource.escape_idname(col_name)
+        etname = utils.escape_idname(table_name)
+        ecname = utils.escape_idname(col_name)
 
         add_col = add_col.format(
             table_name=etname,
@@ -374,19 +378,19 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
     # @param src_col_name str : The name of the concerned column in the src_table
     # @param dst_col_name str : The name of the concerned column in the dst_table
     def _add_fk(self, src_table_name, dst_table_name, src_col_name, dst_col_name):
-        stname = self.datasource.escape_idname(src_table_name)
-        dtname = self.datasource.escape_idname(dst_table_name)
-        scname = self.datasource.escape_idname(src_col_name)
-        dcname = self.datasource.escape_idname(dst_col_name)
+        stname = utils.escape_idname(src_table_name)
+        dtname = utils.escape_idname(dst_table_name)
+        scname = utils.escape_idname(src_col_name)
+        dcname = utils.escape_idname(dst_col_name)
 
-        fk_name = self.datasource.get_fk_name(src_table_name, dst_table_name)
+        fk_name = utils.get_fk_name(src_table_name, dst_table_name)
 
         self._del_fk(src_table_name, dst_table_name)
 
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
 FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
-            fk_name=self.datasource.escape_idname(fk_name),
+            fk_name=utils.escape_idname(fk_name),
             src_table=stname,
             src_col=scname,
             dst_table=dtname,
@@ -401,8 +405,8 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
-                src_table=self.datasource.escape_idname(src_table_name),
-                fk_name=self.datasource.escape_idname(self.datasource.get_fk_name(src_table_name, dst_table_name))
+                src_table=utils.escape_idname(src_table_name),
+                fk_name=utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
             ))
         except self._dbmodule.err.InternalError:
             # If the FK don't exists we do not care
@@ -438,18 +442,18 @@ DROP FOREIGN KEY {fk_name}""".format(
     # @param moment str : can be 'update' or 'insert'
     # @param cols_val dict : Dict with column name as key and column value as value
     def _table_trigger(self, table_name, moment, cols_val):
-        trigger_name = self.datasource.escape_idname("%s_%s_trig" % (table_name, moment))
+        trigger_name = utils.escape_idname("%s_%s_trig" % (table_name, moment))
         #Try to delete the trigger
         drop_trig = """DROP TRIGGER IF EXISTS {trigger_name};""".format(trigger_name=trigger_name)
         self._query(drop_trig)
 
-        col_val_l = ', '.join(["NEW.%s = %s" % (self.datasource.escape_idname(cname), cval)for cname, cval in cols_val.items()])
+        col_val_l = ', '.join(["NEW.%s = %s" % (utils.escape_idname(utils.column_name(cname)), cval)for cname, cval in cols_val.items()])
         #Create a trigger if needed
         if len(col_val_l) > 0:
             trig_q = """CREATE TRIGGER {trigger_name} BEFORE {moment} ON {table_name}
 FOR EACH ROW SET {col_val_list};""".format(
                 trigger_name=trigger_name,
-                table_name=self.datasource.escape_idname(table_name),
+                table_name=utils.escape_idname(table_name),
                 moment=moment, col_val_list=col_val_l
             )
             self._query(trig_q)
@@ -506,41 +510,51 @@ FOR EACH ROW SET {col_val_list};""".format(
             res = "INT"
         elif ftype == 'rel2type':
             res = "INT"
+        elif ftype == 'leobject':
+            res = "INT"
         else:
             raise ValueError("Unsuported fieldtype ftype : %s" % ftype)
 
         return res
 
+    ## @brief Return primary key name & fieldtype for relation or object
+    @classmethod
+    def extract_pk(cls, common_fields):
+        for fname, finfo in common_fields.items():
+            if finfo['fieldtype'] == 'pk':
+                fto = EditorialModel.fieldtypes.generic.GenericFieldType.from_name('pk')
+                finfo_cp = copy.copy(finfo)
+                del(finfo_cp['fieldtype'])
+                return (utils.column_name(fname), fto(**finfo_cp))
+        raise RuntimeError("No primary key found in common fields : %s"%common_fields)
+
     ## @brief Returns a tuple (pkname, pk_ftype)
     @property
     def _common_field_pk(self):
-        for fname, fta in EditorialModel.classtypes.common_fields.items():
-            if fta['fieldtype'] == 'pk':
-                return (fname, self._common_field_to_ftype(fname))
-        return (None, None)
+        return self.extract_pk(EditorialModel.classtypes.common_fields)
 
     ## @brief Returns a tuple (rel_pkname, rel_ftype)
-    # @todo do it
     @property
     def _relation_pk(self):
-        return (MySQL.relations_pkname, EditorialModel.fieldtypes.pk.EmFieldType())
+        return self.extract_pk(EditorialModel.classtypes.relations_common_fields)
 
     ## @brief Returns a dict { colname:fieldtype } of relation table columns
     @property
     def _relation_cols(self):
         from_name = EditorialModel.fieldtypes.generic.GenericFieldType.from_name
-        return {
-            'id_sup': from_name('integer')(),
-            'id_sub': from_name('integer')(),
-            'rank': from_name('integer')(nullable=True),
-            'depth': from_name('integer')(nullable=True),
-            'nature': from_name('char')(max_lenght=10, nullable=True),
-        }
+        res = dict()
+        for fieldname, fieldinfo in EditorialModel.classtypes.relations_common_fields.items():
+            finfo = copy.copy(fieldinfo)
+            fieldtype_name = finfo['fieldtype']
+            del(finfo['fieldtype'])
+            res[fieldname] = EditorialModel.fieldtypes.generic.GenericFieldType.from_name(fieldtype_name)(**finfo)
+        return res
 
     ## @brief Given a common field name return an EmFieldType instance
     # @param cname str : Common field name
     # @return An EmFieldType instance
-    def _common_field_to_ftype(self, cname):
+    @classmethod
+    def _common_field_to_ftype(cls, cname):
         fta = copy.copy(EditorialModel.classtypes.common_fields[cname])
         fto = EditorialModel.fieldtypes.generic.GenericFieldType.from_name(fta['fieldtype'])
         del fta['fieldtype']
