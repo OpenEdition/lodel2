@@ -3,6 +3,8 @@
 import copy
 import pymysql
 
+from Lodel.settings import Settings
+
 import EditorialModel
 import EditorialModel.classtypes
 import EditorialModel.fieldtypes
@@ -44,11 +46,15 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param user str : The db user
     # @param password str : The db password
     # @param db str : The db name
-    def __init__(self, host, user, passwd, db, module=pymysql, db_engine='InnoDB', foreign_keys=True, debug=False, dryrun=False, drop_if_exists=False):
+    def __init__(self, module = pymysql, conn_args = None, db_engine='InnoDB', foreign_keys=True, debug=None, dryrun=False, drop_if_exists=False):
         self._dbmodule = module
+        if conn_args is None:
+            conn_args = copy.copy(Settings.get('datasource')['default'])
+            self._dbmodule = conn_args['module']
+            del conn_args['module']
+        self.db = self._dbmodule.connect(**conn_args)
         #Connect to MySQL
-        self.db = self._dbmodule.connect(host=host, user=user, passwd=passwd, db=db)
-        self.debug = debug
+        self.debug = Settings.get('debug') if debug is None else debug
         self.dryrun = dryrun
         self.db_engine = db_engine
         self.foreign_keys = foreign_keys if db_engine == 'InnoDB' else False

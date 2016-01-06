@@ -22,7 +22,7 @@ def refreshdyn():
 def db_init():
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.model import Model
-    mh = getattr(migrationhandler,settings.mh_classname)(**(settings.datasource['default']))
+    mh = getattr(migrationhandler,settings.mh_classname)()
     em = Model(EmBackendJson(settings.emfile))
     em.migrate_handler(mh)
 

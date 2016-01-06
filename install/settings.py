@@ -5,6 +5,8 @@ import pymysql
 name = 'LODEL2_INSTANCE_NAME'
 lodel2_lib_path = 'LODEL2_LIB_ABS_PATH'
 
+debug = False
+
 emfile = 'em.json'
 dynamic_code = 'dynleapi.py'
 
