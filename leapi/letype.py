@@ -61,6 +61,10 @@ class _LeType(_LeClass):
             raise LeApiDataCheckError("Invalid arguments given to constructor", err_l)
 
     @classmethod
+    def leo_class(cls):
+        return cls._leclass
+
+    @classmethod
     def fieldlist(cls):
         return cls._fields
 
