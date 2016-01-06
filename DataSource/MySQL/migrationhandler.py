@@ -47,41 +47,24 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param password str : The db password
     # @param db str : The db name
     def __init__(self, module = pymysql, conn_args = None, db_engine='InnoDB', foreign_keys=True, debug=None, dryrun=False, drop_if_exists=False):
+        
+        # Database connection
         self._dbmodule = module
         if conn_args is None:
             conn_args = copy.copy(Settings.get('datasource')['default'])
             self._dbmodule = conn_args['module']
             del conn_args['module']
         self.db = self._dbmodule.connect(**conn_args)
-        #Connect to MySQL
+        
+        # Fetch options
         self.debug = Settings.get('debug') if debug is None else debug
         self.dryrun = dryrun
         self.db_engine = db_engine
         self.foreign_keys = foreign_keys if db_engine == 'InnoDB' else False
         self.drop_if_exists = drop_if_exists
+
         #Create default tables
         self._create_default_tables(self.drop_if_exists)
-
-    ## @brief Delete all table created by the MH
-    # @param model Model : the Editorial model
-    def __purge_db(self, model):
-        for uid in [c.uid for c in model.components('EmClass')]:
-            try:
-                self.delete_emclass_table(model, uid)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
-
-        for tname in [MySQL.get_r2t2table_name(f.em_class.name, model.component(f.rel_to_type_id).name) for f in model.components('EmField') if f.fieldtype == 'rel2type']:
-            try:
-                self._query("DROP TABLE %s;" % tname)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
-
-        for tname in [MySQL.relations_table_name, MySQL.objects_table_name]:
-            try:
-                self._query("DROP TABLE %s;" % tname)
-            except self._dbmodule.err.InternalError as e:
-                print(e)
 
     ## @brief Modify the db given an EM change
     # @param em model : The EditorialModel.model object to provide the global context
@@ -124,16 +107,6 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @note implemented to avoid the log message of EditorialModel.migrationhandler.dummy.DummyMigrationHandler
     def register_model_state(self, em, state_hash):
         pass
-
-    ## @brief Exec a query
-    # @param query str : SQL query
-    def _query(self, query):
-        if self.debug:
-            print(query + "\n")
-        if not self.dryrun:
-            with self.db.cursor() as cur:
-                cur.execute(query)
-        self.db.commit()  # autocommit
 
     ## @brief Add a relationnal field
     # Add a rel2type attribute
@@ -190,7 +163,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             raise ValueError("The given uid is not an EmField uid")
 
         emclass = emfield.em_class
-        tname = self._emclass2table_name(emclass)
+        tname = utils.object_table_name(emclass.name)
         self._add_column(tname, emfield.name, emfield.fieldtype_instance())
         # Refresh the table triggers
         cols_l = self._class2cols(emclass)
@@ -204,7 +177,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The given uid is not an EmClass uid")
         pkname, pktype = self._object_pk
-        table_name = self._emclass2table_name(emclass)
+        table_name = utils.object_table_name(emclass.name)
+
         self._create_table(table_name, pkname, pktype, engine=engine)
 
         if self.foreign_keys:
@@ -217,7 +191,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         emclass = em.component(uid)
         if not isinstance(emclass, EditorialModel.classes.EmClass):
             raise ValueError("The give uid is not an EmClass uid")
-        tname = self._emclass2table_name(emclass)
+        tname = utils.object_table_name(emclass.name)
         # Delete the table triggers to prevent errors
         self._generate_triggers(tname, dict())
 
@@ -234,7 +208,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             raise ValueError("The given uid is not an EmField uid")
 
         emclass = emfield.em_class
-        tname = self._emclass2table_name(emclass)
+        tname = utils.object_table_name(emclass.name)
         # Delete the table triggers to prevent errors
         self._generate_triggers(tname, dict())
 
@@ -251,12 +225,6 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         fname = utils.escape_idname(fname)
 
         self._query("""ALTER TABLE {table_name} DROP COLUMN {col_name};""".format(table_name=tname, col_name=fname))
-
-    ## @brief Construct a table name given an EmClass instance
-    # @param emclass EmClass : An EmClass instance
-    # @return a table name
-    def _emclass2table_name(self, emclass):
-        return utils.object_table_name(emclass.name)
 
     ## @brief Construct a table name given a rela2type EmField instance
     # @param em Model : A Model instance
@@ -326,10 +294,6 @@ class MysqlMigrationHandler(DummyMigrationHandler):
                 else:
                     sub = fname
         return utils.column_name(sup),utils.column_name(sub)
-
-    ## @return true if the name changes
-    def _name_change(self, initial_state, new_state):
-        return 'name' in initial_state and initial_state['name'] != new_state['name']
 
     ## @brief Create a table with primary key
     # @param table_name str : table name
@@ -549,6 +513,27 @@ FOR EACH ROW SET {col_val_list};""".format(
 
         return res
 
+    ## @brief Delete all table created by the MH
+    # @param model Model : the Editorial model
+    def __purge_db(self, model):
+        for uid in [c.uid for c in model.components('EmClass')]:
+            try:
+                self.delete_emclass_table(model, uid)
+            except self._dbmodule.err.InternalError as e:
+                print(e)
+
+        for tname in [MySQL.get_r2t2table_name(f.em_class.name, model.component(f.rel_to_type_id).name) for f in model.components('EmField') if f.fieldtype == 'rel2type']:
+            try:
+                self._query("DROP TABLE %s;" % tname)
+            except self._dbmodule.err.InternalError as e:
+                print(e)
+
+        for tname in [MySQL.relations_table_name, MySQL.objects_table_name]:
+            try:
+                self._query("DROP TABLE %s;" % tname)
+            except self._dbmodule.err.InternalError as e:
+                print(e)
+
     ## @brief Return primary key name & fieldtype for relation or object
     @classmethod
     def extract_pk(cls, common_fields):
@@ -559,6 +544,26 @@ FOR EACH ROW SET {col_val_list};""".format(
                 del(finfo_cp['fieldtype'])
                 return (utils.column_name(fname), fto(**finfo_cp))
         raise RuntimeError("No primary key found in common fields : %s"%common_fields)
+
+    ## @brief Exec a query
+    # @param query str : SQL query
+    def _query(self, query):
+        if self.debug:
+            print(query + "\n")
+        if not self.dryrun:
+            with self.db.cursor() as cur:
+                cur.execute(query)
+        self.db.commit()  # autocommit
+
+    ## @brief Given a common field name return an EmFieldType instance
+    # @param cname str : Common field name
+    # @return An EmFieldType instance
+    @classmethod
+    def _common_field_to_ftype(cls, cname):
+        fta = copy.copy(EditorialModel.classtypes.common_fields[cname])
+        fto = EditorialModel.fieldtypes.generic.GenericFieldType.from_name(fta['fieldtype'])
+        del fta['fieldtype']
+        return fto(**fta)
 
     ## @brief Returns a tuple (pkname, pk_ftype)
     @property
@@ -581,13 +586,3 @@ FOR EACH ROW SET {col_val_list};""".format(
             del(finfo['fieldtype'])
             res[fieldname] = EditorialModel.fieldtypes.generic.GenericFieldType.from_name(fieldtype_name)(**finfo)
         return res
-
-    ## @brief Given a common field name return an EmFieldType instance
-    # @param cname str : Common field name
-    # @return An EmFieldType instance
-    @classmethod
-    def _common_field_to_ftype(cls, cname):
-        fta = copy.copy(EditorialModel.classtypes.common_fields[cname])
-        fto = EditorialModel.fieldtypes.generic.GenericFieldType.from_name(fta['fieldtype'])
-        del fta['fieldtype']
-        return fto(**fta)
