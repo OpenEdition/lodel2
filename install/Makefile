@@ -1,12 +1,15 @@
 all: refreshdyn dbinit
 
-refreshdyn:
+refreshdyn: distclean
 	python -c "import utils; utils.refreshdyn()"
 
 dbinit:
 	python -c "import utils; utils.db_init()"
 
-.PHONY: clean cleanpycache cleanpyc refreshdyn
+.PHONY: clean cleanpycache cleanpyc refreshdyn distclean
+
+distclean: clean
+	-@rm dynleapi.py
 
 clean: cleanpycache
 
