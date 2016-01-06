@@ -14,9 +14,10 @@ from mosql.util import raw, or_
 import mosql.mysql
 
 from DataSource.dummy.leapidatasource import DummyDatasource
-from DataSource.MySQL.common_utils import MySQL
-from EditorialModel.classtypes import EmNature, common_fields, relations_common_fields
+from DataSource.MySQL import utils
+from EditorialModel.classtypes import EmNature
 
+from Lodel.settings import Settings
 
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
@@ -26,9 +27,8 @@ class LeDataSourceSQL(DummyDatasource):
     def __init__(self, module=pymysql, conn_args=None):
         super(LeDataSourceSQL, self).__init__()
         self.module = module
-        self.datasource_utils = MySQL
         if conn_args is None:
-            conn_args = copy.copy(self.datasource_utils.connections['default'])
+            conn_args = copy.copy(Settings.get('datasource')['default'])
             self.module = conn_args['module']
             del conn_args['module']
         self.connection = Database(self.module, **conn_args)
@@ -48,15 +48,16 @@ class LeDataSourceSQL(DummyDatasource):
         joins = []
         # it is a LeObject, query only on main table
         if target_cls.__name__ == 'LeObject':
-            main_table = self.datasource_utils.objects_table_name
-            fields = [(main_table, common_fields)]
+            main_table = utils.common_tables['object']
+            fields = [(main_table, target_cls.fieldlist())]
 
         # it is a LeType or a LeClass, query on main table left join class table on lodel_id
         elif target_cls.is_letype() or target_cls.is_leclass():
             # find main table and main table datas
-            main_table = self.datasource_utils.objects_table_name
-            main_class = target_cls._leclass if hasattr(target_cls, '_leclass') else target_cls
-            class_table = self.datasource_utils.get_table_name_from_class(main_class.__name__)
+            main_table = utils.common_tables['object']
+            main_class = target_cls.leo_class()
+            class_table = utils.object_table_name(main_class.__name__)
+            print (class_table)
             main_lodel_id = self.datasource_utils.column_prefix(main_table, self.datasource_utils.field_lodel_id)
             class_lodel_id = self.datasource_utils.column_prefix(class_table, self.datasource_utils.field_lodel_id)
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
@@ -74,13 +75,13 @@ class LeDataSourceSQL(DummyDatasource):
             raise AttributeError("Target class '%s' in get() is not a Lodel Editorial Object !" % target_cls)
 
         # prefix column name in fields list
-        prefixed_field_list = [self.datasource_utils.find_prefix(name, fields) for name in field_list]
+        prefixed_field_list = [utils.find_prefix(name, fields) for name in field_list]
 
         kwargs = {}
         if group:
-            kwargs['group_by'] = (self.datasource_utils.find_prefix(column, fields) for column, direction in group)
+            kwargs['group_by'] = (utils.find_prefix(column, fields) for column, direction in group)
         if order:
-            kwargs['order_by'] = (self.datasource_utils.find_prefix(column, fields) + ' ' + direction for column, direction in order)
+            kwargs['order_by'] = (utils.find_prefix(column, fields) + ' ' + direction for column, direction in order)
         if limit:
             kwargs['limit'] = limit
         if offset:
@@ -99,12 +100,12 @@ class LeDataSourceSQL(DummyDatasource):
                 #where_filters[rel_filter['condition_key']] = rel_filter['condition_value']
 
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
-        wheres = {(self.datasource_utils.find_prefix(name, fields), op):value for name,op,value in filters}
+        wheres = {(utils.find_prefix(name, fields), op):value for name,op,value in filters}
         query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins, **kwargs)
         print ('SQL', query)
 
         # Executing the query
-        cur = self.datasource_utils.query(self.connection, query)
+        cur = utils.query(self.connection, query)
         results = all_to_dicts(cur)
 
         # instanciate each row to editorial components
