@@ -3,6 +3,8 @@ Creating a Lodel "instance":
 use the lodel_init.sh script :
 	lodel_init.sh INSTANCE_NAME INSTANCE_WANTED_PATH [LODEL2_LIB_PATH]
 
+When you have set the new instance settings ( by editing settings.py in instance directory ) you should be able to create the database structure + dynamic code by running make (without arguments) in the instance directory .
+
 Once the instance is created you can run an interactive python interpreter using :
 	cd INSTANCE_PATH; python loader.py
 

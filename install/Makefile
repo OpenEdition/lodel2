@@ -1,4 +1,4 @@
-all:
+all: refreshdyn dbinit
 
 refreshdyn:
 	python -c "import utils; utils.refreshdyn()"
