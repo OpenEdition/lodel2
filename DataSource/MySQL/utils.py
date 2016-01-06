@@ -21,14 +21,14 @@ leroot_lodel_id = 0
 # @param class_name str : The class name
 # @return a table name
 def object_table_name(class_name):
-    return "%s%s"%(table_preffix['object'], class_name).lower()
+    return ("%s%s"%(table_preffix['object'], class_name)).lower()
 
 ## @brief Return a table name given a class name and a type name
 # @param class_name str : The (Em|Le)Class name
 # @param type_name str : The (Em|Le)Type name
 # @return a table name
 def r2t_table_name(class_name, type_name):
-    return "%s%s_%s"%(table_preffix['relation'], class_name, type_name).lower()
+    return ("%s%s_%s"%(table_preffix['relation'], class_name, type_name)).lower()
 
 ## @brief Return a column name given a field name
 # @param field_name : The EmField or LeObject field name
@@ -40,11 +40,8 @@ def column_name(field_name):
 # @param src_table_name str
 # @param dst_table_name str
 # @return str
-def get_fk_name(cls, src_table_name, dst_table_name):
-    return "fk_%s_%s" % (src_table_name, dst_table_name)
-
-def common_table_name(relation=True):
-    return common_tables['relation' if relation else 'object']
+def get_fk_name(src_table_name, dst_table_name):
+    return ("fk_%s_%s" % (src_table_name, dst_table_name)).lower()
 
 ## @brief Exec a query
 # @param query str : SQL query
@@ -58,7 +55,7 @@ def query(connection, query):
 
 ## @brief Identifier escaping
 # @param idname str : An SQL identifier
-def escape_idname(cls, idname):
+def escape_idname(idname):
     if '`' in idname:
         raise ValueError("Invalid name : '%s'" % idname)
     return '`%s`' % idname
@@ -66,7 +63,7 @@ def escape_idname(cls, idname):
 ## @brief Given a fieldtype, returns a MySQL type specifier
 # @param emfieldType EmFieldType : A fieldtype
 # @return str
-def get_type_spec_from_fieldtype(cls, emfieldtype):
+def get_type_spec_from_fieldtype(emfieldtype):
 
     ftype = emfieldtype.ftype
 
