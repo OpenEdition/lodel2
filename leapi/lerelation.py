@@ -17,7 +17,7 @@ class _LeRelation(lecrud._LeCrud):
     _rel_fieldtypes = dict()
 
     def __init__(self, id_relation, **kwargs):
-        self.id_relation = id_relation
+        super().__init__(id_relation, **kwargs)
     
     ## @brief Forge a filter to match the superior
     @classmethod

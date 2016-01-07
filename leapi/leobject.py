@@ -33,16 +33,6 @@ class _LeObject(_LeCrud):
     ## @brief Stores the names of the fields storing the EM class uid and EM type uid
     _me_uid_field_names = (None, None)
     
-    ## @brief Instanciate a partial LeObject with a lodel_id
-    # @note use the get_instance method to fetch datas and instanciate a concret LeObject
-    def __init__(self, lodel_id):
-        #Warning ! Handles only single pk
-        uid_fname, uid_ft = list(self._uid_fieldtype.items())[0]
-        new_id, err = uid_ft.check_data_value(lodel_id)
-        if not (err is None):
-            raise err
-        setattr(self, uid_fname, lodel_id)
-    
     ## @return Corresponding populated LeObject
     def get_instance(self):
         uid_fname = self.uidname()

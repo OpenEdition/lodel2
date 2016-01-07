@@ -55,8 +55,41 @@ class _LeCrud(object):
     ## @brief Stores Query filters operators
     _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
-    def __init__(self):
-        raise NotImplementedError("Abstract class")
+    
+    ## @brief Asbtract constructor for every child classes
+    # @param uid int : lodel_id if LeObject, id_relation if its a LeRelation
+    # @param **kwargs : datas !
+    # @raise NotImplementedError if trying to instanciate a class that cannot be instanciated
+    def __init__(self, uid, **kwargs):
+        if not self.implements_leobject() and not self.implements_lerelation():
+            raise NotImplementedError("Abstract class !")
+        # Try to get the name of the uid field (lodel_id for objects, id_relation for relations)
+        try:
+            uid_name = self.uidname()
+        except NotImplementedError: #Should never append
+            raise NotImplementedError("Abstract class !")
+        
+        # Checking uid value
+        uid, err = self._uid_fieldtype[uid_name].check_data_value(uid)
+        if isinstance(err, Exception):
+            raise err
+        setattr(self, uid_name, uid)
+        
+        # Populating the object with given datas
+        errors = dict()
+        for name, value in kwargs.items():
+            if name not in self.fieldlist():
+                errors[name] = AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
+            else:
+                cvalue, err = self.fieldtypes()[name].check_data_value(value)
+                if isinstance(err, Exception):
+                    errors[name] = err
+                else:
+                    setattr(self, name, cvalue)
+        if len(errors) > 0:
+            raise LeApiDataCheckError("Invalid arguments given to constructor", errors)
+
+
  
     ## @brief Given a dynamically generated class name return the corresponding python Class
     # @param name str : a concrete class name

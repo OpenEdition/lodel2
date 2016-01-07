@@ -35,30 +35,14 @@ class _LeType(_LeClass):
         if self._leclass is None:
             raise NotImplementedError("Abstract class")
 
-        self.lodel_id, err = self._uid_fieldtype['lodel_id'].check_data_value(lodel_id)
-        if isinstance(err, Exception):
-            raise err
-
         if 'type_id' in kwargs:
             if self.__class__._type_id != int(kwargs['type_id']):
                 raise RuntimeError("Trying to instanciate a %s with an type_id that is not correct"%self.__class__.__name__)
         if 'class_id' in kwargs:
             if self.__class__._class_id != int(kwargs['class_id']):
                 raise RuntimeError("Trying to instanciate a %s with a clas_id that is not correct"%self.__class__.__name__)
-
-        ## Populate the object from the datas received in kwargs
-        err_l = dict()
-        for name, value in kwargs.items():
-            if name not in self._fields:
-                err_l[name] = AttributeError("No such field '%s' for %s"%(name, self.__class__.__name__))
-            else:
-                cvalue, err =  self.fieldtypes()[name].check_data_value(value)
-                if isinstance(err, Exception):
-                    err_l[name] = err
-                else:
-                    setattr(self, name, value)
-        if len(err_l) > 0:
-            raise LeApiDataCheckError("Invalid arguments given to constructor", err_l)
+        
+        super().__init__(lodel_id, **kwargs)
 
     @classmethod
     def leo_class(cls):
