@@ -16,8 +16,8 @@ class _LeRelation(lecrud._LeCrud):
     ## @brief Stores the list of fieldtypes that are common to all relations
     _rel_fieldtypes = dict()
 
-    def __init__(self, rel_id, **kwargs):
-        self.id_relation = rel_id
+    def __init__(self, id_relation, **kwargs):
+        self.id_relation = id_relation
     
     ## @brief Forge a filter to match the superior
     @classmethod
@@ -41,7 +41,14 @@ class _LeRelation(lecrud._LeCrud):
         if cls.implements_lerel2type():
             rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
-    
+
+    ## @brief instanciate the relevant lodel object using a dict of datas
+    @classmethod
+    def object_from_data(cls, datas):
+        if 'nature' in datas:
+            return cls.name2class('LeHierarch')(**datas)
+        return "To implement !"
+
     @classmethod
     def _prepare_relational_fields(cls, field):
         return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject" % (field,
