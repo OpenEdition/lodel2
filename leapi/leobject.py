@@ -84,7 +84,12 @@ class _LeObject(_LeCrud):
         if uid not in cls._me_uid:
             raise KeyError("No LeType or LeClass child classes with uid '%d'"%uid)
         return cls._me_uid[uid]
-    
+
+    ## @brief instanciate the relevant lodel object using a dict of datas
+    @classmethod
+    def object_from_data(cls, datas):
+        return cls.uid2leobj(datas['type_id'])(**datas)
+
     @classmethod
     def fieldtypes(cls):
         if cls._fieldtypes_all is None:
