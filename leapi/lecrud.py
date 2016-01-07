@@ -92,10 +92,27 @@ class _LeCrud(object):
                     setattr(self, name, cvalue)
         if len(errors) > 0:
             raise LeApiDataCheckError("Invalid arguments given to constructor", errors)
-        
+
         ## @brief A flag to indicate if the object was fully intanciated or not
         self._instanciation_complete = len(kwargs) + 1 == len(self.fieldlist())
- 
+
+    ## @brief Convert an EmType or EmClass name in a python class name
+    # @param name str : The name
+    # @return name.title()
+    @staticmethod
+    def name2classname(name):
+        if not isinstance(name, str):
+            raise AttributeError("Argument name should be a str and not a %s" % type(name))
+        return name.title()
+
+    ## @brief Convert an EmCalss and EmType name in a rel2type class name
+    # @param name str : The name
+    # @return name.title()
+    @staticmethod
+    def name2rel2type(class_name, type_name):
+        cls_name = "Rel_%s2%s"%(_LeCrud.name2classname(class_name), _LeCrud.name2classname(type_name))
+        return cls_name
+
     ## @brief Given a dynamically generated class name return the corresponding python Class
     # @param name str : a concrete class name
     # @return False if no such component

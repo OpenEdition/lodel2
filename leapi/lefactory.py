@@ -7,6 +7,7 @@ import os.path
 import EditorialModel
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
+from leapi.lecrud import _LeCrud
 
 
 ## @brief This class is designed to generated the leobject API given an EditorialModel.model
@@ -23,15 +24,6 @@ class LeFactory(object):
         self._code_filename = code_filename
         self._dyn_file = os.path.basename(code_filename)
         self._modname = os.path.dirname(code_filename).strip('/').replace('/', '.') #Warning Windaube compatibility
-
-    ## @brief Convert an EmType or EmClass name in a python class name
-    # @param name str : The name
-    # @return name.title()
-    @staticmethod
-    def name2classname(name):
-        if not isinstance(name, str):
-            raise AttributeError("Argument name should be a str and not a %s" % type(name))
-        return name.title()
 
     ## @brief Return a call to a FieldType constructor given an EmField
     # @param emfield EmField : An EmField
@@ -83,7 +75,7 @@ class LeFactory(object):
         for field in [ f for f in model.components('EmField') if f.fieldtype == 'rel2type']:
             related = model.component(field.rel_to_type_id)
             src = field.em_class
-            cls_name = "Rel_%s2%s"%(self.name2classname(src.name), self.name2classname(related.name))
+            cls_name = _LeCrud.name2rel2type(src.name, related.name)
 
             attr_l = dict()
             for attr in [ f for f in model.components('EmField') if f.rel_field_id == field.uid]:
@@ -98,8 +90,8 @@ class {classname}(LeRel2Type):
 """.format(
     classname = cls_name,
     attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}",
-    supcls = self.name2classname(src.name),
-    subcls = self.name2classname(related.name),
+    supcls = _LeCrud.name2classname(src.name),
+    subcls = _LeCrud.name2classname(related.name),
 )
             res_code += rel_code
         return res_code
@@ -115,7 +107,7 @@ class {classname}(LeRel2Type):
         #Populating linked_type attr
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
-            cls_linked_types.append(LeFactory.name2classname(model.component(fti.rel_to_type_id).name))
+            cls_linked_types.append(_LeCrud.name2classname(model.component(fti.rel_to_type_id).name))
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
             self.needed_fieldtypes |= set([field.fieldtype])
@@ -128,7 +120,7 @@ class {classname}(LeRel2Type):
 {name}._linked_types = {ltypes}
 {name}._classtype = {classtype}
 """.format(
-            name = LeFactory.name2classname(emclass.name),
+            name = _LeCrud.name2classname(emclass.name),
             ftypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
 
             ltypes = "[" + (','.join(cls_linked_types))+"]",
@@ -148,7 +140,7 @@ class {classname}(LeRel2Type):
         for nat, sup_l in emtype.superiors().items():
             type_superiors.append('%s: [%s]' % (
                 repr(nat),
-                ', '.join([LeFactory.name2classname(sup.name) for sup in sup_l])
+                ', '.join([_LeCrud.name2classname(sup.name) for sup in sup_l])
             ))
 
         return """
@@ -157,10 +149,10 @@ class {classname}(LeRel2Type):
 {name}._superiors = {dsups}
 {name}._leclass = {leclass}
 """.format(
-            name=LeFactory.name2classname(emtype.name),
+            name=_LeCrud.name2classname(emtype.name),
             fields=repr(type_fields),
             dsups='{' + (', '.join(type_superiors)) + '}',
-            leclass=LeFactory.name2classname(emtype.em_class.name)
+            leclass=_LeCrud.name2classname(emtype.em_class.name)
         )
 
     ## @brief Generate python code containing the LeObject API
@@ -198,7 +190,7 @@ import %s
         #Generating the code for LeObject class
         leobj_me_uid = dict()
         for comp in model.components('EmType') + model.components('EmClass'):
-            leobj_me_uid[comp.uid] = LeFactory.name2classname(comp.name)
+            leobj_me_uid[comp.uid] = _LeCrud.name2classname(comp.name)
         
         #Building the fieldtypes dict of LeObject
         (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.common_fields)
@@ -284,7 +276,7 @@ class {name}(LeClass, LeObject):
     _class_id = {uid}
 
 """.format(
-                name=LeFactory.name2classname(emclass.name),
+                name=_LeCrud.name2classname(emclass.name),
                 uid=emclass.uid
             )
         #LeType child classes definition
@@ -296,8 +288,8 @@ class {name}(LeType, {leclass}):
     _type_id = {uid}
 
 """.format(
-                name=LeFactory.name2classname(emtype.name),
-                leclass=LeFactory.name2classname(emtype.em_class.name),
+                name=_LeCrud.name2classname(emtype.name),
+                leclass=_LeCrud.name2classname(emtype.em_class.name),
                 uid=emtype.uid
             )
 
@@ -312,7 +304,7 @@ class {name}(LeType, {leclass}):
 
 
         #Populating LeObject._me_uid dict for a rapid fetch of LeType and LeClass given an EM uid
-        me_uid = {comp.uid: LeFactory.name2classname(comp.name) for comp in emclass_l + emtype_l}
+        me_uid = {comp.uid: _LeCrud.name2classname(comp.name) for comp in emclass_l + emtype_l}
         result += """
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
 LeObject._me_uid = %s""" % "{" + (', '.join(['%s: %s' % (k, v) for k, v in me_uid.items()])) + "}"
