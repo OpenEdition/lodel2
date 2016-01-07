@@ -196,12 +196,13 @@ class _LeCrud(object):
     ## @brief Returns object datas
     # @param
     # @return a dict of fieldname : value
-    def datas(self, internal = False):
+    def datas(self, internal=True):
         res = dict()
         for fname, ftt in self.fieldtypes().items():
-            if (internal or (not internal and ftt.is_internal)) and hasattr(self, fname):
+            if (internal or (not internal and not ftt.is_internal)) and hasattr(self, fname):
                 res[fname] = getattr(self, fname)
-    
+        return res
+
     ## @brief Update a component in DB
     # @param datas dict : If None use instance attributes to update de DB
     # @return True if success

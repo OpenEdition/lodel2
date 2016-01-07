@@ -76,11 +76,6 @@ class _LeType(_LeClass):
         for fname, fval in fdatas[0].items():
             setattr(self, fname, fval)
 
-    ## @brief Get a fieldname:value dict
-    # @return A dict with field name as key and the field value as value
-    def datas(self):
-        return { fname: getattr(self, fname) for fname in self._fields if hasattr(self,fname) }
-    
     ## @brief Get all the datas for this LeType
     # @return a dict with fieldname as key and field value as value
     # @warning Can represent a performance issue
