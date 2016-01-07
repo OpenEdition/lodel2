@@ -53,10 +53,10 @@ class TestLeFactory(TestCase):
     def test_leclass(self):
         """ Testing generated LeClass childs classes """
         import dyncode
-        from dyncode import LeType, LeClass
+        from dyncode import LeType, LeClass, LeCrud
 
         for emclass in self.model.components(EditorialModel.classes.EmClass):
-            leclass_name = LeFactory.name2classname(emclass.name)
+            leclass_name = LeCrud.name2classname(emclass.name)
             self.assertTrue(hasattr(dyncode, leclass_name))
 
             leclass = getattr(dyncode, leclass_name)
@@ -67,7 +67,7 @@ class TestLeFactory(TestCase):
             
             #Testing _linked_types attr
             self.assertEqual(
-                set([ LeFactory.name2classname(lt.name) for lt in emclass.linked_types()]),
+                set([ LeCrud.name2classname(lt.name) for lt in emclass.linked_types()]),
                 set([ t.__name__ for t in leclass._linked_types ])
             )
 
@@ -86,10 +86,10 @@ class TestLeFactory(TestCase):
     def test_letype(self):
         """ Testing generated LeType childs classes """
         import dyncode
-        from dyncode import LeType, LeClass
+        from dyncode import LeType, LeClass, LeCrud
 
         for emtype in self.model.components(EditorialModel.types.EmType):
-            letype_name = LeFactory.name2classname(emtype.name)
+            letype_name = LeCrud.name2classname(emtype.name)
             self.assertTrue(hasattr(dyncode, letype_name))
 
             letype = getattr(dyncode, letype_name)
@@ -113,6 +113,6 @@ class TestLeFactory(TestCase):
                 self.assertIn(nat, letype._superiors.keys())
                 self.assertEqual(
                     set([ s.__name__ for s in letype._superiors[nat]]),
-                    set([ LeFactory.name2classname(s.name) for s in sups])
+                    set([ LeCrud.name2classname(s.name) for s in sups])
                 )
 
