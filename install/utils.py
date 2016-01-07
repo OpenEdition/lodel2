@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import settings
-from settings import *
 from loader import *
 
 def refreshdyn():
@@ -10,8 +8,8 @@ def refreshdyn():
     from leapi.lefactory import LeFactory
     from EditorialModel.backend.json_backend import EmBackendJson
     from DataSource.MySQL.leapidatasource import LeDataSourceSQL
-    OUTPUT = dynamic_code
-    EMJSON = emfile
+    OUTPUT = Settings.dynamic_code_file
+    EMJSON = Settings.em_file
     # Load editorial model
     em = Model(EmBackendJson(EMJSON))
     # Generate dynamic code
@@ -22,8 +20,8 @@ def refreshdyn():
 def db_init():
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.model import Model
-    mh = getattr(migrationhandler,settings.mh_classname)()
-    em = Model(EmBackendJson(settings.emfile))
+    mh = getattr(migrationhandler,Settings.mh_classname)()
+    em = Model(EmBackendJson(Settings.em_file))
     em.migrate_handler(mh)
 
 

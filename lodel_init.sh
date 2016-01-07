@@ -18,7 +18,7 @@ libdir="$3"
 libdir="${libdir:=$(realpath $(dirname $0))}"
 
 emfilename="em.json"
-settings="$instdir/settings.py"
+settings="$instdir/instance_settings.py"
 em="$instdir/em.json"
 dyncode="$instdir/${name}.py"
 

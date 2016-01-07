@@ -1,4 +1,4 @@
-import settings as instance_settings
+import instance_settings
 import importlib
 import sys
 import os
@@ -7,12 +7,12 @@ sys.path.append(instance_settings.lodel2_lib_path)
 
 from Lodel.settings import Settings
 
-# Update the settings
-for name in [ name for name in dir(instance_settings) if not name.startswith('__') ]:
-    Settings.set(name, getattr(instance_settings, name))
+# Settings initialisation
+Settings.load_module(instance_settings)
+globals()['Settings'] = Settings
 
 # Import dynamic code
-if os.path.isfile(Settings.get('dynamic_code')):
+if os.path.isfile(Settings.dynamic_code_file):
     from dynleapi import *
 
 # Import wanted datasource objects
@@ -30,5 +30,5 @@ if __name__ == '__main__':
     print("""
      Running interactive python in Lodel2 %s instance environment
 
-"""%settings.name)
+"""%Settings.sitename)
     code.interact(local=locals())
