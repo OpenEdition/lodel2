@@ -34,7 +34,7 @@ class _LeClass(_LeObject):
 
     @classmethod
     def fieldlist(cls):
-        return cls.fieldtypes().keys()
+        return list(cls.fieldtypes().keys())
 
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
