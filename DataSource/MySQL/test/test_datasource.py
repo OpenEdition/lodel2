@@ -101,12 +101,12 @@ class DataSourceTestCase(TestCase):
                     expected_calls = [
                         # insert in object table call
                         call(
-                            db_utils.objects_table_name,
+                            db_utils.common_tables['object'],
                             object_table_datas
                         ),
                         # insert in class specific table call
                         call(
-                            db_utils.get_table_name_from_class(letype._leclass.__name__),
+                            db_utils.object_table_name(letype._leclass.__name__),
                             class_table_datas
                         ),
                     ]
@@ -126,12 +126,12 @@ class DataSourceTestCase(TestCase):
         # Utils var and stuff to make tests queries write easier
         
         # lodel_id field name
-        lodel_id = db_utils.field_lodel_id
+        lodel_id = LeObject.uidname()
         # pre-fetch tables name to make the tests_queries
         table_names = {
-            LeObject: db_utils.objects_table_name,
-            Article: db_utils.get_table_name_from_class(Article._leclass.__name__),
-            Textes: db_utils.get_table_name_from_class(Textes.__name__),
+            LeObject: db_utils.common_tables['object'],
+            Article: db_utils.object_table_name(Article._leclass.__name__),
+            Textes: db_utils.object_table_name(Textes.__name__),
         }
         # lodel_id name to be use in joins (leobject side)
         join_lodel_id = db_utils.column_prefix(table_names[LeObject], lodel_id)
@@ -296,17 +296,17 @@ class DataSourceTestCase(TestCase):
                     datasource.select(**select_args)
 
                     # building the select expected argument
-                    select_arg = [ db_utils.column_prefix(db_utils.objects_table_name, fname) for fname in fields_details['leobject'] ]
+                    select_arg = [ db_utils.column_prefix(db_utils.common_tables['object'], fname) for fname in fields_details['leobject'] ]
                     if len(fields_details['leclass']) > 0:
                         leclass = select_args['target_cls']
                         leclass = leclass._leclass if leclass.is_letype() else leclass
-                        table_name = db_utils.get_table_name_from_class(leclass.__name__)
+                        table_name = db_utils.object_table_name(leclass.__name__)
                         select_arg += [ db_utils.column_prefix(table_name, field_name) for field_name in fields_details['leclass'] ]
                     
                     if expt_args['joins'] is None:
                         # If the call is made with LeObject as target class no joins call is made
                         mock_select.assert_called_once_with(
-                            db_utils.objects_table_name,
+                            db_utils.common_tables['object'],
                             select= select_arg,
                             where=expt_args['where'],
                             joins=[]
@@ -316,7 +316,7 @@ class DataSourceTestCase(TestCase):
                         expected_calls = [
                             expt_args['joins'],
                             call(
-                                db_utils.objects_table_name,
+                                db_utils.common_tables['object'],
                                 select= select_arg,
                                 where=expt_args['where'],
                                 joins=[mosql_query_return_value]
