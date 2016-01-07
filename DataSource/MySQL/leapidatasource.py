@@ -53,12 +53,14 @@ class LeDataSourceSQL(DummyDatasource):
 
         # it is a LeType or a LeClass, query on main table left join class table on lodel_id
         elif target_cls.is_letype() or target_cls.is_leclass():
-            # find main table and main table datas
+            # find main table
             main_table = utils.common_tables['object']
             main_class = target_cls.leo_class()
+            # find class table
             class_table = utils.object_table_name(main_class.__name__)
             main_lodel_id = utils.column_prefix(main_table, main_class.uidname())
             class_lodel_id = utils.column_prefix(class_table, main_class.uidname())
+            # do the join
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
             fields = [(main_table, target_cls.name2class('LeObject').fieldlist()), (class_table, main_class.fieldlist())]
 
@@ -67,7 +69,27 @@ class LeDataSourceSQL(DummyDatasource):
             fields = [(main_table, target_cls.name2class('LeRelation').fieldlist())]
         elif target_cls.is_lerel2type():
             main_table = utils.common_tables['relation']
-            fields = [(main_table, target_cls.name2class('LeRelation').fieldlist())]
+
+            class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
+            relation_fieldname = target_cls.name2class('LeRelation').uidname()
+            main_relation_id = utils.column_prefix(main_table, relation_fieldname)
+            class_relation_id = utils.column_prefix(class_table, relation_fieldname)
+
+            lodel_id = target_cls.name2class('LeObject').uidname()
+            joins = [
+                left_join(class_table, {main_relation_id:class_relation_id}),
+                # join with the object table to retrieve class and type of superior and subordinate
+                left_join(utils.common_tables['object'] + ' as sup_obj', {'sup_obj.'+lodel_id:target_cls._superior_field_name}),
+                left_join(utils.common_tables['object'] + ' as sub_obj', {'sub_obj.'+lodel_id:target_cls._subordinate_field_name})
+            ]
+            fields = [
+                (main_table, target_cls.name2class('LeRelation').fieldlist()),
+                (class_table, target_cls.fieldlist()),
+                ('sup_obj', ['class_id']),
+                ('sub_obj', ['type_id'])
+            ]
+
+            field_list.extend(['class_id', 'type_id'])
         else:
             raise AttributeError("Target class '%s' in get() is not a Lodel Editorial Object !" % target_cls)
 
@@ -94,6 +116,7 @@ class LeDataSourceSQL(DummyDatasource):
         # Executing the query
         cur = utils.query(self.connection, query)
         results = all_to_dicts(cur)
+        #print(results)
 
         # instanciate each row to editorial components
         results = [target_cls.object_from_data(datas) for datas in results]
@@ -196,8 +219,8 @@ class LeDataSourceSQL(DummyDatasource):
         elif target_cls.is_lehierarch():
             main_table = utils.common_tables['relation']
             main_datas = {
-                utils.column_name(target_cls._lesup_name): datas[target_cls._lesup_name].lodel_id,
-                utils.column_name(target_cls._lesub_name): datas[target_cls._lesub_name].lodel_id
+                utils.column_name(target_cls._superior_field_name): datas[target_cls._superior_field_name].lodel_id,
+                utils.column_name(target_cls._subordinate_field_name): datas[target_cls._subordinate_field_name].lodel_id
             }
             main_fields = target_cls.name2class('LeRelation').fieldlist()
             class_table = False
@@ -205,8 +228,8 @@ class LeDataSourceSQL(DummyDatasource):
         elif target_cls.is_lerel2type():
             main_table = utils.common_tables['relation']
             main_datas = {
-                utils.column_name(target_cls._lesup_name): datas[target_cls._lesup_name].lodel_id,
-                utils.column_name(target_cls._lesub_name): datas[target_cls._lesub_name].lodel_id
+                utils.column_name(target_cls._superior_field_name): datas[target_cls._superior_field_name].lodel_id,
+                utils.column_name(target_cls._subordinate_field_name): datas[target_cls._subordinate_field_name].lodel_id
             }
             main_fields = target_cls.name2class('LeRelation').fieldlist()
 
