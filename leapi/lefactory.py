@@ -92,10 +92,14 @@ class LeFactory(object):
             rel_code = """
 class {classname}(LeRel2Type):
     _rel_attr_fieldtypes = {attr_dict}
+    superior_cls = {supcls}
+    subordinate_cls = {subcls}
 
 """.format(
     classname = cls_name,
-    attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}"
+    attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}",
+    supcls = self.name2classname(src.name),
+    subcls = self.name2classname(related.name),
 )
             res_code += rel_code
         return res_code
@@ -198,27 +202,6 @@ import %s
         
         #Building the fieldtypes dict of LeObject
         (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.common_fields)
-        """
-        leobj_fieldtypes = list()
-        leobj_uid_fieldtype = None
-        for fname, ftargs in EditorialModel.classtypes.common_fields.items():
-            ftargs = copy.copy(ftargs)
-            fieldtype = ftargs['fieldtype']
-            self.needed_fieldtypes |= set([fieldtype])
-            del(ftargs['fieldtype'])
-
-            constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
-                ftname = GenericFieldType.module_name(fieldtype),
-                ftargs = ftargs,
-            )
-            if fieldtype == 'pk':
-                #
-                #       WARNING multiple PK not supported
-                #
-                leobj_uid_fieldtype = "{ %s: %s }"%(repr(fname),constructor)
-            else:
-                leobj_fieldtypes.append( '%s: %s'%(repr(fname), constructor) )
-        """
         #Building the fieldtypes dict for LeRelation
         (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.relations_common_fields)
         # Fetching superior and subordinate fieldname for LeRelation
@@ -230,17 +213,6 @@ import %s
                     lesup = fname
                 else:
                     lesub = fname
-        """
-        lerel_fieldtypes = list()
-        lerel_uid_fieldtype = None
-        for fname, ftargs in EditorialModel.classtypes.relations_common_fields.items():
-            ftargs = copy.copy(ftargs)
-            fieldtype = ftargs['fieldtype']
-            self.needed_fieldtypes |= set([fieldtype])
-            del(ftargs['fieldtype'])
-
-            constructor
-        """ 
 
         result += """
 ## @brief _LeCrud concret class
