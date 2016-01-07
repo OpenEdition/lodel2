@@ -6,7 +6,7 @@ from . import settings_format
 
 ## @package Lodel.settings
 #
-# @brief Defines stuff to handles Lodel2 configuration
+# @brief Defines stuff to handles Lodel2 configuration (see @ref lodel_settings )
 #
 # To access the confs use the Lodel.settings.Settings SettingsHandler instance
 
