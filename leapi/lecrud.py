@@ -61,19 +61,23 @@ class _LeCrud(object):
     # @param **kwargs : datas !
     # @raise NotImplementedError if trying to instanciate a class that cannot be instanciated
     def __init__(self, uid, **kwargs):
-        if not self.implements_leobject() and not self.implements_lerelation():
-            raise NotImplementedError("Abstract class !")
+        if len(kwargs) > 0:
+            if not self.implements_leobject() and not self.implements_lerelation():
+                raise NotImplementedError("Abstract class !")
         # Try to get the name of the uid field (lodel_id for objects, id_relation for relations)
         try:
-            uid_name = self.uidname()
+                uid_name = self.uidname()
         except NotImplementedError: #Should never append
-            raise NotImplementedError("Abstract class !")
+            raise NotImplementedError("Abstract class ! You can only do partial instanciation on classes that have an uid name ! (LeObject & childs + LeRelation & childs)")
         
         # Checking uid value
         uid, err = self._uid_fieldtype[uid_name].check_data_value(uid)
         if isinstance(err, Exception):
             raise err
         setattr(self, uid_name, uid)
+        if uid_name in kwargs:
+            warnings.warn("When instanciating the uid was given in the uid argument but was also provided in kwargs. Droping the kwargs uid")
+            del(kwargs[uid_name])
         
         # Populating the object with given datas
         errors = dict()
@@ -88,8 +92,9 @@ class _LeCrud(object):
                     setattr(self, name, cvalue)
         if len(errors) > 0:
             raise LeApiDataCheckError("Invalid arguments given to constructor", errors)
-
-
+        
+        ## @brief A flag to indicate if the object was fully intanciated or not
+        self._instanciation_complete = len(kwargs) + 1 == len(self.fieldlist())
  
     ## @brief Given a dynamically generated class name return the corresponding python Class
     # @param name str : a concrete class name
@@ -103,7 +108,7 @@ class _LeCrud(object):
             return getattr(mod, name)
         except AttributeError:
             return False
-    
+
     ## @return LeObject class
     @classmethod
     def leobject(cls):
@@ -203,6 +208,42 @@ class _LeCrud(object):
                 res[fname] = getattr(self, fname)
         return res
 
+    ## @brief Indicates if an instance is complete
+    # @return a bool
+    def is_complete(self):
+        return self._instanciation_complete
+
+    ## @brief Populate the LeType wih datas from DB
+    # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
+    # @todo Add checks to forbid the use of this method on abtract classes (LeObject, LeClass, LeType, LeRel2Type, LeRelation etc...)
+    def populate(self, field_list=None):
+        if not self._instanciation_complete:
+            if field_list == None:
+                field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
+            filters = [self._id_filter()]
+            rel_filters = []
+            # Getting datas from db
+            fdatas = self._datasource.select(self.__class__, field_list, filters, rel_filters)
+            if fdatas is None or len(fdatas) == 0:
+                raise LeApiQueryError("Error when trying to populate an object. For type %s id : %d"% (self.__class__.__name__, self.lodel_id))
+            # Setting datas
+            for fname, fval in fdatas[0].items():
+                setattr(self, fname, fval)
+            self._instanciation_complete = True
+    
+    ## @brief Return the corresponding instance
+    #
+    # @note this method is a kind of factory. Allowing to make a partial instance
+    # of abstract types using only an uid and then fetching an complete instance of
+    # the correct class
+    # @return Corresponding populated LeObject
+    def get_instance(self):
+        if self._instanciation_complete:
+            return self
+        uid_fname = self.uidname()
+        qfilter = '{uid_fname} = {uid}'.format(uid_fname = uid_fname, uid = getattr(self, uid_fname))
+        return leobject.get([qfilter])[0]
+    
     ## @brief Update a component in DB
     # @param datas dict : If None use instance attributes to update de DB
     # @return True if success
@@ -603,3 +644,27 @@ class _LeCrud(object):
 # - leapi.lecrud.REL_SUP for "superiors"
 #
 # @note The filters translation process also check if given field are valids compared to the concerned letype and/or the leclass
+
+## @page lecrud_instanciation LeCrud child classes instanciations
+#
+# _LeCrud provide a generic __init__ method for all its child classes. The following notes are
+# important parts of the instanciation mechanism.
+#
+# The constructor takes 2 parameters : 
+# - a uniq identifier (uid)
+# - **kwargs for object datas
+#
+# @section lecrud_pi Partial instancation
+#
+# You can make partial instanciations by giving only parts of datas and even by giving only a uid
+#
+# @warning Partial instanciation needs an uid field name (lodel_id for LeObject and id_relation for LeRelation). This implies that you cannot make partial instance of a LeCrud.
+#
+# @subsection lecrud_pitools Partial instances tools
+#
+# The _LeCrud.is_complete() method indicates whether or not an instance is partial.
+#
+# The _LeCrud.populate() method fetch missing datas
+#
+# You partially instanciate an abtract class (like LeClass or LeRelation) using only a uid. Then you cannot populate this kind of instance (you cannot dinamically change the type of an instance). The _LeCrud.get_instance() method returns a populated instance with the good type.
+#

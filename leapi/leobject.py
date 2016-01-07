@@ -33,12 +33,6 @@ class _LeObject(_LeCrud):
     ## @brief Stores the names of the fields storing the EM class uid and EM type uid
     _me_uid_field_names = (None, None)
     
-    ## @return Corresponding populated LeObject
-    def get_instance(self):
-        uid_fname = self.uidname()
-        qfilter = '{uid_fname} = {uid}'.format(uid_fname = uid_fname, uid = getattr(self, uid_fname))
-        return leobject.get([qfilter])[0]
-    
     ## @return True if the LeObject is partially instanciated
     def is_partial(self):
         return not hasattr(self, '_classtype')
