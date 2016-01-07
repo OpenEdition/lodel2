@@ -7,12 +7,12 @@ common_fields = {
         'internal': 'automatic',
     },
     'class_id': {
-        'fieldtype': 'integer',
-        'internal': 'automatic',
+        'fieldtype': 'emuid',
+        'class_id': True,
     },
     'type_id': {
-        'fieldtype': 'integer',
-        'internal': 'automatic',
+        'fieldtype': 'emuid',
+        'class_id': False,
     },
     'string': {
         'fieldtype': 'char',

@@ -92,8 +92,8 @@ class LeFactory(object):
             rel_code = """
 class {classname}(LeRel2Type):
     _rel_attr_fieldtypes = {attr_dict}
-    superior_cls = {supcls}
-    subordinate_cls = {subcls}
+    _superior_cls = {supcls}
+    _subordinate_cls = {subcls}
 
 """.format(
     classname = cls_name,
@@ -213,6 +213,16 @@ import %s
                     lesup = fname
                 else:
                     lesub = fname
+        # Fetch class_id and type_id fieldnames for LeObject
+        class_id = None
+        type_id = None
+        for fname, finfo in EditorialModel.classtypes.common_fields.items():
+            if finfo['fieldtype'] == 'emuid':
+                if finfo['class_id']:
+                    class_id = fname
+                else:
+                    type_id = fname
+        # TEST IF SOME OF THE ARE NONE !!!
 
         result += """
 ## @brief _LeCrud concret class
@@ -225,6 +235,7 @@ class LeCrud(leapi.lecrud._LeCrud):
 # @see leapi.leobject._LeObject
 class LeObject(LeCrud, leapi.leobject._LeObject):
     _me_uid = {me_uid_l}
+    _me_uid_field_names = ({class_id}, {type_id})
     _uid_fieldtype = {leo_uid_fieldtype}
     _leo_fieldtypes = {leo_fieldtypes}
 
@@ -257,6 +268,8 @@ class LeType(LeClass, _LeType):
             lerel_uid_fieldtype = lerel_uid_fieldtype,
             lesup_name = repr(lesup),
             lesub_name = repr(lesub),
+            class_id = repr(class_id),
+            type_id = repr(type_id),
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)
