@@ -29,7 +29,7 @@ class EmFieldType(GenericFieldType):
             # Cast to int
             try:
                 datas[fname] = int(datas[fname])
-            except ValueError as e:
+            except (ValueError, TypeError) as e:
                 raise e # Raise Here !?
         if datas[fname].is_leobject():
             # Its an object not populated (we dont now its type)

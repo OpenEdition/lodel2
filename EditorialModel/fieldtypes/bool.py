@@ -20,6 +20,6 @@ class EmFieldType(GenericFieldType):
         error = None
         try:
             value = bool(value)
-        except ValueError:
+        except (ValueError, TypeError):
             error = TypeError("the value '%s' is not, and will never be a boolean" % value)
         return (value, error)

@@ -16,6 +16,6 @@ class EmFieldType(GenericFieldType):
         error = None
         try:
             value = int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             error = TypeError("the value '%s' is not, and will never be an integer" % value)
         return (value, error)
