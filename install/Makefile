@@ -9,12 +9,12 @@ dbinit:
 .PHONY: clean cleanpycache cleanpyc refreshdyn distclean
 
 distclean: clean
-	-@rm dynleapi.py
+	-@rm -vf dynleapi.py
 
 clean: cleanpycache
 
 cleanpyc:
-	-@rm -v *.pyc
+	-@rm -vf *.pyc
 
 cleanpycache: cleanpyc
-	-@rm -vR __pycache__
+	-@rm -vfR __pycache__

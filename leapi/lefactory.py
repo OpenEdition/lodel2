@@ -244,8 +244,8 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
-    _lesup_name = {lesup_name}
-    _lesub_name = {lesub_name}
+    _superior_fieldname = {lesup_name}
+    _subordinate_fieldname = {lesub_name}
 
 class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
     pass

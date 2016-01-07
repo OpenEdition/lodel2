@@ -12,10 +12,10 @@ pip: cleanpycache
 .PHONY: check doc clean cleanpyc cleandoc cleanpycache
 
 cleandoc:
-	-rm -Rv ./doc/
+	-rm -Rfv ./doc/
 cleanpyc:
-	-find ./ |grep -E "\.pyc$$" |xargs rm -v 2>/dev/null
+	-find ./ |grep -E "\.pyc$$" |xargs rm -fv 2>/dev/null
 cleanpycache: cleanpyc
-	-find ./ -type d |grep '__pycache__' | xargs rmdir -v 2>/dev/null
+	-find ./ -type d |grep '__pycache__' | xargs rmdir -fv 2>/dev/null
 
 clean: cleanpyc cleandoc cleanpycache
