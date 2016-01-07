@@ -66,8 +66,10 @@ class GenericFieldType(object):
     # @param value * : The value to check
     # @return (checked_and_casted_value, Exception|None)
     def check_data_value(self, value):
-        if value is None and not self.nullable:
-            return (None, TypeError("'None' value but field is not nullable"))
+        if value is None:
+            if not self.nullable:
+                return (None, TypeError("'None' value but field is not nullable"))
+            return (None, None)
         return self._check_data_value(value)
     
     ## @brief Build automatic fields values
