@@ -150,6 +150,11 @@ class _LeHierarch(_LeRelation):
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes
     _rel_attr_fieldtypes = dict()
+    
+    ## @brief Stores the LeClass child class used as superior
+    _superior_cls = None
+    ## @biref Stores the LeType child class used as subordinate
+    _subordinate_cls = None
 
     ## @brief Delete current instance from DB
     def delete(self):
