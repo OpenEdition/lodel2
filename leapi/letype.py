@@ -61,21 +61,6 @@ class _LeType(_LeClass):
     def fieldtypes(cls):
         return { fname: cls._fieldtypes[fname] for fname in cls._fieldtypes if fname in cls._fields }
 
-    ## @brief Populate the LeType wih datas from DB
-    # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
-    def populate(self, field_list=None):
-        if field_list == None:
-            field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
-        filters = [self._id_filter()]
-        rel_filters = []
-
-        fdatas = self._datasource.select(self.__class__, field_list, filters, rel_filters)
-        if fdatas is None or len(fdatas) == 0:
-            raise LeApiQueryError("Error when trying to populate an object. For type %s id : %d"% (self.__class__.__name__, self.lodel_id))
-
-        for fname, fval in fdatas[0].items():
-            setattr(self, fname, fval)
-
     ## @brief Get all the datas for this LeType
     # @return a dict with fieldname as key and field value as value
     # @warning Can represent a performance issue
