@@ -113,18 +113,18 @@ class _LeType(_LeClass):
     # @param nature str : Relation nature
     # @param del_if_exists bool : If true delete the superior if any before setting the new one
     # @return relation id if successfully created else returns false
-    def add_superior(self, lesup, nature, del_if_exists = False):
+    def add_superior(self, superior, nature, del_if_exists = False):
         lehierarch = self.name2class('LeHierarch')
         if del_if_exists:
             prev_sup = lehierarch.get(
-                [('lesub', '=', self), ('nature', '=', nature)],
+                [('subordinate', '=', self), ('nature', '=', nature)],
                 [ lehierarch.uidname() ]
             )
             if len(prev_sup) > 0:
                 for todel_sup in prev_sup: #This loop shoud be useless...but we never know
                     todel_sup.delete()
 
-        return lehierarch.insert({'lesup':lesup, 'lesub':self, 'nature':nature})
+        return lehierarch.insert({'superior':superior, 'subordinate':self, 'nature':nature})
 
     ## @brief Link the LeObject with another one (rel2type relations)
     #
@@ -140,8 +140,8 @@ class _LeType(_LeClass):
         r2tcls = self.name2class(class_name)
         if not r2tcls:
             raise ValueError("No rel2type possible between a '%s' as superior and a '%s' as subordinate" % (self._leclass.__name__, leo_tolink.__class__.__name__))
-        datas['lesup'] = self
-        datas['lesub'] = leo_tolink
+        datas['superior'] = self
+        datas['subordinate'] = leo_tolink
         return r2tcls.insert(datas, class_name)
 
     ## @brief Get the linked objects lodel_id
