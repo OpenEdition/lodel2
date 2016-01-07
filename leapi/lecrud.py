@@ -173,7 +173,7 @@ class _LeCrud(object):
     # @param cls Class: a Class or instanciated object
     @classmethod
     def implements_lerelation(cls):
-        return hasattr(cls, '_lesup_name')
+        return hasattr(cls, '_superior_field_name')
     
     ## @return maybe Bool: True if cls implements LeRel2Type
     # @param cls Class: a Class or instanciated object
