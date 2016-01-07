@@ -42,13 +42,6 @@ class _LeRelation(lecrud._LeCrud):
             rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
 
-    ## @brief instanciate the relevant lodel object using a dict of datas
-    @classmethod
-    def object_from_data(cls, datas):
-        if 'nature' in datas:
-            return cls.name2class('LeHierarch')(**datas)
-        return "To implement !"
-
     @classmethod
     def _prepare_relational_fields(cls, field):
         return lecrud.LeApiQueryError("Relational field '%s' given but %s doesn't is not a LeObject" % (field,
@@ -146,6 +139,11 @@ class _LeHierarch(_LeRelation):
     def delete(self):
         lecrud._LeCrud._delete(self)
 
+    ## @brief instanciate the relevant lodel object using a dict of datas
+    @classmethod
+    def object_from_data(cls, datas):
+        return cls.name2class('LeHierarch')(**datas)
+
 ## @brief Abstract class to handle rel2type relations
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes
@@ -183,3 +181,14 @@ class _LeRel2Type(_LeRelation):
 
         return "Rel_%s2%s" % (supname, subname)
 
+    ## @brief instanciate the relevant lodel object using a dict of datas
+    @classmethod
+    def object_from_data(cls, datas):
+        le_object = cls.name2class('LeObject')
+        class_name = le_object._me_uid[datas['class_id']].__name__
+        type_name = le_object._me_uid[datas['type_id']].__name__
+        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name)
+
+        del(datas['class_id'], datas['type_id'])
+
+        return cls.name2class(relation_classname)(**datas)
