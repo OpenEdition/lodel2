@@ -19,3 +19,6 @@ migration_options = {
     'foreign_keys': True,
     'drop_if_exists': False,
 }
+
+em_graph_format = 'png'
+em_graph_output = '/tmp/em_%s_graph.png'

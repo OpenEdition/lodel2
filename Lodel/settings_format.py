@@ -12,4 +12,7 @@ MANDATORY = [
     'migration_options',
 ]
 
-ALLOWED = []
+ALLOWED = [
+    'em_graph_output',
+    'em_graph_format',
+]
