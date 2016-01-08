@@ -229,6 +229,7 @@ class LeCrudTestCase(TestCase):
 
         for ccls, initarg, qdatas, efilters, erelfilters in args_l:
             obji = ccls(**initarg)
+            obji._instanciation_complete = True  # fake full-instance
             obji.update(qdatas)
             dsmock.assert_called_once_with(ccls, efilters, erelfilters, **qdatas)
     

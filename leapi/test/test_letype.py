@@ -77,6 +77,7 @@ class LeTypeMockDsTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, missing_fields, [('lodel_id','=',1)],[])
 
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
+    @unittest.skip('must verify that populate is called')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         

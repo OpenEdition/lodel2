@@ -234,7 +234,7 @@ class _LeCrud(object):
     # @param field_list None|list : List of fieldname to fetch. If None fetch all the missing datas
     # @todo Add checks to forbid the use of this method on abtract classes (LeObject, LeClass, LeType, LeRel2Type, LeRelation etc...)
     def populate(self, field_list=None):
-        if not self._instanciation_complete:
+        if not self.is_complete():
             if field_list == None:
                 field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
             filters = [self._id_filter()]
@@ -255,7 +255,7 @@ class _LeCrud(object):
     # the correct class
     # @return Corresponding populated LeObject
     def get_instance(self):
-        if self._instanciation_complete:
+        if self.is_complete():
             return self
         uid_fname = self.uidname()
         qfilter = '{uid_fname} = {uid}'.format(uid_fname = uid_fname, uid = getattr(self, uid_fname))
@@ -265,7 +265,11 @@ class _LeCrud(object):
     # @param datas dict : If None use instance attributes to update de DB
     # @return True if success
     # @todo better error handling
-    def update(self, datas = None):
+    # @todo for check_data_consistency, datas must be populated to make update safe !
+    def update(self, datas=None):
+        if not self.is_complete():
+            self.populate()
+            warnings.warn("\nThis object %s is not complete and has been populated. This is very unsafe\n" % self)
         datas = self.datas(internal=False) if datas is None else datas
         upd_datas = self.prepare_datas(datas, complete = False, allow_internal = False)
         filters = [self._id_filter()]
@@ -400,7 +404,7 @@ class _LeCrud(object):
     # @param datas dict : The value of object we want to insert
     # @return A new id if success else False
     @classmethod
-    def insert(cls, datas, classname = None):
+    def insert(cls, datas, classname=None):
         callcls = cls if classname is None else cls.name2class(classname)
         if not callcls:
             raise LeApiErrors("Error when inserting",[ValueError("The class '%s' was not found"%classname)])
@@ -416,16 +420,18 @@ class _LeCrud(object):
     # @param datas dict : {fieldname : fieldvalue, ...}
     # @param complete bool : If True you MUST give all the datas
     # @param allow_internal : Wether or not interal fields are expected in datas
-    # @return Datas ready for use
+    # @return Datas ready for use
+    # @todo: complete is very unsafe, find a way to get rid of it
     @classmethod
-    def prepare_datas(cls, datas, complete = False, allow_internal = True):
+    def prepare_datas(cls, datas, complete=False, allow_internal=True):
         if not complete:
-            warnings.warn("\nActual implementation can make datas construction and consitency checks fails when datas are not complete\n")
+            warnings.warn("\nActual implementation can make datas construction and consitency unsafe when datas are not complete\n")
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
         if isinstance(ret_datas, Exception):
             raise ret_datas
-        ret_datas = cls._construct_datas(ret_datas)
-        cls._check_datas_consistency(ret_datas)
+        if complete:
+            ret_datas = cls._construct_datas(ret_datas)
+            cls._check_datas_consistency(ret_datas)
         return ret_datas
 
     #-###################-#
