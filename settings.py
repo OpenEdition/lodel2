@@ -3,6 +3,7 @@
 import pymysql
 
 debug = False
+debug_sql = False
 
 datasource = {
     'default': {

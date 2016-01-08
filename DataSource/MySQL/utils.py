@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+from Lodel.settings import Settings
+
 common_tables = {
     'relation': 'relation',
     'object': 'object'
@@ -49,6 +51,8 @@ def get_fk_name(src_table_name, dst_table_name):
 ## @brief Exec a query
 # @param query str : SQL query
 def query(connection, query_string):
+    if Settings.debug_sql:
+        print("SQL : ", query_string)
     with connection as cur:
         try:
             cur.execute(query_string)

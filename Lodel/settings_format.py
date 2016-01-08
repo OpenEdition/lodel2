@@ -2,6 +2,7 @@
 
 MANDATORY = [
     'debug',
+    'debug_sql',
     'sitename',
     'lodel2_lib_path',
     'em_file',

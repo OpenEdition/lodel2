@@ -54,7 +54,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self.db_conn = self._dbmodule.connect(**conn_args)
         # Fetch options
         mh_settings = Settings.migration_options
-        self.debug = kwargs['debug'] if 'debug' in kwargs else Settings.debug
+        self.debug = kwargs['debug'] if 'debug' in kwargs else Settings.debug_sql
         self.dryrun = kwargs['dryrun'] if 'dryrun' in kwargs else mh_settings['dryrun']
         self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else mh_settings['foreign_keys']
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_if_exists' in kwargs else mh_settings['drop_if_exists']
