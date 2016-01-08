@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+## @package refreshdyn Python script designed to generate dynamic API
+# @see leapi.lefactory
 
 import sys
 from EditorialModel.model import Model

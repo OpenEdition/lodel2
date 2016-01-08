@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
+## @package Lodel.settings_format Rules for settings
 
+## @brief List mandatory configurations keys
 MANDATORY = [
     'debug',
     'debug_sql',
@@ -13,6 +15,7 @@ MANDATORY = [
     'migration_options',
 ]
 
+## @brief List allowed (but not mandatory) configurations keys
 ALLOWED = [
     'em_graph_output',
     'em_graph_format',
