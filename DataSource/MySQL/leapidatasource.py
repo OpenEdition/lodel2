@@ -6,7 +6,7 @@ import copy
 import leapi
 from leapi.leobject import REL_SUB, REL_SUP
 
-from leapi.lecrud import _LeCrud
+from leapi.lecrud import _LeCrud, REL_SUP, REL_SUB
 
 from mosql.db import Database, all_to_dicts, one_to_dict
 from mosql.query import select, insert, update, delete, join, left_join
@@ -107,7 +107,24 @@ class LeDataSourceSQL(DummyDatasource):
         if offset:
             kwargs['offset'] = offset
 
-        # @todo implement relational filters
+        # relational filters
+        # @todo this only works with hierarchy relations
+        if rel_filters:
+            le_relation = target_cls.name2class('LeRelation')
+            rel_cpt = 0
+            for rel_filter in rel_filters:
+                rel_cpt += 1
+                rel_name = 'rel' + str(rel_cpt)
+                name, op, value = rel_filter
+                direction, nature = name
+                if direction == REL_SUP:
+                    join_column, filter_column = (le_relation._subordinate_field_name, le_relation._superior_field_name)
+                else:
+                    join_column, filter_column = (le_relation._superior_field_name, le_relation._subordinate_field_name)
+                rel_join = left_join(utils.common_tables['relation'] + ' as ' + rel_name, {utils.column_prefix(main_table, main_class.uidname()):utils.column_prefix(rel_name, join_column)})
+                filters.append((utils.column_prefix(rel_name, 'nature'), '=', nature))
+                filters.append((utils.column_prefix(rel_name, filter_column), op, value))
+                joins.append(rel_join)
 
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
         wheres = {(utils.find_prefix(name, fields), op):value for name,op,value in filters}
