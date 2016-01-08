@@ -19,4 +19,5 @@ MANDATORY = [
 ALLOWED = [
     'em_graph_output',
     'em_graph_format',
+    'templates_base_dir'
 ]
