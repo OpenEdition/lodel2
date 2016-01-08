@@ -6,6 +6,9 @@ refreshdyn: distclean
 dbinit:
 	python -c "import utils; utils.db_init()"
 
+emgraph:
+	python -c "import utils; utils.em_graph()"
+
 .PHONY: clean cleanpycache cleanpyc refreshdyn distclean
 
 distclean: clean
