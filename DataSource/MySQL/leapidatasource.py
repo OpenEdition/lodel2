@@ -68,13 +68,14 @@ class LeDataSourceSQL(DummyDatasource):
             main_table = utils.common_tables['relation']
             fields = [(main_table, target_cls.name2class('LeRelation').fieldlist())]
         elif target_cls.is_lerel2type():
+            # find main table
             main_table = utils.common_tables['relation']
-
+            # find relational table
             class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
             relation_fieldname = target_cls.name2class('LeRelation').uidname()
             main_relation_id = utils.column_prefix(main_table, relation_fieldname)
             class_relation_id = utils.column_prefix(class_table, relation_fieldname)
-
+            # do the joins
             lodel_id = target_cls.name2class('LeObject').uidname()
             joins = [
                 left_join(class_table, {main_relation_id:class_relation_id}),
@@ -106,12 +107,11 @@ class LeDataSourceSQL(DummyDatasource):
         if offset:
             kwargs['offset'] = offset
 
-       # @todo implement relational filters
+        # @todo implement relational filters
 
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
         wheres = {(utils.find_prefix(name, fields), op):value for name,op,value in filters}
         query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins, **kwargs)
-        #print ('SQL', query)
 
         # Executing the query
         cur = utils.query(self.connection, query)
@@ -174,30 +174,38 @@ class LeDataSourceSQL(DummyDatasource):
     # @return the number of updated components
     # @todo implement other filters than lodel_id
     def update(self, target_cls, filters, rel_filters, **datas):
-        #print(target_cls, filters, rel_filters, datas)
-        # it is a LeType
-        if not target_cls.is_letype():
-            raise AttributeError("'%s' is not a LeType, it is not possible to update it" % target_cls)
+        class_table = False
 
-        # find main table and main table datas
-        main_table = self.datasource_utils.objects_table_name
-        main_datas = {self.datasource_utils.field_lodel_id: raw(self.datasource_utils.field_lodel_id)} #  be sure to have one SET clause
-        for main_column_name in common_fields:
+        # it is a LeType
+        if target_cls.is_letype():
+            # find main table and main table datas
+            main_table = utils.common_tables['object']
+            main_datas = {target_cls.uidname(): raw(target_cls.uidname())} #  be sure to have one SET clause
+            main_fields = target_cls.name2class('LeObject').fieldlist()
+            class_table = utils.object_table_name(target_cls.leo_class().__name__)
+        elif target_cls.is_lerel2type():
+            main_table = utils.common_tables['relation']
+            le_relation = target_cls.name2class('LeRelation')
+            main_datas = {le_relation.uidname(): raw(le_relation.uidname())} #  be sure to have one SET clause
+            main_fields = le_relation.fieldlist()
+
+            class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
+        else:
+            raise AttributeError("'%s' is not a LeType or a LeRelation, it is not possible to insert it" % target_cls)
+
+        for main_column_name in main_fields:
             if main_column_name in datas:
                 main_datas[main_column_name] = datas[main_column_name]
                 del(datas[main_column_name])
 
         wheres = {(name, op):value for name,op,value in filters}
-        query = update(main_table, wheres, main_datas)
-        #print(query)
-        self.datasource_utils.query(self.connection, query)
+        sql = update(main_table, wheres, main_datas)
+        utils.query(self.connection, sql)
 
         # update on class table
-        if datas:
-            class_table = self.datasource_utils.get_table_name_from_class(target_cls._leclass.__name__)
-            query = update(class_table, wheres, datas)
-            #print(query)
-            self.datasource_utils.query(self.connection, query)
+        if class_table and datas:
+            sql = update(class_table, wheres, datas)
+            utils.query(self.connection, sql)
 
         return True
 
@@ -207,10 +215,12 @@ class LeDataSourceSQL(DummyDatasource):
     # @return The inserted component's id
     # @todo should work with LeType, LeClass, and Relations
     def insert(self, target_cls, **datas):
+        class_table = False
+
         # it is a LeType
         if target_cls.is_letype():
             main_table = utils.common_tables['object']
-            main_datas = {'class_id':target_cls._leclass._class_id, 'type_id':target_cls._type_id}
+            main_datas = {'class_id':target_cls.leo_class()._class_id, 'type_id':target_cls._type_id}
             main_fields = target_cls.name2class('LeObject').fieldlist()
 
             class_table = utils.object_table_name(target_cls.leo_class().__name__)
@@ -223,7 +233,6 @@ class LeDataSourceSQL(DummyDatasource):
                 utils.column_name(target_cls._subordinate_field_name): datas[target_cls._subordinate_field_name].lodel_id
             }
             main_fields = target_cls.name2class('LeRelation').fieldlist()
-            class_table = False
         # it is a relation
         elif target_cls.is_lerel2type():
             main_table = utils.common_tables['relation']
@@ -247,7 +256,6 @@ class LeDataSourceSQL(DummyDatasource):
                 del(datas[main_column_name])
 
         sql = insert(main_table, main_datas)
-        #print (sql)
         cur = utils.query(self.connection, sql)
         lodel_id = cur.lastrowid
 
@@ -255,7 +263,6 @@ class LeDataSourceSQL(DummyDatasource):
             # insert in class_table
             datas[fk_name] = lodel_id
             sql = insert(class_table, datas)
-            #print (sql)
             utils.query(self.connection, sql)
 
         return lodel_id
