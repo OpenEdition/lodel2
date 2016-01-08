@@ -43,7 +43,7 @@ class LeDataSourceSQL(DummyDatasource):
     # @todo for speed get rid of all_to_dicts
     # @todo filters: all use cases are not implemented
     # @todo group: mosql does not permit direction in group_by clause, it should, so for now we don't use direction in group clause
-    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=None):
+    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=None, instanciate=True):
 
         joins = []
         # it is a LeObject, query only on main table
@@ -119,8 +119,9 @@ class LeDataSourceSQL(DummyDatasource):
         #print(results)
 
         # instanciate each row to editorial components
-        results = [target_cls.object_from_data(datas) for datas in results]
-        #print('results', results)
+        if instanciate:
+            results = [target_cls.object_from_data(datas) for datas in results]
+            #print('results', results)
 
         return results
 
@@ -167,7 +168,7 @@ class LeDataSourceSQL(DummyDatasource):
         return result
 
     ## @brief update an existing lodel editorial component
-    # @param target_cls LeCrud(class) : The component class concerned by the update (a LeCrud child class (not instance !) )
+    # @param target_cls LeCrud(class) : Instance of the object concerned by the update
     # @param filters list : List of filters (see @ref leobject_filters)
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
@@ -191,7 +192,7 @@ class LeDataSourceSQL(DummyDatasource):
 
             class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
         else:
-            raise AttributeError("'%s' is not a LeType or a LeRelation, it is not possible to insert it" % target_cls)
+            raise AttributeError("'%s' is not a LeType nor a LeRelation, it's impossible to update it" % target_cls)
 
         for main_column_name in main_fields:
             if main_column_name in datas:
@@ -246,7 +247,7 @@ class LeDataSourceSQL(DummyDatasource):
             class_table = utils.r2t_table_name(superior_class.__name__, datas['subordinate'].__class__.__name__)
             fk_name = superior_class.name2class('LeRelation').uidname()
         else:
-            raise AttributeError("'%s' is not a LeType or a LeRelation, it is not possible to insert it" % target_cls)
+            raise AttributeError("'%s' is not a LeType nor a LeRelation, it's impossible to insert it" % target_cls)
 
         # extract main table datas from datas
         for main_column_name in main_fields:

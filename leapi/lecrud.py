@@ -356,7 +356,7 @@ class _LeCrud(object):
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
+    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
         if field_list is None or len(field_list) == 0:
             #default field_list
             field_list = cls.fieldlist()
@@ -395,7 +395,8 @@ class _LeCrud(object):
                                             order=order,
                                             group=group,
                                             limit=limit,
-                                            offset=offset
+                                            offset=offset,
+                                            instanciate=instanciate
                                         )
 
         return results
