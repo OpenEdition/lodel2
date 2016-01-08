@@ -22,8 +22,11 @@ class TemplateLoader(object):
     #                            TemplateLoader)
     # @param template_vars dict : parameters to be used in the template
     # @return str. String containing the HTML output of the processed templated
-    def render_to_html(self, template_file, template_vars):
+    def render_to_html(self, template_file, template_vars={}, template_extra={}):
         loader = jinja2.FileSystemLoader(searchpath=self.search_path, followlinks=self.follow_links)
         environment = jinja2.Environment(loader=loader)
         template = environment.get_template(template_file)
+        if template_extra is not None or template_extra != {}:
+            for extra in template_extra:
+                template.globals[extra[0]] = extra[1]
         return template.render(template_vars)
