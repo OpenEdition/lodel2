@@ -22,11 +22,11 @@ from DataSource.dummy.migrationhandler import DummyMigrationHandler
 #
 # Supported operations :
 # - EmClass creation
-# - EmClass deletion (untested)
+# - EmClass deletion
 # - EmField creation
-# - EmField deletion (untested)
+# - EmField deletion
 # - rel2type attribute creation
-# - rel2type attribute deletion (unstested)
+# - rel2type attribute deletion
 #
 # Unsupported operations :
 # - EmClass rename

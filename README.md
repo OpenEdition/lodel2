@@ -16,7 +16,7 @@ Create a database for your instance
   > CREATE DATABASE `lodel2`  CHARACTER SET utf8 COLLATE utf8_general_ci;
   > GRANT ALL ON `lodel2`.* TO "lodel"@"localhost";
 
-Edit seetings.py according to your database, install database and dynamic code
+Edit instance_settings.py according to your database, install database and dynamic code
 	make
 
 Once the instance is created you can run an interactive python interpreter using :
