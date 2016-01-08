@@ -44,7 +44,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     ## @brief Construct a MysqlMigrationHandler
     # @param module : sql module
     # @param conn_args dict : A dict containing connection options
-    def __init__(self, module=pymysql, conn_args=None, db_engine='InnoDB', foreign_keys=True, debug=None, dryrun=False, drop_if_exists=False):
+    def __init__(self, module=pymysql, conn_args=None, db_engine='InnoDB', **kwargs):
         # Database connection
         self._dbmodule = module
         if conn_args is None:
@@ -53,11 +53,12 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             del conn_args['module']
         self.db_conn = self._dbmodule.connect(**conn_args)
         # Fetch options
-        self.debug = Settings.get('debug') if debug is None else debug
-        self.dryrun = dryrun
+        mh_settings = Settings.migration_options
+        self.debug = kwargs['debug'] if 'debug' in kwargs else Settings.debug
+        self.dryrun = kwargs['dryrun'] if 'dryrun' in kwargs else mh_settings['dryrun']
+        self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else mh_settings['foreign_keys']
+        self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_if_exists' in kwargs else mh_settings['drop_if_exists']
         self.db_engine = db_engine
-        self.foreign_keys = foreign_keys if db_engine == 'InnoDB' else False
-        self.drop_if_exists = drop_if_exists
         #Create default tables
         self._create_default_tables(self.drop_if_exists)
 

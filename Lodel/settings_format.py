@@ -9,6 +9,7 @@ MANDATORY = [
     'ds_package',
     'datasource',
     'mh_classname',
+    'migration_options',
 ]
 
 ALLOWED = []
