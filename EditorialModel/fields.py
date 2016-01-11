@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import copy
 import importlib
 import warnings
 
@@ -87,6 +88,11 @@ class EmField(EmComponent):
     @property
     def em_class(self):
         return self.model.component(self.class_id)
+    
+    ## @brief Getter for private property EmField._fieldtype_args
+    # @return A copy of private dict _fieldtype_args
+    def fieldtype_options(self):
+        return copy.copy(self._fieldtype_args)
 
     ## @brief Get the fieldtype instance
     # @return a fieldtype instance

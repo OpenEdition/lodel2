@@ -9,15 +9,18 @@ common_fields = {
     'class_id': {
         'fieldtype': 'emuid',
         'is_id_class': True,
+        'internal': 'automatic',
     },
     'type_id': {
         'fieldtype': 'emuid',
         'is_id_class': False,
+        'internal': 'automatic',
     },
     'string': {
         'fieldtype': 'char',
         'max_length': 128,
         'internal': 'automatic',
+        'nullable': True,
     },
     'creation_date': {
         'fieldtype': 'datetime',
