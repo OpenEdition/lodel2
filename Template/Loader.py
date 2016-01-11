@@ -21,9 +21,13 @@ class TemplateLoader(object):
     # @param template_file str : path to the template file (starting from the base path used to instanciate the
     #                            TemplateLoader)
     # @param template_vars dict : parameters to be used in the template
+    # @param template_extra list : list of custom modules to import in the template (default value : None)
     # @return str. String containing the HTML output of the processed templated
-    def render_to_html(self, template_file, template_vars):
+    def render_to_html(self, template_file, template_vars={}, template_extra=None):
         loader = jinja2.FileSystemLoader(searchpath=self.search_path, followlinks=self.follow_links)
         environment = jinja2.Environment(loader=loader)
         template = environment.get_template(template_file)
+        if template_extra is not None:
+            for extra in template_extra:
+                template.globals[extra[0]] = extra[1]
         return template.render(template_vars)
