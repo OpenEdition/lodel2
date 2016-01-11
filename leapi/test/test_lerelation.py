@@ -180,6 +180,9 @@ class LeHierarch(LeRelationTestCase):
         ]
         """
         for query, equery in queries:
+            equery['rank'] = 1
+            equery['depth'] = None
+
             LeHierarch.insert(query)
             dsmock.assert_called_once_with(LeHierarch, **equery)
             dsmock.reset_mock()
@@ -241,7 +244,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
         for query in queries:
             Rel_Textes2Personne.insert(query)
 
-            eres = {'nature': None}
+            eres = {'nature': None, 'depth': None, 'rank': 0}
             eres.update(query)
             for fname in ('superior', 'subordinate'):
                 if isinstance(eres[fname], int):

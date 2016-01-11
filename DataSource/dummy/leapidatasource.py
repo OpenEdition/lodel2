@@ -20,7 +20,7 @@ class DummyDatasource(object):
     # @param limit int : Number of row to be returned
     # @param offset int : Used with limit to choose the start row
     # @return a list of LeCrud child classes
-    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0):
+    def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0, instanciate=True):
         pass
 
     ## @brief delete lodel editorial components given filters

@@ -13,7 +13,7 @@ class EmFieldType(integer.EmFieldType):
         allowed = {
             'nullable': False,
             'uniq': False,
-            'internal': 'automatic',
+            'internal': 'autosql',
             'primary': True,
         }
         # Checking args

@@ -2,6 +2,8 @@
     Tests for _LeCrud and LeCrud
 """
 
+import copy
+
 import unittest
 from unittest import TestCase
 from unittest.mock import patch
@@ -188,11 +190,18 @@ class LeCrudTestCase(TestCase):
         ]
         for lecclass, ndats in ndatas:
             lecclass.insert(ndats)
-            dsmock.assert_called_once_with(lecclass, **ndats)
-            dsmock.reset_mock()
 
+            # Adding default values for internal fields
+            expt_dats = copy.copy(ndats)
+            expt_dats['string'] = None
+            expt_dats['class_id'] = lecclass._class_id
+            expt_dats['type_id'] = lecclass._type_id if lecclass.implements_letype() else None
+
+            dsmock.assert_called_once_with(lecclass, **expt_dats)
+            dsmock.reset_mock()
+            
             lecclass.insert(ndats)
-            dsmock.assert_called_once_with(lecclass, **ndats)
+            dsmock.assert_called_once_with(lecclass, **expt_dats)
             dsmock.reset_mock()
     
     ## @todo try failing on inserting from LeClass child or LeObject
@@ -308,7 +317,8 @@ class LeCrudTestCase(TestCase):
                                         order=None,
                                         group=None,
                                         limit=None,
-                                        offset=0
+                                        offset=0,
+                                        instanciate=True
                                     )
             dsmock.reset_mock()
     
@@ -387,6 +397,7 @@ class LeCrudTestCase(TestCase):
                 exptargs['filters'].append( ('type_id', '=', callcls._type_id) )
             if callcls.implements_leclass:
                 exptargs['filters'].append( ('class_id', '=', callcls._class_id) )
+            exptargs['instanciate'] = True
             callcls.get(**getargs) 
             dsmock.assert_called_once_with(**exptargs)
             dsmock.reset_mock()

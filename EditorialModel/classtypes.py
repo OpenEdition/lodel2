@@ -4,15 +4,15 @@
 common_fields = {
     'lodel_id': {
         'fieldtype': 'pk',
-        'internal': 'automatic',
+        'internal': 'autosql',
     },
     'class_id': {
         'fieldtype': 'emuid',
-        'class_id': True,
+        'is_id_class': True,
     },
     'type_id': {
         'fieldtype': 'emuid',
-        'class_id': False,
+        'is_id_class': False,
     },
     'string': {
         'fieldtype': 'char',
@@ -22,20 +22,20 @@ common_fields = {
     'creation_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
-        'internal': 'automatic',
+        'internal': 'autosql',
     },
     'modification_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'now_on_update': True,
-        'internal': 'automatic',
+        'internal': 'autosql',
     }
 }
 
 relations_common_fields = {
     'id_relation': {
         'fieldtype': 'pk',
-        'internal': 'automatic',
+        'internal': 'autosql',
     },
     'nature': {
         'fieldtype': 'naturerelation',
@@ -45,7 +45,7 @@ relations_common_fields = {
         'internal': 'automatic',
     },
     'rank': {
-        'fieldtype': 'integer',
+        'fieldtype': 'rank',
         'internal': 'automatic',
     },
     'superior': {

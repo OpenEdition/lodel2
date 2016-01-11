@@ -215,6 +215,9 @@ class _LeCrud(object):
     def is_lerel2type(cls):
         return cls.implements_lerel2type()
 
+    def uidget(self):
+        return getattr(self, self.uidname())
+
     ## @brief Returns object datas
     # @param
     # @return a dict of fieldname : value
@@ -411,6 +414,7 @@ class _LeCrud(object):
             raise LeApiErrors("Error when inserting",[ValueError("The class '%s' was not found"%classname)])
         if not callcls.implements_letype() and not callcls.implements_lerelation():
             raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
+
         insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
         return callcls._datasource.insert(callcls, **insert_datas)
     
@@ -430,6 +434,7 @@ class _LeCrud(object):
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
         if isinstance(ret_datas, Exception):
             raise ret_datas
+
         if complete:
             ret_datas = cls._construct_datas(ret_datas)
             cls._check_datas_consistency(ret_datas)
@@ -458,7 +463,7 @@ class _LeCrud(object):
     def _construct_datas(cls, datas):
         res_datas = dict()
         for fname, ftype in cls.fieldtypes().items():
-            if fname in datas:
+            if not ftype.is_internal() or ftype.internal != 'autosql':
                 res_datas[fname] = ftype.construct_data(cls, fname, datas)
         return res_datas
     ## @brief Check datas consistency
@@ -581,7 +586,7 @@ class _LeCrud(object):
                     err_l[field] = ret
                 else:
                     res_filters.append((field,operator, value))
-
+        
         if len(err_l) > 0:
             raise LeApiDataCheckError("Error while preparing filters : ", err_l)
         return (res_filters, rel_filters)

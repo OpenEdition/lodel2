@@ -39,8 +39,8 @@ class EmField(EmComponent):
         if not internal:
             self.internal = False
         else:
-            if internal.lower() not in ['automatic']:
-                raise ValueError("The internal arguments possible values are : [False, 'object', 'automatic']")
+            if internal.lower() not in ['automatic', 'autosql']:
+                raise ValueError("The internal arguments possible values are : [False, 'autosql', 'automatic']")
             self.internal = internal.lower()
 
         if self.internal == 'object' and name not in EditorialModel.classtypes.common_fields.keys():

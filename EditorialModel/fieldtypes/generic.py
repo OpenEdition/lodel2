@@ -78,7 +78,13 @@ class GenericFieldType(object):
     # @param datas dict : dict storing fields values
     # @return constructed datas
     def construct_data(self, lec, fname, datas):
-        return datas[fname]
+        if fname in datas:
+            return datas[fname]
+        elif hasattr(lec.fieldtypes()[fname], 'default'):
+            return lec.fieldtypes()[fname].default
+        elif lec.fieldtypes()[fname].nullable:
+            return None
+        raise RuntimeError("Unable to construct data for field %s", fname)
     
     ## @brief Check datas consistency
     # @param leo LeCrud : A LeCrud child class instance

@@ -74,9 +74,9 @@ class _LeType(_LeClass):
     # @return relation id if successfully created else returns false
     def add_superior(self, superior, nature, del_if_exists = False):
         lehierarch = self.name2class('LeHierarch')
-        if del_if_exists:
+        if del_if_exists: #Duplicated test with lehierarch.insert
             prev_sup = lehierarch.get(
-                [('subordinate', '=', self), ('nature', '=', nature)],
+                [(lehierarch._subordinate_field_name, '=', self), ('nature', '=', nature)],
                 [ lehierarch.uidname() ]
             )
             if len(prev_sup) > 0:

@@ -10,27 +10,30 @@ class EmFieldType(integer.EmFieldType):
     
     help = 'Fieldtypes designed to handle editorial model UID for LeObjects'
 
-    def __init__(self, id_class=True, **kwargs):
+    def __init__(self, is_id_class, **kwargs):
+        self._is_id_class = is_id_class
         kwargs['internal'] = 'automatic'
-        super(EmFieldType, self).__init__(id_class = id_class, **kwargs)
+        super(EmFieldType, self).__init__(is_id_class = is_id_class, **kwargs)
 
     def _check_data_value(self, value):
-        if not( value is None):
-            return ValueError("Cannot set this value. Only None is authorized")
+        return (value, None)
 
     def construct_data(self, lec, fname, datas):
-        if isinstance(lec, letype._LeType):
-            # if None try to fetch data from lec itself
-            fname[datas] = lec.em_uid()[ 0 if self.class_id else 1]
+        if self.is_id_class:
+            if lec.implements_leclass():
+                datas[fname] = lec._class_id
+            else:
+                datas[fname] = None
         else:
-            raise RuntimeError("The LeObject is not a LeType")
+            if lec.implements_letype():
+                datas[fname] = lec._type_id
+            else:
+                datas[fname] = None
+        return datas[fname]
     
     def check_data_consistency(self, lec, fname, datas):
-        if isinstance(lec, lecrud._LeCrud) and lec.implements_letype():
-            if datas[fname] != (lec._class_id if self.class_id else lec._type_id):
-                return FieldTypeError("Given Editorial model uid doesn't fit with given LeObject")
-        else:
-            return FieldTypeError("You have to give a LeType !!!")
+        if datas[fname] != (lec._class_id if self.is_id_class else lec._type_id):
+            return FieldTypeError("Given Editorial model uid doesn't fit with given LeObject")
                 
             
         

@@ -2,6 +2,8 @@
     Tests for _LeObject and LeObject
 """
 
+import copy
+
 import unittest
 from unittest import TestCase
 from unittest.mock import patch
@@ -114,12 +116,18 @@ class LeObjectMockDatasourceTestCase(TestCase):
             {'titre':'world'},
         ]
         for ndats in ndatas:
+            # Adding values for internal fields
+            expt_dats = copy.copy(ndats)
+            expt_dats['string'] = None
+            expt_dats['class_id'] = Publication._class_id
+            expt_dats['type_id'] = Numero._type_id
+
             Publication.insert(ndats, classname='Numero')
-            dsmock.assert_called_once_with(Numero, **ndats)
+            dsmock.assert_called_once_with(Numero, **expt_dats)
             dsmock.reset_mock()
 
             LeObject.insert(ndats, classname = 'Numero')
-            dsmock.assert_called_once_with(Numero, **ndats)
+            dsmock.assert_called_once_with(Numero, **expt_dats)
             dsmock.reset_mock()
 
     @unittest.skip("Wait FieldTypes modification (cf. #90) and classmethod capabilities for update")

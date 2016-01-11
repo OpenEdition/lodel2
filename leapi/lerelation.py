@@ -2,7 +2,9 @@
 
 import copy
 import re
+import warnings
 
+import EditorialModel.classtypes
 import EditorialModel.fieldtypes.leo as ft_leo
 from . import lecrud
 from . import leobject
@@ -18,7 +20,7 @@ class _LeRelation(lecrud._LeCrud):
 
     def __init__(self, id_relation, **kwargs):
         super().__init__(id_relation, **kwargs)
-    
+  
     ## @brief Forge a filter to match the superior
     @classmethod
     def sup_filter(self, leo):
@@ -101,7 +103,11 @@ class _LeRelation(lecrud._LeCrud):
     # @return True in case of success, False in case of failure
     # @throw ValueError if step is not castable into an integer
     def set_rank(self, new_rank):
-        max_rank = self.get_max_rank()
+        raise NotImplemented("Abtract method")
+    
+    ## @brief Implements set_rank
+    def _set_rank(self, new_rank, **get_max_rank_args):
+        max_rank = self.get_max_rank(**get_max_rank_args)
         try:
             new_rank = int(new_rank)
         except ValueError:
@@ -128,9 +134,7 @@ class _LeRelation(lecrud._LeCrud):
     ## @returns The maximum assignable rank for this relation
     # @todo implementation
     def get_max_rank(self):
-        max_rank_result = self.__class__.get(field_list=['rank'], order=[('rank', 'DESC')], limit=1)
-        max_rank = int(max_rank_result[0].rank)
-        return max_rank+1
+        raise NotImplemented("Abstract method")
 
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
@@ -138,6 +142,46 @@ class _LeHierarch(_LeRelation):
     ## @brief Delete current instance from DB
     def delete(self):
         lecrud._LeCrud._delete(self)
+    
+    ## @brief modify a LeHierarch rank
+    # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
+    # @return True in case of success, False in case of failure
+    # @throw ValueError if step is not castable into an integer
+    def set_rank(self, new_rank):
+        return self._set_rank(
+                                new_rank,
+                                id_superior=getattr(self, self.uidname()),
+                                nature=self.nature
+        )
+    
+    @classmethod
+    def insert(cls, datas):
+        # Checks if the relation exists
+        res = cls.get(
+                [(cls._subordinate_field_name, '=', datas['subordinate']), ('nature', '=', datas['nature'])],
+                [ cls.uidname() ]
+            )
+        if not(res is None) and len(res) > 0:
+            return False
+        return super().insert(datas, 'LeHierarch')
+
+    ## @brief Get maximum assignable rank given a superior id and a nature
+    # @return an integer > 1
+    @classmethod
+    def get_max_rank(cls, id_superior, nature):
+        if nature not in EditorialModel.classtypes.EmNature.getall():
+            raise ValueError("Unknow relation nature '%s'" % nature)
+        sql_res = cls.get(
+                            query_filters=[
+                                ('nature','=', nature),
+                                (cls._superior_field_name, '=', id_superior),
+                            ],
+                            field_list=['rank'],
+                            order=[('rank', 'DESC')],
+                            limit=1,
+                            instanciate=False
+                        )
+        return sql_res[0]['rank']+1 if not(sql_res is None) and len(sql_res) > 0 else 1
 
     ## @brief instanciate the relevant lodel object using a dict of datas
     @classmethod
@@ -157,6 +201,23 @@ class _LeRel2Type(_LeRelation):
     ## @brief Delete current instance from DB
     def delete(self):
         lecrud._LeCrud._delete(self)
+    
+    ## @brief modify a LeRel2Type rank
+    # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
+    # @return True in case of success, False in case of failure
+    # @throw ValueError if step is not castable into an integer
+    def set_rank(self, new_rank):
+        return self._set_rank(
+                                new_rank,
+                                id_superior=getattr(self, self.uidname()),
+                                type_em_id=self._subordinate_cls._type_id
+        )
+
+    @classmethod
+    def get_max_rank(cls, id_superior, type_em_id):
+       # SELECT rank FROM relation JOIN object ON object.lodel_id = id_subordinate WHERE object.type_id = <type_em_id>
+        warnings.warn("LeRel2Type.get_max_rank() is not implemented yet and will always return 0")
+        return 0
 
     ## @brief Implements insert for rel2type
     # @todo checks when autodetecing the rel2type class

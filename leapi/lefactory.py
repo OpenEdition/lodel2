@@ -210,7 +210,7 @@ import %s
         type_id = None
         for fname, finfo in EditorialModel.classtypes.common_fields.items():
             if finfo['fieldtype'] == 'emuid':
-                if finfo['class_id']:
+                if finfo['is_id_class']:
                     class_id = fname
                 else:
                     type_id = fname
