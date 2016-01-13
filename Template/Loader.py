@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import jinja2
-import settings_local
+import settings
 
 
 class TemplateLoader(object):
@@ -12,7 +12,7 @@ class TemplateLoader(object):
     #                          it to the root "/". By default, it will be the root of the project, defined in the
     #                          settings of the application
     # @param follow_links bool : indicates whether or not to follow the symbolic links (default: True)
-    def __init__(self, search_path=settings_local.base_path, follow_links=True):
+    def __init__(self, search_path=settings.base_path, follow_links=True):
         self.search_path = search_path
         self.follow_links = follow_links
 
