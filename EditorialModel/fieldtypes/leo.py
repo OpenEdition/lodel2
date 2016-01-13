@@ -3,16 +3,17 @@
 import leapi.letype as letype
 import leapi.leclass as leclass
 
-from .generic import GenericFieldType, FieldTypeError
+from .generic import ReferenceFieldType, FieldTypeError
 
-class EmFieldType(GenericFieldType):
+class EmFieldType(ReferenceFieldType):
     
     help = 'Fieldtypes designed to handle pk of LeObject in LeRelations'
 
     ftype = 'leobject'
-
+    
+    ## @todo Replace hardcoded string for reference initialisation
     def __init__(self, superior=True, **kwargs):
-        super(EmFieldType, self).__init__(ftype = 'leobject', superior = superior, **kwargs)
+        super().__init__(superior = superior, reference='object', **kwargs)
 
     def _check_data_value(self, value):
         if not isinstance(value, int):

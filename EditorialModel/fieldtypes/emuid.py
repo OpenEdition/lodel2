@@ -13,7 +13,7 @@ class EmFieldType(integer.EmFieldType):
     def __init__(self, is_id_class, **kwargs):
         self._is_id_class = is_id_class
         kwargs['internal'] = 'automatic'
-        super(EmFieldType, self).__init__(is_id_class = is_id_class, **kwargs)
+        super().__init__(is_id_class = is_id_class, **kwargs)
 
     def _check_data_value(self, value):
         return (value, None)

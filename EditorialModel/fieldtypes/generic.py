@@ -3,80 +3,44 @@
 import types
 import importlib
 
-
-## @brief Abstract class representing a fieldtype
-# 
-# Important notes on datas checking :
 class GenericFieldType(object):
+    
+    help_text = 'Generic field type : abstract class for every fieldtype'
 
-    ## @brief Text describing the fieldtype
-    help = 'Generic field type : abstract class for every fieldtype'
-    ## @brief Allowed type for handled datas
-    _allowed_ftype = ['char', 'str', 'int', 'bool', 'datetime', 'text', 'rel2type', 'leobject']
-
-    ## @brief The basic lowlevel value type
-    ftype = None
-
-    ## @brief Instanciate a new fieldtype
-    # @param ftype str : The type of datas handled by this fieldtype
-    # @param nullable bool : is None allowed as value ?
-    # @param check_function function : A callback check function that takes 1 argument and raise a TypeError if the validation fails
-    # @param uniq bool : Indicate if a field should handle uniq values
-    # @param primary bool : If true the field is a primary key
-    # @param **kwargs dict : Other arguments
-    # @throw NotImplementedError if called directly
-    # @throw AttributeError if bad ftype
-    # @throw AttributeError if bad check_function
-    def __init__(self, ftype, nullable=True, check_data_value=None, uniq=False, primary=False, **kwargs):
+    ## @param internal False | str : define wheter or not a field is internal
+    # @throw NotImplementedError if called from bad class
+    def __init__(self, internal = False, **args):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
-
-        if self.ftype is None:
-            raise RuntimeError("The class attribute ftype is not properly set by the %s EmFieldType" % self.name)
-
-        if ftype not in self._allowed_ftype:
-            raise AttributeError("Ftype '%s' not known" % ftype)
-
-        if ftype != self.__class__.ftype:
-            raise RuntimeError("The ftype is not the same for the instance and the class. Maybe %s reimplement ftype at class level but shouldn't" % self.name)
-
-        self.ftype = ftype
-        self.nullable = bool(nullable)
-        self.uniq = bool(uniq)
-
-        if 'default' in kwargs:
-            self.default, error = self.check_data_value(kwargs['default'])
-            if error:
-                raise error
-            del kwargs['default']
-
-        for argname, argvalue in kwargs.items():
-            setattr(self, argname, argvalue)
-
-    ## @return A fieldtype name from an instance
+        self.internal = internal #Check this value ?
+    
+        for argname, argval in args.items():
+            setattr(self, argname, argval)
+    
+    ## Fieldtype name
+    # @todo should be a staticmethod
     @property
     def name(self):
         return self.__module__.split('.')[-1]
     
-    ## @return True if a field is internal, else returns False
+    ## @return True if a fieldtype is internal
     def is_internal(self):
-        return hasattr(self, 'internal') and self.internal
-
-    ## @brief Check if a Value is correct else return a check fail reason
-    # @param value * : The value to check
-    # @return (checked_and_casted_value, Exception|None)
-    def check_data_value(self, value):
-        if value is None:
-            if not self.nullable:
-                return (None, TypeError("'None' value but field is not nullable"))
-            return (None, None)
-        return self._check_data_value(value)
+        return self.internal != False
     
-    ## @brief Build automatic fields values
+    ## @brief Take care to call the fieldtype defined _check_data_value() method
+    # @return a tuple (value, error|None)
+    def check_data_value(self, value):
+        return self._check_data_value(value)
+
+    def _check_data_value(self, value):
+        return (value, None)
+    
+    ## @brief Build field value
     # @param lec LeCrud : A LeCrud child class
-    # @param fname str : The field name
-    # @param datas dict : dict storing fields values
-    # @return constructed datas
+    # @param fname str : The field name
+    # @param datas dict : dict storing fields values (from the lec)
+    # @return constructed datas (for the fname field)
+    # @throw RuntimeError if unable to construct data
     def construct_data(self, lec, fname, datas):
         if fname in datas:
             return datas[fname]
@@ -85,7 +49,7 @@ class GenericFieldType(object):
         elif lec.fieldtypes()[fname].nullable:
             return None
         raise RuntimeError("Unable to construct data for field %s", fname)
-    
+
     ## @brief Check datas consistency
     # @param leo LeCrud : A LeCrud child class instance
     # @param fname str : The field name
@@ -93,12 +57,6 @@ class GenericFieldType(object):
     # @return an Exception instance if fails else True
     def check_data_consistency(self, lec, fname, datas):
         return True
-
-    ## @brief Dummy check, designed to be implemented in child classes
-    # @param value * : The value
-    # @return (checked_and_casted_value, Exception|None)
-    def _check_data_value(self, value):
-        return (value, None)
 
     ## @brief Given a fieldtype name return the associated python class
     # @param fieldtype_name str : A fieldtype name
@@ -122,18 +80,83 @@ class GenericFieldType(object):
             hash_dats.append((kdic, getattr(self, kdic)))
         return hash(tuple(hash_dats))
 
-    ## @brief Transform a value into a valid python representation according to the fieldtype
-    # @param value ? : The value to cast
-    # @param kwargs dict : optionnal cast arguments
-    # @return Something (depending on the fieldtype
-    # @throw AttributeError if error in argument given to the method
-    # @throw TypeError if the cast is not possible
-    def cast(self, value, **kwargs):
-        if len(kwargs) > 0:
-            raise AttributeError("No optionnal argument allowed for %s cast method" % self.__class__.__name__)
-        return value
+class SingleValueFieldType(GenericFieldType):
+    
+    ## @brief Instanciate a new fieldtype
+    # @param nullable bool : is None allowed as value ?
+    # @param uniqu bool : Indicate if a field should handle uniq value
+    # @param primary bool : If True the field is a primary key
+    # @param **args : Other arguments
+    # @throw NotImplementedError if called from bad class
+    def __init__(self, internal = False, nullable = True, uniq = False, primary = False, **args):
+        if self.__class__ == SingleValueFieldType:
+            raise NotImplementedError("Asbtract class")
 
+        super().__init__(internal, **args)
 
+        self.nullable = nullable
+        self.uniq = uniq
+        self.primary = primary
+        if 'default' in args:
+            self.default, error = self.check_data_value(args['default'])
+            if error:
+                raise error
+            del(args['default'])
+
+    def check_data_value(self, value):
+        if value is None:
+            if not self.nullable:
+                return (None, TypeError("'None' value but field is not nullable"))
+            return (None, None)
+        return super().check_data_value(value)
+
+class ReferenceFieldType(SingleValueFieldType):
+
+    ## @brief Instanciate a new fieldtype
+    #
+    #
+    # @param reference str : A string that defines the reference (can be 'object' or 'relation')
+    # @param nullable bool : is None allowed as value ?
+    # @param unique bool : Indicate if a field should handle uniq value
+    # @param primary bool : If True the field is a primary key
+    # @param **args : Other arguments
+    # @throw NotImplementedError if called from bad class
+    def __init__(self, reference, internal=False, nullable = True, uniq = False, primary = False, **args):
+        if reference.lower() not in ['relation', 'object']:
+            raise ValueError("Bad value for reference : %s. Excepted on of 'relation', 'object'" % reference)
+        self.reference = reference.lower()
+        super().__init__(
+                            internal = internal,
+                            nullable = nullable,
+                            uniq = uniq,
+                            primary = primary,
+                            **args
+        );
+        pass
+
+class MultiValueFieldType(GenericFieldType):
+    
+    ## @brief Instanciate a new multivalue fieldtype
+    #
+    # This fieldtype describe a field that handles multiple values referenced by a key (like a dict).
+    # A typicall example is the i18n fieldtype
+    # @param keyname str : The identifier key name
+    # @param key_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
+    # @param value_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
+    def __init__(self, internal, keyname, key_fieldtype, value_fieldtype, **args):
+        super().__init__(internal)
+        ## stores the keyname
+        self.keyname = keyname
+        ## stores the fieldtype that handles the key
+        self.key_fieldtype = key_fieldtype
+        ## stores the fieldtype that handles the values
+        self.value_fieldtype = value_fieldtype
+
+#
+#
+#   Exceptions
+#
+#
 class FieldTypeError(Exception):
     pass
 

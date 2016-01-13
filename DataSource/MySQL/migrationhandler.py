@@ -10,6 +10,7 @@ import EditorialModel.classtypes
 import EditorialModel.fieldtypes
 import EditorialModel.fieldtypes.generic
 
+from DataSource.MySQL import fieldtypes as fieldtypes_utils
 from DataSource.MySQL import utils
 from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
@@ -274,8 +275,6 @@ class MysqlMigrationHandler(DummyMigrationHandler):
 
         # Creating foreign keys between relation and object table
         sup_cname, sub_cname = self.get_sup_and_sub_cols()
-        self._add_fk(tname, object_tname, sup_cname, self._object_pk[0], 'fk_relations_superiors')
-        self._add_fk(tname, object_tname, sub_cname, self._object_pk[0], 'fk_relations_subordinate')
 
     ## @brief Returns the fieldname for superior and subordinate in relation table
     # @return a tuple (superior_name, subordinate_name)
@@ -301,8 +300,9 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing'):
         #Escaped table name
         etname = utils.escape_idname(table_name)
-        pk_type = self._field_to_type(pk_ftype)
-        pk_specs = self._field_to_specs(pk_ftype)
+        instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype)
+        if instr_type != 'column':
+            raise ValueError("Migration handler doesn't support MultiValueFieldType as primary keys")
 
         if if_exists == 'drop':
             self._query("""DROP TABLE IF EXISTS {table_name};""".format(table_name=etname))
@@ -343,11 +343,17 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         etname = utils.escape_idname(table_name)
         ecname = utils.escape_idname(col_name)
 
+        instr, col_type, col_specs = fieldtypes_utils.fieldtype_db_init(col_fieldtype)
+        if instr is None:
+            return True
+        if instr != "column":
+            raise RuntimeError("Bad implementation")
+
         add_col = add_col.format(
             table_name=etname,
             col_name=ecname,
-            col_type=self._field_to_type(col_fieldtype),
-            col_specs=self._field_to_specs(col_fieldtype),
+            col_type=col_type,
+            col_specs=col_specs,
         )
         try:
             self._query(add_col)
@@ -359,6 +365,31 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
                 #LOG
                 print("Aborded, column `%s` exists" % col_name)
                 return False
+
+        if isinstance(col_fieldtype, EditorialModel.fieldtypes.generic.ReferenceFieldType):
+            # We have to create a FK !
+            if col_fieldtype.reference == 'object':
+                dst_table_name = utils.common_tables['object']
+                dst_col_name, _ = self._object_pk
+            elif col_fieldtypes.reference == 'relation':
+                dst_table_name = utils.common_tables['relation']
+                dst_col_name, _ = self._relation_pk
+            
+            fk_name = 'fk_%s-%s_%s-%s' % (
+                                            table_name,
+                                            col_name,
+                                            dst_table_name,
+                                            dst_col_name,
+                                        )
+                
+            self._add_fk(
+                            src_table_name = table_name,
+                            dst_table_name = dst_table_name,
+                            src_col_name = col_name,
+                            dst_col_name = dst_col_name,
+                            fk_name = fk_name
+                        )
+
         return True
 
     ## @brief Add a foreign key
@@ -398,7 +429,7 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
     src_table=utils.escape_idname(src_table_name),
-    fk_name=fk_name
+    fk_name=utils.escape_idname(fk_name)
 ))
         except self._dbmodule.err.InternalError:
             # If the FK don't exists we do not care
@@ -412,7 +443,7 @@ DROP FOREIGN KEY {fk_name}""".format(
         colval_l_ins = dict()  # param for insert trigger
 
         for cname, cftype in cols_ftype.items():
-            if cftype.ftype == 'datetime':
+            if isinstance(cftype, EditorialModel.fieldtypes.datetime.EmFieldType):
                 if cftype.now_on_update:
                     colval_l_upd[cname] = 'NOW()'
                 if cftype.now_on_create:
@@ -449,65 +480,6 @@ FOR EACH ROW SET {col_val_list};""".format(
     moment=moment, col_val_list=col_val_l
 )
             self._query(trig_q)
-
-    ## @brief Identifier escaping
-    # @param idname str : An SQL identifier
-    #def _idname_escape(self, idname):
-    #    if '`' in idname:
-    #        raise ValueError("Invalid name : '%s'"%idname)
-    #    return '`%s`'%idname
-
-    ## @brief Returns column specs from fieldtype
-    # @param emfieldtype EmFieldType : An EmFieldType insance
-    # @todo escape default value
-    def _field_to_specs(self, emfieldtype):
-        colspec = ''
-        if not emfieldtype.nullable:
-            colspec = 'NOT NULL'
-        if hasattr(emfieldtype, 'default'):
-            colspec += ' DEFAULT '
-            if emfieldtype.default is None:
-                colspec += 'NULL '
-            else:
-                colspec += emfieldtype.default  # ESCAPE VALUE HERE !!!!
-
-        if emfieldtype.name == 'pk':
-            colspec += ' AUTO_INCREMENT'
-
-        return colspec
-
-    ## @brief Given a fieldtype return a MySQL type specifier
-    # @param emfieldtype EmFieldType : A fieldtype
-    # @return the corresponding MySQL type
-    def _field_to_type(self, emfieldtype):
-        ftype = emfieldtype.ftype
-
-        if ftype == 'char' or ftype == 'str':
-            res = "VARCHAR(%d)" % emfieldtype.max_length
-        elif ftype == 'text':
-            res = "TEXT"
-        elif ftype == 'datetime':
-            res = "DATETIME"
-            # client side workaround for only one column with CURRENT_TIMESTAMP : giving NULL to timestamp that don't allows NULL
-            # cf. https://dev.mysql.com/doc/refman/5.0/en/timestamp-initialization.html#idm139961275230400
-            # The solution for the migration handler is to create triggers :
-            # CREATE TRIGGER trigger_name BEFORE INSERT ON `my_super_table`
-            # FOR EACH ROW SET NEW.my_date_column = NOW();
-            # and
-            # CREATE TRIGGER trigger_name BEFORE UPDATE ON
-
-        elif ftype == 'bool':
-            res = "BOOL"
-        elif ftype == 'int':
-            res = "INT"
-        elif ftype == 'rel2type':
-            res = "INT"
-        elif ftype == 'leobject':
-            res = "INT"
-        else:
-            raise ValueError("Unsuported fieldtype ftype : %s" % ftype)
-
-        return res
 
     ## @brief Delete all table created by the MH
     # @param model Model : the Editorial model
