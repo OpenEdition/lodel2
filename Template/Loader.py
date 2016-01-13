@@ -1,7 +1,9 @@
 #-*- coding: utf-8 -*-
 
 import jinja2
+
 import settings
+from . import api_lodel_templates
 
 
 class TemplateLoader(object):
@@ -26,10 +28,17 @@ class TemplateLoader(object):
     #
     # @return str. String containing the HTML output of the processed templated
     def render_to_html(self, template_file, template_vars={}, template_extra=None):
+
         loader = jinja2.FileSystemLoader(searchpath=self.search_path, followlinks=self.follow_links)
         environment = jinja2.Environment(loader=loader)
         template = environment.get_template(template_file)
+
+        # Lodel2 default api is loaded
+        template.globals['lodel'] = api_lodel_templates
+
+        # Extra modules are loaded
         if template_extra is not None:
             for extra in template_extra:
                 template.globals[extra[0]] = extra[1]
+
         return template.render(template_vars)
