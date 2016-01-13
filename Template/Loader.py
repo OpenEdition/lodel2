@@ -3,10 +3,13 @@
 import jinja2
 
 import settings
-from . import api_lodel_templates
+from .api import api_lodel_templates
+from .exceptions import NotAllowedCustomAPIKeyError
 
 
 class TemplateLoader(object):
+
+    __reserved_template_keys = ['lodel']
 
     ## @brief Initializes a template loader
     #
@@ -39,6 +42,15 @@ class TemplateLoader(object):
         # Extra modules are loaded
         if template_extra is not None:
             for extra in template_extra:
+                if not self.__is_allowed_template_key(extra[0]):
+                    raise NotAllowedCustomAPIKeyError("The name 'lodel' is a reserved one for the loaded APIs in templates")
                 template.globals[extra[0]] = extra[1]
 
         return template.render(template_vars)
+
+    ## @brief Checks if the key used for the template is allowed
+    #
+    # @param key str
+    # @return bool
+    def __is_allowed_template_key(self, key):
+        return False if key in self.__class__.__reserved_template_keys else True
