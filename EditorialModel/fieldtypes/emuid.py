@@ -20,7 +20,7 @@ class EmFieldType(integer.EmFieldType):
     def _check_data_value(self, value):
         return (value, None)
 
-    def _construct_data(self, lec, fname, datas, cur_value):
+    def construct_data(self, lec, fname, datas, cur_value):
         ret = None
         if self.is_id_class:
             if lec.implements_leclass():

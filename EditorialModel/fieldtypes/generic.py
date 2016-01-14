@@ -39,12 +39,6 @@ class GenericFieldType(object):
     def _check_data_value(self, value):
         return (value, None)
     
-    ## @brief Wrapper for _construct_data() method
-    # 
-    # Now useless
-    def construct_data(self, lec, fname, datas, cur_value):
-        return self._construct_data(lec, fname, datas, cur_value)
-
     ## @brief Build field value
     # @param lec LeCrud : A LeCrud child class
     # @param fname str : The field name
@@ -52,7 +46,7 @@ class GenericFieldType(object):
     # @param cur_value : the value for the current field (identified by fieldname)
     # @return constructed datas (for the fname field)
     # @throw RuntimeError if unable to construct data
-    def _construct_data(self, lec, fname, datas, cur_value):
+    def construct_data(self, lec, fname, datas, cur_value):
         if fname in datas.keys():
             return cur_value
         elif hasattr(lec.fieldtypes()[fname], 'default'):
@@ -91,6 +85,7 @@ class GenericFieldType(object):
             hash_dats.append((kdic, getattr(self, kdic)))
         return hash(tuple(hash_dats))
 
+## @brief Represent fieldtypes handling a single value
 class SingleValueFieldType(GenericFieldType):
     
     ## @brief Instanciate a new fieldtype
@@ -121,6 +116,9 @@ class SingleValueFieldType(GenericFieldType):
             return (None, None)
         return super().check_data_value(value)
 
+## @brief Abstract class for fieldtype representing references
+#
+# In MySQL its foreign keys (for example leo fieldtypes)
 class ReferenceFieldType(SingleValueFieldType):
 
     ## @brief Instanciate a new fieldtype
@@ -145,6 +143,9 @@ class ReferenceFieldType(SingleValueFieldType):
         );
         pass
 
+## @brief Abstract class for fieldtypes handling multiple values identified by a key
+#
+# For example i18n fieldtype
 class MultiValueFieldType(GenericFieldType):
     
     ## @brief Instanciate a new multivalue fieldtype
@@ -164,6 +165,12 @@ class MultiValueFieldType(GenericFieldType):
         self.value_fieldtype = value_fieldtype
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
+#
+# This class is designed to allow automatic scheduling of construct_data calls. 
+#
+# In theory it's able to detect circular dependencies
+# @todo test circular deps detection
+# @todo test circulat deps false positiv
 class DatasConstructor(object):
     
     ## @brief Init a DatasConstructor
@@ -181,10 +188,12 @@ class DatasConstructor(object):
         self._constructed = []
         ## Stores construct calls list
         self._construct_calls = []
-        
+    
+    ## @brief Implements the dict.keys() method on instance
     def keys(self):
         return self._datas.keys()
-
+    
+    ## @brief Allows to access the instance like a dict
     def __getitem__(self, fname):
         if fname not in self._constructed:
             if fname in self._construct_calls:
@@ -193,9 +202,12 @@ class DatasConstructor(object):
             self._datas[fname] = self._fieldtypes[fname].construct_data(self._lec, fname, self, cur_value)
             self._constructed.append(fname)
         return self._datas[fname]
-
+    
+    ## @brief Allows to set instance values like a dict
+    # @warning Should not append in theory
     def __setitem__(self, fname, value):
         self._datas[fname] = value
+        warnings.warn("Setting value of an DatasConstructor instance")
         
 
 #

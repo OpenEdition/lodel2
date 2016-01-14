@@ -15,7 +15,7 @@ class EmFieldType(integer.EmFieldType):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def _construct_data(self, lec, fname, datas, cur_value):
+    def construct_data(self, lec, fname, datas, cur_value):
         superior_id = datas[EditorialModel.classtypes.relation_superior]
         if lec.is_lerel2type():
             subordinate = lec._subordinate_cls

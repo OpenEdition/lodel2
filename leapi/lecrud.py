@@ -455,11 +455,8 @@ class _LeCrud(object):
 
     ## @brief Construct datas values
     #
-    # @warning assert that datas is complete
-    #
     # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
     # @return A new dict of datas
-    # @todo Decide wether or not the datas are modifed inplace or returned in a new dict (second solution for the moment)
     @classmethod
     def _construct_datas(cls, datas):
         constructor = DatasConstructor(cls, datas, cls.fieldtypes())

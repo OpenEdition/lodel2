@@ -25,7 +25,7 @@ class EmFieldType(ReferenceFieldType):
     
     ## @brief If field value is an integer, returns a partially instanciated LeObject (only with an ID)
     # @todo what should we do if the get fails ? Raise ?
-    def _construct_data(self, lec, fname, datas, cur_value):
+    def construct_data(self, lec, fname, datas, cur_value):
         if isinstance(cur_value, str):
             # Cast to int
             try:
