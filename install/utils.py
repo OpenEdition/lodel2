@@ -3,6 +3,7 @@
 from loader import *
 import warnings
 
+
 def refreshdyn():
     import sys
     from EditorialModel.model import Model
@@ -18,12 +19,14 @@ def refreshdyn():
     # Create the python file
     fact.create_pyfile(em, LeDataSourceSQL, {})
 
+
 def db_init():
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.model import Model
     mh = getattr(migrationhandler,Settings.mh_classname)()
     em = Model(EmBackendJson(Settings.em_file))
     em.migrate_handler(mh)
+
 
 def em_graph(output_file = None, image_format = None):
     from EditorialModel.model import Model
@@ -63,3 +66,26 @@ def em_graph(output_file = None, image_format = None):
     os.unlink(dot_file)
     print("Output image written in file : '%s'" % output_file)
 
+
+def dir_init():
+    import os
+
+    # Templates
+    print("Creating Base Templates ...")
+    templates = {
+        'base': {'file': 'base.html', 'content': '{% extends "templates/base.html" %}'},
+        'base_backend': {'file': 'base_backend.html', 'content': '{% extends "templates/base_backend.html" %}'}
+    }
+
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    templates_directory = os.path.join(current_directory,'templates')
+    if not os.path.exists(templates_directory):
+        os.makedirs(templates_directory)
+
+    for _, template in templates.items():
+        my_file_path = os.path.join(templates_directory, template['file'])
+        if os.path.exists(my_file_path):
+            os.unlink(my_file_path)
+        with open(my_file_path, 'w') as my_file:
+            my_file.write(template['content'])
+        print("Created %s" % my_file_path)

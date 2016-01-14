@@ -7,7 +7,7 @@ dbinit:
 	python -c "import utils; utils.db_init()"
 
 dirinit:
-	@mkdir templates
+	python -c "import utils; utils.dir_init()"
 
 emgraph:
 	python -c "import utils; utils.em_graph()"
