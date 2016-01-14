@@ -1,11 +1,15 @@
 #-*- coding: utf-8 -*-
 
+import copy
 import types
 import importlib
 
 class GenericFieldType(object):
     
     help_text = 'Generic field type : abstract class for every fieldtype'
+    
+    ## @brief List fields that will be exposed to the construct_data_method
+    _construct_datas_deps = []
 
     ## @param internal False | str : define wheter or not a field is internal
     # @throw NotImplementedError if called from bad class
@@ -35,15 +39,22 @@ class GenericFieldType(object):
     def _check_data_value(self, value):
         return (value, None)
     
+    ## @brief Wrapper for _construct_data() method
+    # 
+    # Now useless
+    def construct_data(self, lec, fname, datas, cur_value):
+        return self._construct_data(lec, fname, datas, cur_value)
+
     ## @brief Build field value
     # @param lec LeCrud : A LeCrud child class
     # @param fname str : The field name
     # @param datas dict : dict storing fields values (from the lec)
+    # @param cur_value : the value for the current field (identified by fieldname)
     # @return constructed datas (for the fname field)
     # @throw RuntimeError if unable to construct data
-    def construct_data(self, lec, fname, datas):
-        if fname in datas:
-            return datas[fname]
+    def _construct_data(self, lec, fname, datas, cur_value):
+        if fname in datas.keys():
+            return cur_value
         elif hasattr(lec.fieldtypes()[fname], 'default'):
             return lec.fieldtypes()[fname].default
         elif lec.fieldtypes()[fname].nullable:
@@ -151,6 +162,41 @@ class MultiValueFieldType(GenericFieldType):
         self.key_fieldtype = key_fieldtype
         ## stores the fieldtype that handles the values
         self.value_fieldtype = value_fieldtype
+
+## @brief Class designed to handle datas access will fieldtypes are constructing datas
+class DatasConstructor(object):
+    
+    ## @brief Init a DatasConstructor
+    # @param lec LeCrud : LeCrud child class 
+    # @param datas dict : dict with field name as key and field values as value
+    # @param fieldtypes dict : dict with field name as key and fieldtype as value
+    def __init__(self, lec, datas, fieldtypes):
+        ## Stores concerned class
+        self._lec = lec
+        ## Stores datas and constructed datas
+        self._datas = copy.copy(datas)
+        ## Stores fieldtypes
+        self._fieldtypes = fieldtypes
+        ## Stores list of fieldname for constructed datas
+        self._constructed = []
+        ## Stores construct calls list
+        self._construct_calls = []
+        
+    def keys(self):
+        return self._datas.keys()
+
+    def __getitem__(self, fname):
+        if fname not in self._constructed:
+            if fname in self._construct_calls:
+                raise RuntimeError('Probably circular dependencies in fieldtypes')
+            cur_value = self._datas[fname] if fname in self._datas else None
+            self._datas[fname] = self._fieldtypes[fname].construct_data(self._lec, fname, self, cur_value)
+            self._constructed.append(fname)
+        return self._datas[fname]
+
+    def __setitem__(self, fname, value):
+        self._datas[fname] = value
+        
 
 #
 #

@@ -9,6 +9,8 @@ import warnings
 import importlib
 import re
 
+from EditorialModel.fieldtypes.generic import DatasConstructor
+
 REL_SUP = 0
 REL_SUB = 1
 
@@ -460,11 +462,14 @@ class _LeCrud(object):
     # @todo Decide wether or not the datas are modifed inplace or returned in a new dict (second solution for the moment)
     @classmethod
     def _construct_datas(cls, datas):
-        res_datas = copy.copy(datas)
-        for fname, ftype in cls.fieldtypes().items():
-            if not ftype.is_internal() or ftype.internal != 'autosql':
-                res_datas[fname] = ftype.construct_data(cls, fname, res_datas)
-        return res_datas
+        constructor = DatasConstructor(cls, datas, cls.fieldtypes())
+        ret = {
+                fname:constructor[fname]
+                for fname, ftype in cls.fieldtypes().items()
+                if not ftype.is_internal() or ftype.internal != 'autosql'
+        }
+        return ret
+
     ## @brief Check datas consistency
     # 
     # @warning assert that datas is complete

@@ -10,6 +10,8 @@ class EmFieldType(integer.EmFieldType):
     
     help = 'Fieldtypes designed to handle editorial model UID for LeObjects'
 
+    _construct_datas_deps = []
+
     def __init__(self, is_id_class, **kwargs):
         self._is_id_class = is_id_class
         kwargs['internal'] = 'automatic'
@@ -18,18 +20,15 @@ class EmFieldType(integer.EmFieldType):
     def _check_data_value(self, value):
         return (value, None)
 
-    def construct_data(self, lec, fname, datas):
+    def _construct_data(self, lec, fname, datas, cur_value):
+        ret = None
         if self.is_id_class:
             if lec.implements_leclass():
-                datas[fname] = lec._class_id
-            else:
-                datas[fname] = None
+                ret = lec._class_id
         else:
             if lec.implements_letype():
-                datas[fname] = lec._type_id
-            else:
-                datas[fname] = None
-        return datas[fname]
+                ret = lec._type_id
+        return ret
     
     def check_data_consistency(self, lec, fname, datas):
         if datas[fname] != (lec._class_id if self.is_id_class else lec._type_id):

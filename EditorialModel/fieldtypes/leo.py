@@ -9,7 +9,7 @@ class EmFieldType(ReferenceFieldType):
     
     help = 'Fieldtypes designed to handle pk of LeObject in LeRelations'
 
-    ftype = 'leobject'
+    _construct_data_deps = []
     
     ## @todo Replace hardcoded string for reference initialisation
     def __init__(self, superior=True, **kwargs):
@@ -25,23 +25,23 @@ class EmFieldType(ReferenceFieldType):
     
     ## @brief If field value is an integer, returns a partially instanciated LeObject (only with an ID)
     # @todo what should we do if the get fails ? Raise ?
-    def construct_data(self, lec, fname, datas):
-        if isinstance(datas[fname], str):
+    def _construct_data(self, lec, fname, datas, cur_value):
+        if isinstance(cur_value, str):
             # Cast to int
             try:
-                datas[fname] = int(datas[fname])
+                cur_value = int(cur_value)
             except (ValueError, TypeError) as e:
                 raise e # Raise Here !?
-        if datas[fname].is_leobject():
+        if cur_value.is_leobject():
             # Its an object not populated (we dont now its type)
-            datas[fname] = datas[fname].lodel_id #Optimize here giving only class_id and type_id to populate ?
-        if isinstance(datas[fname], int):
+            cur_value = cur_value.lodel_id #Optimize here giving only class_id and type_id to populate ?
+        if isinstance(cur_value, int):
             # Get instance with id
-            resget = lec.name2class('LeObject').get(['lodel_id = %d' % datas[fname]])
+            resget = lec.name2class('LeObject').get(['lodel_id = %d' % cur_value])
             if resget is None or len(resget) != 1:
                 # Bad filter or bad id... raise ?
                 raise Exception("BAAAAAD")
-        return datas[fname]
+        return cur_value
     
     ## @brief checks datas consistency
     # @param lec LeCrud : A LeCrud child instance
