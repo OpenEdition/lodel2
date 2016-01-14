@@ -17,7 +17,7 @@ import EditorialModel.fieldtypes.rel2type
 ## @brief Returns column specs from fieldtype
 # @param emfieldtype EmFieldType : An EmFieldType insance
 # @todo escape default value
-def singlevaluefieldtype_db_init_specs(emfieldtype):
+def singlevaluefieldtype_db_init_specs(emfieldtype, noauto_inc = False):
     colspec = ''
     if not emfieldtype.nullable:
         colspec = 'NOT NULL'
@@ -28,7 +28,7 @@ def singlevaluefieldtype_db_init_specs(emfieldtype):
         else:
             colspec += emfieldtype.default  # ESCAPE VALUE HERE !!!!
 
-    if emfieldtype.name == 'pk':
+    if emfieldtype.name == 'pk' and not noauto_inc:
         colspec += ' AUTO_INCREMENT'
 
     return colspec
@@ -46,11 +46,11 @@ def singlevaluefieldtype_db_init_specs(emfieldtype):
 #  - the third tuple item is a tuple(column_type, column_spec)
 # @param fieldtype GenericFieldType : A FieldType instance
 # @return a tuple (instruction_type, infos)
-def fieldtype_db_init(fieldtype):
+def fieldtype_db_init(fieldtype, noauto_inc = False):
     if isinstance(fieldtype, EditorialModel.fieldtypes.rel2type.EmFieldType):
         return (None, None, None)
     elif isinstance(fieldtype, SingleValueFieldType):
-        res = [ 'column', None, singlevaluefieldtype_db_init_specs(fieldtype) ]
+        res = [ 'column', None, singlevaluefieldtype_db_init_specs(fieldtype, noauto_inc) ]
         # We will create a column
         if isinstance(fieldtype, EditorialModel.fieldtypes.integer.EmFieldType):
             res[1] = 'INT'
@@ -66,15 +66,13 @@ def fieldtype_db_init(fieldtype):
             res[1] = 'INT'
         else:
             raise RuntimeError("Unsupported fieldtype : ", fieldtype)
-        return tuple(res)
     elif isinstance(fieldtype, MultiValueFieldType):
         res = [ 'table', None, None ]
-        key_type, _ = fieldtype_db_init(fieldtype.key_fieldtype)
-        key_name = fieldtype.keyname
-        res[1] = (key_name, key_type)
-        res[2] = fieldtype_db_init(fieldtype.value_fieldtype)
+        res[1] = (fieldtype.keyname, fieldtype.key_fieldtype)
+        res[2] = fieldtype.value_fieldtype
     else:
         raise NotImplementedError("Not yet implemented")
+    return tuple(res)
             
     
 

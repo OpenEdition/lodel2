@@ -64,6 +64,11 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_default_tables(self.drop_if_exists)
 
     ## @brief Modify the db given an EM change
+    #
+    # @note Here we don't care about the relation parameter of _add_column() method because the
+    # only case in wich we want to add a field that is linked with the relation table is for rel2type
+    # attr creation. The relation parameter is set to True in the add_relationnal_field() method
+    # 
     # @param em model : The EditorialModel.model object to provide the global context
     # @param uid int : The uid of the change EmComponent
     # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
@@ -120,12 +125,19 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         pkname, pkftype = self._relation_pk
 
         #If not exists create a relational table
-        self._create_table(tname, pkname, pkftype, self.db_engine, if_exists='nothing')
+        self._create_table(
+                            tname,
+                            pkname,
+                            pkftype,
+                            self.db_engine,
+                            if_exists='nothing',
+                            noauto_inc = True,
+                        )
         #Add a foreign key if wanted
         if self.foreign_keys:
             self._add_fk(tname, utils.common_tables['relation'], pkname, pkname)
         #Add the column
-        self._add_column(tname, emfield.name, emfield.fieldtype_instance())
+        self._add_column(tname, emfield.name, emfield.fieldtype_instance(), relation=True)
         #Update table triggers
         self._generate_triggers(tname, self._r2type2cols(edmod, r2tf))
 
@@ -175,9 +187,13 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             raise ValueError("The given uid is not an EmClass uid")
         pkname, pktype = self._object_pk
         table_name = utils.object_table_name(emclass.name)
-
-        self._create_table(table_name, pkname, pktype, engine=engine)
-
+        self._create_table(
+                            table_name,
+                            pkname,
+                            pktype,
+                            engine=engine,
+                            noauto_inc = True
+        )
         if self.foreign_keys:
             self._add_fk(table_name, utils.common_tables['object'], pkname, pkname)
 
@@ -258,7 +274,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         cols = {fname: self._common_field_to_ftype(fname) for fname in EditorialModel.classtypes.common_fields}
         for fname, ftype in cols.items():
             if fname != pk_name:
-                self._add_column(tname, fname, ftype)
+                self._add_column(tname, fname, ftype, relation=False)
         #Creating triggers
         self._generate_triggers(tname, cols)
         object_tname = tname
@@ -269,7 +285,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists=if_exists)
         #Adding columns
         for fname, ftype in self._relation_cols.items():
-            self._add_column(tname, fname, ftype)
+            self._add_column(tname, fname, ftype, relation=True)
         #Creating triggers
         self._generate_triggers(tname, self._relation_cols)
 
@@ -297,7 +313,8 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param engine str : The engine to use with this table
     # @param charset str : The charset of this table
     # @param if_exist str : takes values in ['nothing', 'drop']
-    def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing'):
+    # @param noauto_inc bool : if True forbids autoincrement on PK
+    def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing', noauto_inc = False):
         #Escaped table name
         etname = utils.escape_idname(table_name)
         if not isinstance(pk_name, tuple):
@@ -308,17 +325,17 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             raise ValueError("You have to give as many pk_name as pk_ftype")
         
         pk_instr_cols = ''
-        pk_format = '{pk_name} {pk_type} {pk_specs},'
+        pk_format = "{pk_name} {pk_type} {pk_specs},\n"
         for i in range(len(pk_name)):
-            instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype[i])
+            instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype[i], noauto_inc)
             if instr_type != 'column':
                 raise ValueError("Migration handler doesn't support MultiValueFieldType as primary keys")
             pk_instr_cols += pk_format.format(
-                                                pk_name = pk_name[i],
+                                                pk_name = utils.escape_idname(pk_name[i]),
                                                 pk_type = pk_type,
                                                 pk_specs = pk_specs
                                             )
-        pk_instr_cols += "\nPRIMARY KEY("+(','.join([utils.escape_idname(pkn) for pkn in pk_name]))+')\n'
+        pk_instr_cols += "PRIMARY KEY("+(','.join([utils.escape_idname(pkn) for pkn in pk_name]))+')'
 
         if if_exists == 'drop':
             self._query("""DROP TABLE IF EXISTS {table_name};""".format(table_name=etname))
@@ -337,19 +354,21 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @param table_name str : The table name
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
+    # @param relation bool | None : a flag to indicate if we add a column in a table linked with an bject or with a relation (used only when the column is MultiValueFieldType )
     # @return True if the column was added else return False
-    def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False):
-
+    def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False, relation=False):
         instr, col_type, col_specs = fieldtypes_utils.fieldtype_db_init(col_fieldtype)
 
         if instr == 'table':
             # multivalue field. We are not going to add a column in this table
             # but in corresponding multivalue table
             self._add_column_multivalue(
-                                            table_name,
+                                            ref_table_name = table_name,
                                             key_infos = col_type,
-                                            column_infos = (col_name, col_specs)
+                                            column_infos = (col_name, col_specs),
+                                            relation = relation
                                         )
+            return True
 
         col_name = utils.column_name(col_name)
 
@@ -414,21 +433,25 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
     # @param ref_table_name str : Referenced table name
     # @param key_infos tuple : tuple(key_name, key_fieldtype)
     # @param column_infos tuple : tuple(col_name, col_fieldtype)
-    def _add_column_multivalue(ref_table_name, key_info, column_infos):
+    def _add_column_multivalue(self, ref_table_name, key_infos, column_infos, relation):
         key_name, key_ftype = key_infos
         col_name, col_ftype = column_infos
         table_name = utils.multivalue_table_name(ref_table_name, key_name)
+        if relation:
+            pk_infos = self._relation_pk
+        else:
+            pk_infos = self._object_pk
         # table creation
         self._create_table(
-                            table_name,
-                            key_name,
-                            key_ftype,
-                            self.db_engine,
-                            if_exists = 'nothing'
+                            table_name = table_name,
+                            pk_name = (key_name, pk_infos[0]),
+                            pk_ftype = (key_ftype, pk_infos[1]),
+                            engine = self.db_engine,
+                            if_exists = 'nothing',
+                            noauto_inc = True
         )
         # with FK
-        self._del_fk(table_name, dst_table_name)
-        self._add_fk(table_name, dst_table_name, key_name, utils._object_pk[0])
+        self._add_fk(table_name, ref_table_name, pk_infos[0], pk_infos[0])
         # adding the column
         self._add_column(table_name, col_name, col_ftype)
 
@@ -465,12 +488,13 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
     # @warning fails silently
     def _del_fk(self, src_table_name, dst_table_name, fk_name=None):
         if fk_name is None:
-            fk_name = utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
+            fk_name = utils.get_fk_name(src_table_name, dst_table_name)
+        fk_name = utils.escape_idname(fk_name)
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
     src_table=utils.escape_idname(src_table_name),
-    fk_name=utils.escape_idname(fk_name)
+    fk_name=fk_name
 ))
         except self._dbmodule.err.InternalError:
             # If the FK don't exists we do not care

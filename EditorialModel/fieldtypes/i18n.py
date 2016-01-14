@@ -3,7 +3,7 @@
 from .generic import MultiValueFieldType
 from . import char
 
-class EmFieldType(MutliValueFieldType):
+class EmFieldType(MultiValueFieldType):
     
     help = 'Fieldtype designed to handle translations'
     
