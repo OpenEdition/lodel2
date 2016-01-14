@@ -1,10 +1,13 @@
-all: refreshdyn dbinit
+all: refreshdyn dbinit dirinit
 
 refreshdyn: distclean
 	python -c "import utils; utils.refreshdyn()"
 
 dbinit:
 	python -c "import utils; utils.db_init()"
+
+dirinit:
+	@mkdir templates
 
 emgraph:
 	python -c "import utils; utils.em_graph()"
