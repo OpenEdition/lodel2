@@ -292,41 +292,46 @@ class MysqlMigrationHandler(DummyMigrationHandler):
 
     ## @brief Create a table with primary key
     # @param table_name str : table name
-    # @param pk_name str : pk column name
-    # @param pk_specs str : see @ref _field_to_sql()
+    # @param pk_name str | tuple : pk column name (give tuple for multi pk)
+    # @param pk_ftype fieldtype | tuple : pk fieldtype (give a tuple for multi pk)
     # @param engine str : The engine to use with this table
     # @param charset str : The charset of this table
     # @param if_exist str : takes values in ['nothing', 'drop']
     def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing'):
         #Escaped table name
         etname = utils.escape_idname(table_name)
-        instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype)
-        if instr_type != 'column':
-            raise ValueError("Migration handler doesn't support MultiValueFieldType as primary keys")
+        if not isinstance(pk_name, tuple):
+            pk_name = tuple([pk_name])
+            pk_ftype = tuple([pk_ftype])
+
+        if len(pk_name) != len(pk_ftype):
+            raise ValueError("You have to give as many pk_name as pk_ftype")
+        
+        pk_instr_cols = ''
+        pk_format = '{pk_name} {pk_type} {pk_specs},'
+        for i in range(len(pk_name)):
+            instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype[i])
+            if instr_type != 'column':
+                raise ValueError("Migration handler doesn't support MultiValueFieldType as primary keys")
+            pk_instr_cols += pk_format.format(
+                                                pk_name = pk_name[i],
+                                                pk_type = pk_type,
+                                                pk_specs = pk_specs
+                                            )
+        pk_instr_cols += "\nPRIMARY KEY("+(','.join([utils.escape_idname(pkn) for pkn in pk_name]))+')\n'
 
         if if_exists == 'drop':
             self._query("""DROP TABLE IF EXISTS {table_name};""".format(table_name=etname))
-            qres = """
-CREATE TABLE {table_name} (
-{pk_name} {pk_type} {pk_specs},
-PRIMARY KEY({pk_name})
-) ENGINE={engine} DEFAULT CHARSET={charset};"""
-        elif if_exists == 'nothing':
-            qres = """CREATE TABLE IF NOT EXISTS {table_name} (
-{pk_name} {pk_type} {pk_specs},
-PRIMARY KEY({pk_name})
-) ENGINE={engine} DEFAULT CHARSET={charset};"""
-        else:
-            raise ValueError("Unexpected value for argument if_exists '%s'." % if_exists)
 
-        self._query(qres.format(
-            table_name=utils.escape_idname(table_name),
-            pk_name=utils.escape_idname(pk_name),
-            pk_type=pk_type,
-            pk_specs=pk_specs,
-            engine=engine,
-            charset=charset
-        ))
+        qres = """CREATE TABLE IF NOT EXISTS {table_name} (
+{pk_cols}
+) ENGINE={engine} DEFAULT CHARSET={charset};""".format(
+                                                        table_name = table_name,
+                                                        pk_cols = pk_instr_cols,
+                                                        engine = engine,
+                                                        charset = charset
+        )
+        self._query(qres)
 
     ## @brief Add a column to a table
     # @param table_name str : The table name
