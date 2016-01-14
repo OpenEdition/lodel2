@@ -33,6 +33,12 @@ class _LeRelation(lecrud._LeCrud):
         if isinstance(leo, leobject._LeObject):
             return (self._subordinate_field_name, '=', leo)
 
+    
+    ## @return The name of the uniq id field
+    @classmethod
+    def uidname(cls):
+        return EditorialModel.classtypes.relation_uid
+
     ## @return a dict with field name as key and fieldtype instance as value
     @classmethod
     def fieldtypes(cls):

@@ -5,6 +5,7 @@ import copy
 import os.path
 
 import EditorialModel
+from EditorialModel import classtypes
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
 from leapi.lecrud import _LeCrud
@@ -196,25 +197,6 @@ import %s
         (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.common_fields)
         #Building the fieldtypes dict for LeRelation
         (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.relations_common_fields)
-        # Fetching superior and subordinate fieldname for LeRelation
-        lesup = None
-        lesub = None
-        for fname, finfo in EditorialModel.classtypes.relations_common_fields.items():
-            if finfo['fieldtype'] == 'leo':
-                if finfo['superior']:
-                    lesup = fname
-                else:
-                    lesub = fname
-        # Fetch class_id and type_id fieldnames for LeObject
-        class_id = None
-        type_id = None
-        for fname, finfo in EditorialModel.classtypes.common_fields.items():
-            if finfo['fieldtype'] == 'emuid':
-                if finfo['is_id_class']:
-                    class_id = fname
-                else:
-                    type_id = fname
-        # TEST IF SOME OF THE ARE NONE !!!
 
         result += """
 ## @brief _LeCrud concret class
@@ -236,7 +218,9 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
+    ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _superior_field_name = {lesup_name}
+    ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _subordinate_field_name = {lesub_name}
 
 class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
@@ -258,10 +242,10 @@ class LeType(LeClass, _LeType):
             leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
             lerel_fieldtypes = '{\n\t' + (',\n\t'.join(lerel_fieldtypes))+ '\n\t}',
             lerel_uid_fieldtype = lerel_uid_fieldtype,
-            lesup_name = repr(lesup),
-            lesub_name = repr(lesub),
-            class_id = repr(class_id),
-            type_id = repr(type_id),
+            lesup_name = repr(classtypes.relation_superior),
+            lesub_name = repr(classtypes.relation_subordinate),
+            class_id = repr(classtypes.object_em_class_id),
+            type_id = repr(classtypes.object_em_type_id),
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)

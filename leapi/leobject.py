@@ -59,6 +59,11 @@ class _LeObject(_LeCrud):
     def __repr__(self):
         return self.__str__()
     
+    ## @brief Returns the name of the uid field
+    @classmethod
+    def uidname(cls):
+        return EditorialModel.classtypes.object_uid
+
     ## @brief Given a ME uid return the corresponding LeClass or LeType class
     # @return a LeType or LeClass child class
     # @throw KeyError if no corresponding child classes

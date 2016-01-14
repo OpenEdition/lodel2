@@ -4,6 +4,7 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
+import copy
 import warnings
 import importlib
 import re
@@ -151,9 +152,7 @@ class _LeCrud(object):
     # @todo test for abstract method !!!
     @classmethod
     def uidname(cls):
-        if cls._uid_fieldtype is None or len(cls._uid_fieldtype) == 0:
-            raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
-        return list(cls._uid_fieldtype.keys())[0]
+        raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
     
     ## @return maybe Bool: True if cls implements LeType
     # @param cls Class: a Class or instanciated object
@@ -461,10 +460,10 @@ class _LeCrud(object):
     # @todo Decide wether or not the datas are modifed inplace or returned in a new dict (second solution for the moment)
     @classmethod
     def _construct_datas(cls, datas):
-        res_datas = dict()
+        res_datas = copy.copy(datas)
         for fname, ftype in cls.fieldtypes().items():
             if not ftype.is_internal() or ftype.internal != 'autosql':
-                res_datas[fname] = ftype.construct_data(cls, fname, datas)
+                res_datas[fname] = ftype.construct_data(cls, fname, res_datas)
         return res_datas
     ## @brief Check datas consistency
     # 

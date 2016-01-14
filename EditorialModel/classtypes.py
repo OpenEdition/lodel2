@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
 
+object_uid = 'lodel_id'
+object_em_class_id = 'class_id'
+object_em_type_id = 'type_id'
+
+relation_uid = 'id_relation'
+relation_superior = 'superior'
+relation_subordinate = 'subordinate'
+
 
 common_fields = {
-    'lodel_id': {
+    object_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
     },
-    'class_id': {
+    object_em_class_id : {
         'fieldtype': 'emuid',
         'is_id_class': True,
         'internal': 'automatic',
     },
-    'type_id': {
+    object_em_type_id : {
         'fieldtype': 'emuid',
         'is_id_class': False,
         'internal': 'automatic',
@@ -36,7 +44,7 @@ common_fields = {
 }
 
 relations_common_fields = {
-    'id_relation': {
+    relation_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
     },
@@ -51,11 +59,11 @@ relations_common_fields = {
         'fieldtype': 'rank',
         'internal': 'automatic',
     },
-    'superior': {
+    relation_superior : {
         'fieldtype': 'leo',
         'superior': True,
     },
-    'subordinate': {
+    relation_subordinate: {
         'fieldtype': 'leo',
         'superior': False,
     }
