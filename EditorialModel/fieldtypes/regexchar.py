@@ -17,7 +17,7 @@ class EmFieldType(char.EmFieldType):
         self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
 
 
-        super(EmFieldType, self).__init__(check_data_value=check_value, max_length=max_length, **kwargs)
+        super().__init__(check_data_value=check_value, max_length=max_length, **kwargs)
 
     def _check_data_value(self,value):
         error = None
