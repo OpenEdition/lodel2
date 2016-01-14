@@ -340,6 +340,17 @@ class MysqlMigrationHandler(DummyMigrationHandler):
     # @return True if the column was added else return False
     def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False):
 
+        instr, col_type, col_specs = fieldtypes_utils.fieldtype_db_init(col_fieldtype)
+
+        if instr == 'table':
+            # multivalue field. We are not going to add a column in this table
+            # but in corresponding multivalue table
+            self._add_column_multivalue(
+                                            table_name,
+                                            key_infos = col_type,
+                                            column_infos = (col_name, col_specs)
+                                        )
+
         col_name = utils.column_name(col_name)
 
         add_col = """ALTER TABLE {table_name}
@@ -348,7 +359,6 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         etname = utils.escape_idname(table_name)
         ecname = utils.escape_idname(col_name)
 
-        instr, col_type, col_specs = fieldtypes_utils.fieldtype_db_init(col_fieldtype)
         if instr is None:
             return True
         if instr != "column":
@@ -396,6 +406,32 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
                         )
 
         return True
+
+    ## @brief Add a column to a multivalue table
+    #
+    # Add a column (and create a table if not existing) for storing multivalue
+    # datas. (typically i18n)
+    # @param ref_table_name str : Referenced table name
+    # @param key_infos tuple : tuple(key_name, key_fieldtype)
+    # @param column_infos tuple : tuple(col_name, col_fieldtype)
+    def _add_column_multivalue(ref_table_name, key_info, column_infos):
+        key_name, key_ftype = key_infos
+        col_name, col_ftype = column_infos
+        table_name = utils.multivalue_table_name(ref_table_name, key_name)
+        # table creation
+        self._create_table(
+                            table_name,
+                            key_name,
+                            key_ftype,
+                            self.db_engine,
+                            if_exists = 'nothing'
+        )
+        # with FK
+        self._del_fk(table_name, dst_table_name)
+        self._add_fk(table_name, dst_table_name, key_name, utils._object_pk[0])
+        # adding the column
+        self._add_column(table_name, col_name, col_ftype)
+
 
     ## @brief Add a foreign key
     # @param src_table_name str : The name of the table where we will add the FK

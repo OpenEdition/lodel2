@@ -143,7 +143,7 @@ class MultiValueFieldType(GenericFieldType):
     # @param keyname str : The identifier key name
     # @param key_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
     # @param value_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
-    def __init__(self, internal, keyname, key_fieldtype, value_fieldtype, **args):
+    def __init__(self, keyname, key_fieldtype, value_fieldtype, internal = False, **args):
         super().__init__(internal)
         ## stores the keyname
         self.keyname = keyname

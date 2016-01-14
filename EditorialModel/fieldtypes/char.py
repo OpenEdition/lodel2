@@ -11,5 +11,5 @@ class EmFieldType(SingleValueFieldType):
     # @brief max_length int : The maximum length of this field
     def __init__(self, max_length=64, **kwargs):
         self.max_length = max_length
-        super(EmFieldType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
