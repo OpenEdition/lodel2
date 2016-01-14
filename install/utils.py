@@ -79,10 +79,13 @@ def dir_init():
 
     current_directory = os.path.dirname(os.path.abspath(__file__))
     templates_directory = os.path.join(current_directory,'templates')
-    os.makedirs(templates_directory)
+    if not os.path.exists(templates_directory):
+        os.makedirs(templates_directory)
 
-    for template in templates:
+    for _, template in templates.items():
         my_file_path = os.path.join(templates_directory, template['file'])
-        with open(my_file_path) as my_file:
+        if os.path.exists(my_file_path):
+            os.unlink(my_file_path)
+        with open(my_file_path, 'w') as my_file:
             my_file.write(template['content'])
         print("Created %s" % my_file_path)
