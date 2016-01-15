@@ -21,5 +21,5 @@ class EmFieldType(char.EmFieldType):
             ret += datas[fname]
         if len(ret) > self.max_length:
             warnings.warn("Join field overflow. Truncating value")
-            ret = [:self.max_length-1]
+            ret = ret[:self.max_length-1]
         return ret

@@ -19,5 +19,5 @@ class EmFieldType(char.EmFieldType):
         ret = self._format_string % tuple([ datas[fname] for fname in self._field_list ])
         if len(ret) > self.max_length:
             warnings.warn("Format field overflow. Truncating value")
-            ret = [:self.max_length-1]
+            ret = ret[:self.max_length-1]
         return ret
