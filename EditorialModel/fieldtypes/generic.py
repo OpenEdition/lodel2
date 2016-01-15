@@ -1,9 +1,12 @@
 #-*- coding: utf-8 -*-
 
+## @package EditorialModel.fieldtypes.generic Class definition for fieldtypes
+
 import copy
 import types
 import importlib
 
+## @brief Abstract class for all fieldtypes
 class GenericFieldType(object):
     
     help_text = 'Generic field type : abstract class for every fieldtype'
