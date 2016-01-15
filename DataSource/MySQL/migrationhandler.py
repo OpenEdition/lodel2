@@ -9,6 +9,7 @@ import EditorialModel
 import EditorialModel.classtypes
 import EditorialModel.fieldtypes
 import EditorialModel.fieldtypes.generic
+from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
 from DataSource.MySQL import fieldtypes as fieldtypes_utils
 from DataSource.MySQL import utils
@@ -468,7 +469,7 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         tname = utils.object_table_name(emfield.em_class.name)
         tname = utils.multivalue_table_name(tname, ftype.keyname)
         self._del_column(tname, emfield.name)
-        if len([ f for f in emfield.em_class.fields()]) == 0:
+        if len([ f for f in emfield.em_class.fields() if isinstance(f.fieldtype_instance(), MultiValueFieldType)]) == 0:
             try:
                 self._query("DROP TABLE %s;" % utils.escape_idname(tname))
             except self._dbmodule.err.InternalError as expt:
