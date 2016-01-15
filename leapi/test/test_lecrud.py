@@ -416,8 +416,8 @@ class LeCrudTestCase(TestCase):
         r2t_lst = list()
         for leo in leo_lst:
             if leo.is_leclass() and hasattr(leo, '_linked_types'):
-                for relleo in leo._linked_types:
-                    r2t_lst.append(LeRel2Type.relname(leo, relleo))
+                for relation_name, relleo in leo._linked_types.items():
+                    r2t_lst.append(LeRel2Type.relname(leo, relleo, relation_name))
         leo_lst = [cls.__name__ for cls in leo_lst]
 
         # Begin test
@@ -454,6 +454,6 @@ class LeCrudTestCase(TestCase):
 
     def test_typeasserts(self):
         """ Tests te implements_le* and is_le* methods """
-        from dyncode import LeObject, LeCrud, LeRelation, LeHierarch, LeRel2Type, Article, Textes, Rel_Textes2Personne
+        from dyncode import LeObject, LeCrud, LeRelation, LeHierarch, LeRel2Type, Article, Textes, RelTextesPersonneAuteur
 
         self.assertTrue(LeObject.is_leobject())

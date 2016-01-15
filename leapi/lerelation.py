@@ -163,6 +163,7 @@ class _LeHierarch(_LeRelation):
     @classmethod
     def insert(cls, datas):
         # Checks if the relation exists
+        datas[EditorialModel.classtypes.relation_name] = None
         res = cls.get(
                 [(cls._subordinate_field_name, '=', datas['subordinate']), ('nature', '=', datas['nature'])],
                 [ cls.uidname() ]
@@ -201,8 +202,10 @@ class _LeRel2Type(_LeRelation):
     
     ## @brief Stores the LeClass child class used as superior
     _superior_cls = None
-    ## @biref Stores the LeType child class used as subordinate
+    ## @brief Stores the LeType child class used as subordinate
     _subordinate_cls = None
+    ## @brief Stores the relation name for a rel2type
+    _relation_name = None
 
     ## @brief Delete current instance from DB
     def delete(self):
@@ -232,21 +235,31 @@ class _LeRel2Type(_LeRelation):
         #Set the nature
         if 'nature' not in datas:
             datas['nature'] = None
-        if cls == cls.name2class('LeRel2Type') and classname is None:
-            # autodetect the rel2type child class
-            classname = relname(datas[self._superior_field_name], datas[self._subordinate_field_name])
+        if cls.__name__ == 'LeRel2Type' and classname is None:
+            if EditorialModel.classtypes.relation_name not in datas:
+                raise RuntimeError("Unable to autodetect rel2type. No relation_name given")
+            # autodetect the rel2type child class (BROKEN)
+            classname = relname(datas[self._superior_field_name], datas[self._subordinate_field_name], datas[EditorialModel.classtypes.relation_name])
+        else:
+            if classname != None:
+                ccls = cls.name2class(classname)
+                if ccls == False:
+                    raise lecrud.LeApiErrors("Bad classname given")
+                relation_name = ccls._relation_name
+            else:
+                relation_name = cls._relation_name
+            datas[EditorialModel.classtypes.relation_name] = relation_name
         return super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (not an instance) (can be a LeType or a LeClass child)
     # @param lesubclass LeType : A LeType child class (not an instance)
     # @return a name as string
-    @staticmethod
-    def relname(lesupclass, lesubclass):
+    @classmethod
+    def relname(cls, lesupclass, lesubclass, relation_name):
         supname = lesupclass._leclass.__name__ if lesupclass.implements_letype() else lesupclass.__name__
         subname = lesubclass.__name__
-
-        return "Rel_%s2%s" % (supname, subname)
+        return cls.name2rel2type(supname, subname, relation_name)
 
     ## @brief instanciate the relevant lodel object using a dict of datas
     @classmethod
@@ -254,7 +267,7 @@ class _LeRel2Type(_LeRelation):
         le_object = cls.name2class('LeObject')
         class_name = le_object._me_uid[datas['class_id']].__name__
         type_name = le_object._me_uid[datas['type_id']].__name__
-        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name)
+        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name, EditorialModel.classtypes.relation_name)
 
         del(datas['class_id'], datas['type_id'])
 

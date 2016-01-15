@@ -69,9 +69,8 @@ relations_common_fields = {
         'superior': False,
     },
     relation_name: {
-        'fieldtype': 'char',
+        'fieldtype': 'namerelation',
         'max_length': 128,
-        'internal': 'automatic',
     }
 }
 

@@ -117,7 +117,6 @@ class LeHierarch(LeRelationTestCase):
             self.assertEqual(len(cargs), 2)
             cargs=cargs[1]
             self.assertEqual(cargs['target_cls'], target, "%s != %s"%(cargs, eargs))
-            print("FUCK : ", cargs['field_list'])
             self.assertEqual(set(cargs['field_list']), set(field_ds), "%s != %s"%(cargs, eargs))
             self.assertEqual(cargs['filters'], filters_ds, "%s != %s"%(cargs, eargs))
             self.assertEqual(cargs['rel_filters'], rfilters_ds, "%s != %s"%(cargs, eargs))
@@ -219,7 +218,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
+        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur
 
         queries = [
             {
@@ -245,7 +244,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
         ]
 
         for query in queries:
-            Rel_Textes2Personne.insert(query)
+            RelTextesPersonneAuteur.insert(query)
 
             eres = {
                     'nature': None,
@@ -258,18 +257,19 @@ class LeRel2TypeTestCase(LeRelationTestCase):
                 if isinstance(eres[fname], int):
                     eres[fname] = LeObject(eres[fname])
 
-            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
+            dsmock.assert_called_once_with(RelTextesPersonneAuteur, **eres)
             dsmock.reset_mock()
-
-            LeRel2Type.insert(query, "Rel_Textes2Personne")
-
-            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
+            
+            query[EditorialModel.classtypes.relation_name] = 'auteur'
+            LeRel2Type.insert(query, "RelTextesPersonneAuteur")
+            
+            dsmock.assert_called_once_with(RelTextesPersonneAuteur, **eres)
             dsmock.reset_mock()
 
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert_fails(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
+        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur
 
         queries = [
             {
@@ -304,10 +304,10 @@ class LeRel2TypeTestCase(LeRelationTestCase):
                 self.fail("No exception raised")
             except Exception as e:
                 if not isinstance(e, lecrud.LeApiErrors) and not isinstance(e, lecrud.LeApiDataCheckError):
-                    self.fail("Bad exception raised : ", e)
+                    self.fail("Bad exception raised : "+str(e))
 
             try:
-                Rel_Textes2Personne.insert(query)
+                RelTextesPersonneAuteur.insert(query)
                 self.fail("No exception raised")
             except Exception as e:
                 if not isinstance(e, lecrud.LeApiErrors) and not isinstance(e, lecrud.LeApiDataCheckError):

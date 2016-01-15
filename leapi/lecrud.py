@@ -112,8 +112,8 @@ class _LeCrud(object):
     # @param name str : The name
     # @return name.title()
     @staticmethod
-    def name2rel2type(class_name, type_name):
-        cls_name = "Rel_%s2%s"%(_LeCrud.name2classname(class_name), _LeCrud.name2classname(type_name))
+    def name2rel2type(class_name, type_name, relation_name):
+        cls_name = "Rel%s%s%s"%(_LeCrud.name2classname(class_name), _LeCrud.name2classname(type_name), relation_name.title())
         return cls_name
 
     ## @brief Given a dynamically generated class name return the corresponding python Class
@@ -412,10 +412,9 @@ class _LeCrud(object):
     def insert(cls, datas, classname=None):
         callcls = cls if classname is None else cls.name2class(classname)
         if not callcls:
-            raise LeApiErrors("Error when inserting",[ValueError("The class '%s' was not found"%classname)])
+            raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
         if not callcls.implements_letype() and not callcls.implements_lerelation():
             raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
-
         insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
         return callcls._datasource.insert(callcls, **insert_datas)
     

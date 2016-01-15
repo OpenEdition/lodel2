@@ -59,7 +59,7 @@ class EmFieldType(ReferenceFieldType):
             # Checking consistency for a rel2type relation
             lesup = datas[lec._superior_field_name]
             lesub = datas[lec._subordinate_field_name]
-            if lesub.__class__ not in lesup._linked_types:
+            if lesub.__class__ not in lesup._linked_types.values():
                 return FieldTypeError("Rel2type not authorized between %s and %s"%(lesup, lesub))
         pass
             

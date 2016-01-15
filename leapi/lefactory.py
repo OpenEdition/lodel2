@@ -76,7 +76,8 @@ class LeFactory(object):
         for field in [ f for f in model.components('EmField') if f.fieldtype == 'rel2type']:
             related = model.component(field.rel_to_type_id)
             src = field.em_class
-            cls_name = _LeCrud.name2rel2type(src.name, related.name)
+            cls_name = _LeCrud.name2rel2type(src.name, related.name, field.name)
+            relation_name = field.name
 
             attr_l = dict()
             for attr in [ f for f in model.components('EmField') if f.rel_field_id == field.uid]:
@@ -87,12 +88,14 @@ class {classname}(LeRel2Type):
     _rel_attr_fieldtypes = {attr_dict}
     _superior_cls = {supcls}
     _subordinate_cls = {subcls}
+    _relation_name = {relation_name}
 
 """.format(
     classname = cls_name,
     attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}",
     supcls = _LeCrud.name2classname(src.name),
     subcls = _LeCrud.name2classname(related.name),
+    relation_name = repr(relation_name),
 )
             res_code += rel_code
         return res_code
@@ -104,11 +107,11 @@ class {classname}(LeRel2Type):
     def emclass_pycode(self, model, emclass):
 
         cls_fields = dict()
-        cls_linked_types = list() #Stores authorized LeObject for rel2type
+        cls_linked_types = dict() # Stores rel2type referenced by fieldname
         #Populating linked_type attr
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
-            cls_linked_types.append(_LeCrud.name2classname(model.component(fti.rel_to_type_id).name))
+            cls_linked_types[rfield.name] = _LeCrud.name2classname(model.component(fti.rel_to_type_id).name)
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
             self.needed_fieldtypes |= set([field.fieldtype])
@@ -123,8 +126,8 @@ class {classname}(LeRel2Type):
 """.format(
             name = _LeCrud.name2classname(emclass.name),
             ftypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
+            ltypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_linked_types.items()])) + "\n}",
 
-            ltypes = "[" + (','.join(cls_linked_types))+"]",
             classtype = repr(emclass.classtype)
         )
 

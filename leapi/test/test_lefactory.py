@@ -68,7 +68,7 @@ class TestLeFactory(TestCase):
             #Testing _linked_types attr
             self.assertEqual(
                 set([ LeCrud.name2classname(lt.name) for lt in emclass.linked_types()]),
-                set([ t.__name__ for t in leclass._linked_types ])
+                set([ t.__name__ for t in leclass._linked_types.values() ])
             )
 
             #Testing fieldtypes
