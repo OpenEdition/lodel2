@@ -7,6 +7,7 @@ object_em_type_id = 'type_id'
 relation_uid = 'id_relation'
 relation_superior = 'superior'
 relation_subordinate = 'subordinate'
+relation_name = 'relation_name'
 
 
 common_fields = {
@@ -66,6 +67,11 @@ relations_common_fields = {
     relation_subordinate: {
         'fieldtype': 'leo',
         'superior': False,
+    },
+    relation_name: {
+        'fieldtype': 'char',
+        'max_length': 128,
+        'internal': 'automatic',
     }
 }
 

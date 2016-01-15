@@ -8,6 +8,7 @@ from unittest.mock import patch
 from collections import OrderedDict
 
 import EditorialModel
+import EditorialModel.classtypes
 import DataSource.dummy
 import leapi
 import leapi.test.utils
@@ -101,7 +102,7 @@ class LeHierarch(LeRelationTestCase):
                 [],
 
                 LeHierarch,
-                [ 'nature', 'rank', 'subordinate', 'depth', 'superior', 'id_relation'],
+                [ 'nature', 'rank', 'subordinate', 'depth', 'superior', 'id_relation', EditorialModel.classtypes.relation_name],
                 [('superior', '=', Numero(42))],
                 [],
             ),
@@ -116,6 +117,7 @@ class LeHierarch(LeRelationTestCase):
             self.assertEqual(len(cargs), 2)
             cargs=cargs[1]
             self.assertEqual(cargs['target_cls'], target, "%s != %s"%(cargs, eargs))
+            print("FUCK : ", cargs['field_list'])
             self.assertEqual(set(cargs['field_list']), set(field_ds), "%s != %s"%(cargs, eargs))
             self.assertEqual(cargs['filters'], filters_ds, "%s != %s"%(cargs, eargs))
             self.assertEqual(cargs['rel_filters'], rfilters_ds, "%s != %s"%(cargs, eargs))
@@ -182,6 +184,7 @@ class LeHierarch(LeRelationTestCase):
         for query, equery in queries:
             equery['rank'] = 1
             equery['depth'] = None
+            equery[EditorialModel.classtypes.relation_name] = None
 
             LeHierarch.insert(query)
             dsmock.assert_called_once_with(LeHierarch, **equery)
@@ -244,7 +247,12 @@ class LeRel2TypeTestCase(LeRelationTestCase):
         for query in queries:
             Rel_Textes2Personne.insert(query)
 
-            eres = {'nature': None, 'depth': None, 'rank': 0}
+            eres = {
+                    'nature': None,
+                    'depth': None,
+                    'rank': 0,
+                    EditorialModel.classtypes.relation_name: None,
+            }
             eres.update(query)
             for fname in ('superior', 'subordinate'):
                 if isinstance(eres[fname], int):
