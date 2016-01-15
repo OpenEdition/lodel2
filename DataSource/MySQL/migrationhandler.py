@@ -220,6 +220,9 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
 
+        if isinstance(emfield.fieldtype_instance(), MultiValueFieldType):
+            return self._del_column_multivalue(emfield)
+
         emclass = emfield.em_class
         tname = utils.object_table_name(emclass.name)
         # Delete the table triggers to prevent errors
@@ -455,6 +458,22 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         # adding the column
         self._add_column(table_name, col_name, col_ftype)
 
+    ## @brief Delete a multivalue column
+    # @param emfield EmField : EmField instance
+    # @note untested
+    def _del_column_multivalue(self, emfield):
+        ftype = emfield.fieldtype_instance()
+        if not isinstance(ftype, MultiValueFieldType):
+            raise ValueError("Except an emfield with multivalue fieldtype")
+        tname = utils.object_table_name(emfield.em_class.name)
+        tname = utils.multivalue_table_name(tname, ftype.keyname)
+        self._del_column(tname, emfield.name)
+        if len([ f for f in emfield.em_class.fields()]) == 0:
+            try:
+                self._query("DROP TABLE %s;" % utils.escape_idname(tname))
+            except self._dbmodule.err.InternalError as expt:
+                print(expt)
+
 
     ## @brief Add a foreign key
     # @param src_table_name str : The name of the table where we will add the FK
@@ -549,6 +568,13 @@ FOR EACH ROW SET {col_val_list};""".format(
     ## @brief Delete all table created by the MH
     # @param model Model : the Editorial model
     def __purge_db(self, model):
+        for uid in [
+                    field
+                    for field in model.components('EmField')
+                    if isinstance(field.fieldtype_instance(), MultiValueFieldType)
+        ]:
+            self._del_column_multivalue(field)
+
         for uid in [c.uid for c in model.components('EmClass')]:
             try:
                 self.delete_emclass_table(model, uid)
