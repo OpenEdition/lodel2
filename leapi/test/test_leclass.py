@@ -28,22 +28,10 @@ class LeClassTestCase(TestCase):
         for leclass in [ Publication, Personnes, Textes ]:
             for fieldname in leclass.fieldlist(complete = False):
                 ftype = leclass.fieldtypes()[fieldname]
-                if hasattr(ftype, 'immutable'):
-                    if ftype.immutable:
-                        self.assertNotIn(
-                            fieldname,
-                            LeObject.fieldlist()
-                        )
-                    else:
-                        self.assertIn(
-                            fieldname,
-                            LeObject.fieldlist()
-                        )
-                else:
-                    self.assertNotIn(
-                        fieldname,
-                        LeObject.fieldlist()
-                    )
+                self.assertNotIn(
+                    fieldname,
+                    LeObject.fieldlist()
+                )
             for obj_fname in LeObject.fieldlist():
                 self.assertIn(
                     obj_fname,

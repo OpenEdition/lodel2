@@ -18,14 +18,19 @@ class _LeClass(_LeObject):
     _class_id = None
     ## @brief Stores the classtype
     _classtype = None
-
+        
+    ## @brief Return a dict with fieldname as key and a fieldtype instance as value
+    # @note not optimised at all
     @classmethod
     def fieldtypes(cls, complete=True):
-        ret = dict()
         if complete:
+            ret = dict()
             ret.update(super().fieldtypes())
-        ret.update(cls._fieldtypes)
-        return ret
+            ret.update(cls._fieldtypes)
+            return ret
+        else:
+            leobject = cls.name2class('LeObject')
+            return { fname: cls._fieldtypes[fname] for fname in cls._fieldtypes if fname not in leobject.fieldtypes().keys() }
 
     @classmethod
     def fieldlist(cls, complete=True):

@@ -149,7 +149,7 @@ class {classname}(LeRel2Type):
         type_fields = list()
         type_superiors = list()
         for field in emtype.fields(relational=False):
-            if not hasattr(field, 'immutable') or not field.immutable:
+            if not field.name in EditorialModel.classtypes.common_fields:
                 type_fields.append(field.name)
 
         for nat, sup_l in emtype.superiors().items():

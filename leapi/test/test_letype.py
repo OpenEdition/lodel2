@@ -72,11 +72,7 @@ class LeTypeTestCase(TestCase):
             for fname in letype.fieldlist(complete = False):
                 self.assertIn(fname, letype._leclass.fieldlist(False))
                 ftype = letype.fieldtypes()[fname]
-                if hasattr(ftype, 'immutable'):
-                    if ftype.immutable:
-                        self.assertNotIn(fname, LeObject.fieldlist())
-                    else:
-                        self.assertIn(fname, LeObject.fieldlist())
+                self.assertNotIn(fname, LeObject.fieldlist())
 
     def test_fieldtypes(self):
         """ Test fieldtypes() method """
