@@ -20,15 +20,16 @@ class _LeClass(_LeObject):
     _classtype = None
 
     @classmethod
-    def fieldtypes(cls):
+    def fieldtypes(cls, complete=True):
         ret = dict()
-        ret.update(super().fieldtypes())
+        if complete:
+            ret.update(super().fieldtypes())
         ret.update(cls._fieldtypes)
         return ret
 
     @classmethod
-    def fieldlist(cls):
-        return list(cls.fieldtypes().keys())
+    def fieldlist(cls, complete=True):
+        return list(cls.fieldtypes(complete).keys())
 
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):

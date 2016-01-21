@@ -45,8 +45,11 @@ class _LeType(_LeClass):
         return cls._leclass
 
     @classmethod
-    def fieldlist(cls):
-        return cls._fields
+    def fieldlist(cls, complete = True):
+        if not complete:
+            return cls._fields
+        else:
+            return list(set(cls._fields + cls.name2class('LeObject').fieldlist()))
 
     @classmethod
     def get(cls, query_filters, field_list = None, order = None, group = None, limit = None, offset = 0):
@@ -54,9 +57,9 @@ class _LeType(_LeClass):
         return super().get(query_filters, field_list, order, group, limit, offset)
 
     @classmethod
-    def fieldtypes(cls):
-        super_fieldtypes = super().fieldtypes()
-        return { fname: super_fieldtypes[fname] for fname in super_fieldtypes if fname in cls._fields }
+    def fieldtypes(cls, complete=True):
+        super_fieldtypes = super().fieldtypes(complete)
+        return { fname: super_fieldtypes[fname] for fname in super_fieldtypes if fname in cls.fieldlist(complete)}
 
     ## @brief Get all the datas for this LeType
     # @return a dict with fieldname as key and field value as value

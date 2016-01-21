@@ -104,8 +104,9 @@ class TestLeFactory(TestCase):
             )
 
             #Testing _fields
+            expected_fields = [ f for f in emtype.fields(relational=False) if not(hasattr(f, 'immutable') and f.immutable) ]
             self.assertEqual(
-                set([ f.name for f in emtype.fields(False) ]),
+                set([ f.name for f in expected_fields ]),
                 set([ f for f in letype._fields])
             )
 

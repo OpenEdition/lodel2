@@ -240,7 +240,7 @@ class _LeCrud(object):
     def populate(self, field_list=None):
         if not self.is_complete():
             if field_list == None:
-                field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
+                field_list = [ fname for fname in self.fieldlist() if not hasattr(self, fname) ]
             filters = [self._id_filter()]
             rel_filters = []
             # Getting datas from db

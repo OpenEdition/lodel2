@@ -54,6 +54,45 @@ class LeTypeTestCase(TestCase):
         num.all_datas
         dsmock.assert_called_once()
 
+    def test_fieldlist(self):
+        """ Test fieldlist method """
+        from dyncode import Numero, Rubrique, Article, Personne, LeObject
+
+        letypes = [Numero, Rubrique, Article, Personne]
+
+        for letype in letypes:
+            self.assertEquals(
+                letype.fieldlist(complete=False),
+                letype._fields
+            )
+            self.assertEquals(
+                sorted(letype.fieldlist(complete = True)),
+                sorted(list(set(letype._fields + LeObject.fieldlist())))
+            )
+            for fname in letype.fieldlist(complete = False):
+                self.assertIn(fname, letype._leclass.fieldlist(False))
+                ftype = letype.fieldtypes()[fname]
+                if hasattr(ftype, 'immutable'):
+                    if ftype.immutable:
+                        self.assertNotIn(fname, LeObject.fieldlist())
+                    else:
+                        self.assertIn(fname, LeObject.fieldlist())
+
+    def test_fieldtypes(self):
+        """ Test fieldtypes() method """
+        from dyncode import Numero, Rubrique, Article, Personne, LeObject
+
+        letypes = [Numero, Rubrique, Article, Personne]
+
+        for letype in letypes:
+            for complete in [True, False]:
+                self.assertEquals(
+                    sorted(letype.fieldlist(complete = complete)),
+                    sorted(list(letype.fieldtypes(complete = complete).keys()))
+                )
+
+
+
 class LeTypeMockDsTestCase(TestCase):
     """ Tests that need to mock the datasource """
 

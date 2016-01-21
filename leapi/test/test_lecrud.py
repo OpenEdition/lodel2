@@ -278,7 +278,7 @@ class LeCrudTestCase(TestCase):
                 [],
                 [],
 
-                Numero._fields,
+                Numero.fieldlist(),
                 [
                     ('type_id', '=', Numero._type_id),
                     ('class_id', '=', Numero._class_id),
