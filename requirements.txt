@@ -3,3 +3,4 @@ mosql==0.11
 pep8==1.6.2
 pylint==1.4.4
 jinja2==2.8
+Flask==0.10.1
