@@ -58,6 +58,7 @@ class EmClass(EmComponent):
                         ctype_opts[opt_name] = opt_val
 
                 if ftype_opts != ctype_opts:
+                    field.set_fieldtype_options(**ctype_opts)
                     # If options mismatch produce a diff and display a warning
                     ctype_opts = [ "%s: %s\n"%(repr(k), repr(ctype_opts[k])) for k in sorted(ctype_opts.keys())]
                     ftype_opts = [ "%s: %s\n"%(repr(k), repr(ftype_opts[k])) for k in sorted(ftype_opts.keys())]

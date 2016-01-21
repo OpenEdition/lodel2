@@ -55,7 +55,8 @@ class _LeType(_LeClass):
 
     @classmethod
     def fieldtypes(cls):
-        return { fname: cls._fieldtypes[fname] for fname in cls._fieldtypes if fname in cls._fields }
+        super_fieldtypes = super().fieldtypes()
+        return { fname: super_fieldtypes[fname] for fname in super_fieldtypes if fname in cls._fields }
 
     ## @brief Get all the datas for this LeType
     # @return a dict with fieldname as key and field value as value

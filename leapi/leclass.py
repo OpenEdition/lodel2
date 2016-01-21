@@ -22,7 +22,7 @@ class _LeClass(_LeObject):
     @classmethod
     def fieldtypes(cls):
         ret = dict()
-        ret.update(super(_LeClass,cls).fieldtypes())
+        ret.update(super().fieldtypes())
         ret.update(cls._fieldtypes)
         return ret
 

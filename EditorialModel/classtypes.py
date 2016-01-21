@@ -14,33 +14,39 @@ common_fields = {
     object_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
+        'immutable' : True,
     },
     object_em_class_id : {
         'fieldtype': 'emuid',
         'is_id_class': True,
         'internal': 'automatic',
+        'immutable' : True,
     },
     object_em_type_id : {
         'fieldtype': 'emuid',
         'is_id_class': False,
         'internal': 'automatic',
+        'immutable' : True,
     },
     'string': {
         'fieldtype': 'char',
         'max_length': 128,
         'internal': 'automatic',
         'nullable': True,
+        'immutable' : False,
     },
     'creation_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'internal': 'autosql',
+        'immutable' : True,
     },
     'modification_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'now_on_update': True,
         'internal': 'autosql',
+        'immutable' : True,
     }
 }
 
@@ -48,29 +54,36 @@ relations_common_fields = {
     relation_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
+        'immutable' : True,
     },
     'nature': {
         'fieldtype': 'naturerelation',
+        'immutable' : True,
     },
     'depth': {
         'fieldtype': 'integer',
         'internal': 'automatic',
+        'immutable' : True,
     },
     'rank': {
         'fieldtype': 'rank',
         'internal': 'automatic',
+        'immutable' : True,
     },
     relation_superior : {
         'fieldtype': 'leo',
         'superior': True,
+        'immutable' : True,
     },
     relation_subordinate: {
         'fieldtype': 'leo',
         'superior': False,
+        'immutable' : True,
     },
     relation_name: {
         'fieldtype': 'namerelation',
         'max_length': 128,
+        'immutable' : True,
     }
 }
 

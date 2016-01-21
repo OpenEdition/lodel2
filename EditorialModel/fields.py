@@ -32,7 +32,6 @@ class EmField(EmComponent):
     # @param uniq bool : if True the value should be uniq in the db table
     # @param **kwargs : more keywords arguments for the fieldtype
     def __init__(self, model, uid, name, class_id, fieldtype, optional=False, internal=False, rel_field_id=None, icon='0', string=None, help_text=None, date_update=None, date_create=None, rank=None, nullable=False, uniq=False, **kwargs):
-
         self.class_id = class_id
         self.check_type('class_id', int)
         self.optional = bool(optional)
@@ -57,20 +56,11 @@ class EmField(EmComponent):
         self.fieldtype = fieldtype
         self._fieldtype_args = kwargs
         self._fieldtype_args.update({'nullable': nullable, 'uniq': uniq, 'internal': self.internal})
-        try:
-            fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
-        except AttributeError as e:
-            raise AttributeError("Error will instanciating fieldtype : %s" % e)
+        self.set_fieldtype_options(**self._fieldtype_args)
 
         if 'default' in kwargs:
             if not fieldtype_instance.check(default):
                 raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'" % (default, fieldtype))
-
-        self.nullable = nullable
-        self.uniq = uniq
-
-        for kname, kval in kwargs.items():
-            setattr(self, kname, kval)
 
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)
 
@@ -89,6 +79,28 @@ class EmField(EmComponent):
     def em_class(self):
         return self.model.component(self.class_id)
     
+    ## @brief Update the fieldtype of a field
+    def set_fieldtype(self, fieldtype_name):
+        self.fieldtype = fieldtype_name
+        self._fieldtype_cls = GenericFieldType.from_name(self.fieldtype)
+        self.set_fieldtype_options(**self._fieldtype_args)
+
+    ## @brief Set fieldtype options
+    def set_fieldtype_options(self, nullable = False, uniq = False, internal=False, **kwargs):
+        # Cleaning old options
+        if hasattr(self, 'name'): # If not called by __init__
+            for opt_name in self._fieldtype_args:
+                if hasattr(self, opt_name):
+                    delattr(self,opt_name)
+        self._fieldtype_args = kwargs
+        self._fieldtype_args.update({'nullable': nullable, 'uniq': uniq, 'internal': internal})
+        try:
+            fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
+        except AttributeError as e:
+            raise AttributeError("Error will instanciating fieldtype : %s" % e)
+        for opt_name, opt_val in self._fieldtype_args.items():
+            setattr(self, opt_name, opt_val)
+
     ## @brief Getter for private property EmField._fieldtype_args
     # @return A copy of private dict _fieldtype_args
     def fieldtype_options(self):

@@ -1,27 +1,40 @@
 # -*- coding: utf-8 -*-
 
 import json
+import warnings
 
 
 ## Handle string with translations
 # @todo define a default language that will be used in case the wanted language is not available for this string (gettext-like behavior)
 class MlString(object):
 
+    default_lang = '__default__'
     ## Instanciate a new string with translation
     #
     # @param translations dict: With key = lang and value the translation
-    def __init__(self, translations=None):
-        self.translations = dict() if translations is None else translations
+    def __init__(self, translations=None, default_value = None):
+        if translations is None:
+            translations = dict()
+        elif isinstance(translations, str):
+            translations = json.loads(translations)
+
+        if not isinstance(translations, dict):
+            raise ValueError('Bad value given for translations argument on MlString instanciation')
+        else:
+            self.translations = translations
+
+        self.translations[self.default_lang] = '' if default_value is None else default_value
+        if default_value is None:
+            warnings.warn('No default value when isntanciating an MlString')
     
     ## Return a translation
     # @param lang str: The lang
     # @return An empty string if the wanted lang don't exist
     # @warning Returns an empty string if the wanted translation didn't exists
     # @todo if the asked language is not available, use the default one, defined as a class property
-    def get(self, lang):
-        if not lang in self.translations:
-            return ''
-
+    def get(self, lang = None):
+        if lang is None or lang not in self.translations:
+            lang = self.default_lang
         return self.translations[lang]
     
     ## Set a translation for this MlString
@@ -34,6 +47,9 @@ class MlString(object):
                 del(self.translations[lang])
         else:
             self.translations[lang] = text
+
+    def set_default(self, text):
+        self.set(self.default_lang, text)
 
     def __repr__(self):
         return self.__str__()
