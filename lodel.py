@@ -13,7 +13,7 @@ app = Flask(__name__)
 def index(path):
     url_elements = path.split('/')
     url_arguments = request.args
-    return "%s" % url_elements
+    return "%s <br/> %s" % (url_elements, url_arguments)
 
 
 if __name__ == '__main__':
