@@ -76,6 +76,9 @@ def fieldtype_db_init(fieldtype, noauto_inc = False):
     return tuple(res)
 
 ## @brief Cast a value given a fieldtype
+# @param fieldtype EmFieldType : a fieldtype instance
+# @param value : mixed value
+# @return The value in a way usable by the datasource
 def fieldtype_cast(fieldtype, value):
     if isinstance(fieldtype, EditorialModel.fieldtypes.leo.EmFieldType):
         return value.uidget()

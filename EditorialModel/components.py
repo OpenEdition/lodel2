@@ -32,8 +32,7 @@ class EmComponent(object):
         self.check_type('uid', int)
         self.name = name
         self.check_type('name', str)
-        self.string = MlString() if string is None else string
-        self.check_type('string', MlString)
+        self.string = string
         self.help_text = MlString() if help_text is None else help_text
         self.check_type('help_text', MlString)
         self.date_update = datetime.datetime.now() if date_update is None else date_update  # WARNING timezone !
@@ -83,6 +82,10 @@ class EmComponent(object):
 
     ## @brief Reimplementation for calling the migration handler to register the change
     def __setattr__(self, attr_name, value):
+        if attr_name == 'string':
+            if not(isinstance(value, MlString)):
+                value = MlString(value)
+            super().__setattr__('string', value)
         inited = '_inited' in self.__dict__ and self.__dict__['_inited']
         if inited:
             # if fails raise MigrationHandlerChangeError

@@ -49,6 +49,7 @@ class EmClass(EmComponent):
                 # Building fieltypes options to match the ones stored in EditorialModel.classtypes
                 ftype_opts = field.fieldtype_options()
                 ftype_opts['fieldtype'] = field.fieldtype
+                ftype_opts['string'] = field.string
 
                 ctype_opts = EditorialModel.classtypes.common_fields[field.name]
                 #Adding default value for options nullable, uniq and internal to fieldtypes options stored in classtypes

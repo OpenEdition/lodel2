@@ -15,18 +15,21 @@ common_fields = {
         'fieldtype': 'pk',
         'internal': 'autosql',
         'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant lodel", "eng": "lodel identifier"}'
     },
     object_em_class_id : {
         'fieldtype': 'emuid',
         'is_id_class': True,
         'internal': 'automatic',
         'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant de la classe", "eng": "class identifier"}'
     },
     object_em_type_id : {
         'fieldtype': 'emuid',
         'is_id_class': False,
         'internal': 'automatic',
         'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant de la type", "eng": "type identifier"}'
     },
     'string': {
         'fieldtype': 'char',
@@ -34,12 +37,14 @@ common_fields = {
         'internal': 'automatic',
         'nullable': True,
         'immutable' : False,
+        'string': '{"___": "", "fre": "Représentation textuel", "eng": "String representation"}',
     },
     'creation_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'internal': 'autosql',
         'immutable' : True,
+        'string': '{"___": "", "fre": "Date de création", "eng": "Creation date"}',
     },
     'modification_date': {
         'fieldtype': 'datetime',
@@ -47,6 +52,7 @@ common_fields = {
         'now_on_update': True,
         'internal': 'autosql',
         'immutable' : True,
+        'string': '{"___": "", "fre": "Date de modification", "eng": "Modification date"}',
     }
 }
 

@@ -115,16 +115,17 @@ class {classname}(LeRel2Type):
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
             cls_linked_types[rfield.name] = _LeCrud.name2classname(model.component(fti.rel_to_type_id).name)
-        ml_fieldnames = dict()
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
             if field.name not in EditorialModel.classtypes.common_fields.keys() or not ( hasattr(field, 'immutable') and field.immutable):
                 self.needed_fieldtypes |= set([field.fieldtype])
                 cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
                 fti = field.fieldtype_instance()
-                if field.string.get() == '':
-                    field.string.set_default(field.name)
-                ml_fieldnames[field.name] = field.string.dumps()
+        ml_fieldnames = dict()
+        for field in emclass.fields():
+            if field.string.get() == '':
+                field.string.set_default(field.name)
+            ml_fieldnames[field.name] = field.string.dumps()
 
         return """
 #Initialisation of {name} class attributes
