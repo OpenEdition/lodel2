@@ -32,7 +32,7 @@ class EmFieldType(ReferenceFieldType):
                 cur_value = int(cur_value)
             except (ValueError, TypeError) as e:
                 raise e # Raise Here !?
-        if cur_value.is_leobject():
+        if hasattr(cur_value, 'is_leobject') and cur_value.is_leobject():
             # Its an object not populated (we dont now its type)
             cur_value = cur_value.lodel_id #Optimize here giving only class_id and type_id to populate ?
         if isinstance(cur_value, int):
