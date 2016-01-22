@@ -220,13 +220,17 @@ class _LeCrud(object):
         return getattr(self, self.uidname())
 
     ## @brief Returns object datas
-    # @param
+    # @param internal bool : If True return all datas including internal fields
+    # @param lang str | None : if None return datas indexed with field name, else datas are indexed with field name translation
     # @return a dict of fieldname : value
-    def datas(self, internal=True):
+    def datas(self, internal = True, lang = None):
         res = dict()
         for fname, ftt in self.fieldtypes().items():
             if (internal or (not internal and not ftt.is_internal)) and hasattr(self, fname):
-                res[fname] = getattr(self, fname)
+                if lang is None:
+                    res[fname] = getattr(self, fname)
+                else:
+                    res[self.ml_fields_strings[fname][lang]] = getattr(self, fname)
         return res
 
     ## @brief Indicates if an instance is complete
