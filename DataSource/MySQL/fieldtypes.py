@@ -13,6 +13,7 @@ import EditorialModel.fieldtypes.char
 import EditorialModel.fieldtypes.bool
 import EditorialModel.fieldtypes.text
 import EditorialModel.fieldtypes.rel2type
+import EditorialModel.fieldtypes.leo
 
 ## @brief Returns column specs from fieldtype
 # @param emfieldtype EmFieldType : An EmFieldType insance
@@ -73,6 +74,10 @@ def fieldtype_db_init(fieldtype, noauto_inc = False):
     else:
         raise NotImplementedError("Not yet implemented")
     return tuple(res)
-            
-    
+
+## @brief Cast a value given a fieldtype
+def fieldtype_cast(fieldtype, value):
+    if isinstance(fieldtype, EditorialModel.fieldtypes.leo.EmFieldType):
+        return value.uidget()
+    return value
 
