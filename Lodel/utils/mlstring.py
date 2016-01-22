@@ -13,10 +13,15 @@ class MlString(object):
     #
     # @param translations dict: With key = lang and value the translation
     def __init__(self, translations=None, default_value = None):
+        if isinstance(translations, str):
+            try:
+                translations = json.loads(translations)
+            except ValueError:
+                if default_value is None:
+                    default_value = str(translations)
+                    translations = None
         if translations is None:
             translations = dict()
-        elif isinstance(translations, str):
-            translations = json.loads(translations)
 
         if not isinstance(translations, dict):
             raise ValueError('Bad value given for translations argument on MlString instanciation')
@@ -48,29 +53,35 @@ class MlString(object):
         else:
             self.translations[lang] = text
 
+    ## @return Default translation
     def get_default(self):
         return self.get(self.default_lang)
-
+    
+    ## @brief Set default value
     def set_default(self, text):
         self.set(self.default_lang, text)
-
-    def __repr__(self):
-        return self.__str__()
 
     ## String representation
     # @return A json dump of the MlString::translations dict
     def __str__(self):
+        return self.get_default()
+    
+    ## @brief Serialize the MlString in Json
+    def json_dumps(self):
         if self.translations:
             return json.dumps(self.translations, sort_keys=True)
         else:
             return ""
+
+    ## @brief Equivalent to json_dumps
+    def dumps(self): return self.json_dumps()
 
     ## Test if two MlString instance are equivalent
     # @param other MlString|str : Another MlString instance or a string (json formated)
     # @return True or False
     def __eq__(self, other):
         if isinstance(other, str):
-            other = MlString.load(other)
+            other = MlString(other)
 
         if not isinstance(other, MlString):
             return False
@@ -97,13 +108,7 @@ class MlString(object):
     def items(self): return self.translations.items()
 
     @staticmethod
-    ## Instanciate a MlString from json
-    # @param json_string str: Json datas in a string
-    # @return A new MlString instance
-    # @warning fails silently
-    def load(json_string):
-        if isinstance(json_string, str) and json_string != '':
-            translations = json.loads(json_string)
-        else:
-            translations = dict()
-        return MlString(translations)
+    ## Instanciate a MlString from something
+    # @deprecated Equivalent to MlString(translations = arg, default_value = None)
+    def load(arg):
+        return MlString(arg)

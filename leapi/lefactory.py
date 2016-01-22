@@ -124,7 +124,7 @@ class {classname}(LeRel2Type):
                 fti = field.fieldtype_instance()
                 if field.string.get() == '':
                     field.string.set_default(field.name)
-                ml_fieldnames[field.name] = field.string.__str__()
+                ml_fieldnames[field.name] = field.string.dumps()
 
         return """
 #Initialisation of {name} class attributes

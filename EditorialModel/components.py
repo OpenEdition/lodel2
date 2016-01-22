@@ -57,7 +57,7 @@ class EmComponent(object):
             if isinstance(attributes_dump[attr_name], EmComponent):
                 attributes_dump[attr_name] = attributes_dump[attr_name].uid
             elif isinstance(attributes_dump[attr_name], MlString):
-                attributes_dump[attr_name] = attributes_dump[attr_name].__str__()
+                attributes_dump[attr_name] = attributes_dump[attr_name].json_dumps()
         attributes_dump['component'] = self.__class__.__name__
 
         return attributes_dump

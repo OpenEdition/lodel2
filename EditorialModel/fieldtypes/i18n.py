@@ -18,6 +18,8 @@ class EmFieldType(MultiValueFieldType):
         super().__init__(**args)
 
     def _check_data_value(self, value):
+        if value is None:
+            return (None, None)
         if isinstance(value, MlString):
             return (value, None)
         if isinstance(value, dict):
