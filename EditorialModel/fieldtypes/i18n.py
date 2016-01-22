@@ -24,7 +24,7 @@ class EmFieldType(MultiValueFieldType):
             return (value, None)
         if isinstance(value, dict):
             for val in value.values():
-                if not isinstance(val, str):
+                if not(isinstance(val, str) or val is None) :
                     return (None, ValueError("Expected str as dict values. Bad dict : '%s'" % value))
             return (value, None)
         if isinstance(value, str):
