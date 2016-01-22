@@ -280,7 +280,7 @@ class _LeRel2Type(_LeRelation):
         le_object = cls.name2class('LeObject')
         class_name = le_object._me_uid[datas['class_id']].__name__
         type_name = le_object._me_uid[datas['type_id']].__name__
-        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name, EditorialModel.classtypes.relation_name)
+        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name, datas[EditorialModel.classtypes.relation_name])
 
         del(datas['class_id'], datas['type_id'])
 
