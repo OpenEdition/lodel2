@@ -47,6 +47,7 @@ class LeDataSourceSQL(DummyDatasource):
     def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=None, instanciate=True):
 
         joins = []
+        multivalue_fields = False
         # it is a LeObject, query only on main table
         if target_cls.__name__ == 'LeObject':
             main_table = utils.common_tables['object']
@@ -59,10 +60,24 @@ class LeDataSourceSQL(DummyDatasource):
             main_class = target_cls.leo_class()
             # find class table
             class_table = utils.object_table_name(main_class.__name__)
+            class_fk = main_class.uidname()
             main_lodel_id = utils.column_prefix(main_table, main_class.uidname())
             class_lodel_id = utils.column_prefix(class_table, main_class.uidname())
             # do the join
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
+
+            multivalue_fields = self.get_multivalue_fields(target_cls)
+            for field_names in multivalue_fields.values():
+                for field_name in field_names:
+                    try:
+                        field_list.remove(field_name)
+                    except ValueError:
+                        pass  # field_name is not in field_list
+
+            for mandatory_field in [class_fk, 'type_id']:
+                if mandatory_field not in field_list:
+                    field_list.append(mandatory_field)
+
             fields = [(main_table, target_cls.name2class('LeObject').fieldlist()), (class_table, main_class.fieldlist())]
 
         elif target_cls.is_lehierarch():
@@ -73,9 +88,9 @@ class LeDataSourceSQL(DummyDatasource):
             main_table = utils.common_tables['relation']
             # find relational table
             class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
-            relation_fieldname = target_cls.name2class('LeRelation').uidname()
-            main_relation_id = utils.column_prefix(main_table, relation_fieldname)
-            class_relation_id = utils.column_prefix(class_table, relation_fieldname)
+            class_fk = target_cls.name2class('LeRelation').uidname()
+            main_relation_id = utils.column_prefix(main_table, class_fk)
+            class_relation_id = utils.column_prefix(class_table, class_fk)
             # do the joins
             lodel_id = target_cls.name2class('LeObject').uidname()
             joins = [
@@ -135,6 +150,24 @@ class LeDataSourceSQL(DummyDatasource):
         cur = utils.query(self.connection, query)
         results = all_to_dicts(cur)
         #print(results)
+
+        # query multivalued tables, inject result in main result
+        if multivalue_fields:
+            for result in results:
+                for key_name, fields in multivalue_fields.items():
+                    query_fields = [key_name]
+                    query_fields.extend(fields)
+                    table_name = utils.multivalue_table_name(class_table, key_name)
+                    sql = select(table_name, select=query_fields, where={(class_fk, '='):result[class_fk]})
+
+                    multi = {name:{} for name in fields}
+                    cur = utils.query(self.connection, sql)
+
+                    multi_results = all_to_dicts(cur)
+                    for multi_result in multi_results:
+                        for field in fields:
+                            multi[field][multi_result[key_name]] = multi_result[field]
+                    result.update(multi)
 
         # instanciate each row to editorial components
         if instanciate:
