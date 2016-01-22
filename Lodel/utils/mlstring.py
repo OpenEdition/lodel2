@@ -8,7 +8,7 @@ import warnings
 # @todo define a default language that will be used in case the wanted language is not available for this string (gettext-like behavior)
 class MlString(object):
 
-    default_lang = '__default__'
+    default_lang = '___'
     ## Instanciate a new string with translation
     #
     # @param translations dict: With key = lang and value the translation
@@ -48,6 +48,9 @@ class MlString(object):
         else:
             self.translations[lang] = text
 
+    def get_default(self):
+        return self.get(self.default_lang)
+
     def set_default(self, text):
         self.set(self.default_lang, text)
 
@@ -77,6 +80,21 @@ class MlString(object):
             if self.get(lng) != other.get(lng):
                 return False
         return True
+    
+    ## @brief Allow [] access to translations
+    def __getitem__(self, langname): return self.get(langname)
+    
+    ## @brief Allow [] set 
+    def __setitem__(self, langname, txt): return self.set(langname, txt)
+    
+    ## @brief Implements dict.keys() method
+    def keys(self): return self.translations.keys()
+        
+    ## @brief Implements dict.values() method
+    def values(self): return self.translations.values()
+    
+    ## @brief Implements dict.items() method
+    def items(self): return self.translations.items()
 
     @staticmethod
     ## Instanciate a MlString from json
