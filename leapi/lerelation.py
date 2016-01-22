@@ -233,7 +233,7 @@ class _LeRel2Type(_LeRelation):
             limit = 1,
             instanciate = False
         )
-        return 1 if ret is None else ret[0]['rank']
+        return 1 if not ret else ret[0]['rank']
 
     ## @brief Implements insert for rel2type
     # @todo checks when autodetecing the rel2type class
