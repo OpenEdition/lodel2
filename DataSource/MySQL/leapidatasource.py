@@ -19,6 +19,7 @@ from EditorialModel.classtypes import EmNature
 from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
 from Lodel.settings import Settings
+from .fieldtypes import fieldtype_cast
 
 ## MySQL DataSource for LeObject
 class LeDataSourceSQL(DummyDatasource):
@@ -143,7 +144,8 @@ class LeDataSourceSQL(DummyDatasource):
                 joins.append(rel_join)
 
         # prefix filters'' column names, and prepare dict for mosql where {(fieldname, op): value}
-        wheres = {(utils.find_prefix(name, fields), op):value for name,op,value in filters}
+        # TODO: this will not work with special filters
+        wheres = {(utils.find_prefix(name, fields), op):fieldtype_cast(target_cls.fieldtypes()[name], value) for name,op,value in filters}
         query = select(main_table, select=prefixed_field_list, where=wheres, joins=joins, **kwargs)
 
         # Executing the query
@@ -228,6 +230,8 @@ class LeDataSourceSQL(DummyDatasource):
     def update(self, target_cls, filters, rel_filters, **datas):
         class_table = False
 
+        datas = { fname: fieldtype_cast(target_cls.fieldtypes()[fname], datas[fname]) for fname in datas }
+
         # it is a LeType
         if target_cls.is_letype():
             # find main table and main table datas
@@ -299,6 +303,9 @@ class LeDataSourceSQL(DummyDatasource):
             fk_name = superior_class.name2class('LeRelation').uidname()
         else:
             raise AttributeError("'%s' is not a LeType nor a LeRelation, it's impossible to insert it" % target_cls)
+
+        # cast datas
+        datas = { fname: fieldtype_cast(target_cls.fieldtypes()[fname], datas[fname]) for fname in datas }
 
         # extract main table datas from datas
         for main_column_name in main_fields:
