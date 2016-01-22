@@ -249,7 +249,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
             eres = {
                     'nature': None,
                     'depth': None,
-                    'rank': 0,
+                    'rank': 1,
                     EditorialModel.classtypes.relation_name: None,
             }
             eres.update(query)

@@ -14,12 +14,15 @@ class GenericFieldType(object):
     ## @brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
 
-    ## @param internal False | str : define wheter or not a field is internal
+    ## @brief Generic constructor for fieldtypes 
+    # @param internal False | str : define wheter or not a field is internal
+    # @param immutable bool : indicate if the fieldtype has to be defined in child classes of LeObject or if it is defined globally and immutable
     # @throw NotImplementedError if called from bad class
-    def __init__(self, internal = False, **args):
+    def __init__(self, internal = False, immutable = False, **args):
         if self.__class__ == GenericFieldType:
             raise NotImplementedError("Abstract class")
         self.internal = internal #Check this value ?
+        self.immutable = bool(immutable)
     
         for argname, argval in args.items():
             setattr(self, argname, argval)
@@ -234,4 +237,52 @@ class FieldTypeDataCheckError(FieldTypeError):
             msg += "{expt_name}:{expt_msg}; ".format(expt_name=expt.__class__.__name__, expt_msg=str(expt))
         return msg
 
-
+## @page lodel2_fieldtypes Lodel2 fieldtypes
+#
+# @section fieldtypes_features Main features
+#
+# Lodel2 defines Class and Types containing fields that handle values.
+# Fields are defined by FieldTypes. It's objects that are able to check datas value, to construct values (~cast) and to check datas consistency given the list of datas of an Lodel2 object (Class or Type)
+#
+# @subsection fieldtypes_hierarchy Fieldtypes family
+#
+# Fieldtypes are python objects. We use inheritance to defines FieldTypes. Here is a list of main FieldTypes inheritance :
+# - GenericFieldType
+#  - SingleValueFieldType <- handles a single value
+#   - ReferenceFieldType <- handles a reference to another field
+#    - leo.EmFieldType <- handles references to a LeObject (designed for LeRelation)
+#   - char.EmFieldType <- handles string
+#   - integer.EmFieldType <- handles integer
+#    - pk.EmFieldType <- handles primary keys (identifier)
+#  - MultiValueFieldType <- handles multiple values identified by a key
+#   - i18n.EmFieldType <- handles a string and its translations
+#
+# @subsection fieldtypes_options Fieldtypes main options
+#
+# There is 2 options that are common for every fieldtypes :
+# - internal : that indicate who construct the data. Possible values are
+#  - False : the field is not internal, its user that provides datas
+#  - 'automatic' : The field is internal, its leapi that provides datas (see construct in @ref fieldtypes_validator )
+#  - 'autosql' : BAD NAME. The field is internal but it is the datasource that provide the data
+# - immutable : Its a boolean that indicate if a fieldtype defined in EditorialModel.classtypes is immutable or HAVE TO be defined in EmClass
+# 
+# @subsubsection fieldtypes_options_single_value SingleValueFieldType options
+#
+# SingleValueFieldType have more standart options :
+# - nullable (boolean) : is None allowed as value
+# - uniq (boolean) : if True the value has to be uniq in all instances of concerned Lodel2 API object
+# - primary (boolean) : if True the field is an identifier (primary key)
+# - default : if given as argument defines a default value for the FieldType
+#
+# @subsection fieldtypes_validator Data validation
+#
+# For each Lodel2 API objects (LeObject, LeRelation, ...) there is a sequence that is run to check datas and transform them. Each step is run for each fieldtypes of a Lodel2 API object
+#
+# -# Check data : this is a basic data check (for example if an integer is expected and the string 'foo' is given the check will fails)
+# -# Construct data : this is a data 'casting' step, this method is called with all other datas from the Lodel2 API object as argument (to be able to construct datas with other parts of the object) @ref fieldtypes_construct_order
+# -# Datas consistency checks : this step, as the construct step, has all datas from the Lodel2 API object as argument, and check for the whole datas consistency
+#
+# @subsubsection fieldtypes_construct_order Data construction dependencies
+#
+# To handle data construction dependencies there is an object DatasConstructor able to call the data construction when needed and to detect (not tested yet) circular dependencies
+# 

@@ -16,13 +16,12 @@ class EmFieldType(integer.EmFieldType):
         super().__init__(**kwargs)
 
     def construct_data(self, lec, fname, datas, cur_value):
-        superior_id = datas[EditorialModel.classtypes.relation_superior]
+        superior = datas[EditorialModel.classtypes.relation_superior]
         if lec.is_lerel2type():
-            subordinate = lec._subordinate_cls
-            sub_em_type_id = subordinate._type_id
-            cur_value = lec.get_max_rank(superior_id, sub_em_type_id)
+            relation_name = datas[EditorialModel.classtypes.relation_name]
+            cur_value = lec.get_max_rank(superior, relation_name)
         elif lec.is_lehierarch():
-            cur_value = lec.get_max_rank(superior_id, datas['nature'])
+            cur_value = lec.get_max_rank(superior, datas['nature'])
         else:
             raise ValueError("Called with bad class : ", lec.__name__)
         return cur_value

@@ -216,17 +216,24 @@ class _LeRel2Type(_LeRelation):
     # @return True in case of success, False in case of failure
     # @throw ValueError if step is not castable into an integer
     def set_rank(self, new_rank):
-        return self._set_rank(
-                                new_rank,
-                                id_superior=getattr(self, self.uidname()),
-                                type_em_id=self._subordinate_cls._type_id
-        )
+        if self._relation_name is None:
+            raise NotImplementedError("Abstract method")
+        return self._set_rank(new_rank, superior = self.superior, relation_name = self._relation_name)
 
     @classmethod
-    def get_max_rank(cls, id_superior, type_em_id):
-       # SELECT rank FROM relation JOIN object ON object.lodel_id = id_subordinate WHERE object.type_id = <type_em_id>
-        warnings.warn("LeRel2Type.get_max_rank() is not implemented yet and will always return 0")
-        return 0
+    def get_max_rank(cls, superior, relation_name):
+        # SELECT rank FROM relation JOIN object ON object.lodel_id = id_subordinate WHERE object.type_id = <type_em_id>
+        ret = cls.get(
+            query_filters = [
+                (EditorialModel.classtypes.relation_name, '=', relation_name),
+                (EditorialModel.classtypes.relation_superior, '=', superior),
+            ],
+            field_list = ['rank'],
+            order = [('rank', 'DESC')],
+            limit = 1,
+            instanciate = False
+        )
+        return 1 if ret is None else ret[0]['rank']
 
     ## @brief Implements insert for rel2type
     # @todo checks when autodetecing the rel2type class
