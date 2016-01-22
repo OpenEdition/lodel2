@@ -46,8 +46,6 @@ class _LeRelation(lecrud._LeCrud):
         rel_ft.update(cls._uid_fieldtype)
 
         rel_ft.update(cls._rel_fieldtypes)
-        if cls.implements_lerel2type():
-            rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
 
     @classmethod
@@ -219,6 +217,14 @@ class _LeRel2Type(_LeRelation):
         if self._relation_name is None:
             raise NotImplementedError("Abstract method")
         return self._set_rank(new_rank, superior = self.superior, relation_name = self._relation_name)
+    
+    @classmethod
+    def fieldtypes(cls, complete = True):
+        ret = dict()
+        if complete:
+            ret.update(super().fieldtypes())
+        ret.update(cls._rel_attr_fieldtypes)
+        return ret
 
     @classmethod
     def get_max_rank(cls, superior, relation_name):
