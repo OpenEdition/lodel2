@@ -16,6 +16,7 @@ import mosql.mysql
 from DataSource.dummy.leapidatasource import DummyDatasource
 from DataSource.MySQL import utils
 from EditorialModel.classtypes import EmNature
+from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
 from Lodel.settings import Settings
 
@@ -273,6 +274,10 @@ class LeDataSourceSQL(DummyDatasource):
                     main_datas[main_column_name] = datas[main_column_name]
                 del(datas[main_column_name])
 
+        # extract multivalued field from class_table datas
+        if class_table:
+            multivalued_datas = self.create_multivalued_datas(target_cls, datas)
+
         sql = insert(main_table, main_datas)
         cur = utils.query(self.connection, sql)
         lodel_id = cur.lastrowid
@@ -283,7 +288,51 @@ class LeDataSourceSQL(DummyDatasource):
             sql = insert(class_table, datas)
             utils.query(self.connection, sql)
 
+            # do multivalued inserts
+            for key_name, lines in multivalued_datas.items():
+                table_name = utils.multivalue_table_name(class_table, key_name)
+                for key_value, line_datas in lines.items():
+                    line_datas[key_name] = key_value
+                    line_datas[fk_name] = lodel_id
+                    sql = insert(table_name, line_datas)
+                    utils.query(self.connection, sql)
+
         return lodel_id
+
+    # extract multivalued field from datas, prepare multivalued data list
+    def create_multivalued_datas(self, target_cls, datas):
+            multivalue_fields = self.get_multivalue_fields(target_cls)
+
+            if multivalue_fields:
+                # construct multivalued datas
+                multivalued_datas = {key:{} for key in multivalue_fields}
+                for key_name, names in multivalue_fields.items():
+                    for field_name in names:
+                        try:
+                            for key, value in datas[field_name].items():
+                                if key not in multivalued_datas[key_name]:
+                                    multivalued_datas[key_name][key] = {}
+                                multivalued_datas[key_name][key][field_name] = value
+                            del(datas[field_name])
+                        except KeyError:
+                            pass  # field_name is not in datas
+                return multivalued_datas
+            else:
+                return {}
+
+    # return multivalue fields of a class
+    def get_multivalue_fields(self, target_cls):
+        multivalue_fields = {}
+        # scan fieldtypes to get mutltivalued field
+        for field_name, fieldtype in target_cls.fieldtypes(complete=False).items():
+                if isinstance(fieldtype, MultiValueFieldType):
+                    if  fieldtype.keyname in multivalue_fields:
+                        multivalue_fields[fieldtype.keyname].append(field_name)
+                    else:
+                        multivalue_fields[fieldtype.keyname] = [field_name]
+
+        return multivalue_fields
+
 
     ## @brief insert multiple editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
