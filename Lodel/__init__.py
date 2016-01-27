@@ -32,6 +32,7 @@
 
 ## @page lodel2_arch Lodel2 architecture
 #
+# @tableofcontents
 #
 # @section lodel2_arch_basic Lodel2
 #
@@ -74,3 +75,5 @@
 # @image html graphviz/em_relations.png
 # @subsubsection lodel2_arch_edmod_fig_hierarchy Hierarchical relations between EmTypes given a classtype
 # @image html graphviz/em_types_hierarch.png
+# @subsubsection lodel2_arch_edmod_fig_em_example Example of editorial model
+# @image html graphviz/example_em_graph.png

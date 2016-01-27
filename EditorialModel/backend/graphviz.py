@@ -53,14 +53,16 @@ class EmBackendGraphviz(EmBackendDummy):
                 self.edges += cid+' -> '+self._component_id(c.em_class)+' [ style="dotted" ]\n'
                 for nat, sups in c.superiors().items():
                     for sup in sups:
-                        self.edges += cid+' -> '+self._component_id(sup)+' [ label="%s" color="green" ]'%nat
+                        self.edges += cid+' -> '+self._component_id(sup)+' [ label="%s" color="green" ]\n'%nat
             #dotfp.write("}\n")
             
+            """
             for rf in [ f for f in em.components(EmField) if f.fieldtype == 'rel2type']:
                 dotfp.write(self._component_node(rf, em))
                 cid = self._component_id(rf)
                 self.edges += cid+' -> '+self._component_id(rf.em_class)+'\n'
                 self.edges += cid+' -> '+self._component_id(em.component(rf.rel_to_type_id))+'\n'
+            """
 
             dotfp.write(self.edges)
 
@@ -72,12 +74,11 @@ class EmBackendGraphviz(EmBackendDummy):
         return 'emcomp%d'%c.uid
 
     def _component_node(self, c, em):
-        #ret = 'emcomp%d '%c.uid
         ret = "\t"+EmBackendGraphviz._component_id(c)
         cn = c.__class__.__name__
         rel_field = ""
         if cn == 'EmClass':
-            ret += '[ label="%s", shape="%s" ]'%(c.name.replace('"','\\"'), 'doubleoctagon')
+            ret += '[ label="EmClass %s", shape="%s" ]'%(c.name.replace('"','\\"'), 'doubleoctagon')
         elif cn == 'EmField':
             str_def = '[ label="Rel2Type {fname}|{{{records}}}", shape="record"]'
             records = ' | '.join([f.name for f in em.components('EmField') if f.rel_field_id == c.uid])
@@ -88,10 +89,8 @@ class EmBackendGraphviz(EmBackendDummy):
             cntref = 0
             first = True
             for f in [ f for f in c.fields() if f.name not in c.em_class.default_fields_list().keys()]:
-                if cn == 'EmType' and f.rel_field_id is None:
-                    
-                    #if not (f.rel_to_type_id is None):
-                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldType):
+                if f.rel_field_id is None:
+                    if f.fieldtype == 'rel2type':
                         rel_node_id = '%s%s'%(EmBackendGraphviz._component_id(c), EmBackendGraphviz._component_id(em.component(f.rel_to_type_id)))
 
                         rel_node = '\t%s [ label="rel_to_type'%rel_node_id
@@ -105,7 +104,7 @@ class EmBackendGraphviz(EmBackendDummy):
                                     rel_node += '{ '
                                     first = False
                                 rel_node += rf.name
-                        rel_node += '}" shape="record" style="dashed"]\n'
+                        rel_node += '}" shape="record"]\n'
 
                         rel_field += rel_node
 
@@ -117,8 +116,7 @@ class EmBackendGraphviz(EmBackendDummy):
                     if first:
                         ret += ' { '
                         first = False
-                    #if not (f.rel_to_type_id is None):
-                    if isinstance(f, EditorialModel.fieldtypes.rel2type.EmFieldType):
+                    if f.fieldtype == 'rel2type':
                         ret += '<f%d> '%cntref
                         cntref += 1
                     ret += f.name
