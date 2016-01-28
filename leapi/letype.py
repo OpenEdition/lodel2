@@ -68,10 +68,6 @@ class _LeType(_LeClass):
         self.populate()
         return self.datas()
     
-    ## @brief Delete current instance from DB
-    def delete(self):
-        _LeCrud._delete(self)
-    
     ## @brief Add a superior
     # @param lesup LeObject : LeObject child class instance
     # @param nature str : Relation nature

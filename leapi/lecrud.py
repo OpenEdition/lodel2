@@ -289,17 +289,11 @@ class _LeCrud(object):
             #ERROR HANDLING
             return False
     
-    ## @brief Delete a component (instance method)
+    ## @brief Delete a component
     # @return True if success
     # @todo better error handling
-    def _delete(self):
-        filters = [self._id_filter()]
-        ret = _LeCrud.delete(self.__class__, filters)
-        if ret == 1:
-            return True
-        else:
-            #ERROR HANDLING
-            return False
+    def delete(self):
+        self._datasource.delete(self.__class__, self.uidget())
 
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
@@ -345,14 +339,6 @@ class _LeCrud(object):
             raise LeApiDataCheckError("Error while checking datas", err_l)
         return checked_datas
     
-    ## @brief Given filters delete editorial components
-    # @param filters list : 
-    # @return The number of deleted components
-    @staticmethod
-    def delete(cls, filters):
-        filters, rel_filters = cls._prepare_filters(filters)
-        return cls._datasource.delete(cls, filters, rel_filters)
-
     ## @brief Retrieve a collection of lodel editorial components
     #
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters

@@ -25,10 +25,9 @@ class DummyDatasource(object):
 
     ## @brief delete lodel editorial components given filters
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
-    # @param filters list : List of filters (see @ref leobject_filters )
-    # @param rel_filters list : List of relationnal filters (see @ref leobject_filters )
+    # @param leo_id int : The component ID (lodel_id or relation_id)
     # @return the number of deleted components
-    def delete(self, target_cls, filters, rel_filters):
+    def delete(self, target_cls, leo_id):
         pass
 
     ## @brief update an existing lodel editorial component

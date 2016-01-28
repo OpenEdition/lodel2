@@ -129,5 +129,5 @@ class LeTypeMockDsTestCase(TestCase):
         
         num = Numero(lodel_id = 1)
         num.delete()
-        dsmock.assert_called_once_with(Numero, [('lodel_id','=',1)], [])
+        dsmock.assert_called_once_with(Numero, 1)
 

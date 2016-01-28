@@ -159,32 +159,17 @@ class LeObjectMockDatasourceTestCase(TestCase):
     
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):
-        from dyncode import Publication, Numero, LeObject, LeType
-
+        from dyncode import Publication, Numero, LeObject, LeType, LeRelation
+        
         args = [
-            (
-                'Numero',
-                ['lodel_id=1'],
-                [('lodel_id', '=', '1'), ('type_id', '=', Numero._type_id)],
-                []
-            ),
-            (
-                'Publication',
-                ['subordinate.parent not in [1,2,3]', 'titre = "titre nul"'],
-                [('titre','=', '"titre nul"'), ('class_id', '=', Publication._class_id)],
-                [( (leapi.leobject.REL_SUB, 'parent'), ' not in ', '[1,2,3]')]
-            ),
+            Publication(1),
+            Numero(5),
+            LeObject(51),
+            LeRelation(1337),
         ]
 
-        for classname, filters, ds_filters, ds_relfilters in args:
-            ccls = LeObject.name2class(classname)
-
-            LeObject.delete(filters, classname)
-            dsmock.assert_called_once_with(ccls, ds_filters, ds_relfilters)
+        for instance in args:
+            instance.delete()
+            dsmock.assert_called_once_with(instance.__class__, instance.uidget())
             dsmock.reset_mock()
             
-            if not (LeType in ccls.__bases__): #tests for calls with a LeClass child
-                ccls.delete(filters)
-                dsmock.assert_called_once_with(ccls, ds_filters, ds_relfilters)
-                dsmock.reset_mock()
-        

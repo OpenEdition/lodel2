@@ -72,18 +72,6 @@ class _LeRelation(lecrud._LeCrud):
             res_filters.append( (field, op, value) )
         return res_filters, rel_filters
 
-    @classmethod
-    ## @brief deletes a relation between two objects
-    # @param filters_list list
-    # @param target_class str
-    def delete(cls, filters_list, target_class):
-        filters, rel_filters = cls._prepare_filters(filters_list)
-        if isinstance(target_class, str):
-            target_class = cls.name2class(target_class)
-
-        ret = cls._datasource.delete(target_class, filters)
-        return True if ret == 1 else False
-
     ## @brief move to the first rank
     # @return True in case of success, False in case of failure
     def move_first(self):
@@ -143,10 +131,6 @@ class _LeRelation(lecrud._LeCrud):
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
     
-    ## @brief Delete current instance from DB
-    def delete(self):
-        lecrud._LeCrud._delete(self)
-    
     ## @brief modify a LeHierarch rank
     # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
     # @return True in case of success, False in case of failure
@@ -205,10 +189,6 @@ class _LeRel2Type(_LeRelation):
     ## @brief Stores the relation name for a rel2type
     _relation_name = None
 
-    ## @brief Delete current instance from DB
-    def delete(self):
-        lecrud._LeCrud._delete(self)
-    
     ## @brief modify a LeRel2Type rank
     # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
     # @return True in case of success, False in case of failure
