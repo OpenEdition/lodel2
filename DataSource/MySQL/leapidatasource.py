@@ -48,7 +48,9 @@ class LeDataSourceSQL(DummyDatasource):
     def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=None, instanciate=True):
 
         joins = []
-        multivalue_fields = False
+        mandatory_fields = []
+        class_table = False
+
         # it is a LeObject, query only on main table
         if target_cls.__name__ == 'LeObject':
             main_table = utils.common_tables['object']
@@ -67,17 +69,7 @@ class LeDataSourceSQL(DummyDatasource):
             # do the join
             joins = [left_join(class_table, {main_lodel_id:class_lodel_id})]
 
-            multivalue_fields = self.get_multivalue_fields(target_cls)
-            for field_names in multivalue_fields.values():
-                for field_name in field_names:
-                    try:
-                        field_list.remove(field_name)
-                    except ValueError:
-                        pass  # field_name is not in field_list
-
-            for mandatory_field in [class_fk, 'type_id']:
-                if mandatory_field not in field_list:
-                    field_list.append(mandatory_field)
+            mandatory_fields = [class_fk, 'type_id']
 
             fields = [(main_table, target_cls.name2class('LeObject').fieldlist()), (class_table, main_class.fieldlist())]
 
@@ -100,6 +92,9 @@ class LeDataSourceSQL(DummyDatasource):
                 left_join(utils.common_tables['object'] + ' as sup_obj', {'sup_obj.'+lodel_id:target_cls._superior_field_name}),
                 left_join(utils.common_tables['object'] + ' as sub_obj', {'sub_obj.'+lodel_id:target_cls._subordinate_field_name})
             ]
+
+            mandatory_fields = [class_fk, 'class_id', 'type_id']
+
             fields = [
                 (main_table, target_cls.name2class('LeRelation').fieldlist()),
                 (class_table, target_cls.fieldlist()),
@@ -107,9 +102,26 @@ class LeDataSourceSQL(DummyDatasource):
                 ('sub_obj', ['type_id'])
             ]
 
-            field_list.extend(['class_id', 'type_id'])
         else:
             raise AttributeError("Target class '%s' in get() is not a Lodel Editorial Object !" % target_cls)
+
+
+        # extract mutltivalued field from field_list
+        if class_table:
+            multivalue_fields = self.get_multivalue_fields(target_cls)
+            for field_names in multivalue_fields.values():
+                for field_name in field_names:
+                    try:
+                        field_list.remove(field_name)
+                    except ValueError:
+                        pass  # field_name is not in field_list
+        else:
+            multivalue_fields = False
+
+        # add mandatory fields to field_list
+        for mandatory_field in mandatory_fields:
+            if mandatory_field not in field_list:
+                field_list.append(mandatory_field)
 
         # prefix column name in fields list
         prefixed_field_list = [utils.find_prefix(name, fields) for name in field_list]
@@ -220,48 +232,66 @@ class LeDataSourceSQL(DummyDatasource):
 
         return result
 
-    ## @brief update an existing lodel editorial component
+    ## @brief update ONE existing lodel editorial component
     # @param target_cls LeCrud(class) : Instance of the object concerned by the update
-    # @param filters list : List of filters (see @ref leobject_filters)
+    # @param lodel_id : id of the component
     # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
     # @return the number of updated components
     # @todo implement other filters than lodel_id
-    def update(self, target_cls, filters, rel_filters, **datas):
-        class_table = False
-
-        datas = { fname: fieldtype_cast(target_cls.fieldtypes()[fname], datas[fname]) for fname in datas }
+    def update(self, target_cls, lodel_id, **datas):
 
         # it is a LeType
         if target_cls.is_letype():
             # find main table and main table datas
             main_table = utils.common_tables['object']
-            main_datas = {target_cls.uidname(): raw(target_cls.uidname())} #  be sure to have one SET clause
+            fk_name = target_cls.uidname()
+            main_datas = {fk_name: raw(fk_name)} #  be sure to have one SET clause
             main_fields = target_cls.name2class('LeObject').fieldlist()
             class_table = utils.object_table_name(target_cls.leo_class().__name__)
         elif target_cls.is_lerel2type():
             main_table = utils.common_tables['relation']
             le_relation = target_cls.name2class('LeRelation')
-            main_datas = {le_relation.uidname(): raw(le_relation.uidname())} #  be sure to have one SET clause
+            fk_name = le_relation.uidname()
+            main_datas = {fk_name: raw(fk_name)} #  be sure to have one SET clause
             main_fields = le_relation.fieldlist()
 
             class_table = utils.r2t_table_name(target_cls._superior_cls.__name__, target_cls._subordinate_cls.__name__)
         else:
             raise AttributeError("'%s' is not a LeType nor a LeRelation, it's impossible to update it" % target_cls)
 
+
+        datas = { fname: fieldtype_cast(target_cls.fieldtypes()[fname], datas[fname]) for fname in datas }
+
         for main_column_name in main_fields:
             if main_column_name in datas:
                 main_datas[main_column_name] = datas[main_column_name]
                 del(datas[main_column_name])
 
-        wheres = {(name, op):value for name,op,value in filters}
-        sql = update(main_table, wheres, main_datas)
+        # extract multivalued field from class_table datas
+        multivalued_datas = self.create_multivalued_datas(target_cls, datas)
+
+        where = {fk_name: lodel_id}
+        sql = update(main_table, where, main_datas)
         utils.query(self.connection, sql)
 
         # update on class table
-        if class_table and datas:
-            sql = update(class_table, wheres, datas)
+        if datas:
+            sql = update(class_table, where, datas)
             utils.query(self.connection, sql)
+
+        # do multivalued insert
+        # first delete old values, then insert new ones
+        for key_name, lines in multivalued_datas.items():
+            table_name = utils.multivalue_table_name(class_table, key_name)
+            sql = delete(table_name, where)
+            utils.query(self.connection, sql)
+            for key_value, line_datas in lines.items():
+                line_datas[key_name] = key_value
+                line_datas[fk_name] = lodel_id
+                sql = insert(table_name, line_datas)
+                utils.query(self.connection, sql)
+
 
         return True
 
