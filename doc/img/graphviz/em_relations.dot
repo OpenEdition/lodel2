@@ -1,0 +1,26 @@
+digraph editorial_model_relations {
+	
+	label="Editorial Model relations"
+
+	classtypes
+
+	r_class1 [ label="<f0> Class 1| {STR |INTEGER(optionnal) | STR | REL_TO_TYPE}", shape=record ]
+
+	r_class2 [ label="<f0> Class 2| {STR |STR }", shape=record ]
+
+	r_type1 [ label="<f0> Type 1| { STR |INTEGER | STR |<fr>REL_TO_TYPE}}", shape=record ]
+	r_type2 [ label="<f0> Type 2|{ STR | STR |<fr>REL_TO_TYPE}", shape=record ]
+
+	r_type3 [ label="<f0> Type 3|{ STR |STR }", shape=record ]
+
+	classtypes -> r_class1
+	classtypes -> r_class2
+
+	r_class1 -> r_type1 [ label="inherit", style="dotted" ]
+	r_class1 -> r_type2 [ label="inherit", style="dotted" ]
+
+	r_class2 -> r_type3 [ label="inherit", style="dotted" ]
+
+	r_type1:fr -> r_class2 [ label="link to Class 2" ]
+	r_type2:fr -> r_class1 [ label="link to Class 1" ]
+}

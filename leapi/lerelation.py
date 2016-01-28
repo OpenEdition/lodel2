@@ -33,6 +33,12 @@ class _LeRelation(lecrud._LeCrud):
         if isinstance(leo, leobject._LeObject):
             return (self._subordinate_field_name, '=', leo)
 
+    
+    ## @return The name of the uniq id field
+    @classmethod
+    def uidname(cls):
+        return EditorialModel.classtypes.relation_uid
+
     ## @return a dict with field name as key and fieldtype instance as value
     @classmethod
     def fieldtypes(cls):
@@ -40,8 +46,6 @@ class _LeRelation(lecrud._LeCrud):
         rel_ft.update(cls._uid_fieldtype)
 
         rel_ft.update(cls._rel_fieldtypes)
-        if cls.implements_lerel2type():
-            rel_ft.update(cls._rel_attr_fieldtypes)
         return rel_ft
 
     @classmethod
@@ -67,18 +71,6 @@ class _LeRelation(lecrud._LeCrud):
                     value = cls.name2class('LeObject')(value)
             res_filters.append( (field, op, value) )
         return res_filters, rel_filters
-
-    @classmethod
-    ## @brief deletes a relation between two objects
-    # @param filters_list list
-    # @param target_class str
-    def delete(cls, filters_list, target_class):
-        filters, rel_filters = cls._prepare_filters(filters_list)
-        if isinstance(target_class, str):
-            target_class = cls.name2class(target_class)
-
-        ret = cls._datasource.delete(target_class, filters)
-        return True if ret == 1 else False
 
     ## @brief move to the first rank
     # @return True in case of success, False in case of failure
@@ -139,10 +131,6 @@ class _LeRelation(lecrud._LeCrud):
 ## @brief Abstract class to handle hierarchy relations
 class _LeHierarch(_LeRelation):
     
-    ## @brief Delete current instance from DB
-    def delete(self):
-        lecrud._LeCrud._delete(self)
-    
     ## @brief modify a LeHierarch rank
     # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
     # @return True in case of success, False in case of failure
@@ -157,6 +145,7 @@ class _LeHierarch(_LeRelation):
     @classmethod
     def insert(cls, datas):
         # Checks if the relation exists
+        datas[EditorialModel.classtypes.relation_name] = None
         res = cls.get(
                 [(cls._subordinate_field_name, '=', datas['subordinate']), ('nature', '=', datas['nature'])],
                 [ cls.uidname() ]
@@ -195,29 +184,42 @@ class _LeRel2Type(_LeRelation):
     
     ## @brief Stores the LeClass child class used as superior
     _superior_cls = None
-    ## @biref Stores the LeType child class used as subordinate
+    ## @brief Stores the LeType child class used as subordinate
     _subordinate_cls = None
+    ## @brief Stores the relation name for a rel2type
+    _relation_name = None
 
-    ## @brief Delete current instance from DB
-    def delete(self):
-        lecrud._LeCrud._delete(self)
-    
     ## @brief modify a LeRel2Type rank
     # @param new_rank int|str : The new rank can be an integer > 1 or strings 'first' or 'last'
     # @return True in case of success, False in case of failure
     # @throw ValueError if step is not castable into an integer
     def set_rank(self, new_rank):
-        return self._set_rank(
-                                new_rank,
-                                id_superior=getattr(self, self.uidname()),
-                                type_em_id=self._subordinate_cls._type_id
-        )
+        if self._relation_name is None:
+            raise NotImplementedError("Abstract method")
+        return self._set_rank(new_rank, superior = self.superior, relation_name = self._relation_name)
+    
+    @classmethod
+    def fieldtypes(cls, complete = True):
+        ret = dict()
+        if complete:
+            ret.update(super().fieldtypes())
+        ret.update(cls._rel_attr_fieldtypes)
+        return ret
 
     @classmethod
-    def get_max_rank(cls, id_superior, type_em_id):
-       # SELECT rank FROM relation JOIN object ON object.lodel_id = id_subordinate WHERE object.type_id = <type_em_id>
-        warnings.warn("LeRel2Type.get_max_rank() is not implemented yet and will always return 0")
-        return 0
+    def get_max_rank(cls, superior, relation_name):
+        # SELECT rank FROM relation JOIN object ON object.lodel_id = id_subordinate WHERE object.type_id = <type_em_id>
+        ret = cls.get(
+            query_filters = [
+                (EditorialModel.classtypes.relation_name, '=', relation_name),
+                (EditorialModel.classtypes.relation_superior, '=', superior),
+            ],
+            field_list = ['rank'],
+            order = [('rank', 'DESC')],
+            limit = 1,
+            instanciate = False
+        )
+        return 1 if not ret else ret[0]['rank']
 
     ## @brief Implements insert for rel2type
     # @todo checks when autodetecing the rel2type class
@@ -226,21 +228,31 @@ class _LeRel2Type(_LeRelation):
         #Set the nature
         if 'nature' not in datas:
             datas['nature'] = None
-        if cls == cls.name2class('LeRel2Type') and classname is None:
-            # autodetect the rel2type child class
-            classname = relname(datas[self._superior_field_name], datas[self._subordinate_field_name])
+        if cls.__name__ == 'LeRel2Type' and classname is None:
+            if EditorialModel.classtypes.relation_name not in datas:
+                raise RuntimeError("Unable to autodetect rel2type. No relation_name given")
+            # autodetect the rel2type child class (BROKEN)
+            classname = relname(datas[self._superior_field_name], datas[self._subordinate_field_name], datas[EditorialModel.classtypes.relation_name])
+        else:
+            if classname != None:
+                ccls = cls.name2class(classname)
+                if ccls == False:
+                    raise lecrud.LeApiErrors("Bad classname given")
+                relation_name = ccls._relation_name
+            else:
+                relation_name = cls._relation_name
+            datas[EditorialModel.classtypes.relation_name] = relation_name
         return super().insert(datas, classname)
 
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (not an instance) (can be a LeType or a LeClass child)
     # @param lesubclass LeType : A LeType child class (not an instance)
     # @return a name as string
-    @staticmethod
-    def relname(lesupclass, lesubclass):
+    @classmethod
+    def relname(cls, lesupclass, lesubclass, relation_name):
         supname = lesupclass._leclass.__name__ if lesupclass.implements_letype() else lesupclass.__name__
         subname = lesubclass.__name__
-
-        return "Rel_%s2%s" % (supname, subname)
+        return cls.name2rel2type(supname, subname, relation_name)
 
     ## @brief instanciate the relevant lodel object using a dict of datas
     @classmethod
@@ -248,7 +260,7 @@ class _LeRel2Type(_LeRelation):
         le_object = cls.name2class('LeObject')
         class_name = le_object._me_uid[datas['class_id']].__name__
         type_name = le_object._me_uid[datas['type_id']].__name__
-        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name)
+        relation_classname = lecrud._LeCrud.name2rel2type(class_name, type_name, datas[EditorialModel.classtypes.relation_name])
 
         del(datas['class_id'], datas['type_id'])
 

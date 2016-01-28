@@ -12,7 +12,7 @@ class EmFieldType(GenericFieldType):
 
     def __init__(self, rel_to_type_id, **kwargs):
         self.rel_to_type_id = rel_to_type_id
-        super(EmFieldType, self).__init__(ftype='rel2type', **kwargs)
+        super(EmFieldType, self).__init__(**kwargs)
 
     def get_related_type(self):
         return self.model.component(self.rel_to_type_id)

@@ -231,16 +231,15 @@ class LeCrudTestCase(TestCase):
                 {'lodel_id':'1'},
                 {'titre': 'foobar'},
 
-                [('lodel_id', '=', 1)],
-                []
+                1,
             ),
         ]
 
-        for ccls, initarg, qdatas, efilters, erelfilters in args_l:
+        for ccls, initarg, qdatas, eid in args_l:
             obji = ccls(**initarg)
             obji._instanciation_complete = True  # fake full-instance
             obji.update(qdatas)
-            dsmock.assert_called_once_with(ccls, efilters, erelfilters, **qdatas)
+            dsmock.assert_called_once_with(ccls, eid, **qdatas)
     
     ## @todo test invalid get
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
@@ -278,7 +277,7 @@ class LeCrudTestCase(TestCase):
                 [],
                 [],
 
-                Numero._fields,
+                Numero.fieldlist(),
                 [
                     ('type_id', '=', Numero._type_id),
                     ('class_id', '=', Numero._class_id),
@@ -416,8 +415,8 @@ class LeCrudTestCase(TestCase):
         r2t_lst = list()
         for leo in leo_lst:
             if leo.is_leclass() and hasattr(leo, '_linked_types'):
-                for relleo in leo._linked_types:
-                    r2t_lst.append(LeRel2Type.relname(leo, relleo))
+                for relation_name, relleo in leo._linked_types.items():
+                    r2t_lst.append(LeRel2Type.relname(leo, relleo, relation_name))
         leo_lst = [cls.__name__ for cls in leo_lst]
 
         # Begin test
@@ -454,6 +453,6 @@ class LeCrudTestCase(TestCase):
 
     def test_typeasserts(self):
         """ Tests te implements_le* and is_le* methods """
-        from dyncode import LeObject, LeCrud, LeRelation, LeHierarch, LeRel2Type, Article, Textes, Rel_Textes2Personne
+        from dyncode import LeObject, LeCrud, LeRelation, LeHierarch, LeRel2Type, Article, Textes, RelTextesPersonneAuteur
 
         self.assertTrue(LeObject.is_leobject())

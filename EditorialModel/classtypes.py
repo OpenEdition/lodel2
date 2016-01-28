@@ -1,63 +1,95 @@
 # -*- coding: utf-8 -*-
 
+object_uid = 'lodel_id'
+object_em_class_id = 'class_id'
+object_em_type_id = 'type_id'
+
+relation_uid = 'id_relation'
+relation_superior = 'superior'
+relation_subordinate = 'subordinate'
+relation_name = 'relation_name'
+
 
 common_fields = {
-    'lodel_id': {
+    object_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
+        'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant lodel", "eng": "lodel identifier"}'
     },
-    'class_id': {
+    object_em_class_id : {
         'fieldtype': 'emuid',
         'is_id_class': True,
         'internal': 'automatic',
+        'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant de la classe", "eng": "class identifier"}'
     },
-    'type_id': {
+    object_em_type_id : {
         'fieldtype': 'emuid',
         'is_id_class': False,
         'internal': 'automatic',
+        'immutable' : True,
+        'string': '{"___": "", "fre": "identifiant de la type", "eng": "type identifier"}'
     },
     'string': {
         'fieldtype': 'char',
         'max_length': 128,
         'internal': 'automatic',
         'nullable': True,
+        'immutable' : False,
+        'string': '{"___": "", "fre": "Représentation textuel", "eng": "String representation"}',
     },
     'creation_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'internal': 'autosql',
+        'immutable' : True,
+        'string': '{"___": "", "fre": "Date de création", "eng": "Creation date"}',
     },
     'modification_date': {
         'fieldtype': 'datetime',
         'now_on_create': True,
         'now_on_update': True,
         'internal': 'autosql',
+        'immutable' : True,
+        'string': '{"___": "", "fre": "Date de modification", "eng": "Modification date"}',
     }
 }
 
 relations_common_fields = {
-    'id_relation': {
+    relation_uid: {
         'fieldtype': 'pk',
         'internal': 'autosql',
+        'immutable' : True,
     },
     'nature': {
         'fieldtype': 'naturerelation',
+        'immutable' : True,
     },
     'depth': {
         'fieldtype': 'integer',
         'internal': 'automatic',
+        'immutable' : True,
     },
     'rank': {
         'fieldtype': 'rank',
         'internal': 'automatic',
+        'immutable' : True,
     },
-    'superior': {
+    relation_superior : {
         'fieldtype': 'leo',
         'superior': True,
+        'immutable' : True,
     },
-    'subordinate': {
+    relation_subordinate: {
         'fieldtype': 'leo',
         'superior': False,
+        'immutable' : True,
+    },
+    relation_name: {
+        'fieldtype': 'namerelation',
+        'max_length': 128,
+        'immutable' : True,
     }
 }
 

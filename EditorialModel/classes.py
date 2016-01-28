@@ -49,6 +49,7 @@ class EmClass(EmComponent):
                 # Building fieltypes options to match the ones stored in EditorialModel.classtypes
                 ftype_opts = field.fieldtype_options()
                 ftype_opts['fieldtype'] = field.fieldtype
+                ftype_opts['string'] = field.string
 
                 ctype_opts = EditorialModel.classtypes.common_fields[field.name]
                 #Adding default value for options nullable, uniq and internal to fieldtypes options stored in classtypes
@@ -58,6 +59,7 @@ class EmClass(EmComponent):
                         ctype_opts[opt_name] = opt_val
 
                 if ftype_opts != ctype_opts:
+                    field.set_fieldtype_options(**ctype_opts)
                     # If options mismatch produce a diff and display a warning
                     ctype_opts = [ "%s: %s\n"%(repr(k), repr(ctype_opts[k])) for k in sorted(ctype_opts.keys())]
                     ftype_opts = [ "%s: %s\n"%(repr(k), repr(ftype_opts[k])) for k in sorted(ftype_opts.keys())]

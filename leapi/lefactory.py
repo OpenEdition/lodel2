@@ -5,6 +5,7 @@ import copy
 import os.path
 
 import EditorialModel
+from EditorialModel import classtypes
 from EditorialModel.model import Model
 from EditorialModel.fieldtypes.generic import GenericFieldType
 from leapi.lecrud import _LeCrud
@@ -48,23 +49,26 @@ class LeFactory(object):
         res_ft_l = list()
         res_uid_ft = None
         for fname, ftargs in ft_dict.items():
-            ftargs = copy.copy(ftargs)
-            fieldtype = ftargs['fieldtype']
-            self.needed_fieldtypes |= set([fieldtype])
-            del(ftargs['fieldtype'])
-
-            constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
-                ftname = GenericFieldType.module_name(fieldtype),
-                ftargs = ftargs,
-            )
-
-            if fieldtype == 'pk':
-                #
-                #       WARNING multiple PK not supported
-                #
-                res_uid_ft = "{ %s: %s }"%(repr(fname),constructor)
+            if ftargs is None:
+                res_ft_l.append('%s: None' % repr(fname))
             else:
-                res_ft_l.append( '%s: %s'%(repr(fname), constructor) )
+                ftargs = copy.copy(ftargs)
+                fieldtype = ftargs['fieldtype']
+                self.needed_fieldtypes |= set([fieldtype])
+                del(ftargs['fieldtype'])
+
+                constructor = '{ftname}.EmFieldType(**{ftargs})'.format(
+                    ftname = GenericFieldType.module_name(fieldtype),
+                    ftargs = ftargs,
+                )
+
+                if fieldtype == 'pk':
+                    #
+                    #       WARNING multiple PK not supported
+                    #
+                    res_uid_ft = "{ %s: %s }"%(repr(fname),constructor)
+                else:
+                    res_ft_l.append( '%s: %s'%(repr(fname), constructor) )
         return (res_uid_ft, res_ft_l)
 
     ## @brief Given a Model generate concrete instances of LeRel2Type classes to represent relations
@@ -75,7 +79,8 @@ class LeFactory(object):
         for field in [ f for f in model.components('EmField') if f.fieldtype == 'rel2type']:
             related = model.component(field.rel_to_type_id)
             src = field.em_class
-            cls_name = _LeCrud.name2rel2type(src.name, related.name)
+            cls_name = _LeCrud.name2rel2type(src.name, related.name, field.name)
+            relation_name = field.name
 
             attr_l = dict()
             for attr in [ f for f in model.components('EmField') if f.rel_field_id == field.uid]:
@@ -86,12 +91,14 @@ class {classname}(LeRel2Type):
     _rel_attr_fieldtypes = {attr_dict}
     _superior_cls = {supcls}
     _subordinate_cls = {subcls}
+    _relation_name = {relation_name}
 
 """.format(
     classname = cls_name,
     attr_dict = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f,v in attr_l.items()])) + "\n}",
     supcls = _LeCrud.name2classname(src.name),
     subcls = _LeCrud.name2classname(related.name),
+    relation_name = repr(relation_name),
 )
             res_code += rel_code
         return res_code
@@ -103,28 +110,36 @@ class {classname}(LeRel2Type):
     def emclass_pycode(self, model, emclass):
 
         cls_fields = dict()
-        cls_linked_types = list() #Stores authorized LeObject for rel2type
+        cls_linked_types = dict() # Stores rel2type referenced by fieldname
         #Populating linked_type attr
         for rfield in [ f for f in emclass.fields() if f.fieldtype == 'rel2type']:
             fti = rfield.fieldtype_instance()
-            cls_linked_types.append(_LeCrud.name2classname(model.component(fti.rel_to_type_id).name))
+            cls_linked_types[rfield.name] = _LeCrud.name2classname(model.component(fti.rel_to_type_id).name)
         # Populating fieldtype attr
         for field in emclass.fields(relational = False):
-            self.needed_fieldtypes |= set([field.fieldtype])
-            cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
-            fti = field.fieldtype_instance()
+            if field.name not in EditorialModel.classtypes.common_fields.keys() or not ( hasattr(field, 'immutable') and field.immutable):
+                self.needed_fieldtypes |= set([field.fieldtype])
+                cls_fields[field.name] = LeFactory.fieldtype_construct_from_field(field)
+                fti = field.fieldtype_instance()
+        ml_fieldnames = dict()
+        for field in emclass.fields():
+            if field.string.get() == '':
+                field.string.set_default(field.name)
+            ml_fieldnames[field.name] = field.string.dumps()
 
         return """
 #Initialisation of {name} class attributes
 {name}._fieldtypes = {ftypes}
+{name}.ml_fields_strings = {fieldnames}
 {name}._linked_types = {ltypes}
 {name}._classtype = {classtype}
 """.format(
             name = _LeCrud.name2classname(emclass.name),
             ftypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_fields.items()])) + "\n}",
+            fieldnames = '{' + (','.join(['\n   %s: MlString(%s)' % (repr(f), v) for f,v in ml_fieldnames.items()])) + '\n}',
+            ltypes = "{" + (','.join(['\n    %s: %s' % (repr(f), v) for f, v in cls_linked_types.items()])) + "\n}",
 
-            ltypes = "[" + (','.join(cls_linked_types))+"]",
-            classtype = repr(emclass.classtype)
+            classtype = repr(emclass.classtype),
         )
 
     ## @brief Given a Model and an EmType instances generate python code for corresponding LeType
@@ -135,7 +150,8 @@ class {classname}(LeRel2Type):
         type_fields = list()
         type_superiors = list()
         for field in emtype.fields(relational=False):
-            type_fields.append(field.name)
+            if not field.name in EditorialModel.classtypes.common_fields:
+                type_fields.append(field.name)
 
         for nat, sup_l in emtype.superiors().items():
             type_superiors.append('%s: [%s]' % (
@@ -173,6 +189,7 @@ class {classname}(LeRel2Type):
 import EditorialModel
 from EditorialModel import fieldtypes
 from EditorialModel.fieldtypes import {needed_fieldtypes_list}
+from Lodel.utils.mlstring import MlString
 
 import leapi
 import leapi.lecrud
@@ -193,28 +210,15 @@ import %s
             leobj_me_uid[comp.uid] = _LeCrud.name2classname(comp.name)
         
         #Building the fieldtypes dict of LeObject
-        (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.common_fields)
+        common_fieldtypes = dict()
+        for ftname, ftdef in EditorialModel.classtypes.common_fields.items():
+            common_fieldtypes[ftname] = ftdef if 'immutable' in ftdef and ftdef['immutable'] else None
+        (leobj_uid_fieldtype, leobj_fieldtypes) = self.concret_fieldtypes(common_fieldtypes)
         #Building the fieldtypes dict for LeRelation
-        (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(EditorialModel.classtypes.relations_common_fields)
-        # Fetching superior and subordinate fieldname for LeRelation
-        lesup = None
-        lesub = None
-        for fname, finfo in EditorialModel.classtypes.relations_common_fields.items():
-            if finfo['fieldtype'] == 'leo':
-                if finfo['superior']:
-                    lesup = fname
-                else:
-                    lesub = fname
-        # Fetch class_id and type_id fieldnames for LeObject
-        class_id = None
-        type_id = None
-        for fname, finfo in EditorialModel.classtypes.common_fields.items():
-            if finfo['fieldtype'] == 'emuid':
-                if finfo['is_id_class']:
-                    class_id = fname
-                else:
-                    type_id = fname
-        # TEST IF SOME OF THE ARE NONE !!!
+        common_fieldtypes = dict()
+        for ftname, ftdef in EditorialModel.classtypes.relations_common_fields.items():
+            common_fieldtypes[ftname] = ftdef if 'immutable' in ftdef and ftdef['immutable'] else None
+        (lerel_uid_fieldtype, lerel_fieldtypes) = self.concret_fieldtypes(common_fieldtypes)
 
         result += """
 ## @brief _LeCrud concret class
@@ -236,7 +240,9 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
+    ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _superior_field_name = {lesup_name}
+    ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _subordinate_field_name = {lesub_name}
 
 class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
@@ -258,10 +264,10 @@ class LeType(LeClass, _LeType):
             leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
             lerel_fieldtypes = '{\n\t' + (',\n\t'.join(lerel_fieldtypes))+ '\n\t}',
             lerel_uid_fieldtype = lerel_uid_fieldtype,
-            lesup_name = repr(lesup),
-            lesub_name = repr(lesub),
-            class_id = repr(class_id),
-            type_id = repr(type_id),
+            lesup_name = repr(classtypes.relation_superior),
+            lesub_name = repr(classtypes.relation_subordinate),
+            class_id = repr(classtypes.object_em_class_id),
+            type_id = repr(classtypes.object_em_type_id),
         )
 
         emclass_l = model.components(EditorialModel.classes.EmClass)
@@ -269,28 +275,36 @@ class LeType(LeClass, _LeType):
 
         #LeClass child classes definition
         for emclass in emclass_l:
+            if emclass.string.get() == '':
+                emclass.string.set_default(emclass.name)
             result += """
 ## @brief EmClass {name} LeClass child class
 # @see leapi.leclass.LeClass
 class {name}(LeClass, LeObject):
     _class_id = {uid}
+    ml_string = MlString({name_translations})
 
 """.format(
                 name=_LeCrud.name2classname(emclass.name),
-                uid=emclass.uid
+                uid=emclass.uid,
+                name_translations = repr(emclass.string.__str__()),
             )
         #LeType child classes definition
         for emtype in emtype_l:
+            if emtype.string.get() == '':
+                emtype.string.set_default(emtype.name)
             result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
 class {name}(LeType, {leclass}):
     _type_id = {uid}
+    ml_string = MlString({name_translations})
 
 """.format(
                 name=_LeCrud.name2classname(emtype.name),
                 leclass=_LeCrud.name2classname(emtype.em_class.name),
-                uid=emtype.uid
+                uid=emtype.uid,
+                name_translations = repr(emtype.string.__str__()),
             )
 
         #Generating concret class of LeRel2Type

@@ -9,7 +9,9 @@ import EditorialModel
 import EditorialModel.classtypes
 import EditorialModel.fieldtypes
 import EditorialModel.fieldtypes.generic
+from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
+from DataSource.MySQL import fieldtypes as fieldtypes_utils
 from DataSource.MySQL import utils
 from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
@@ -63,6 +65,11 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_default_tables(self.drop_if_exists)
 
     ## @brief Modify the db given an EM change
+    #
+    # @note Here we don't care about the relation parameter of _add_column() method because the
+    # only case in wich we want to add a field that is linked with the relation table is for rel2type
+    # attr creation. The relation parameter is set to True in the add_relationnal_field() method
+    # 
     # @param em model : The EditorialModel.model object to provide the global context
     # @param uid int : The uid of the change EmComponent
     # @param initial_state dict | None : dict with field name as key and field value as value. Representing the original state. None mean creation of a new component.
@@ -119,12 +126,19 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         pkname, pkftype = self._relation_pk
 
         #If not exists create a relational table
-        self._create_table(tname, pkname, pkftype, self.db_engine, if_exists='nothing')
+        self._create_table(
+                            tname,
+                            pkname,
+                            pkftype,
+                            self.db_engine,
+                            if_exists='nothing',
+                            noauto_inc = True,
+                        )
         #Add a foreign key if wanted
         if self.foreign_keys:
             self._add_fk(tname, utils.common_tables['relation'], pkname, pkname)
         #Add the column
-        self._add_column(tname, emfield.name, emfield.fieldtype_instance())
+        self._add_column(tname, emfield.name, emfield.fieldtype_instance(), relation=True)
         #Update table triggers
         self._generate_triggers(tname, self._r2type2cols(edmod, r2tf))
 
@@ -174,9 +188,13 @@ class MysqlMigrationHandler(DummyMigrationHandler):
             raise ValueError("The given uid is not an EmClass uid")
         pkname, pktype = self._object_pk
         table_name = utils.object_table_name(emclass.name)
-
-        self._create_table(table_name, pkname, pktype, engine=engine)
-
+        self._create_table(
+                            table_name,
+                            pkname,
+                            pktype,
+                            engine=engine,
+                            noauto_inc = True
+        )
         if self.foreign_keys:
             self._add_fk(table_name, utils.common_tables['object'], pkname, pkname)
 
@@ -202,6 +220,9 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         emfield = edmod.component(uid)
         if not isinstance(emfield, EditorialModel.fields.EmField):
             raise ValueError("The given uid is not an EmField uid")
+
+        if isinstance(emfield.fieldtype_instance(), MultiValueFieldType):
+            return self._del_column_multivalue(emfield)
 
         emclass = emfield.em_class
         tname = utils.object_table_name(emclass.name)
@@ -257,7 +278,7 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         cols = {fname: self._common_field_to_ftype(fname) for fname in EditorialModel.classtypes.common_fields}
         for fname, ftype in cols.items():
             if fname != pk_name:
-                self._add_column(tname, fname, ftype)
+                self._add_column(tname, fname, ftype, relation=False)
         #Creating triggers
         self._generate_triggers(tname, cols)
         object_tname = tname
@@ -268,14 +289,12 @@ class MysqlMigrationHandler(DummyMigrationHandler):
         self._create_table(tname, pk_name, pk_ftype, engine=self.db_engine, if_exists=if_exists)
         #Adding columns
         for fname, ftype in self._relation_cols.items():
-            self._add_column(tname, fname, ftype)
+            self._add_column(tname, fname, ftype, relation=True)
         #Creating triggers
         self._generate_triggers(tname, self._relation_cols)
 
         # Creating foreign keys between relation and object table
         sup_cname, sub_cname = self.get_sup_and_sub_cols()
-        self._add_fk(tname, object_tname, sup_cname, self._object_pk[0], 'fk_relations_superiors')
-        self._add_fk(tname, object_tname, sub_cname, self._object_pk[0], 'fk_relations_subordinate')
 
     ## @brief Returns the fieldname for superior and subordinate in relation table
     # @return a tuple (superior_name, subordinate_name)
@@ -293,47 +312,67 @@ class MysqlMigrationHandler(DummyMigrationHandler):
 
     ## @brief Create a table with primary key
     # @param table_name str : table name
-    # @param pk_name str : pk column name
-    # @param pk_specs str : see @ref _field_to_sql()
+    # @param pk_name str | tuple : pk column name (give tuple for multi pk)
+    # @param pk_ftype fieldtype | tuple : pk fieldtype (give a tuple for multi pk)
     # @param engine str : The engine to use with this table
     # @param charset str : The charset of this table
     # @param if_exist str : takes values in ['nothing', 'drop']
-    def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing'):
+    # @param noauto_inc bool : if True forbids autoincrement on PK
+    def _create_table(self, table_name, pk_name, pk_ftype, engine, charset='utf8', if_exists='nothing', noauto_inc = False):
         #Escaped table name
         etname = utils.escape_idname(table_name)
-        pk_type = self._field_to_type(pk_ftype)
-        pk_specs = self._field_to_specs(pk_ftype)
+        if not isinstance(pk_name, tuple):
+            pk_name = tuple([pk_name])
+            pk_ftype = tuple([pk_ftype])
+
+        if len(pk_name) != len(pk_ftype):
+            raise ValueError("You have to give as many pk_name as pk_ftype")
+        
+        pk_instr_cols = ''
+        pk_format = "{pk_name} {pk_type} {pk_specs},\n"
+        for i in range(len(pk_name)):
+            instr_type, pk_type, pk_specs = fieldtypes_utils.fieldtype_db_init(pk_ftype[i], noauto_inc)
+            if instr_type != 'column':
+                raise ValueError("Migration handler doesn't support MultiValueFieldType as primary keys")
+            pk_instr_cols += pk_format.format(
+                                                pk_name = utils.escape_idname(pk_name[i]),
+                                                pk_type = pk_type,
+                                                pk_specs = pk_specs
+                                            )
+        pk_instr_cols += "PRIMARY KEY("+(','.join([utils.escape_idname(pkn) for pkn in pk_name]))+')'
 
         if if_exists == 'drop':
             self._query("""DROP TABLE IF EXISTS {table_name};""".format(table_name=etname))
-            qres = """
-CREATE TABLE {table_name} (
-{pk_name} {pk_type} {pk_specs},
-PRIMARY KEY({pk_name})
-) ENGINE={engine} DEFAULT CHARSET={charset};"""
-        elif if_exists == 'nothing':
-            qres = """CREATE TABLE IF NOT EXISTS {table_name} (
-{pk_name} {pk_type} {pk_specs},
-PRIMARY KEY({pk_name})
-) ENGINE={engine} DEFAULT CHARSET={charset};"""
-        else:
-            raise ValueError("Unexpected value for argument if_exists '%s'." % if_exists)
 
-        self._query(qres.format(
-            table_name=utils.escape_idname(table_name),
-            pk_name=utils.escape_idname(pk_name),
-            pk_type=pk_type,
-            pk_specs=pk_specs,
-            engine=engine,
-            charset=charset
-        ))
+        qres = """CREATE TABLE IF NOT EXISTS {table_name} (
+{pk_cols}
+) ENGINE={engine} DEFAULT CHARSET={charset};""".format(
+                                                        table_name = table_name,
+                                                        pk_cols = pk_instr_cols,
+                                                        engine = engine,
+                                                        charset = charset
+        )
+        self._query(qres)
 
     ## @brief Add a column to a table
     # @param table_name str : The table name
     # @param col_name str : The columns name
     # @param col_fieldtype EmFieldype the fieldtype
+    # @param relation bool | None : a flag to indicate if we add a column in a table linked with an bject or with a relation (used only when the column is MultiValueFieldType )
     # @return True if the column was added else return False
-    def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False):
+    def _add_column(self, table_name, col_name, col_fieldtype, drop_if_exists=False, relation=False):
+        instr, col_type, col_specs = fieldtypes_utils.fieldtype_db_init(col_fieldtype)
+
+        if instr == 'table':
+            # multivalue field. We are not going to add a column in this table
+            # but in corresponding multivalue table
+            self._add_column_multivalue(
+                                            ref_table_name = table_name,
+                                            key_infos = col_type,
+                                            column_infos = (col_name, col_specs),
+                                            relation = relation
+                                        )
+            return True
 
         col_name = utils.column_name(col_name)
 
@@ -343,11 +382,16 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
         etname = utils.escape_idname(table_name)
         ecname = utils.escape_idname(col_name)
 
+        if instr is None:
+            return True
+        if instr != "column":
+            raise RuntimeError("Bad implementation")
+
         add_col = add_col.format(
             table_name=etname,
             col_name=ecname,
-            col_type=self._field_to_type(col_fieldtype),
-            col_specs=self._field_to_specs(col_fieldtype),
+            col_type=col_type,
+            col_specs=col_specs,
         )
         try:
             self._query(add_col)
@@ -359,7 +403,78 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
                 #LOG
                 print("Aborded, column `%s` exists" % col_name)
                 return False
+
+        if isinstance(col_fieldtype, EditorialModel.fieldtypes.generic.ReferenceFieldType):
+            # We have to create a FK !
+            if col_fieldtype.reference == 'object':
+                dst_table_name = utils.common_tables['object']
+                dst_col_name, _ = self._object_pk
+            elif col_fieldtypes.reference == 'relation':
+                dst_table_name = utils.common_tables['relation']
+                dst_col_name, _ = self._relation_pk
+            
+            fk_name = 'fk_%s-%s_%s-%s' % (
+                                            table_name,
+                                            col_name,
+                                            dst_table_name,
+                                            dst_col_name,
+                                        )
+                
+            self._add_fk(
+                            src_table_name = table_name,
+                            dst_table_name = dst_table_name,
+                            src_col_name = col_name,
+                            dst_col_name = dst_col_name,
+                            fk_name = fk_name
+                        )
+
         return True
+
+    ## @brief Add a column to a multivalue table
+    #
+    # Add a column (and create a table if not existing) for storing multivalue
+    # datas. (typically i18n)
+    # @param ref_table_name str : Referenced table name
+    # @param key_infos tuple : tuple(key_name, key_fieldtype)
+    # @param column_infos tuple : tuple(col_name, col_fieldtype)
+    def _add_column_multivalue(self, ref_table_name, key_infos, column_infos, relation):
+        key_name, key_ftype = key_infos
+        col_name, col_ftype = column_infos
+        table_name = utils.multivalue_table_name(ref_table_name, key_name)
+        if relation:
+            pk_infos = self._relation_pk
+        else:
+            pk_infos = self._object_pk
+        # table creation
+        self._create_table(
+                            table_name = table_name,
+                            pk_name = (key_name, pk_infos[0]),
+                            pk_ftype = (key_ftype, pk_infos[1]),
+                            engine = self.db_engine,
+                            if_exists = 'nothing',
+                            noauto_inc = True
+        )
+        # with FK
+        self._add_fk(table_name, ref_table_name, pk_infos[0], pk_infos[0])
+        # adding the column
+        self._add_column(table_name, col_name, col_ftype)
+
+    ## @brief Delete a multivalue column
+    # @param emfield EmField : EmField instance
+    # @note untested
+    def _del_column_multivalue(self, emfield):
+        ftype = emfield.fieldtype_instance()
+        if not isinstance(ftype, MultiValueFieldType):
+            raise ValueError("Except an emfield with multivalue fieldtype")
+        tname = utils.object_table_name(emfield.em_class.name)
+        tname = utils.multivalue_table_name(tname, ftype.keyname)
+        self._del_column(tname, emfield.name)
+        if len([ f for f in emfield.em_class.fields() if isinstance(f.fieldtype_instance(), MultiValueFieldType)]) == 0:
+            try:
+                self._query("DROP TABLE %s;" % utils.escape_idname(tname))
+            except self._dbmodule.err.InternalError as expt:
+                print(expt)
+
 
     ## @brief Add a foreign key
     # @param src_table_name str : The name of the table where we will add the FK
@@ -379,7 +494,9 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
 
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
-FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
+FOREIGN KEY ({src_col}) references {dst_table}({dst_col})
+ON DELETE CASCADE
+ON UPDATE CASCADE;""".format(
     fk_name=utils.escape_idname(fk_name),
     src_table=stname,
     src_col=scname,
@@ -393,7 +510,8 @@ FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
     # @warning fails silently
     def _del_fk(self, src_table_name, dst_table_name, fk_name=None):
         if fk_name is None:
-            fk_name = utils.escape_idname(utils.get_fk_name(src_table_name, dst_table_name))
+            fk_name = utils.get_fk_name(src_table_name, dst_table_name)
+        fk_name = utils.escape_idname(fk_name)
         try:
             self._query("""ALTER TABLE {src_table}
 DROP FOREIGN KEY {fk_name}""".format(
@@ -412,7 +530,7 @@ DROP FOREIGN KEY {fk_name}""".format(
         colval_l_ins = dict()  # param for insert trigger
 
         for cname, cftype in cols_ftype.items():
-            if cftype.ftype == 'datetime':
+            if isinstance(cftype, EditorialModel.fieldtypes.datetime.EmFieldType):
                 if cftype.now_on_update:
                     colval_l_upd[cname] = 'NOW()'
                 if cftype.now_on_create:
@@ -450,68 +568,16 @@ FOR EACH ROW SET {col_val_list};""".format(
 )
             self._query(trig_q)
 
-    ## @brief Identifier escaping
-    # @param idname str : An SQL identifier
-    #def _idname_escape(self, idname):
-    #    if '`' in idname:
-    #        raise ValueError("Invalid name : '%s'"%idname)
-    #    return '`%s`'%idname
-
-    ## @brief Returns column specs from fieldtype
-    # @param emfieldtype EmFieldType : An EmFieldType insance
-    # @todo escape default value
-    def _field_to_specs(self, emfieldtype):
-        colspec = ''
-        if not emfieldtype.nullable:
-            colspec = 'NOT NULL'
-        if hasattr(emfieldtype, 'default'):
-            colspec += ' DEFAULT '
-            if emfieldtype.default is None:
-                colspec += 'NULL '
-            else:
-                colspec += emfieldtype.default  # ESCAPE VALUE HERE !!!!
-
-        if emfieldtype.name == 'pk':
-            colspec += ' AUTO_INCREMENT'
-
-        return colspec
-
-    ## @brief Given a fieldtype return a MySQL type specifier
-    # @param emfieldtype EmFieldType : A fieldtype
-    # @return the corresponding MySQL type
-    def _field_to_type(self, emfieldtype):
-        ftype = emfieldtype.ftype
-
-        if ftype == 'char' or ftype == 'str':
-            res = "VARCHAR(%d)" % emfieldtype.max_length
-        elif ftype == 'text':
-            res = "TEXT"
-        elif ftype == 'datetime':
-            res = "DATETIME"
-            # client side workaround for only one column with CURRENT_TIMESTAMP : giving NULL to timestamp that don't allows NULL
-            # cf. https://dev.mysql.com/doc/refman/5.0/en/timestamp-initialization.html#idm139961275230400
-            # The solution for the migration handler is to create triggers :
-            # CREATE TRIGGER trigger_name BEFORE INSERT ON `my_super_table`
-            # FOR EACH ROW SET NEW.my_date_column = NOW();
-            # and
-            # CREATE TRIGGER trigger_name BEFORE UPDATE ON
-
-        elif ftype == 'bool':
-            res = "BOOL"
-        elif ftype == 'int':
-            res = "INT"
-        elif ftype == 'rel2type':
-            res = "INT"
-        elif ftype == 'leobject':
-            res = "INT"
-        else:
-            raise ValueError("Unsuported fieldtype ftype : %s" % ftype)
-
-        return res
-
     ## @brief Delete all table created by the MH
     # @param model Model : the Editorial model
     def __purge_db(self, model):
+        for uid in [
+                    field
+                    for field in model.components('EmField')
+                    if isinstance(field.fieldtype_instance(), MultiValueFieldType)
+        ]:
+            self._del_column_multivalue(field)
+
         for uid in [c.uid for c in model.components('EmClass')]:
             try:
                 self.delete_emclass_table(model, uid)

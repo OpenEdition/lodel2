@@ -59,6 +59,11 @@ class _LeObject(_LeCrud):
     def __repr__(self):
         return self.__str__()
     
+    ## @brief Returns the name of the uid field
+    @classmethod
+    def uidname(cls):
+        return EditorialModel.classtypes.object_uid
+
     ## @brief Given a ME uid return the corresponding LeClass or LeType class
     # @return a LeType or LeClass child class
     # @throw KeyError if no corresponding child classes
@@ -91,19 +96,6 @@ class _LeObject(_LeCrud):
             return ('class_id', '=', cls._class_id)
         else:
             raise ValueError("Cannot generate a typefilter with %s class"%cls.__name__)
-    
-    ## @brief Delete LeObjects from db given filters and a classname
-    # @note if no classname given, take the caller class
-    # @param filters list : 
-    # @param classname None|str : the classname or None
-    # @return number of deleted LeObjects
-    # @see leapi.lecrud._LeCrud.delete()
-    @classmethod
-    def delete(cls, filters, classname = None):
-        ccls = cls if classname is None else cls.name2class(classname)
-        new_filters = copy.copy(filters)
-        new_filters.append(ccls.typefilter())
-        return _LeCrud.delete(ccls, new_filters)
 
     ## @brief Check that a relational field is valid
     # @param field str : a relational field

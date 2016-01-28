@@ -8,6 +8,7 @@ from unittest.mock import patch
 from collections import OrderedDict
 
 import EditorialModel
+import EditorialModel.classtypes
 import DataSource.dummy
 import leapi
 import leapi.test.utils
@@ -73,8 +74,8 @@ class LeRelationTestCase(TestCase):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         
-        LeRelation.delete([LeRelation.sup_filter(Numero(42)), 'nature = "parent"'], 'LeHierarch')
-        dsmock.assert_called_once_with(LeHierarch, [('superior', '=', Numero(42)), ('nature','=','"parent"')])
+        LeHierarch(42).delete()
+        dsmock.assert_called_once_with(LeHierarch, 42)
         dsmock.reset_mock()
 
 
@@ -101,7 +102,7 @@ class LeHierarch(LeRelationTestCase):
                 [],
 
                 LeHierarch,
-                [ 'nature', 'rank', 'subordinate', 'depth', 'superior', 'id_relation'],
+                [ 'nature', 'rank', 'subordinate', 'depth', 'superior', 'id_relation', EditorialModel.classtypes.relation_name],
                 [('superior', '=', Numero(42))],
                 [],
             ),
@@ -182,6 +183,7 @@ class LeHierarch(LeRelationTestCase):
         for query, equery in queries:
             equery['rank'] = 1
             equery['depth'] = None
+            equery[EditorialModel.classtypes.relation_name] = None
 
             LeHierarch.insert(query)
             dsmock.assert_called_once_with(LeHierarch, **equery)
@@ -198,7 +200,7 @@ class LeHierarch(LeRelationTestCase):
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
         rel = LeHierarch(10)
         rel.delete()
-        dsmock.assert_called_once_with(LeHierarch, [(LeHierarch.uidname(), '=', 10)], [])
+        dsmock.assert_called_once_with(LeHierarch, 10)
         
     
     @unittest.skip("Wait for LeRelation.update() to unskip")
@@ -216,7 +218,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
+        from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur
 
         queries = [
             {
@@ -242,26 +244,32 @@ class LeRel2TypeTestCase(LeRelationTestCase):
         ]
 
         for query in queries:
-            Rel_Textes2Personne.insert(query)
+            RelTextesPersonneAuteur.insert(query)
 
-            eres = {'nature': None, 'depth': None, 'rank': 0}
+            eres = {
+                    'nature': None,
+                    'depth': None,
+                    'rank': 1,
+                    EditorialModel.classtypes.relation_name: None,
+            }
             eres.update(query)
             for fname in ('superior', 'subordinate'):
                 if isinstance(eres[fname], int):
                     eres[fname] = LeObject(eres[fname])
 
-            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
+            dsmock.assert_called_once_with(RelTextesPersonneAuteur, **eres)
             dsmock.reset_mock()
-
-            LeRel2Type.insert(query, "Rel_Textes2Personne")
-
-            dsmock.assert_called_once_with(Rel_Textes2Personne, **eres)
+            
+            query[EditorialModel.classtypes.relation_name] = 'auteur'
+            LeRel2Type.insert(query, "RelTextesPersonneAuteur")
+            
+            dsmock.assert_called_once_with(RelTextesPersonneAuteur, **eres)
             dsmock.reset_mock()
 
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
     def test_insert_fails(self, dsmock):
         """ test LeHierach update method"""
-        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, Rel_Textes2Personne
+        from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur
 
         queries = [
             {
@@ -296,10 +304,10 @@ class LeRel2TypeTestCase(LeRelationTestCase):
                 self.fail("No exception raised")
             except Exception as e:
                 if not isinstance(e, lecrud.LeApiErrors) and not isinstance(e, lecrud.LeApiDataCheckError):
-                    self.fail("Bad exception raised : ", e)
+                    self.fail("Bad exception raised : "+str(e))
 
             try:
-                Rel_Textes2Personne.insert(query)
+                RelTextesPersonneAuteur.insert(query)
                 self.fail("No exception raised")
             except Exception as e:
                 if not isinstance(e, lecrud.LeApiErrors) and not isinstance(e, lecrud.LeApiDataCheckError):

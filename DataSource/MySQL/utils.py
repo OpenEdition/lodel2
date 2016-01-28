@@ -32,6 +32,8 @@ def object_table_name(class_name):
 def r2t_table_name(class_name, type_name):
     return ("%s%s_%s" % (table_preffix['relation'], class_name, type_name)).lower()
 
+def multivalue_table_name(referenced_table_name, key_name):
+    return ("%s%s" % (key_name, referenced_table_name))
 
 ## @brief Return a column name given a field name
 # @param field_name : The EmField or LeObject field name

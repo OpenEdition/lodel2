@@ -4,9 +4,12 @@
 # @brief This package contains the abstract class representing Lodel Editorial components
 #
 
+import copy
 import warnings
 import importlib
 import re
+
+from EditorialModel.fieldtypes.generic import DatasConstructor
 
 REL_SUP = 0
 REL_SUB = 1
@@ -109,8 +112,8 @@ class _LeCrud(object):
     # @param name str : The name
     # @return name.title()
     @staticmethod
-    def name2rel2type(class_name, type_name):
-        cls_name = "Rel_%s2%s"%(_LeCrud.name2classname(class_name), _LeCrud.name2classname(type_name))
+    def name2rel2type(class_name, type_name, relation_name):
+        cls_name = "Rel%s%s%s"%(_LeCrud.name2classname(class_name), _LeCrud.name2classname(type_name), relation_name.title())
         return cls_name
 
     ## @brief Given a dynamically generated class name return the corresponding python Class
@@ -151,9 +154,7 @@ class _LeCrud(object):
     # @todo test for abstract method !!!
     @classmethod
     def uidname(cls):
-        if cls._uid_fieldtype is None or len(cls._uid_fieldtype) == 0:
-            raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
-        return list(cls._uid_fieldtype.keys())[0]
+        raise NotImplementedError("Abstract method uid_name for %s!"%cls.__name__)
     
     ## @return maybe Bool: True if cls implements LeType
     # @param cls Class: a Class or instanciated object
@@ -219,13 +220,17 @@ class _LeCrud(object):
         return getattr(self, self.uidname())
 
     ## @brief Returns object datas
-    # @param
+    # @param internal bool : If True return all datas including internal fields
+    # @param lang str | None : if None return datas indexed with field name, else datas are indexed with field name translation
     # @return a dict of fieldname : value
-    def datas(self, internal=True):
+    def datas(self, internal = True, lang = None):
         res = dict()
         for fname, ftt in self.fieldtypes().items():
             if (internal or (not internal and not ftt.is_internal)) and hasattr(self, fname):
-                res[fname] = getattr(self, fname)
+                if lang is None:
+                    res[fname] = getattr(self, fname)
+                else:
+                    res[self.ml_fields_strings[fname][lang]] = getattr(self, fname)
         return res
 
     ## @brief Indicates if an instance is complete
@@ -239,7 +244,7 @@ class _LeCrud(object):
     def populate(self, field_list=None):
         if not self.is_complete():
             if field_list == None:
-                field_list = [ fname for fname in self._fields if not hasattr(self, fname) ]
+                field_list = [ fname for fname in self.fieldlist() if not hasattr(self, fname) ]
             filters = [self._id_filter()]
             rel_filters = []
             # Getting datas from db
@@ -277,24 +282,18 @@ class _LeCrud(object):
         upd_datas = self.prepare_datas(datas, complete = False, allow_internal = False)
         filters = [self._id_filter()]
         rel_filters = []
-        ret = self._datasource.update(self.__class__, filters, rel_filters, **upd_datas)
+        ret = self._datasource.update(self.__class__, self.uidget(), **upd_datas)
         if ret == 1:
             return True
         else:
             #ERROR HANDLING
             return False
     
-    ## @brief Delete a component (instance method)
+    ## @brief Delete a component
     # @return True if success
     # @todo better error handling
-    def _delete(self):
-        filters = [self._id_filter()]
-        ret = _LeCrud.delete(self.__class__, filters)
-        if ret == 1:
-            return True
-        else:
-            #ERROR HANDLING
-            return False
+    def delete(self):
+        self._datasource.delete(self.__class__, self.uidget())
 
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
@@ -340,14 +339,6 @@ class _LeCrud(object):
             raise LeApiDataCheckError("Error while checking datas", err_l)
         return checked_datas
     
-    ## @brief Given filters delete editorial components
-    # @param filters list : 
-    # @return The number of deleted components
-    @staticmethod
-    def delete(cls, filters):
-        filters, rel_filters = cls._prepare_filters(filters)
-        return cls._datasource.delete(cls, filters, rel_filters)
-
     ## @brief Retrieve a collection of lodel editorial components
     #
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
@@ -411,10 +402,9 @@ class _LeCrud(object):
     def insert(cls, datas, classname=None):
         callcls = cls if classname is None else cls.name2class(classname)
         if not callcls:
-            raise LeApiErrors("Error when inserting",[ValueError("The class '%s' was not found"%classname)])
+            raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
         if not callcls.implements_letype() and not callcls.implements_lerelation():
             raise ValueError("You can only insert relations and LeTypes objects but tying to insert a '%s'"%callcls.__name__)
-
         insert_datas = callcls.prepare_datas(datas, complete = True, allow_internal = False)
         return callcls._datasource.insert(callcls, **insert_datas)
     
@@ -454,18 +444,18 @@ class _LeCrud(object):
 
     ## @brief Construct datas values
     #
-    # @warning assert that datas is complete
-    #
     # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
     # @return A new dict of datas
-    # @todo Decide wether or not the datas are modifed inplace or returned in a new dict (second solution for the moment)
     @classmethod
     def _construct_datas(cls, datas):
-        res_datas = dict()
-        for fname, ftype in cls.fieldtypes().items():
-            if not ftype.is_internal() or ftype.internal != 'autosql':
-                res_datas[fname] = ftype.construct_data(cls, fname, datas)
-        return res_datas
+        constructor = DatasConstructor(cls, datas, cls.fieldtypes())
+        ret = {
+                fname:constructor[fname]
+                for fname, ftype in cls.fieldtypes().items()
+                if not ftype.is_internal() or ftype.internal != 'autosql'
+        }
+        return ret
+
     ## @brief Check datas consistency
     # 
     # @warning assert that datas is complete

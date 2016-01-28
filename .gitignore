@@ -3,5 +3,6 @@
 .git
 .idea
 settings_local.py
-doc
+doc/html
+doc/*.sqlite3.db
 .*.swp

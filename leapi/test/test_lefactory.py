@@ -68,15 +68,16 @@ class TestLeFactory(TestCase):
             #Testing _linked_types attr
             self.assertEqual(
                 set([ LeCrud.name2classname(lt.name) for lt in emclass.linked_types()]),
-                set([ t.__name__ for t in leclass._linked_types ])
+                set([ t.__name__ for t in leclass._linked_types.values() ])
             )
 
             #Testing fieldtypes
+            expected_fieldtypes = [ f for f in emclass.fields(relational=False) if not(hasattr(f, 'immutable') and f.immutable)]
             self.assertEqual(
-                set([ f.name for f in emclass.fields(relational=False)]),
+                set([ f.name for f in expected_fieldtypes]),
                 set(leclass._fieldtypes.keys())
             )
-            for field in emclass.fields(relational=False):
+            for field in expected_fieldtypes:
                 self.assertEqual(
                     hash(field.fieldtype_instance()),
                     hash(leclass._fieldtypes[field.name])
@@ -103,8 +104,9 @@ class TestLeFactory(TestCase):
             )
 
             #Testing _fields
+            expected_fields = [ f for f in emtype.fields(relational=False) if f.name not in EditorialModel.classtypes.common_fields.keys() ]
             self.assertEqual(
-                set([ f.name for f in emtype.fields(False) ]),
+                set([ f.name for f in expected_fields ]),
                 set([ f for f in letype._fields])
             )
 

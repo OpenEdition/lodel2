@@ -1,0 +1,77 @@
+digraph em_types_hierarchy {
+
+	label="Editorial Model types hierarchy"
+
+	subgraph cluster_person {
+		label="Person"
+		h_person [ label="Person", shape="tripleoctagon" ]
+
+		hc3 [ label="Class 3", shape="doubleoctagon"]
+		hc4 [ label="Class 4", shape="doubleoctagon"]
+
+		ht6 [ label="Type 6", shape="octagon" ]
+		ht7 [ label="Type 7", shape="octagon" ]
+		ht8 [ label="Type 8", shape="octagon" ]
+
+		h_person -> {hc3, hc4}
+
+		hc3 -> { ht6,ht7 }
+		hc4 -> ht8
+
+		ht6 -> ht7 [ label="identity", color="blue" ]
+		ht6 -> ht8 [ label="identity", color="blue" ]
+		ht8 -> ht8 [ label="identity", color="blue" ]
+	}
+
+	subgraph cluster_entity {
+		label="Entity"
+		h_entity [ label="Entity", shape="tripleoctagon" ]
+
+		hc1 [ label="Class 1", shape="doubleoctagon"]
+		hc2 [ label="Class 2", shape="doubleoctagon"]
+
+		ht1 [ label="Type 1", shape="octagon" ]
+		ht2 [ label="Type 2", shape="octagon" ]
+		ht3 [ label="Type 3", shape="octagon" ]
+		ht4 [ label="Type 4", shape="octagon" ]
+		ht5 [ label="Type 5", shape="octagon" ]
+
+		
+		h_entity -> { hc1, hc2 }
+
+		hc1 -> { ht1,ht2,ht3 }
+		hc2 -> { ht4, ht5 }
+
+		ht1 -> ht1 [label="translation", color="red"]
+		ht3 -> ht3 [label="translation", color="red"]
+		ht5 -> ht5 [label="translation", color="red"]
+		ht4 -> ht1 [ label="parent", color="green"]
+		ht2 -> ht1 [ label="parent", color="green"]
+		ht5 -> ht4 [ label="parent", color="green"]
+		ht3 -> ht4 [ label="parent", color="green"]
+		ht3 -> ht1 [ label="parent", color="green"]
+
+
+	}
+
+	subgraph cluster_entry {
+		label="Entry"
+		h_entry [ label="Entry", shape="tripleoctagon" ]
+
+		hc5 [ label="Class 5", shape="doubleoctagon"]
+
+		ht9 [ label="Type 9", shape="octagon" ]
+		ht10 [ label="Type 10", shape="octagon" ]
+
+		h_entry -> hc5
+
+		hc5 -> {ht9, ht10}
+
+		ht9 -> ht9 [ label="parent", color="green" ]
+		ht9 -> ht9 [ label="translation", color="red" ]
+		ht10 -> ht10 [ label="translation", color="red" ]
+	}
+
+	ht5 -> hc3 [ label="relation to type", style="dotted"]
+	ht2 -> hc5 [ label="relation to type", style="dotted"]
+}
