@@ -177,6 +177,11 @@ class _LeHierarch(_LeRelation):
     def object_from_data(cls, datas):
         return cls.name2class('LeHierarch')(**datas)
 
+    ## @warning Abastract method
+    def update(self):
+        raise NotImplementedError("Abstract method")
+        
+
 ## @brief Abstract class to handle rel2type relations
 class _LeRel2Type(_LeRelation):
     ## @brief Stores the list of fieldtypes handling relations attributes

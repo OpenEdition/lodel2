@@ -56,7 +56,6 @@ class DataSourceTestCase(TestCase):
             DataSource(conn_args = conn_args)
             mock_db.assert_called_once_with(pymysql, **conn_args)
     
-    @unittest.skip("Broken because of multivalue fields")
     def test_insert_leobject(self):
         """ Test the insert method on LeObjects """
         from dyncode import Article, Personne, Rubrique
@@ -82,11 +81,16 @@ class DataSourceTestCase(TestCase):
 
             sql_query = 'SELECT wow FROM splendid_table'
 
-            class_table_datas = { fname: random.randint(42,1337) for fname in letype.fieldlist(complete = False) }
-            for fname in class_table_datas:
+            class_table_datas = {
+                fname: random.randint(42,1337)
+                for fname in letype.fieldlist(complete = False)
+                if not isinstance(letype.fieldtypes()[fname], MultiValueFieldType)
+            }
+            i18n = dict()
+            for fname in letype.fieldlist():
                 if isinstance(letype.fieldtypes()[fname], MultiValueFieldType):
-                    class_table_datas[fname] = {'fre': 'bonjour', 'eng': 'hello'}
-            #class_table_datas = { 'title': 'foo', 'number': 42 }
+                    i18n[fname] = {'fre': 'bonjour', 'eng': 'hello'}
+                    class_table_datas[fname] = i18n[fname]
             object_table_datas = { 'string': random.randint(-42,42) }
             
             # build the insert datas argument
@@ -103,6 +107,8 @@ class DataSourceTestCase(TestCase):
                     object_table_datas['type_id'] = letype._type_id
                     # construct expected datas used in class table insert
                     class_table_datas['lodel_id'] = lodel_id
+                    for fname in i18n:
+                        del(class_table_datas[fname])
 
                     expected_calls = [
                         # insert in object table call
@@ -116,7 +122,29 @@ class DataSourceTestCase(TestCase):
                             class_table_datas
                         ),
                     ]
-
+                    i18n_calls = dict()
+                    for fname, fval in i18n.items():
+                        keyname = letype.fieldtypes()[fname].keyname
+                        if not keyname in i18n_calls:
+                            i18n_calls[keyname] = dict()
+                        for lang, val in fval.items():
+                            if not lang in i18n_calls[keyname]:
+                                i18n_calls[keyname][lang] = dict()
+                            i18n_calls[keyname][lang][fname] = val
+                    real_i18n_calls = []
+                    for keyname, kval in i18n_calls.items():
+                        table_name = db_utils.multivalue_table_name(
+                            db_utils.object_table_name(letype._leclass.__name__),
+                            keyname
+                        )
+                        for lang, value in kval.items():
+                            value[keyname] = lang
+                            value[letype.uidname()] = lodel_id
+                            expected_calls.append(call(
+                                    table_name,
+                                    value
+                                )
+                            )
                     expected_utils_query_calls = [
                         call(datasource.connection, sql_query),
                         call(datasource.connection, sql_query),

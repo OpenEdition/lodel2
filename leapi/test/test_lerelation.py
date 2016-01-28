@@ -203,7 +203,6 @@ class LeHierarch(LeRelationTestCase):
         dsmock.assert_called_once_with(LeHierarch, 10)
         
     
-    @unittest.skip("Wait for LeRelation.update() to unskip")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):
         """ test LeHierach update method"""

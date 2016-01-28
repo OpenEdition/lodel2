@@ -10,6 +10,7 @@ import EditorialModel
 import leapi
 import DataSource.dummy
 import leapi.test.utils
+from leapi.lecrud import _LeCrud
 
 class LeTypeTestCase(TestCase):
     
@@ -112,7 +113,6 @@ class LeTypeMockDsTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, missing_fields, [('lodel_id','=',1)],[])
 
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
-    @unittest.skip('must verify that populate is called')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -120,8 +120,10 @@ class LeTypeMockDsTestCase(TestCase):
         
         #Testing as instance method
         num = Numero(lodel_id = 1)
-        num.update(datas)
-        dsmock.assert_called_once_with(Numero, [('lodel_id','=',1)], [], **datas)
+        with patch.object(_LeCrud, 'populate', return_value=None) as mock_populate:
+            num.update(datas)
+            mock_populate.assert_called_once_with()
+            dsmock.assert_called_once_with(Numero, num.uidget(), **datas)
     
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):

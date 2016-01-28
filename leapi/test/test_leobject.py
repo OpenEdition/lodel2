@@ -46,56 +46,6 @@ class LeObjectTestCase(TestCase):
         with self.assertRaises(KeyError):
             dyncode.LeObject.uid2leobj(i)
     
-    @unittest.skip("Obsolete but may be usefull for datasources tests")
-    def test_prepare_targets(self):
-        """ Testing _prepare_targets() method """
-        from dyncode import Publication, Numero, LeObject
-
-        test_v = {
-            (None, None) : (None, None),
-
-            (Publication, Numero): (Publication, Numero),
-            (Publication, None): (Publication, None),
-            (None, Numero): (Publication, Numero),
-
-            (Publication,'Numero'): (Publication, Numero),
-            ('Publication', Numero): (Publication, Numero),
-
-            ('Publication', 'Numero'): (Publication, Numero),
-            ('Publication', None): (Publication, None),
-            (None, 'Numero'): (Publication, Numero),
-        }
-
-        for (leclass, letype), (rleclass, rletype) in test_v.items():
-            self.assertEqual((rletype,rleclass), LeObject._prepare_targets(letype, leclass))
-
-    @unittest.skip("Obsolete but may be usefull for datasources tests")
-    def test_invalid_prepare_targets(self):
-        """ Testing _prepare_targets() method with invalid arguments """
-        from dyncode import Publication, Numero, LeObject, Personnes
-        
-        test_v = [
-            ('',''),
-            (Personnes, Numero),
-            (leapi.leclass.LeClass, Numero),
-            (Publication, leapi.letype.LeType),
-            ('foobar', Numero),
-            (Publication, 'foobar'),
-            (Numero, Numero),
-            (Publication, Publication),
-            (None, Publication),
-            ('foobar', 'foobar'),
-            (42,1337),
-            (type, Numero),
-            (LeObject, Numero),
-            (LeObject, LeObject),
-            (Publication, LeObject),
-        ]
-
-        for (leclass, letype) in test_v:
-            with self.assertRaises(ValueError):
-                LeObject._prepare_targets(letype, leclass)
-
 class LeObjectMockDatasourceTestCase(TestCase):
     """ Testing _LeObject using a mock on the datasource """
 
