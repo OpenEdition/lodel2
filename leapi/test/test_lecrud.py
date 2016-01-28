@@ -231,16 +231,15 @@ class LeCrudTestCase(TestCase):
                 {'lodel_id':'1'},
                 {'titre': 'foobar'},
 
-                [('lodel_id', '=', 1)],
-                []
+                1,
             ),
         ]
 
-        for ccls, initarg, qdatas, efilters, erelfilters in args_l:
+        for ccls, initarg, qdatas, eid in args_l:
             obji = ccls(**initarg)
             obji._instanciation_complete = True  # fake full-instance
             obji.update(qdatas)
-            dsmock.assert_called_once_with(ccls, efilters, erelfilters, **qdatas)
+            dsmock.assert_called_once_with(ccls, eid, **qdatas)
     
     ## @todo test invalid get
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')

@@ -33,11 +33,10 @@ class DummyDatasource(object):
 
     ## @brief update an existing lodel editorial component
     # @param target_cls LeCrud(class) : The component class concerned by the insert (a LeCrud child class (not instance !) )
-    # @param filters list : List of filters (see @ref leobject_filters )
-    # @param rel_filters list : List of relationnal filters (see @ref leobject_filters )
+    # @param leo_id int : The uniq ID of the object we want to update
     # @param **datas : Datas in kwargs
     # @return The number of updated components
-    def update(self, target_cls, filters, rel_filters, **datas):
+    def update(self, target_cls, leo_id, **datas):
         pass
     
     ## @brief insert a new lodel editorial component
