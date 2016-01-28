@@ -9,7 +9,9 @@ class EmFieldType(char.EmFieldType):
 
     ## @brief Build its content with a field list and a format string
     # @param format_string str :  
+    # @param max_length int : The maximum length of the handled value
     # @param field_list list : List of field to use
+    # @param **kwargs
     def __init__(self, format_string, field_list, max_length, **kwargs):
         self._field_list = field_list
         self._format_string = format_string

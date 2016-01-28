@@ -17,6 +17,7 @@ import EditorialModel.fieldtypes.leo
 
 ## @brief Returns column specs from fieldtype
 # @param emfieldtype EmFieldType : An EmFieldType insance
+# @param noauto_inc bool : if True don't set the autoincrement parameter
 # @todo escape default value
 def singlevaluefieldtype_db_init_specs(emfieldtype, noauto_inc = False):
     colspec = ''
@@ -46,6 +47,7 @@ def singlevaluefieldtype_db_init_specs(emfieldtype, noauto_inc = False):
 #  - the second tuple item is a tuple(key_name, key_value)
 #  - the third tuple item is a tuple(column_type, column_spec)
 # @param fieldtype GenericFieldType : A FieldType instance
+# @param noauto_inc bool : if True don't set the autoincrement parameter
 # @return a tuple (instruction_type, infos)
 def fieldtype_db_init(fieldtype, noauto_inc = False):
     if isinstance(fieldtype, EditorialModel.fieldtypes.rel2type.EmFieldType):

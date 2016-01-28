@@ -17,6 +17,7 @@ class GenericFieldType(object):
     ## @brief Generic constructor for fieldtypes 
     # @param internal False | str : define wheter or not a field is internal
     # @param immutable bool : indicate if the fieldtype has to be defined in child classes of LeObject or if it is defined globally and immutable
+    # @param **args
     # @throw NotImplementedError if called from bad class
     def __init__(self, internal = False, immutable = False, **args):
         if self.__class__ == GenericFieldType:
@@ -62,7 +63,7 @@ class GenericFieldType(object):
         raise RuntimeError("Unable to construct data for field %s", fname)
 
     ## @brief Check datas consistency
-    # @param leo LeCrud : A LeCrud child class instance
+    # @param lec LeCrud : A LeCrud child class instance
     # @param fname str : The field name
     # @param datas dict : dict storing fields values
     # @return an Exception instance if fails else True
@@ -134,6 +135,7 @@ class ReferenceFieldType(SingleValueFieldType):
     # @param nullable bool : is None allowed as value ?
     # @param unique bool : Indicate if a field should handle uniq value
     # @param primary bool : If True the field is a primary key
+    # @param internal str|False : if False the field is not internal. Else can be 'autosql' or 'internal'
     # @param **args : Other arguments
     # @throw NotImplementedError if called from bad class
     def __init__(self, reference, internal=False, nullable = True, uniq = False, primary = False, **args):
@@ -161,6 +163,8 @@ class MultiValueFieldType(GenericFieldType):
     # @param keyname str : The identifier key name
     # @param key_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
     # @param value_fieldtype SingleValueFieldType : A SingleValueFieldType child class instance
+    # @param internal str|False : if False the field is not internal. Else can be 'autosql' or 'internal'
+    # @param **args
     def __init__(self, keyname, key_fieldtype, value_fieldtype, internal = False, **args):
         super().__init__(internal)
         ## stores the keyname

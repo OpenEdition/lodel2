@@ -126,11 +126,11 @@ Settings = SettingsHandler()
 # from Lodel.settings import Settings
 # if Settings.debug:
 #   print("DEBUG")
-# #or
+# # or
 # if Settings.get('debug'):
 #   print("DEBUG")
 # Settings.debug = False
-# #or
+# # or
 # Settings.set('debug', False)
 # </pre>
 # 

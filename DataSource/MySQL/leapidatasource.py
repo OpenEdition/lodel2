@@ -38,8 +38,13 @@ class LeDataSourceSQL(DummyDatasource):
     ## @brief select lodel editorial components using given filters
     # @param target_cls LeCrud(class): The component class concerned by the select (a LeCrud child class (not instance !) )
     # @param field_list list: List of field to fetch
-    # @param filters list: List of filters (see @ref lecrud_filters)
-    # @param rel_filters list: List of relational filters (see @ref lecrud_filters)
+    # @param filters list: List of filters (see @ref api_user_side)
+    # @param rel_filters list: List of relational filters (see @ref api_user_side)
+    # @param group list of tupple: List of column to group together.  group = [('titre', 'ASC'), ]
+    # @param order list of tupple : List of column to order.  order = [('titre', 'ASC'), ]
+    # @param offset int : Used with limit to choose the start row
+    # @param limit int : Number of row to be returned
+    # @param instanciate bool : If True return an instance, else return a dict
     # @return a list of LeCrud child classes
     # @todo this only works with LeObject.get(), LeClass.get() and LeType.get()
     # @todo for speed get rid of all_to_dicts
@@ -209,10 +214,8 @@ class LeDataSourceSQL(DummyDatasource):
     ## @brief update ONE existing lodel editorial component
     # @param target_cls LeCrud(class) : Instance of the object concerned by the update
     # @param lodel_id : id of the component
-    # @param rel_filters list : List of relationnal filters (see @ref leobject_filters)
     # @param **datas : Datas in kwargs
     # @return the number of updated components
-    # @todo implement other filters than lodel_id
     def update(self, target_cls, lodel_id, **datas):
 
         # it is a LeType
@@ -390,7 +393,7 @@ class LeDataSourceSQL(DummyDatasource):
 
     ## @brief Sets a new rank on a relation
     # @param le_relation LeRelation
-    # @param new_rank int: integer representing the absolute new rank
+    # @param rank int: integer representing the absolute new rank
     # @return True if success, False if failure
     # TODO Conserver cette méthode dans le datasource du fait des requêtes SQL. Elle est appelée par le set_rank de LeRelation
     def update_rank(self, le_relation, rank):

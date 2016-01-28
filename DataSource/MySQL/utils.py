@@ -51,7 +51,8 @@ def get_fk_name(src_table_name, dst_table_name):
 
 
 ## @brief Exec a query
-# @param query str : SQL query
+# @param connection : Db connection (has returned by dbmodule.connect())
+# @param query_string str : SQL query
 def query(connection, query_string):
     if Settings.debug_sql:
         print("SQL : ", query_string)
