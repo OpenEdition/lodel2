@@ -4,31 +4,30 @@
 #
 # For basics Lodel2 configuration & usage see README.md
 #
+# - @subpage lodel2_doc
+# - Main packages
+#  - Lodel
+#   - Lodel.settings
+#  - EditorialModel
+#   - EditorialModel.fieldtypes
+#   - EditorialModel.backend
+#  - @ref leapi
+#  - DataSource
+#   - DataSource.MySQL
+
+## @page lodel2_doc Lodel2 documentation
 # @tableofcontents
 #
 # @section mainpage_docs Documentation
 #
-# - Lodel2 architecture : @subpage lodel2_arch 
-# - Fieldtypes : @subpage lodel2_fieldtypes
-# @subsection mainpage_docs_leapi LeAPI
+# - @subpage lodel2_arch 
+#  - @subpage lodel_settings
+#  - @subpage api_user_side
+#   - @subpage lecrud_instanciation
+#  - @subpage lodel2_fieldtypes
 #
-# - LeAPI objects instanciation : @subpage lecrud_instanciation
-# - Querying leapi : @subpage api_user_side
 #
-# @subsection mainpage_docs_configs Lodel2 settings
-# - Lodel2 settings handling : @subpage lodel_settings
-#
-# @section mainpage_pkg_list Main packages
-#
-# - Lodel
-#  - Lodel.settings
-# - EditorialModel
-#  - EditorialModel.fieldtypes
-#  - EditorialModel.backend
-# - @ref leapi
-# - DataSource
-#  - DataSource.MySQL
-#
+
 
 ## @page lodel2_arch Lodel2 architecture
 #
