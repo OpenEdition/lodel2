@@ -109,8 +109,8 @@ class EmBackendGraphviz(EmBackendDummy):
                         rel_field += rel_node
 
                         ref_node = EmBackendGraphviz._component_id(em.component(f.rel_to_type_id))
-                        self.edges += '%s:f%d -> %s [ color="purple" ]\n'%(EmBackendGraphviz._component_id(c), cntref, rel_node_id)
-                        self.edges += '%s -> %s [color="purple"]\n'%(rel_node_id, ref_node)
+                        self.edges += '%s:f%d -> %s [ color="purple" dir="both" ]\n'%(EmBackendGraphviz._component_id(c), cntref, rel_node_id)
+                        self.edges += '%s -> %s [color="purple" dir="both" ]\n'%(rel_node_id, ref_node)
 
                     ret += '|'
                     if first:

@@ -67,13 +67,26 @@
 # EmFields defines what kind of datas can be stored in EmTypes. Actually its the associationg with an EmFieldtype ( see @ref lodel2_fieldtypes )
 # that really defines what kind of datas can be stored.
 #
-# @subsection lodel2_arch_edmod_fig Editorial model figures
+# @section lodel2_arch_ui Lodel2 user interfaces
 #
-# @subsubsection lodel2_arch_edmod_fig_components Editorial model main components
+# All access to datas are made via UI. UI actions are composed with 3 or 4 elements :
+# - user
+# - action (Crud actions ?)
+# - target
+# - sometimes datas
+#
+# Each actions are send to Lodel2 ACL that check permissions and forward the actions to leapi. leapi send back a reply to the
+# UI. And the response get formatted by UI templates. ( see @ref lodel2_arch_ui_fig )
+#
+# @section lodel2_arch_fig Figures
+#
+# @subsection lodel2_arch_edmod_fig_components Editorial model main components
 # @image html graphviz/em_components.png
-# @subsubsection lodel2_arch_edmod_fig_relations Editorial model relations between components
+# @subsection lodel2_arch_edmod_fig_relations Editorial model relations between components
 # @image html graphviz/em_relations.png
-# @subsubsection lodel2_arch_edmod_fig_hierarchy Hierarchical relations between EmTypes given a classtype
+# @subsection lodel2_arch_edmod_fig_hierarchy Hierarchical relations between EmTypes given a classtype
 # @image html graphviz/em_types_hierarch.png
-# @subsubsection lodel2_arch_edmod_fig_em_example Example of editorial model
+# @subsection lodel2_arch_edmod_fig_em_example Example of editorial model
 # @image html graphviz/example_em_graph.png
+# @subsection lodel2_arch_ui_fig Lodel2 UI schema
+# @image html graphviz/lodel2_ui.png

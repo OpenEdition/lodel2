@@ -1,0 +1,15 @@
+digraph Lodel2_architecture {
+	
+	ui [label="<ui> UI|{web|cli|lodel2fs}|<tpl> templates", shape=record]
+
+	action [label="{user|action|target}|<datas> datas}", shape=record]
+	ACL
+	leapi [label="LeAPI"]
+
+	ui:ui -> action
+	action -> ACL
+	ACL -> leapi
+	action:datas -> leapi
+	leapi -> ui:tpl
+
+}

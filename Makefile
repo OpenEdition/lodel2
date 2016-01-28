@@ -25,10 +25,10 @@ docimages:
 #
 .PHONY: check doc clean cleanpyc cleandoc cleanpycache
 
-clean: cleanpyc cleandoc cleanpycache
+clean: cleanpyc cleandoc cleanpycache cleandocimages
 
 # Documentation cleaning
-cleandoc: cleandocimages
+cleandoc:
 	-rm -Rfv ./doc/html ./doc/doxygen_sqlite3.db
 
 cleandocimages:
