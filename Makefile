@@ -13,19 +13,22 @@ pip: cleanpycache
 #
 graphviz_images_path = doc/img/graphviz
 
-doc: cleandoc docimages
+doc: cleandoc docimages refreshdyn
 	doxygen
 
 # Generating graphviz images
 docimages:
 	cd $(graphviz_images_path); make
 
+refreshdyn:
+	python refreshdyn.py &>/dev/null
+
 #
 # Cleaning rules
 #
-.PHONY: check doc clean cleanpyc cleandoc cleanpycache
+.PHONY: check doc clean cleanpyc cleandoc cleanpycache cleandyn cleandocimages
 
-clean: cleanpyc cleandoc cleanpycache cleandocimages
+clean: cleanpyc cleandoc cleanpycache cleandocimages cleandyn
 
 # Documentation cleaning
 cleandoc:
@@ -39,4 +42,7 @@ cleanpyc:
 	-find ./ |grep -E "\.pyc$$" |xargs rm -fv 2>/dev/null
 cleanpycache: cleanpyc
 	-find ./ -type d |grep '__pycache__' | xargs rmdir -fv 2>/dev/null
+
+cleandyn:
+	-rm leapi/dyn.py
 
