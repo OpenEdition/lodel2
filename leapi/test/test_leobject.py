@@ -13,6 +13,7 @@ import DataSource.dummy
 import leapi
 import leapi.test.utils
 from leapi.leobject import _LeObject
+from leapi.lecrud import _LeCrud
 
 ## Testing methods that need the generated code
 class LeObjectTestCase(TestCase):
@@ -130,32 +131,22 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, **expt_dats)
             dsmock.reset_mock()
 
-    @unittest.skip("Wait FieldTypes modification (cf. #90) and classmethod capabilities for update")
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
     def test_update(self, dsmock):
-        from dyncode import Publication, Numero, LeObject
+        from dyncode import Publication, Numero, LeObject, Personne, Article, RelTextesPersonneAuteur
 
         args = [
-            (   ['lodel_id = 1'],
-                {'titre':'foobar'},
-                [('lodel_id','=','1')],
-                []
-            ),
-            (   ['superior.parent in [1,2,3,4,5,6]', 'titre != "FooBar"'],
-                {'titre':'FooBar'},
-                [( 'titre','!=','"FooBar"')],
-                [( (leapi.leobject.REL_SUP, 'parent') ,' in ', '[1,2,3,4,5,6]')]
-            ),
+            (Article(42), {'titre': 'foobar'}),
+            (Personne(51), {'nom': 'foobar'}),
+            (RelTextesPersonneAuteur(1337), {'adresse': 'foobar'}),
         ]
 
-        for filters, datas, ds_filters, ds_relfilters in args:
-            LeObject.update(Numero, filters, datas)
-            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
-            dsmock.reset_mock()
-
-            LeObject.update('Numero', filters, datas)
-            dsmock.assert_called_once_with(Numero, Publication, ds_filters, ds_relfilters, datas)
-            dsmock.reset_mock()
+        for instance, datas in args:
+            with patch.object(_LeCrud, 'populate', return_value=None) as mock_populate:
+                instance.update(datas)
+                mock_populate.assert_called_once_with()
+                dsmock.assert_called_once_with(instance.__class__, instance.uidget(), **datas)
+                dsmock.reset_mock()
     
     @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
     def test_delete(self, dsmock):

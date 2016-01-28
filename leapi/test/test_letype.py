@@ -61,7 +61,7 @@ class LeTypeTestCase(TestCase):
         letypes = [Numero, Rubrique, Article, Personne]
 
         for letype in letypes:
-            self.assertEquals(
+            self.assertEqual(
                 letype.fieldlist(complete=False),
                 letype._fields
             )

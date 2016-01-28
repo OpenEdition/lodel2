@@ -277,7 +277,7 @@ class _LeCrud(object):
     def update(self, datas=None):
         if not self.is_complete():
             self.populate()
-            warnings.warn("\nThis object %s is not complete and has been populated. This is very unsafe\n" % self)
+            warnings.warn("\nThis object %s is not complete and has been populated when update was called. This is very unsafe\n" % self)
         datas = self.datas(internal=False) if datas is None else datas
         upd_datas = self.prepare_datas(datas, complete = False, allow_internal = False)
         filters = [self._id_filter()]
