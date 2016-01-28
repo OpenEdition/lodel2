@@ -494,7 +494,9 @@ ADD COLUMN {col_name} {col_type} {col_specs};"""
 
         self._query("""ALTER TABLE {src_table}
 ADD CONSTRAINT {fk_name}
-FOREIGN KEY ({src_col}) references {dst_table}({dst_col});""".format(
+FOREIGN KEY ({src_col}) references {dst_table}({dst_col})
+ON DELETE CASCADE
+ON UPDATE CASCADE;""".format(
     fk_name=utils.escape_idname(fk_name),
     src_table=stname,
     src_col=scname,
