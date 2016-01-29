@@ -110,6 +110,6 @@ class TestField(FieldTestCase):
             self.assertNotIn(field, field_components_records)
 
     def test_emclass(self):
-        """ Test if the EmField.em_class @property method is correct """
+        """ Test if the EmField.em_class \@property method is correct """
         for field in EM_TEST_OBJECT.components(EmField):
             self.assertIn(field, field.em_class.fields())

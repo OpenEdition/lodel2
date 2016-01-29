@@ -69,7 +69,7 @@ class _LeType(_LeClass):
         return self.datas()
     
     ## @brief Add a superior
-    # @param lesup LeObject : LeObject child class instance
+    # @param superior LeObject : LeObject child class instance
     # @param nature str : Relation nature
     # @param del_if_exists bool : If true delete the superior if any before setting the new one
     # @return relation id if successfully created else returns false

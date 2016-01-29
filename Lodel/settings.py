@@ -14,7 +14,7 @@ from . import settings_format
 #
 # When instanciating a SettingsHandler, the new instance is filled with the content of settings.py (in the root directory of lodel2
 #
-# @important You don't have to instanciate this class, you can access to the global instance with the Settings variable in this module
+# @warning You don't have to instanciate this class, you can access to the global instance with the Settings variable in this module
 # @todo Forbid module assignement in settings ! and disable tests about this
 # @todo Implements a type checking of config value
 # @todo Implements default values for config keys

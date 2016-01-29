@@ -11,6 +11,7 @@ class EmFieldType(char.EmFieldType):
     # @param field_list list : fieldname list
     # @param glue str : separator
     # @param max_length int : Field max length
+    # @param **kwargs
     def __init__(self, field_list, max_length, glue = ' ', **kwargs):
         self._field_list = field_list
         super().__init__(internal='automatic', max_length = max_length)

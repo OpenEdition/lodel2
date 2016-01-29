@@ -170,6 +170,7 @@ class RandomEm(object):
 
     @classmethod
     ## @brief Generate a random MlString
+    # @param cls
     # @param nlng : Number of langs in the MlString
     # @return a random MlString with nlng translations
     # @todo use a dict to generated langages

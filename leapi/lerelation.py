@@ -252,6 +252,8 @@ class _LeRel2Type(_LeRelation):
     ## @brief Given a superior and a subordinate, returns the classname of the give rel2type
     # @param lesupclass LeClass : LeClass child class (not an instance) (can be a LeType or a LeClass child)
     # @param lesubclass LeType : A LeType child class (not an instance)
+    # @param relation_name str : Name of the relation (rel2type field name in LeClass)
+    # @param cls
     # @return a name as string
     @classmethod
     def relname(cls, lesupclass, lesubclass, relation_name):

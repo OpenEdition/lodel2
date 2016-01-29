@@ -97,8 +97,9 @@ class SingleValueFieldType(GenericFieldType):
     
     ## @brief Instanciate a new fieldtype
     # @param nullable bool : is None allowed as value ?
-    # @param uniqu bool : Indicate if a field should handle uniq value
+    # @param uniq bool : Indicate if a field should handle uniq value
     # @param primary bool : If True the field is a primary key
+    # @param internal str|False : if False the field is not internal. Else can be 'autosql' or 'internal'
     # @param **args : Other arguments
     # @throw NotImplementedError if called from bad class
     def __init__(self, internal = False, nullable = True, uniq = False, primary = False, **args):
@@ -133,7 +134,7 @@ class ReferenceFieldType(SingleValueFieldType):
     #
     # @param reference str : A string that defines the reference (can be 'object' or 'relation')
     # @param nullable bool : is None allowed as value ?
-    # @param unique bool : Indicate if a field should handle uniq value
+    # @param uniq bool : Indicate if a field should handle uniq value
     # @param primary bool : If True the field is a primary key
     # @param internal str|False : if False the field is not internal. Else can be 'autosql' or 'internal'
     # @param **args : Other arguments

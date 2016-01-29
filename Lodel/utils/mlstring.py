@@ -11,7 +11,8 @@ class MlString(object):
     default_lang = '___'
     ## Instanciate a new string with translation
     #
-    # @param translations dict: With key = lang and value the translation
+    # @param translations dict|str : With key = lang and value the translation  or a json string
+    # @param default_value str : The default translation value
     def __init__(self, translations=None, default_value = None):
         if isinstance(translations, str):
             try:

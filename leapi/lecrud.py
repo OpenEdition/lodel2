@@ -16,7 +16,8 @@ REL_SUB = 1
 
 class LeApiErrors(Exception):
     ## @brief Instanciate a new exceptions handling multiple exceptions
-    # @param exptexptions dict : A list of data check Exception with concerned field (or stuff) as key
+    # @param msg str : Exception message
+    # @param exceptions dict : A list of data check Exception with concerned field (or stuff) as key
     def __init__(self, msg = "Unknow error", exceptions = None):
         self._msg = msg
         self._exceptions = dict() if exceptions is None else exceptions
@@ -62,7 +63,7 @@ class _LeCrud(object):
     ## @brief Asbtract constructor for every child classes
     # @param uid int : lodel_id if LeObject, id_relation if its a LeRelation
     # @param **kwargs : datas !
-    # @raise NotImplementedError if trying to instanciate a class that cannot be instanciated
+    # @throw NotImplementedError if trying to instanciate a class that cannot be instanciated
     def __init__(self, uid, **kwargs):
         if len(kwargs) > 0:
             if not self.implements_leobject() and not self.implements_lerelation():
@@ -109,7 +110,9 @@ class _LeCrud(object):
         return name.title()
 
     ## @brief Convert an EmCalss and EmType name in a rel2type class name
-    # @param name str : The name
+    # @param class_name str : The name of concerned class
+    # @param type_name str : The name of the concerned type
+    # @param relation_name str : The name of the relation (the name of the rel2type field in the LeClass)
     # @return name.title()
     @staticmethod
     def name2rel2type(class_name, type_name, relation_name):
@@ -118,6 +121,7 @@ class _LeCrud(object):
 
     ## @brief Given a dynamically generated class name return the corresponding python Class
     # @param name str : a concrete class name
+    # @param cls
     # @return False if no such component
     @classmethod
     def name2class(cls, name):
@@ -299,6 +303,7 @@ class _LeCrud(object):
     # @param datas dict : key == field name value are field values
     # @param complete bool : if True expect that datas provide values for all non internal fields
     # @param allow_internal bool : if True don't raise an error if a field is internal
+    # @param cls
     # @return Checked datas
     # @throw LeApiDataCheckError if errors reported during check
     @classmethod
@@ -344,9 +349,11 @@ class _LeCrud(object):
     # @param query_filters list : list of string of query filters (or tuple (FIELD, OPERATOR, VALUE) ) see @ref leobject_filters
     # @param field_list list|None : list of string representing fields see @ref leobject_filters
     # @param order list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
-    # @param groups list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
+    # @param group list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
     # @param limit int : The maximum number of returned results
     # @param offset int : offset
+    # @param instanciate bool : If True return an instance, else return a dict
+    # @param cls
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
@@ -397,6 +404,8 @@ class _LeCrud(object):
 
     ## @brief Insert a new component
     # @param datas dict : The value of object we want to insert
+    # @param classname str : The class name
+    # @param cls
     # @return A new id if success else False
     @classmethod
     def insert(cls, datas, classname=None):
@@ -415,6 +424,7 @@ class _LeCrud(object):
     # @param datas dict : {fieldname : fieldvalue, ...}
     # @param complete bool : If True you MUST give all the datas
     # @param allow_internal : Wether or not interal fields are expected in datas
+    # @param cls
     # @return Datas ready for use
     # @todo: complete is very unsafe, find a way to get rid of it
     @classmethod
@@ -444,6 +454,7 @@ class _LeCrud(object):
 
     ## @brief Construct datas values
     #
+    # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
     # @return A new dict of datas
     @classmethod
@@ -459,7 +470,7 @@ class _LeCrud(object):
     ## @brief Check datas consistency
     # 
     # @warning assert that datas is complete
-    #
+    # @param cls
     # @param datas dict : Datas that have been returned by LeCrud._construct_datas() method
     # @throw LeApiDataCheckError if fails
     @classmethod
@@ -476,6 +487,7 @@ class _LeCrud(object):
         
 
     ## @brief Prepare a field_list
+    # @param cls
     # @param field_list list : List of string representing fields
     # @return A well formated field list
     # @throw LeApiDataCheckError if invalid field given
@@ -499,6 +511,7 @@ class _LeCrud(object):
         return ret_field_list
      
     ## @brief Check that a relational field is valid
+    # @param cls
     # @param field str : a relational field
     # @return a nature
     @classmethod
@@ -506,6 +519,8 @@ class _LeCrud(object):
         raise NotImplementedError("Abstract method")
     
     ## @brief Check that the field list only contains fields that are in the current class
+    # @param cls
+    # @param field : a field
     # @return None if no problem, else returns a list of exceptions that occurs during the check
     @classmethod
     def _check_field(cls, field):
@@ -515,7 +530,8 @@ class _LeCrud(object):
     
     ## @brief Prepare the order parameter for the get method
     # @note if an item in order_list is just a str it is considered as ASC by default
-    # @param order_list list : A list of field name or tuple (FIELDNAME, [ASC|DESC])
+    # @param cls
+    # @param order_field_list list : A list of field name or tuple (FIELDNAME, [ASC|DESC])
     # @return a list of tuple (FIELDNAME, [ASC|DESC] )
     @classmethod
     def _prepare_order_fields(cls, order_field_list):
@@ -544,6 +560,7 @@ class _LeCrud(object):
     # 
     # Both categories of filters are represented in the same way, a tuple with 3 elements (NAME|NAT , OP, VALUE )
     # 
+    # @param cls
     # @param filters_l list : This list can contain str "FIELDNAME OP VALUE" and tuples (FIELDNAME, OP, VALUE)
     # @return a tuple(FILTERS, RELATIONNAL_FILTERS
     #

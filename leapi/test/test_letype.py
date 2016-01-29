@@ -48,7 +48,7 @@ class LeTypeTestCase(TestCase):
     
     @patch('leapi.letype._LeType.populate')
     def test_datas(self, dsmock):
-        """ Testing the datas @property method """
+        """ Testing the datas \@property method """
         from dyncode import Publication, Numero, LeObject
         num = Numero(42, titre = 'foofoo')
         self.assertEqual({'lodel_id' : 42, 'titre': 'foofoo'}, num.datas())
