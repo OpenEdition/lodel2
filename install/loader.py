@@ -13,7 +13,7 @@ globals()['Settings'] = Settings
 
 # Import dynamic code
 if os.path.isfile(Settings.dynamic_code_file):
-    from dynleapi import *
+    from api import *
 
 # Import wanted datasource objects
 for db_modname in ['leapidatasource', 'migrationhandler']:

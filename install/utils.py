@@ -18,6 +18,10 @@ def refreshdyn():
     fact = LeFactory(OUTPUT)
     # Create the python file
     fact.create_pyfile(em, LeDataSourceSQL, {})
+    # Generate wrapped API
+    from acl.factory import AclFactory
+    fact = AclFactory(Settings.acl_dyn_api)
+    fact.create_pyfile(em, 'dynleapi')
 
 
 def db_init():

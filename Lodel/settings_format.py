@@ -9,6 +9,7 @@ MANDATORY = [
     'lodel2_lib_path',
     'em_file',
     'dynamic_code_file',
+    'acl_dyn_api',
     'ds_package',
     'datasource',
     'mh_classname',
