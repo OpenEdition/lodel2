@@ -15,7 +15,7 @@ emgraph:
 .PHONY: clean cleanpycache cleanpyc refreshdyn distclean
 
 distclean: clean
-	-@rm -vf dynleapi.py
+	-@rm -vf dynleapi.py api.py
 
 clean: cleanpycache
 

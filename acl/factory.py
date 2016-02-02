@@ -25,7 +25,7 @@ class AclFactory(object):
 from acl.acl import get_wrapper
 """
         
-        classes_to_wrap = ['LeCrud', 'LeObject', 'LeClass', 'LeType', 'LeRelation']
+        classes_to_wrap = ['LeCrud', 'LeObject', 'LeClass', 'LeType', 'LeRelation', 'LeHierarch', 'LeRel2Type']
         classes_to_wrap += [ _LeCrud.name2classname(emclass.name) for emclass in model.components(EditorialModel.classes.EmClass) ]
         classes_to_wrap += [ _LeCrud.name2classname(emtype.name) for emtype in model.components(EditorialModel.types.EmType) ]
 
