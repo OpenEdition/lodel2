@@ -19,12 +19,14 @@ class WebUI(object):
     def parse_request(self, request):
         uri_args = request['REQUEST_URI'].split('/')
         uri_args.pop(0)  # We delete the first element which is a ""
-        request['URL_ARGS'] = uri_args
+        request['URI_ARGS'] = uri_args
         return request
 
     def response(self):
-        print(self.request['URL_ARGS'])
-        if self.request['URL_ARGS'][0] == 'admin':
+        print(self.request['URI_ARGS'])
+        if self.request['URI_ARGS'][0] == 'admin':
             return admin(self.request)
+        elif self.request['URI_ARGS'][0] == '':
+            return index(self.request)
         else:
             return "Hello World"
