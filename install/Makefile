@@ -1,7 +1,10 @@
 all: refreshdyn dbinit dirinit
 
-refreshdyn: distclean
+refreshdyn: cleandyn dyncode
 	python -c "import utils; utils.refreshdyn()"
+
+dyncode:
+	mkdir dyncode; touch dyncode/__init__.py
 
 dbinit:
 	python -c "import utils; utils.db_init()"
@@ -14,10 +17,12 @@ emgraph:
 
 .PHONY: clean cleanpycache cleanpyc refreshdyn distclean
 
-distclean: clean
-	-@rm -vf dynleapi.py api.py
+distclean: clean cleandyn
 
 clean: cleanpycache
+
+cleandyn: cleanpycache
+	-@rm -vf dyncode/internal_api.py dyncode/acl_api.py dyncode/__init__.py ; rmdir dyncode
 
 cleanpyc:
 	-@rm -vf *.pyc

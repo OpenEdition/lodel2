@@ -1,19 +1,13 @@
-import instance_settings
-import importlib
-import sys
 import os
-
-sys.path.append(instance_settings.lodel2_lib_path)
-
+import importlib
+from utils import dyn_code_filename
 from Lodel.settings import Settings
 
-# Settings initialisation
-Settings.load_module(instance_settings)
-globals()['Settings'] = Settings
-
 # Import dynamic code
-if os.path.isfile(Settings.dynamic_code_file):
-    from api import *
+if Settings.acl_bypass:
+    from dyncode.internal_api import *
+else:
+    from dyncode.acl_api import *
 
 # Import wanted datasource objects
 for db_modname in ['leapidatasource', 'migrationhandler']:

@@ -1,30 +1,63 @@
 # -*- coding: utf-8 -*-
 
-from loader import *
 import warnings
+import sys
+
+# Startup
+#
+# Loading instance config to fetch lodel2 lib path
+# @TODO migrate this portion of code in a bootstrap.py file
+import instance_settings
+sys.path.append(instance_settings.lodel2_lib_path)
+# Load Lodel2 settings module
+from Lodel.settings import Settings
+# Settings initialisation
+Settings.load_module(instance_settings)
+globals()['Settings'] = Settings
 
 
+## @brief fetch full module name of dynamic code
+# @warning hardcoded names are used in loader.py and in Makefile
+# @param name str : can be 'leapi' or 'aclapi'
+def dyn_module_fullname(name):
+    if name == 'leapi':
+        return 'dyncode.internal_api'
+    else:
+        return 'dyncode.acl_api'
+
+## @brief fetch dynamic codefile path
+# @warning hardcoded names are used in loader.py and in Makefile
+# @param name str : can be 'leapi' or 'aclapi'
+def dyn_code_filename(name):
+    if name == 'leapi':
+        return 'dyncode/internal_api.py'
+    else:
+        return 'dyncode/acl_api.py'
+
+## @brief Refresh dynamic code
 def refreshdyn():
     import sys
+    import os, os.path
     from EditorialModel.model import Model
     from leapi.lefactory import LeFactory
     from EditorialModel.backend.json_backend import EmBackendJson
     from DataSource.MySQL.leapidatasource import LeDataSourceSQL
-    OUTPUT = Settings.dynamic_code_file
+    from acl.factory import AclFactory
+
     EMJSON = Settings.em_file
     # Load editorial model
     em = Model(EmBackendJson(EMJSON))
     # Generate dynamic code
-    fact = LeFactory(OUTPUT)
+    fact = LeFactory(dyn_code_filename('leapi'))
     # Create the python file
     fact.create_pyfile(em, LeDataSourceSQL, {})
     # Generate wrapped API
-    from acl.factory import AclFactory
-    fact = AclFactory(Settings.acl_dyn_api)
-    fact.create_pyfile(em, 'dynleapi')
-
+    fact = AclFactory(dyn_code_filename('aclapi'))
+    fact.create_pyfile(em, dyn_module_fullname('leapi'))
 
 def db_init():
+    import loader
+    from loader import migrationhandler
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.model import Model
     mh = getattr(migrationhandler,Settings.mh_classname)()
@@ -33,6 +66,7 @@ def db_init():
 
 
 def em_graph(output_file = None, image_format = None):
+    import loader
     from EditorialModel.model import Model
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.backend.graphviz import EmBackendGraphviz

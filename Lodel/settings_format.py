@@ -4,17 +4,20 @@
 ## @brief List mandatory configurations keys
 MANDATORY = [
     'debug',
-    'debug_sql',
+
     'sitename',
-    'lodel2_lib_path',
     'em_file',
-    'dynamic_code_file',
-    'acl_dyn_api',
+
+    'acl_bypass',
+
+    'debug_sql',
     'ds_package',
     'datasource',
     'mh_classname',
     'migration_options',
-    'base_path'
+
+    'base_path',
+    'lodel2_lib_path',
 ]
 
 ## @brief List allowed (but not mandatory) configurations keys
@@ -23,3 +26,4 @@ ALLOWED = [
     'em_graph_format',
     'templates_base_dir'
 ]
+

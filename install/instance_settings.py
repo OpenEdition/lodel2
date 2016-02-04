@@ -11,8 +11,6 @@ templates_base_dir = 'LODEL2_INSTANCE_TEMPLATES_BASE_DIR'
 debug = False
 
 em_file = 'em.json'
-dynamic_code_file = 'dynleapi.py' #Warning hardcoded module name in utils.py and loader.py
-acl_dyn_api = 'api.py' #Warning hardcoded module name in utils.py and loader.py
 
 ds_package = 'MySQL'
 mh_classname = 'MysqlMigrationHandler'
@@ -25,3 +23,5 @@ datasource = {
         'db': 'DBNAME'
     }
 }
+
+acl_bypass = False

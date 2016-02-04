@@ -1,5 +1,18 @@
 #!/bin/bash
 
+#
+# Create a Lodel2 instance
+#-------------------------
+#
+# Usage : ./lodel_init.sh instance_name instance_path [lodel2_lib_path]
+#
+# This script creates a new Lodel2 instance.
+#
+# It make a copy of install/ directory + some substitution in the instance_settings.py file
+# and then it generates dynamic code
+#
+
+
 usage() {
 	echo "Usage : $0 instance_name instance_dir [lodel_libdir]" 1>&2
 	exit 1
