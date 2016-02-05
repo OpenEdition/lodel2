@@ -7,8 +7,15 @@
 import types
 from .magix import MAGIX
 
+## @brief Default call catcher for wrappers
 class DefaultCallCatcher(object):
-        
+    
+    ## @brief Method designed to be called when an access is done on a wrapped class
+    # @note fetch the attribute
+    # @param obj : the python object on wich the access is done
+    # @param attr_name str : the name of the accessed attribute
+    # @return the attribute
+    # @throw AttributeError if the attr does not exist
     @classmethod
     def attr_get(self, obj, attr_name):
         if hasattr(obj, '__name__'):
@@ -17,6 +24,13 @@ class DefaultCallCatcher(object):
             print("\tCatched ! Get %s.%s"  % (obj, attr_name))
         return getattr(obj, attr_name)
     
+    ## @brief Method designed to be called when a wrapped class method is called
+    # @note Do the call
+    # @param obj : the python object the method belongs to
+    # @param method : the python bound method
+    # @param args tuple : method call positional arguments
+    # @param kwargs dict : method call named arguments
+    # @return the call returned value
     @classmethod
     def method_call(self, obj, method, args, kwargs):
         if obj is method:
@@ -30,8 +44,19 @@ class DefaultCallCatcher(object):
 
         return method(*args, **kwargs)
 
+## @brief Generate a wrapper
+#
+# Returns a wrapper for a given class. The wrapper will call the call_catcher
+# for any access done on wrapped class
+#
+# @param towrap Class : Python class to wrap
+# @param call_catcher_cls : A child class of DefaultCallCatcher designed to be called by the wrapper
+# @return A class that is a wrapper for towrap
 def get_wrap(towrap, call_catcher_cls = DefaultCallCatcher):
-    
+        
+    ## @brief Function wrapper
+    #
+    # In fact this class will only be a wrapper for methods
     class funwrap(object):
         
         def __init__(self, obj, fun):
@@ -44,6 +69,9 @@ def get_wrap(towrap, call_catcher_cls = DefaultCallCatcher):
         def __repr__(self):
             return '<funwrap %s>' % self._fun
 
+    ## @brief the wrapper class metaclass
+    #
+    # Handles static attributes access
     class metawrap(type):
             
         def __getattribute__(self, name):
@@ -55,7 +83,10 @@ def get_wrap(towrap, call_catcher_cls = DefaultCallCatcher):
                     return call_catcher_cls.attr_get(towrap, name)
             except Exception as e:
                 raise e
-
+    
+    ## @brief The class that will be the wrapper
+    #
+    # Handles instance attributes access
     class wrap(object, metaclass=metawrap):
 
         def __init__(self, *args, **kwargs):
@@ -99,8 +130,10 @@ def get_wrap(towrap, call_catcher_cls = DefaultCallCatcher):
             return call_catcher_cls.method_call(towrap.__class__, method, args, kwargs)
         return magix_class_wrap
 
-    instance_ex = ['__init__', '__new__'] # exclude for instances
-    class_ex = ['__new__'] # exclude for classes
+    instance_ex = ['__init__'] # exclude for instances
+    class_ex = [] # exclude for classes
+
+    # Add all magic methods to wrap and metawrap classes
     for name in MAGIX:
         if name not in instance_ex:
             setattr(wrap, name, make_instance_magix(name))

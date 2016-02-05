@@ -1,3 +1,5 @@
+## @brief Magic method names
+# @note regroup all magic methods that should be injected in wrap and metawrap objects (with exceptions)
 MAGIX = [
 	"__abs__",
 	"__add__",
@@ -61,7 +63,7 @@ MAGIX = [
 	"__mul__",
 	"__ne__",
 	"__neg__",
-	"__new__",
+	#"__new__",
 	"__next__",
 	"__or__",
 	"__pos__",
