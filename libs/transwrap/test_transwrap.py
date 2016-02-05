@@ -50,7 +50,7 @@ class TransWrapTestCase(unittest.TestCase):
     def setUp(self):
         DummyCatcher.attr_get = unittest.mock.Mock()
         DummyCatcher.method_call = unittest.mock.Mock()
-        self.wrap = transwrap.get_wrap(DummyClass, DummyCatcher)
+        self.wrap = transwrap.get_class_wrapper(DummyClass, DummyCatcher)
         DummyCatcher.method_call.reset_mock()
         DummyCatcher.attr_get.reset_mock()
 
@@ -173,7 +173,7 @@ class AnotherMockTestCase(unittest.TestCase):
 
     def test_implicit_magic_instance(self):
         """ Testing implicit magic method call on instances """
-        wrapper = transwrap.get_wrap(DummyClass, DummyCatcher)
+        wrapper = transwrap.get_class_wrapper(DummyClass, DummyCatcher)
         dumm = wrapper()
 
         # fetching dumm._instance

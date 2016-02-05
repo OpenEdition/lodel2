@@ -4,6 +4,7 @@ import importlib
 import copy
 import os.path
 
+import Lodel.python_factory
 import EditorialModel
 from EditorialModel import classtypes
 from EditorialModel.model import Model
@@ -15,16 +16,10 @@ from leapi.lecrud import _LeCrud
 # @note Contains only static methods
 #
 # The name is not good but i've no other ideas for the moment
-class LeFactory(object):
+class LeFactory(Lodel.python_factory.PythonFactory):
 
-    output_file = 'dyn.py'
-    modname = None
-
-
-    def __init__(self, code_filename = 'leapi/dyn.py'):
-        self._code_filename = code_filename
-        self._dyn_file = os.path.basename(code_filename)
-        self._modname = os.path.dirname(code_filename).strip('/').replace('/', '.') #Warning Windaube compatibility
+    def __init__(self, code_filename = 'acl/dyn.py'):
+        super().__init__(code_filename = code_filename)
 
     ## @brief Return a call to a FieldType constructor given an EmField
     # @param emfield EmField : An EmField
@@ -36,12 +31,6 @@ class LeFactory(object):
             repr(emfield._fieldtype_args),
         )
     
-    ## @brief Write generated code to a file
-    # @todo better options/params for file creation
-    def create_pyfile(self, model, datasource_cls, datasource_args):
-        with open(self._code_filename, "w+") as dynfp:
-            dynfp.write(self.generate_python(model, datasource_cls, datasource_args))
-
     ## @brief Generate fieldtypes for concret classes
     # @param ft_dict dict : key = fieldname value = fieldtype __init__ args
     # @return (uid_fieldtypes, fieldtypes) designed to be printed in generated code

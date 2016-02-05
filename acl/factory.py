@@ -2,27 +2,32 @@
 
 import os
 
+import Lodel.python_factory
 import EditorialModel
 from leapi.lecrud import _LeCrud
 
-class AclFactory(object):
+## @brief ACL wrapper for leapi dynamically generated classes generator
+#
+# This class handles dynamic ACL wrapper for dynamically generated leapi classes.
+#
+# The goal of those wrapped leapi classes is to reroute every calls that are made to
+# the API to the acl.acl.ACL module in order to validate them.
+class AclFactory(Lodel.python_factory.PythonFactory):
     
+    ## @brief Instanciate the generator
+    # @param code_filename str : the output filename for python code
     def __init__(self, code_filename = 'acl/dyn.py'):
-        self._code_filename = code_filename
-        self._dyn_file = os.path.basename(code_filename)
-        self._modname = os.path.dirname(code_filename).strip('/').replace('/', '.') #Warning Windaube compatibility
+        super().__init__(code_filename = code_filename)
 
-    ## @brief Create dynamic code python file
-    # @param modle Model : An editorial model
-    # @param leap_dyn_module_name str : Name of leapi dynamic module name
-    def create_pyfile(self, model, leapi_dyn_module_name):
-        with open(self._code_filename, "w+") as dynfp:
-            dynfp.write(self.generate_python(model, leapi_dyn_module_name))
-
+    ## @brief Generate the python code
+    # @param model Model : An editorial model
+    # @param leap_dyn_module_name str : Name of leapi dynamically generated module name
     def generate_python(self, model, leapi_module_name):
         result = """## @author acl/factory
 
-from acl.acl import get_wrapper
+from libs.transwrap.transwrap import get_wrapper
+import libs.transwrap
+from acl.acl import ACL
 """
         
         classes_to_wrap = ['LeCrud', 'LeObject', 'LeClass', 'LeType', 'LeRelation', 'LeHierarch', 'LeRel2Type']
@@ -33,7 +38,7 @@ from acl.acl import get_wrapper
             result += """
 ## @brief Wrapped for {class_to_wrap} LeAPI class
 # @see {module_name}.{class_to_wrap}
-class {class_to_wrap}(get_wrapper('{module_name}', '{class_to_wrap}')):
+class {class_to_wrap}(get_wrapper('{module_name}', '{class_to_wrap}', ACL)):
     pass
 
 """.format(

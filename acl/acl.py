@@ -2,9 +2,10 @@
 
 import types
 import importlib
+from libs.transwrap.transwrap import DefaultCallCatcher
 
 ## @brief Example implementation of an ACL class
-class ACL(object):
+class ACL(DefaultCallCatcher):
     _singleton = None
     
     ## @brief dummy singleton contructor
@@ -18,92 +19,43 @@ class ACL(object):
             cls()
         return cls._singleton
 
-    ## @brief Callback that checks a call to wrapped classes methods
+    ## @brief Method designed to be called when an access is done on a wrapped class
+    # @note fetch the attribute
+    # @param obj : the python object on wich the access is done
+    # @param attr_name str : the name of the accessed attribute
+    # @return the attribute
+    # @throw AttributeError if the attr does not exist
     @classmethod
-    def check_call(cls, call_object, method_name, args, kwargs):
-        return ACL.instance()._check_call(call_object, method_name, args, kwargs)
+    def attr_get(cls, obj, attr_name):
+        return cls.instance()._attr_get(obj, attr_name)
 
-    ## @brief Callback that checks calls to wrapped classes attributes
+    ## @brief Method designed to be called when a wrapped class method is called
+    # @note Do the call
+    # @param obj : the python object the method belongs to
+    # @param method : the python bound method
+    # @param args tuple : method call positional arguments
+    # @param kwargs dict : method call named arguments
+    # @return the call returned value
     @classmethod
-    def check_attr(cls, call_object, attr_name):
-        return ACL.instance()._check_attr(call_object, attr_name)
+    def method_call(cls, obj, method, args, kwargs):
+        return cls.instance()._method_call(obj, method, args, kwargs)
 
-    ## @brief instance version of check_attr()
-    # @note this method is the one that fetch and return the attribute
-    def _check_attr(self, call_object, attr_name):
-        print("Getting attribute '%s' on %s" % (attr_name, call_object))
-        return getattr(call_object, attr_name)
+    ## @brief instance implementation of attr_get()
+    def _attr_get(self, obj, attr_name):
+        if hasattr(obj, '__name__'):
+            print("\tCatched ! %s.%s"  % (obj.__name__, attr_name))
+        else:
+            print("\tCatched ! Get %s.%s"  % (obj, attr_name))
+        return super().attr_get(obj, attr_name)
 
-    ## @brief instance version of check_call()
-    # @note this method is the one that call the method and return the returned value
-    # @param call_object : the object on wich the method is called (class if class methode else instance)
-    # @param method_name str : method name
-    # @param *args : positional method arguments
-    # @param **kwargs : keyword method arguments
-    def _check_call(self, call_object, method_name, args, kwargs):
-        print("Calling '%s' on %s with %s %s" % (method_name, call_object, args, kwargs))
-        #return call_object.__getattribute__(method_name)(*args, **kwargs)
-        if method_name == '__init__':
-            return call_object(*args, **kwargs)
-        return getattr(call_object, method_name)(*args, **kwargs)
-
-
-## @brief A class designed as a wrapper for a method
-class AclMethodWrapper(object):
-    
-    ## @brief Constructor
-    # @param wrapped_object PythonClass : A python class
-    # @param method_name str : the wrapped method name
-    def __init__(self, wrapped_object, method_name):
-        self._wrapped_object = wrapped_object
-        self._method_name = method_name
-
-    ## @brief Triggered when the wrapped method is called
-    def __call__(self, *args, **kwargs):
-        return ACL.check_call(self._wrapped_object, self._method_name, args, kwargs)
-
-## @brief Return a wrapped class
-#
-# @param module_name str : LeAPI dyn mopdule name
-# @param wrapped_class_name str : wrapped class name
-def get_wrapper(module_name, wrapped_class_name):
-    
-    module = importlib.import_module(module_name)
-    wrapped_class = getattr(module, wrapped_class_name)
-
-    ## @brief Meta class that handles accesses to wrapped class/static attributes
-    class MetaAclWrapper(type):
-        ## @brief Called when we get a class attribute
-        def __getattribute__(cls, name):
-            try:
-                attr = getattr(wrapped_class, name)
-                if isinstance(attr, types.MethodType):
-                    return AclMethodWrapper(wrapped_class, name)
-                else:
-                    return ACL.check_attr(wrapped_class, name)
-            except Exception as e:
-                #Here we can process the exception or log it
-                raise e
-
-    #class AclWrapper(metaclass=MetaAclWrapper):
-    class AclWrapper(object, metaclass=MetaAclWrapper):
-
-        def __init__(self, *args, **kwargs):
-            self._wrapped_instance = ACL.check_call(wrapped_class, '__init__', args, kwargs)
-            #self._wrapped_instance = wrapped_class(*args, **kwargs)
-
-        def __getattribute__(self, name):
-            try:
-                attr = getattr(
-                    super().__getattribute__('_wrapped_instance'),
-                    name
-                )
-                if isinstance(attr, types.MethodType):
-                    return AclMethodWrapper(super().__getattribute__('_wrapped_instance'), name)
-                else:
-                    return ACL.check_attr(super().__getattribute__('_wrapped_instance'), name)
-            except Exception as e:
-                #do what you want
-                raise e
-    return AclWrapper
-
+    ## @brief instance implementation of method_call()
+    def _method_call(self, obj, method, args, kwargs):
+        if obj is method:
+            print("\tCatched ! %s(%s %s)" % (obj.__name__, args, kwargs))
+        else:
+            if hasattr(obj, '__name__'):
+                print("\tCatched ! %s.%s(%s %s)" % (obj.__name__, method.__name__, args,kwargs))
+            else:
+                print("\tCatched ! %s.%s(%s %s)" % (obj, method.__name__, args,kwargs))
+            print("\t\tCallobject = %s method = %s with %s %s" % (obj, method, args, kwargs))
+        return super().method_call(obj, method, args, kwargs)

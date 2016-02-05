@@ -35,6 +35,8 @@ def dyn_code_filename(name):
         return 'dyncode/acl_api.py'
 
 ## @brief Refresh dynamic code
+#
+# Generate dynamic leapi code and ACL wrapper for dynamic leapi classes
 def refreshdyn():
     import sys
     import os, os.path
@@ -64,7 +66,9 @@ def db_init():
     em = Model(EmBackendJson(Settings.em_file))
     em.migrate_handler(mh)
 
-
+## @brief Generate a graphviz representation of instance's editorial model
+# @param output_file str : output filename
+# @param image_format str : takes value in png, jpg, svg (or any accepted graphviz output format)
 def em_graph(output_file = None, image_format = None):
     import loader
     from EditorialModel.model import Model

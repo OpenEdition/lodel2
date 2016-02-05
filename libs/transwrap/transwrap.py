@@ -5,6 +5,7 @@
 #
 
 import types
+import importlib
 from .magix import MAGIX
 
 ## @brief Default call catcher for wrappers
@@ -45,6 +46,16 @@ class DefaultCallCatcher(object):
         return method(*args, **kwargs)
 
 ## @brief Generate a wrapper
+# @param module_name str : Module name of the class we want to wrap
+# @param class_name str : The name of the class we want to wrap
+# @param call_catcher_cls : A child class of DefaultCallCatcher designed to be called by the wrapper
+# @return A class that is a wrapper for module_name.class_name class
+def get_wrapper(module_name, class_name, call_catcher_cls = DefaultCallCatcher):
+    module = importlib.import_module(module_name)
+    towrap = getattr(module, class_name)
+    return get_class_wrapper(towrap, call_catcher_cls)
+
+## @brief Generate a wrapper
 #
 # Returns a wrapper for a given class. The wrapper will call the call_catcher
 # for any access done on wrapped class
@@ -52,7 +63,7 @@ class DefaultCallCatcher(object):
 # @param towrap Class : Python class to wrap
 # @param call_catcher_cls : A child class of DefaultCallCatcher designed to be called by the wrapper
 # @return A class that is a wrapper for towrap
-def get_wrap(towrap, call_catcher_cls = DefaultCallCatcher):
+def get_class_wrapper(towrap, call_catcher_cls = DefaultCallCatcher):
         
     ## @brief Function wrapper
     #
