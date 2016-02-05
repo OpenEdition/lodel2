@@ -7,13 +7,11 @@ from Interface.web.urls import urls
 
 def application(env, start_response):
 
-    values = {}
-
     # Querystring
-    values['GET'] = parse_qs(env.get('QUERY_STRING'))
+    env['GET'] = parse_qs(env.get('QUERY_STRING'))
 
     # POST Values
-    values['POST'] = parse_qs(env.get('wsgi.input').read())
+    env['POST'] = parse_qs(env.get('wsgi.input').read())
 
 
     # URL Args
