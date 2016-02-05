@@ -15,7 +15,6 @@ def application(env, start_response):
     # POST Values
     values['POST'] = parse_qs(env.get('wsgi.input').read())
 
-    print(values)
 
     # URL Args
     path = env.get('PATH_INFO', '').lstrip('/')
