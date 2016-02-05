@@ -1,12 +1,21 @@
 import re
+from urllib.parse import parse_qs
 
-import Interface.web.controllers as controllers
-import Interface.web.urls.urls as urls
+from Interface.web.controllers import *
+from Interface.web.urls import urls
 
 
 def application(env, start_response):
-    # Query string
-    print(env.get('QUERY_STRING'))
+
+    values = {}
+
+    # Querystring
+    values['GET'] = parse_qs(env.get('QUERY_STRING'))
+
+    # POST Values
+    values['POST'] = parse_qs(env.get('wsgi.input').read())
+
+    print(values)
 
     # URL Args
     path = env.get('PATH_INFO', '').lstrip('/')
@@ -14,6 +23,5 @@ def application(env, start_response):
         match = re.search(regex, path)
         if match is not None:
             env['url_args'] = match.groups()
-            return controllers.callback(env, start_response)
-
-    return controllers.not_found(env, start_response)
+            return callback(env, start_response)
+    return not_found(env, start_response)
