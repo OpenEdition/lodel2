@@ -6,14 +6,14 @@ from Template.Loader import TemplateLoader
 
 def admin(request, start_response):
     start_response('200 OK', [('Content-Type', 'text/html')])
-    return ["ADMIN"]
+    return [b"ADMIN"]
 
 
 def index(request, start_response):
     start_response('200 OK', [('Content-Type', 'text/html')])
-    return ["DASHBOARD"]
+    return [b"DASHBOARD"]
 
 
 def not_found(request, start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
-    return ['Not Found']
+    return [b'Not Found']
