@@ -8,7 +8,10 @@ import copy
 import warnings
 import importlib
 import re
+import inspect
 
+from Lodel.settings import Settings
+from libs.transwrap.transwrap import get_class_wrapper
 from EditorialModel.fieldtypes.generic import DatasConstructor
 
 REL_SUP = 0
@@ -41,8 +44,7 @@ class LeApiQueryError(LeApiErrors): pass
 
 ## @brief When an error concerns a datas
 class LeApiDataCheckError(LeApiErrors): pass
-    
-
+ 
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object):
     ## @brief The datasource
@@ -59,7 +61,13 @@ class _LeCrud(object):
     ## @brief Stores Query filters operators
     _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
-    
+    ## @brief Returns a wrapped object
+    def __new__(cls, *args, **kwargs):
+        if Settings.acl_bypass or inspect.stack()[2][3] == '__init__':
+            return super().__new__(cls)
+        else:
+            return get_class_wrapper(cls)(*args, **kwargs)
+
     ## @brief Asbtract constructor for every child classes
     # @param uid int : lodel_id if LeObject, id_relation if its a LeRelation
     # @param **kwargs : datas !
