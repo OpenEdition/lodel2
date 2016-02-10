@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from Template.Loader import TemplateLoader
+from ...Template.Loader import TemplateLoader
 
 # This module contains the web UI controllers that will be called from the WebUI class
 
