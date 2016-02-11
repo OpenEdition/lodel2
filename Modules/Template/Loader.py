@@ -24,6 +24,7 @@ class TemplateLoader(object):
         self.follow_links = follow_links
         self.is_cache_active = is_cache_active
 
+
     ## @brief Renders a HTML content of a template
     #
     # @see Modules.Template.Loader.TemplateLoader.render_to_response
