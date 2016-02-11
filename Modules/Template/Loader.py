@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import jinja2
+import os
 
 import settings
 from .api import api_lodel_templates
@@ -20,6 +21,7 @@ class TemplateLoader(object):
     def __init__(self, search_path=settings.base_path, follow_links=True):
         self.search_path = search_path
         self.follow_links = follow_links
+
 
     ## @brief Renders a HTML content of a template
     #
