@@ -22,7 +22,6 @@ class TemplateLoader(object):
         self.search_path = search_path
         self.follow_links = follow_links
 
-
     ## @brief Renders a HTML content of a template
     #
     # @param template_file str : path to the template file (starting from the base path used to instanciate the
