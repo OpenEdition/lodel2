@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ## @mainpage
 #
 # @section Introduction
@@ -89,3 +91,15 @@
 # @image html graphviz/example_em_graph.png
 # @subsection lodel2_arch_ui_fig Lodel2 UI schema
 # @image html graphviz/lodel2_ui.png
+
+from flask import Flask
+
+# Config
+UPLOAD_DIRECTORY = 'tmp'
+ALLOWED_UPLOAD_FILE_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'sh'])
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_DIRECTORY
+app.config['ALLOWED_UPLOAD_FILE_EXTENSIONS'] = ALLOWED_UPLOAD_FILE_EXTENSIONS
+
+from Modules.Interface.web.controllers import *

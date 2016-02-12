@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 
 import jinja2
+from .api import api_lodel_templates
 
 import settings
-from .api import api_lodel_templates
 from .exceptions import NotAllowedCustomAPIKeyError
 
 
