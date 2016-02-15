@@ -28,4 +28,4 @@ migration_options = {
 em_graph_format = 'png'
 em_graph_output = '/tmp/em_%s_graph.png'
 
-acl_bypass = False
+acl_bypass = True

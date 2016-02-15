@@ -8,7 +8,8 @@ import copy
 import warnings
 import importlib
 import re
-import inspect
+#import inspect
+import sys
 
 from Lodel.settings import Settings
 from libs.transwrap.transwrap import get_class_wrapper
@@ -60,13 +61,16 @@ class _LeCrud(object):
     _query_re = None
     ## @brief Stores Query filters operators
     _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
-
+    
     ## @brief Returns a wrapped object
     def __new__(cls, *args, **kwargs):
-        if Settings.acl_bypass or inspect.stack()[2][3] == '__init__':
+        # differents ways of checking the caller
+        #if Settings.acl_bypass or inspect.stack()[2][3] == '__init__':
+        if Settings.acl_bypass or sys._getframe().f_back.f_code.co_name == '__do_call__':
             return super().__new__(cls)
         else:
             return get_class_wrapper(cls)(*args, **kwargs)
+    
 
     ## @brief Asbtract constructor for every child classes
     # @param uid int : lodel_id if LeObject, id_relation if its a LeRelation

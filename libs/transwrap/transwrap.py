@@ -33,7 +33,7 @@ class DefaultCallCatcher(object):
     # @param kwargs dict : method call named arguments
     # @return the call returned value
     @classmethod
-    def method_call(self, obj, method, args, kwargs):
+    def method_call(cls, obj, method, args, kwargs):
         if obj is method:
             print("\tCatched ! %s(%s %s)" % (obj.__name__, args, kwargs))
         else:
@@ -42,7 +42,16 @@ class DefaultCallCatcher(object):
             else:
                 print("\tCatched ! %s.%s(%s %s)" % (obj, method.__name__, args,kwargs))
             print("\t\tCallobject = %s method = %s with %s %s" % (obj, method, args, kwargs))
-
+        return cls.__do_call__(method, args, kwargs)
+    
+    ## @brief Do the method call
+    # @note You have to use this method to make the call, because the __new__ method test caller method name to know if it has to return a real instance or a wrapped one
+    # @param method : the python bounded method
+    # @param args tuple : positional arguments
+    # @param kwargs dict : keywords arguments
+    # @return method returned value
+    @classmethod
+    def __do_call__(cls, method, args, kwargs):
         return method(*args, **kwargs)
 
 ## @brief Generate a wrapper
@@ -64,7 +73,7 @@ def get_wrapper(module_name, class_name, call_catcher_cls = DefaultCallCatcher):
 # @param call_catcher_cls : A child class of DefaultCallCatcher designed to be called by the wrapper
 # @return A class that is a wrapper for towrap
 def get_class_wrapper(towrap, call_catcher_cls = DefaultCallCatcher):
-        
+    
     ## @brief Function wrapper
     #
     # In fact this class will only be a wrapper for methods
@@ -150,5 +159,5 @@ def get_class_wrapper(towrap, call_catcher_cls = DefaultCallCatcher):
             setattr(wrap, name, make_instance_magix(name))
         if name not in class_ex:
             setattr(metawrap, name, make_class_magix(name))
-            
+
     return wrap

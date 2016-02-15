@@ -35,13 +35,13 @@ cleandoc:
 	-rm -Rf ./doc/html ./doc/doxygen_sqlite3.db
 
 cleandocimages:
-	cd $(graphviz_images_path); make clean
+	$(MAKE) -C $(graphviz_images_path) clean
 
 # Python cleaning
 cleanpyc:
 	-find ./ |grep -E "\.pyc$$" |xargs rm -f 2>/dev/null
 cleanpycache: cleanpyc
-	-find ./ -type d |grep '__pycache__' | xargs rmdir -f 2>/dev/null
+	-find ./ -type d |grep '__pycache__' | xargs rmdir 2>/dev/null
 
 cleandyn:
 	-rm leapi/dyn.py
