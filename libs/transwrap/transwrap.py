@@ -19,10 +19,6 @@ class DefaultCallCatcher(object):
     # @throw AttributeError if the attr does not exist
     @classmethod
     def attr_get(self, obj, attr_name):
-        if hasattr(obj, '__name__'):
-            print("\tCatched ! %s.%s"  % (obj.__name__, attr_name))
-        else:
-            print("\tCatched ! Get %s.%s"  % (obj, attr_name))
         return getattr(obj, attr_name)
     
     ## @brief Method designed to be called when a wrapped class method is called
@@ -34,14 +30,6 @@ class DefaultCallCatcher(object):
     # @return the call returned value
     @classmethod
     def method_call(cls, obj, method, args, kwargs):
-        if obj is method:
-            print("\tCatched ! %s(%s %s)" % (obj.__name__, args, kwargs))
-        else:
-            if hasattr(obj, '__name__'):
-                print("\tCatched ! %s.%s(%s %s)" % (obj.__name__, method.__name__, args,kwargs))
-            else:
-                print("\tCatched ! %s.%s(%s %s)" % (obj, method.__name__, args,kwargs))
-            print("\t\tCallobject = %s method = %s with %s %s" % (obj, method, args, kwargs))
         return cls.__do_call__(method, args, kwargs)
     
     ## @brief Do the method call

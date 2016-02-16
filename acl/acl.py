@@ -53,9 +53,10 @@ class ACL(DefaultCallCatcher):
         if obj is method:
             print("\tCatched ! %s(%s %s)" % (obj.__name__, args, kwargs))
         else:
-            if hasattr(obj, '__name__'):
-                print("\tCatched ! %s.%s(%s %s)" % (obj.__name__, method.__name__, args,kwargs))
-            else:
-                print("\tCatched ! %s.%s(%s %s)" % (obj, method.__name__, args,kwargs))
-            print("\t\tCallobject = %s method = %s with %s %s" % (obj, method, args, kwargs))
+            if not method.__name__.startswith('__'):
+                if hasattr(obj, '__name__'):
+                    print("\tCatched ! %s.%s(%s %s)" % (obj.__name__, method.__name__, args,kwargs))
+                else:
+                    print("\tCatched ! %s.%s(%s %s)" % (obj, method.__name__, args,kwargs))
+                print("\t\tCallobject = %s method = %s with %s %s" % (obj, method, args, kwargs))
         return super().method_call(obj, method, args, kwargs)
