@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from importlib import import_module
-from urllib.parse import parse_qs
+from .request import *
 
 from Modules.Interface.web.controllers import *
 import Modules.Interface.web.urls as main_urls
@@ -13,10 +12,7 @@ def get_controller(env):
     for url in main_urls.urls:
         url_rules.append((url[0], url[1]))
 
-    # Parsing the request
-    env['GET'] = parse_qs(env.get('QUERY_STRING'))
-    env['POST'] = parse_qs(env.get('wsgi.input').read())
-    env['PATH'] = env.get('PATH_INFO', '').lstrip('/')
+    env = parse_request(env)
 
     # Returning the right controller to call
     for regex, callback in url_rules:

@@ -12,14 +12,17 @@ response_codes = {
 
 def admin(request, start_response):
     start_response(response_codes['200'], [('Content-Type', 'text/html')])
-    return [b"ADMIN"]
+    loader = TemplateLoader()
+    return [loader.render_to_response('Lodel/templates/admin/admin.html')]
 
 
 def index(request, start_response):
     start_response(response_codes['200'], [('Content-Type', 'text/html')])
-    return [b"DASHBOARD"]
+    loader = TemplateLoader()
+    return [loader.render_to_response('Lodel/templates/index/index.html')]
 
 
 def not_found(request, start_response):
-    start_response(response_codes['404'], [('Content-Type', 'text/plain')])
-    return [b'Not Found']
+    start_response(response_codes['404'], [('Content-Type', 'text/html')])
+    loader = TemplateLoader()
+    return [loader.render_to_response('Lodel/templates/errors/404.html')]

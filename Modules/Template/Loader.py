@@ -24,11 +24,7 @@ class TemplateLoader(object):
 
     ## @brief Renders a HTML content of a template
     #
-    # @param template_file str : path to the template file (starting from the base path used to instanciate the
-    #                            TemplateLoader)
-    # @param template_vars dict : parameters to be used in the template
-    # @param template_extra list : list of tuples indicating the custom modules to import in the template (default: None).
-    #                              The modules are given as tuples with the format : ('name_to_use_in_the_template', module)
+    # @see Modules.Template.Loader.TemplateLoader.render_to_response
     #
     # @return str. String containing the HTML output of the processed templated
     def render_to_html(self, template_file, template_vars={}, template_extra=None):
@@ -48,6 +44,20 @@ class TemplateLoader(object):
                 template.globals[extra[0]] = extra[1]
 
         return template.render(template_vars)
+
+
+    ## @brief Renders a template into an encoded form ready to be sent to a wsgi response
+    #
+    # @param template_file str : path to the template file (starting from the base path used to instanciate the
+    #                            TemplateLoader)
+    # @param template_vars dict : parameters to be used in the template
+    # @param template_extra list : list of tuples indicating the custom modules to import in the template (default: None).
+    #                              The modules are given as tuples with the format : ('name_to_use_in_the_template', module)
+    #
+    # @return str
+    def render_to_response(self, template_file, template_vars={}, template_extra=None):
+        return self.render_to_html(template_file=template_file,template_vars=template_vars,
+                                   template_extra=template_extra).encode()
 
     ## @brief Checks if the key used for the template is allowed
     #
