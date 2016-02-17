@@ -1,10 +1,12 @@
+DYNDIR=dyncode
+
 all: refreshdyn dbinit dirinit
 
 refreshdyn: cleandyn dyncode
 	python -c "import utils; utils.refreshdyn()"
 
 dyncode:
-	mkdir dyncode; touch dyncode/__init__.py
+	mkdir $(DYNDIR); touch $(DYNDIR)/__init__.py
 
 dbinit:
 	python -c "import utils; utils.db_init()"
@@ -21,11 +23,10 @@ distclean: clean cleandyn
 
 clean: cleanpycache
 
-cleandyn: cleanpycache
-	-@rm -vf dyncode/internal_api.py dyncode/acl_api.py dyncode/__init__.py ; rmdir dyncode
+cleandyn:
+	-rm $(DYNDIR)/acl_api.py $(DYNDIR)/internal_api.py $(DYNDIR)/__init__.py 2>/dev/null ; rmdir $(DYNDIR)
 
 cleanpyc:
-	-@rm -vf *.pyc
-
+	-find ./ |grep -E "\.pyc$$" |xargs rm -f 2>/dev/null
 cleanpycache: cleanpyc
-	-@rm -vfR __pycache__
+	-find ./ -type d |grep '__pycache__' | xargs rmdir 2>/dev/null
