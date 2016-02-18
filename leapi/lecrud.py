@@ -10,6 +10,7 @@ import importlib
 import re
 
 from EditorialModel.fieldtypes.generic import DatasConstructor
+from Lodel.hooks import LodelHook
 
 REL_SUP = 0
 REL_SUB = 1
@@ -279,6 +280,15 @@ class _LeCrud(object):
     # @todo better error handling
     # @todo for check_data_consistency, datas must be populated to make update safe !
     def update(self, datas=None):
+        kwargs = locals()
+        del(kwargs['self'])
+        kwargs = LodelHook.call_hook('leapi_update_pre', self, kwargs)
+        ret = self.__update_unsafe(**kwargs)
+        return ret
+
+    ## @brief Unsafe, without hooks version of insert method
+    # @see _LeCrud.update()
+    def __update_unsafe(self, datas=None):
         if not self.is_complete():
             self.populate()
             warnings.warn("\nThis object %s is not complete and has been populated when update was called. This is very unsafe\n" % self)
@@ -297,7 +307,9 @@ class _LeCrud(object):
     # @return True if success
     # @todo better error handling
     def delete(self):
+        LodelHook.call_hook('leapi_delete_pre', self, None)
         self._datasource.delete(self.__class__, self.uidget())
+        return LodelHook.call_hook('leapi_delete_post', self, None)
 
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
@@ -358,6 +370,17 @@ class _LeCrud(object):
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+        kwargs = locals()
+        del(kwargs['cls'])
+        kwargs = LodelHook.call_hook('leapi_get_pre', cls, kwargs)
+        ret = cls.__get_unsafe(**kwargs)
+        return LodelHook.call_hook('leapi_get_post', cls, ret)
+
+    ## @brief Unsafe, without hooks version of get() method
+    # @see _LeCrud.get()
+    @classmethod
+    def __get_unsafe(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+
         if field_list is None or len(field_list) == 0:
             #default field_list
             field_list = cls.fieldlist()
@@ -409,6 +432,16 @@ class _LeCrud(object):
     # @return A new id if success else False
     @classmethod
     def insert(cls, datas, classname=None):
+        kwargs = locals()
+        del(kwargs['cls'])
+        kwargs = LodelHook.call_hook('leapi_insert_pre', cls, kwargs)
+        ret = cls.__insert_unsafe(**kwargs)
+        return LodelHook.call_hook('leapi_insert_post', cls, ret)
+
+    ## @brief Unsafe, without hooks version of insert() method
+    # @see _LeCrud.insert()
+    @classmethod
+    def __insert_unsafe(cls, datas, classname=None):
         callcls = cls if classname is None else cls.name2class(classname)
         if not callcls:
             raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})

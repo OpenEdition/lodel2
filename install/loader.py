@@ -11,6 +11,8 @@ from Lodel.settings import Settings
 Settings.load_module(instance_settings)
 globals()['Settings'] = Settings
 
+from plugins import * #Load activated plugins
+
 # Import dynamic code
 if os.path.isfile(Settings.dynamic_code_file):
     from dynleapi import *

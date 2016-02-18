@@ -3,11 +3,14 @@
 
 import pymysql
 import os
+import os.path
 
 lodel2_lib_path = os.path.dirname(os.path.abspath(__file__))
 base_path = os.path.dirname(os.path.abspath(__file__))
 debug = False
 debug_sql = False
+
+plugins = ['dummy']
 
 datasource = {
     'default': {

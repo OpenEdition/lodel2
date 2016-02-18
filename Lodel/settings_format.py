@@ -13,7 +13,8 @@ MANDATORY = [
     'datasource',
     'mh_classname',
     'migration_options',
-    'base_path'
+    'base_path',
+    'plugins',
 ]
 
 ## @brief List allowed (but not mandatory) configurations keys
