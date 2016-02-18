@@ -18,9 +18,11 @@ class TemplateLoader(object):
     #                          it to the root "/". By default, it will be the root of the project, defined in the
     #                          settings of the application
     # @param follow_links bool : indicates whether or not to follow the symbolic links (default: True)
-    def __init__(self, search_path=settings.base_path, follow_links=True):
+    # @param is_cache_active bool : indicates whether or not the cache should be activated or not (default: True)
+    def __init__(self, search_path=settings.base_path, follow_links=True, is_cache_active=True):
         self.search_path = search_path
         self.follow_links = follow_links
+        self.is_cache_active = is_cache_active
 
     ## @brief Renders a HTML content of a template
     #
@@ -30,7 +32,8 @@ class TemplateLoader(object):
     def render_to_html(self, template_file, template_vars={}, template_extra=None):
 
         loader = jinja2.FileSystemLoader(searchpath=self.search_path, followlinks=self.follow_links)
-        environment = jinja2.Environment(loader=loader)
+        environment = jinja2.Environment(loader=loader) if self.is_cache_active else jinja2.Environment(loader=loader,
+                                                                                                        cache_size=0)
         template = environment.get_template(template_file)
 
         # Lodel2 default api is loaded
