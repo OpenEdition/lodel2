@@ -10,7 +10,7 @@ base_path = os.path.dirname(os.path.abspath(__file__))
 debug = False
 debug_sql = False
 
-plugins = ['dummy']
+plugins = ['dummy', 'dummy_auth']
 
 datasource = {
     'default': {
