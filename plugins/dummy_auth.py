@@ -1,0 +1,21 @@
+#-*- coding: utf-8 -*-
+
+from Lodel.user import authentication_method, identification_method, UserIdentity
+
+@authentication_method
+def dummy_auth(identifier, proof):
+    print("Trying to authenticate user %s" % identifier)
+    if identifier == proof:
+        print("%s authenticated" % identifier)
+        return UserIdentity(identifier, identifier, "User %s" % identifier, authenticated = True)
+    return False
+
+@identification_method
+def dummy_identify(client_infos):
+    print("Trying to identify client with %s" % client_infos)
+    if 'ip' in client_infos:
+        ip = client_infos['ip']
+        if ip in ['localhost', '127.0.0.1', 'local']:
+            return UserIdentity(0, 'localuser', 'local user', identifier = True)
+    return False
+
