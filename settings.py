@@ -30,3 +30,13 @@ migration_options = {
 
 em_graph_format = 'png'
 em_graph_output = '/tmp/em_%s_graph.png'
+
+logging = [
+    { 'level': 'INFO' },
+    {
+        'level': 'DEBUG',
+        'filename': '/tmp/lodel2.log',
+        'maxBytes': 1024 * 50, # rotate at 50MB
+        'backupCount': 10, # keep at most 10 backup
+    }
+]

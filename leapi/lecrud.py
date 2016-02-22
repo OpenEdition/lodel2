@@ -9,6 +9,7 @@ import warnings
 import importlib
 import re
 
+from Lodel import logger
 from EditorialModel.fieldtypes.generic import DatasConstructor
 from Lodel.hooks import LodelHook
 

@@ -15,6 +15,7 @@ MANDATORY = [
     'migration_options',
     'base_path',
     'plugins',
+    'logging',
 ]
 
 ## @brief List allowed (but not mandatory) configurations keys
