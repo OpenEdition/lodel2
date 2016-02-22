@@ -9,6 +9,7 @@ class PermissionDenied(Exception): pass
 def check_anon(hook_name, caller, payload):
     if not UserContext.identity().is_identified:
         raise PermissionDenied("Anonymous user's are not allowed to get content")
+    return payload
 
 @LodelHook('leapi_update_pre')
 @LodelHook('leapi_delete_pre')
@@ -16,3 +17,4 @@ def check_anon(hook_name, caller, payload):
 def check_auth(hook_name, caller, payload):
     if not UserContext.identity().is_authenticated:
         raise PermissionDenied("Only authenticated user's are allowed to do that !")
+    return payload

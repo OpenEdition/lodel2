@@ -147,7 +147,7 @@ class identification_method(object):
     @classmethod
     def identify(cls, client_infos):
         if len(cls.__methods) == 0:
-            raise RuntimeError("Not identification method registered")
+            warnings.warn("No identification methods registered")
         res = False
         for method in cls.__methods:
             ret = method(client_infos)
