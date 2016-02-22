@@ -1,5 +1,10 @@
 #-*- coding: utf-8 -*-
 
+## @package Lodel.user
+# @brief Defines Classes designed to handle users and user's context.
+#
+# Classes defined in this package are "helpers" for Lodel2 UI
+
 import warnings
 from Lodel.settings import Settings
 
@@ -8,6 +13,9 @@ from Lodel.settings import Settings
 # Class that produce immutable instance representing an identity
 class UserIdentity(object):
     
+    ## Maintain a reference to a UserIdentity instance that represents an anonymous user
+    __anonymous_user = None
+
     ## @brief Constructor
     # @note produce immutable instance
     # @param user_id * : user id
@@ -28,7 +36,12 @@ class UserIdentity(object):
     @property
     def username(self):
         return self.__username
-
+    
+    ## @brief getter for fullname
+    @property
+    def fullname(self):
+        return self.__fullname
+    
     @property
     def is_authenticated(self):
         return self.__authenticated
@@ -37,18 +50,25 @@ class UserIdentity(object):
     def is_identified(self):
         return self.__identified
     
-    ## @brief getter for fullname
-    @property
-    def fullname(self):
-        return self.__fullname
-
     def __repr__(self):
-        return "%s(id=%s)" % (self.__username, self.__user_id)
+        return "User '{user_id}'( username = '{username}', fullname = '{fullname}', identified : {identified}, authentified : {auth}".format(
+                                    user_id = self.__user_id,
+                                    username = self.__username,
+                                    fullname = self.__fullname,
+                                    identified = str(self.__identified),
+                                    auth = str(self.__authenticated),
+        )
 
     def __str__(self):
         return self.__fullname
 
-anonymous_user = UserIdentity(False, "anonymous", "Anonymous user")
+    ## @brief Provide an instance of UserIdentity representing an anonymous user
+    @classmethod
+    def anonymous(cls):
+        if cls.__anonymous_user is None:
+            cls.__anonymous_user = UserIdentity(False, "anonymous", "Anonymous user")
+        return cls.__anonymous_user
+
 
 ## @brief Decorator class designed to register user authentication methods
 #
@@ -183,7 +203,7 @@ class UserContext(object):
         cls.assert_init()
         if cls.__identity is False:
             ret = identification_method.identify(cls.__client_infos)
-            cls.__identity = anonymous_user if ret is False else ret
+            cls.__identity = UserIdentity.anonymous() if ret is False else ret
         return cls.__identity
 
     ## @brief authenticate a user
