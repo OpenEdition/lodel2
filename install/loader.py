@@ -11,6 +11,8 @@ from Lodel.settings import Settings
 Settings.load_module(instance_settings)
 globals()['Settings'] = Settings
 
+from Lodel import logger # logger import and initialisation
+
 from plugins import * #Load activated plugins
 
 # Import dynamic code

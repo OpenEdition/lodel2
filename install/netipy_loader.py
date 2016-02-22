@@ -1,9 +1,13 @@
 #-*- coding: utf-8 -*-
 
-from loader import *
 import sys
 import code
+from loader import *
+from Lodel import logger
 from Lodel.user import UserContext
+
+
+logger.remove_console_handlers()
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

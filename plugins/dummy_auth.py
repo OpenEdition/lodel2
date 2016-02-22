@@ -1,13 +1,17 @@
 #-*- coding: utf-8 -*-
 
 from Lodel.user import authentication_method, identification_method, UserIdentity
+from Lodel import logger
 
 @authentication_method
 def dummy_auth(identifier, proof):
-    print("Trying to authenticate user %s" % identifier)
+    logger.info("User '%s' is trying to authenticate" % identifier)
     if identifier == proof:
         print("%s authenticated" % identifier)
         return UserIdentity(identifier, identifier, "User %s" % identifier, authenticated = True)
+    else:
+        logger.security("Authentication failed for user '%s'" % identifier)
+        
     return False
 
 @identification_method
