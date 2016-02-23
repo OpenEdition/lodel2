@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import os
+import copy
 from importlib.machinery import SourceFileLoader
 
 from Lodel.settings import Settings
@@ -65,4 +66,16 @@ class LodelHook(object):
             for hook in cls._hooks[hook_name]:
                 payload = hook(hook_name, caller, payload)
         return payload
+    
+    ## @brief Fetch registered hooks
+    # @param names list | None : optionnal filter on name
+    # @return a list of functions
+    @classmethod
+    def hook_list(cls, names = None):
+        res = None
+        if names is not None:
+            res = { name: copy.copy(cls._hooks[name]) for name in cls._hooks if name in names}
+        else:
+            res = copy.copy(cls._hooks)
+        return { name: [(hook._hook, hook._priority) for hook in hooks] for name, hooks in res.items() }
 

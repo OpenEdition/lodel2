@@ -6,6 +6,7 @@
 # Classes defined in this package are "helpers" for Lodel2 UI
 
 import warnings
+import copy
 from Lodel.settings import Settings
 
 ## @brief Represent a Lodel user identity
@@ -121,6 +122,12 @@ class authentication_method(object):
                 res = ret
         return res
 
+    ## @return registered identification methods
+    @classmethod
+    def list_methods(cls):
+        return list(copy.copy(cls.__methods))
+
+
 
 ## @brief Decorator class designed to register identification methods
 #
@@ -161,6 +168,11 @@ class identification_method(object):
                         return ret
                     res = ret
         return res
+    
+    ## @return registered identification methods
+    @classmethod
+    def list_methods(cls):
+        return list(copy.copy(cls.__methods))
 
 
 ## @brief Static class designed to handle user context

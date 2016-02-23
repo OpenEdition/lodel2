@@ -1,2 +1,2 @@
-import Lodel.settings
-__all__ = Lodel.settings.Settings.plugins
+import Lodel.plugins
+__all__ = Lodel.plugins._all_plugins()

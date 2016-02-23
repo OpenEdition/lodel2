@@ -88,6 +88,14 @@ class SettingsHandler(object):
             err_msg = "Found invalid settings in %s : %s"%(module.__name__, errors)
             raise LookupError(err_msg)
 
+    ## @brief Refresh the allowed and mandatory settings list
+    @classmethod
+    def _refresh_format(cls):
+        ## @brief Shortcut
+        cls._allowed = settings_format.ALLOWED + settings_format.MANDATORY
+        ## @brief Shortcut
+        cls._mandatory = settings_format.MANDATORY
+
     ## @brief If some settings are missings return their names
     # @return an array of string
     def _missings(self):

@@ -33,6 +33,7 @@ mkdir -pv "$instdir"
 
 cp -v $libdir/install/* $instdir
 rm -fv $instdir/__init__.py
+cp -v $libdir/manage_lodel.py $instdir
 
 sed -i -e "s#LODEL2_LIB_ABS_PATH#$libdir#" "$settings"
 sed -i -e "s#LODEL2_INSTANCE_NAME#$name#" "$settings"
