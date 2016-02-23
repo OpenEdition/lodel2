@@ -43,7 +43,7 @@ class LodelHook(object):
     # @param priority int : the hook priority
     def __init__(self, hook_name, priority = None):
         self._hook_name = hook_name
-        self._priority = 0xFFF if priority is None else priority
+        self._priority = 0xFFFF if priority is None else priority
     
     ## @brief called just after __init__
     # @param hook function : the decorated function
@@ -78,4 +78,10 @@ class LodelHook(object):
         else:
             res = copy.copy(cls._hooks)
         return { name: [(hook._hook, hook._priority) for hook in hooks] for name, hooks in res.items() }
-
+    
+    ## @brief Unregister all hooks
+    # @warning REALLY NOT a good idea !
+    # @note implemented for testing purpose
+    @classmethod
+    def __reset_hooks__(cls):
+        cls._hooks = dict()
