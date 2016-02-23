@@ -116,7 +116,6 @@ class LodelHookTestCase(unittest.TestCase):
 
         call_args = {'datas':dict()}
         
-        leo = Numero
         for leo in [Numero, Publication, RelTextesPersonneAuteur]:
             with patch.object(_LeCrud, 'populate', return_value = None) as osef_mock:
                 with patch.object(LodelHook, 'call_hook', return_value = call_args) as callhook_mock:
@@ -128,4 +127,37 @@ class LodelHookTestCase(unittest.TestCase):
                     ]
                     callhook_mock.assert_has_calls(expected_calls, any_order = False)
 
-    ## @todo Write tests for delete and insert hooks
+    def test_leapi_delete_hooks(self):
+        """ Testing that leapi_delete_* hooks get called when calling delete on LeCrud child instance"""
+        from dyncode import Numero, Publication, LeRelation, RelTextesPersonneAuteur
+        for leo in [Numero, Publication, RelTextesPersonneAuteur]:
+            with patch.object(LodelHook, 'call_hook', return_value = None) as callhook_mock:
+                inst = leo(42)
+                inst.delete()
+                expected_calls = [
+                    call('leapi_delete_pre', inst, None),
+                    call('leapi_delete_post', inst, None)
+                ]
+                callhook_mock.assert_has_calls(expected_calls, any_order = False)
+
+    def test_leapi_insert_hooks(self):
+        """ Testing that leapi_insert_* hooks get called when calling insert on LeCrud child instance """
+        # Only testing with Article because datas check is anoying
+        from dyncode import Article
+        call_args = {
+            'datas': {
+                        'titre': 'test',
+                        'soustitre': 'avec des mocks',
+            }
+        }
+
+        full_args = copy.copy(call_args)
+        full_args['classname'] = None
+
+        with patch.object(LodelHook, 'call_hook', return_value = full_args) as callhook_mock:
+            Article.insert(**call_args)
+            expected_calls = [
+                call('leapi_insert_pre', Article, full_args),
+                call('leapi_insert_post', Article, None),
+            ]
+            callhook_mock.assert_has_calls(expected_calls)
