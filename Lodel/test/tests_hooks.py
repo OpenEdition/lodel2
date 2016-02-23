@@ -108,5 +108,24 @@ class LodelHookTestCase(unittest.TestCase):
                     call('leapi_get_post', lerel, None),
                 ]
                 callhook_mock.assert_has_calls(expected_calls, any_order = False)
+    
+    def test_leapi_update_hook(self):
+        """ Testing that leapi_update_* hooks get called when calling update on LeCrud child instance"""
+        from leapi.lecrud import _LeCrud
+        from dyncode import Numero, Publication, LeRelation, RelTextesPersonneAuteur
 
-    ## @todo Write tests for update, delete and insert hooks
+        call_args = {'datas':dict()}
+        
+        leo = Numero
+        for leo in [Numero, Publication, RelTextesPersonneAuteur]:
+            with patch.object(_LeCrud, 'populate', return_value = None) as osef_mock:
+                with patch.object(LodelHook, 'call_hook', return_value = call_args) as callhook_mock:
+                    inst = leo(42)
+                    inst.update(**call_args)
+                    expected_calls = [
+                        call('leapi_update_pre', inst, call_args),
+                        call('leapi_update_post', inst, False),
+                    ]
+                    callhook_mock.assert_has_calls(expected_calls, any_order = False)
+
+    ## @todo Write tests for delete and insert hooks

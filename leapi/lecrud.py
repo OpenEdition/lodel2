@@ -285,7 +285,7 @@ class _LeCrud(object):
         del(kwargs['self'])
         kwargs = LodelHook.call_hook('leapi_update_pre', self, kwargs)
         ret = self.__update_unsafe(**kwargs)
-        return ret
+        return LodelHook.call_hook('leapi_update_post', self, ret)
 
     ## @brief Unsafe, without hooks version of insert method
     # @see _LeCrud.update()
