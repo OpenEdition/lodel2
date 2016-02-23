@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
-## @package Lodel.user
-# @brief Defines Classes designed to handle users and user's context.
+## @package Lodel.user Defines classes designed to handler users and user's context
 #
 # Classes defined in this package are "helpers" for Lodel2 UI
 
@@ -20,7 +19,10 @@ class UserIdentity(object):
     ## @brief Constructor
     # @note produce immutable instance
     # @param user_id * : user id
-    # @param username str : printable name for user identity
+    # @param username str : user name
+    # @param fullname str | None : user full name
+    # @param identified bool : set it to True if the user is identified
+    # @param authenticated bool : set it to True if the user is authenticated (force identified = True )
     def __init__(self, user_id, username, fullname = None, identified = False, authenticated = False):
         self.__user_id = user_id
         self.__username = username
@@ -43,14 +45,17 @@ class UserIdentity(object):
     def fullname(self):
         return self.__fullname
     
+    ## @return True if the user is considered as authenticated
     @property
     def is_authenticated(self):
         return self.__authenticated
 
+    ## @return True if the user is considered as identified
     @property
     def is_identified(self):
         return self.__identified
     
+    ## @brief String representation of the instance
     def __repr__(self):
         return "User '{user_id}'( username = '{username}', fullname = '{fullname}', identified : {identified}, authentified : {auth}".format(
                                     user_id = self.__user_id,
@@ -59,7 +64,8 @@ class UserIdentity(object):
                                     identified = str(self.__identified),
                                     auth = str(self.__authenticated),
         )
-
+    
+    ## @brief Human readable text representation of the instance
     def __str__(self):
         return self.__fullname
 
@@ -73,16 +79,11 @@ class UserIdentity(object):
 
 ## @brief Decorator class designed to register user authentication methods
 #
-# Example : 
-# <pre>
-# @authentication_method
-# def foo_auth(identity, proof):
-#   if ok:
-#       return True
-#   else:
-#       return False
-# </pre>
-#
+# @note Decorated functions are expected to take 2 arguments :
+#  - identifier : the user identifier
+#  - proof : a proof of identity
+# and are expected to return False if authentication fails. When authentication
+# is a success the function is expected to return a UserIdentity instance
 class authentication_method(object):
     
     ## @brief Stores registered authentication functions
@@ -101,8 +102,9 @@ class authentication_method(object):
         return self._method(identifier, proof)
     
     ## @brief Try to authenticate a user with registered functions
-    # @param identity * : user id
+    # @param identifier * : user id
     # @param proof * : user authentication proof
+    # @param cls
     # @return False or a User Identity instance
     @classmethod
     def authenticate(cls, identifier, proof):
@@ -123,11 +125,13 @@ class authentication_method(object):
         return res
 
     ## @return registered identification methods
+    # @param cls
     @classmethod
     def list_methods(cls):
         return list(copy.copy(cls.__methods))
 
     ## @brief Unregister all authentication methods
+    # @param cls
     # @warning REALLY NOT a good idead !
     # @note implemented for testing purpose
     @classmethod
@@ -137,7 +141,10 @@ class authentication_method(object):
 
 ## @brief Decorator class designed to register identification methods
 #
-# The decorated methods should take one client_infos argument and returns a UserIdentity instance
+# @note The decorated functions are expected to take one argument :
+# - client_infos : datas for identification
+# and are expected to return False if identification fails. When identification is a success
+# the function is expected to return a UserIdentity instance
 class identification_method(object):
     
     ## @brief Stores registered identification functions
@@ -155,7 +162,8 @@ class identification_method(object):
         return self._method(client_infos)
 
     ## @brief Identify someone given datas
-    # @param datas * :  datas that may identify a user
+    # @param client_infos * :  datas that may identify a user
+    # @param cls
     # @return False if identification fails, else returns an UserIdentity instance
     @classmethod
     def identify(cls, client_infos):
@@ -177,11 +185,13 @@ class identification_method(object):
         return res
     
     ## @return registered identification methods
+    # @param cls
     @classmethod
     def list_methods(cls):
         return list(copy.copy(cls.__methods))
 
     ## @brief Unregister all identification methods
+    # @param cls
     # @warning REALLY NOT a good idead !
     # @note implemented for testing purpose
     @classmethod
@@ -206,10 +216,9 @@ class UserContext(object):
         raise NotImplementedError("Static class")
 
     ## @brief User context constructor
-    # @param client str : client id (typically IP addr)
-    # @param login str|None : given when a client try to be authenticated
-    # @param proof str|None : given when a client try to be authenticated
+    # @param client_infos * : datas for client identification (typically IP address)
     # @param **kwargs dict : context
+    # @param cls
     # @todo find another exception to raise
     @classmethod
     def init(cls, client_infos, **kwargs):
@@ -235,6 +244,7 @@ class UserContext(object):
     ## @brief authenticate a user
     # @param identifier * : user identifier
     # @param proof * : proof of identity
+    # @param cls
     # @throw an exception if fails
     # @todo find a better exception to raise when auth fails
     @classmethod

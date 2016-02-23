@@ -1,11 +1,11 @@
 #-*- coding: utf-8 -*-
 
-from .char import EmFieldType
+from . import char
 
 import EditorialModel.classtypes as classtypes
 import leapi.lerelation as lerelation
 
-class EmFieldType(EmFieldType):
+class EmFieldType(char.EmFieldType):
     
     help = 'Stores a relation\'s nature'
 

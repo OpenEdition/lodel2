@@ -16,23 +16,19 @@ class DecoratedWrapper(object):
         self._hook = hook
     
     ## @brief Call the callback
-    # @param *args
-    # @param **kwargs
+    # @param hook_name str : The name of the called hook
+    # @param caller * : The caller (depends on the hook)
+    # @param payload * : Datas that depends on the hook
     # @return modified payload
     def __call__(self, hook_name, caller, payload):
         return self._hook(hook_name, caller, payload)
 
 ## @brief Decorator designed to register hook's callbacks
 #
-# Example : 
-#
-# <pre>
-# @LodelHook('hook_name', 42)
-# def super_callback(hook_name, caller, payload):
-#    return payload
-#
-# LodelHook.call_hook('hook_name', caller, 'foobar') #calls super_callback('hook_name', caller, 'foobar')
-# </pre>
+# @note Decorated functions are expected to take 3 arguments :
+#  - hook_name : the called hook name
+#  - caller : the hook caller (depends on the hook)
+#  - payload : datas depending on the hook
 class LodelHook(object):
     
     ## @brief Stores all hooks (DecoratedWrapper instances)
@@ -58,7 +54,9 @@ class LodelHook(object):
 
     ## @brief Call hooks
     # @param hook_name str : the hook's name
+    # @param caller * : the hook caller (depends on the hook)
     # @param payload * : datas for the hook
+    # @param cls
     # @return modified payload
     @classmethod
     def call_hook(cls, hook_name, caller, payload):
@@ -69,6 +67,7 @@ class LodelHook(object):
     
     ## @brief Fetch registered hooks
     # @param names list | None : optionnal filter on name
+    # @param cls
     # @return a list of functions
     @classmethod
     def hook_list(cls, names = None):
@@ -80,6 +79,7 @@ class LodelHook(object):
         return { name: [(hook._hook, hook._priority) for hook in hooks] for name, hooks in res.items() }
     
     ## @brief Unregister all hooks
+    # @param cls
     # @warning REALLY NOT a good idea !
     # @note implemented for testing purpose
     @classmethod

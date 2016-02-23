@@ -24,9 +24,16 @@ def __init_from_settings():
         add_handler(name, logging_opt)
 
 ## @brief Add an handler, identified by a name, to a given logger 
-# @param logger logging.Logger : Basically the root logger
+#
+# logging_opt is a dict with logger option. Allowed keys are : 
+# - filename : take a filepath as value and cause the use of a logging.handlers.RotatingFileHandler
+# - level : the minimum logging level for a logger, takes values [ 'DEBUG', 'INFO', 'WARNING', 'SECURITY', 'ERROR', 'CRITICAL' ]
+# - format : DONT USE THIS OPTION (or if you use it be sure to includes %(_pathname)s %(_lineno)s %(_funcName)s format variables in format string
+# - context : boolean, if True include the context (module:lineno:function_name) in the log format
+# @todo Move the logging_opt documentation somewhere related with settings
+# 
 # @param name str : The handler name
-# @param logging_opt dict : dict containing options ( see @ref jesaispasou_pour_les_details )
+# @param logging_opt dict : dict containing options ( see above )
 def add_handler(name, logging_opt):
     logger = logging.getLogger()
     if name in handlers:
