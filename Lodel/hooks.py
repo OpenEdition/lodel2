@@ -83,5 +83,5 @@ class LodelHook(object):
     # @warning REALLY NOT a good idea !
     # @note implemented for testing purpose
     @classmethod
-    def __reset_hooks__(cls):
+    def __reset__(cls):
         cls._hooks = dict()

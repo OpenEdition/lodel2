@@ -107,7 +107,7 @@ class authentication_method(object):
     @classmethod
     def authenticate(cls, identifier, proof):
         if len(cls.__methods) == 0:
-            raise RuntimeError("Not authentication method registered")
+            raise RuntimeError("No authentication method registered")
         res = False
         for method in cls.__methods:
             ret = method(identifier, proof)
@@ -127,6 +127,12 @@ class authentication_method(object):
     def list_methods(cls):
         return list(copy.copy(cls.__methods))
 
+    ## @brief Unregister all authentication methods
+    # @warning REALLY NOT a good idead !
+    # @note implemented for testing purpose
+    @classmethod
+    def __reset__(cls):
+        cls.__methods = set()
 
 
 ## @brief Decorator class designed to register identification methods
@@ -165,14 +171,22 @@ class identification_method(object):
                     if res is not False:
                         warnings.warn("Identifying methods returns multiple identity given client_infos")
                     else:
-                        return ret
-                    res = ret
+                        res = ret
+                else:
+                    return ret
         return res
     
     ## @return registered identification methods
     @classmethod
     def list_methods(cls):
         return list(copy.copy(cls.__methods))
+
+    ## @brief Unregister all identification methods
+    # @warning REALLY NOT a good idead !
+    # @note implemented for testing purpose
+    @classmethod
+    def __reset__(cls):
+        cls.__methods = set()
 
 
 ## @brief Static class designed to handle user context
@@ -232,6 +246,7 @@ class UserContext(object):
         cls.__identity = ret
     
     ## @return UserIdentity instance
+    # @todo useless alias to identity()
     @classmethod
     def user_identity(cls):
         cls.assert_init()
@@ -246,3 +261,12 @@ class UserContext(object):
     @classmethod
     def assert_init(cls):
         assert cls.initialized(), "User context is not initialized"
+    
+    ## @brief Reset the UserContext
+    # @warning Most of the time IT IS NOT A GOOD IDEAD
+    # @note implemented for test purpose
+    @classmethod
+    def __reset__(cls):
+        cls.__client_infos = None
+        cls.__identity = None
+        cls.__context = None

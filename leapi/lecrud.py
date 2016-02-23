@@ -309,8 +309,8 @@ class _LeCrud(object):
     # @todo better error handling
     def delete(self):
         LodelHook.call_hook('leapi_delete_pre', self, None)
-        self._datasource.delete(self.__class__, self.uidget())
-        return LodelHook.call_hook('leapi_delete_post', self, None)
+        ret = self._datasource.delete(self.__class__, self.uidget())
+        return LodelHook.call_hook('leapi_delete_post', self, ret)
 
     ## @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
