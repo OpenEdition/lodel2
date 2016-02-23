@@ -46,7 +46,4 @@
 # https://docs.python.org/3.4/library/unittest.html
 #
 
-
-export DJANGO_SETTINGS_MODULE="Lodel.settings"
-
-python -m unittest $@
+python -W ignore -m unittest $@
