@@ -27,6 +27,18 @@ If you want to write a script that run is the instance env you have to use
 
 -----
 
+Lodel2 plugins system:
+
+In an instance or in the lib dir you can ask Lodel2 wich plugins and wich hooks are activated.
+Print a list of plugins :
+	python3 manage_lodel.py --list-plugins
+Print a list of registered hooks :
+	python3 manage_lodel.py --list-hooks
+More informations about the script :
+	python3 manage_lodel.py --help
+
+-----
+
 ** Doxygen generation
   Dependencies : doxygen graphviz doxypy
   Generation : run make doc in the root folder
