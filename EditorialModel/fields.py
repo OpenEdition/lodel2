@@ -139,10 +139,6 @@ class EmField(EmComponent):
         #Uniq Name check
         if len([f for f in self.em_class.fields() if f.name == self.name]) > 1:
             raise EmComponentCheckError("The field %d has a name '%s' that is not uniq in the EmClass %d" % (self.uid, self.name, self.em_class.uid))
-        #rel2type uniq check
-        if self.fieldtype == 'rel2type':
-            if len([f for f in self.em_class.fields() if f.fieldtype == 'rel2type' and f.rel_to_type_id == self.rel_to_type_id]) > 1:
-                raise EmComponentCheckError("The rel2type %d is not uniq, another field is linked to the same type '%s' in the same class '%s'" % (self.uid, self.model.component(self.rel_to_type_id).name, self.em_class.name))
 
     ## @brief Delete a field if it's not linked
     # @return bool : True if deleted False if deletion aborded

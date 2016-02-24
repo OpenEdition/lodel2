@@ -183,7 +183,7 @@ class Model(object):
             em_obj = self.emclass_from_name(component_type)
 
         rank = 'last'
-        if 'rank' in datas:
+        if 'rank' in datas and not datas['rank'] is None:
             rank = datas['rank']
             del datas['rank']
 
@@ -220,6 +220,28 @@ class Model(object):
                 self.add_default_class_fields(em_component.uid)
 
         return em_component
+
+    ## @brief Create a new EmClass
+    def add_class(self, name, classtype, string=None, help_text=None, date_update = None, date_create = None, rank = None):
+        datas = locals()
+        del(datas['self'])
+        return self.create_component('EmClass', datas)
+    
+    ## @brief Create a new EmType
+    def add_type(self, name, emclass, fields_list = None, superiors_list = None, icon='0', sortcolumn='rank', string = None, help_text = None, date_update = None, date_create = None, rank = None):
+        datas = locals()
+        del(datas['self'])
+        emclass = datas['emclass']
+        del(datas['emclass'])
+        datas['class_id'] = emclass.uid if isinstance(emclass, EmClass) else emclass
+        return self.create_component('EmType', datas)
+    
+    ## @brief Add a new EmField
+    def add_field(self, name, emclass, fieldtype, **kwargs):
+        kwargs['name'] = name
+        kwargs['fieldtype'] = fieldtype
+        kwargs['class_id'] = emclass.uid if isinstance(emclass, EmClass) else emclass
+        return self.create_component('EmField', kwargs)
 
     ## @brief Add to a class (if not exists) the default fields
     #
