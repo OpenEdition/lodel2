@@ -15,8 +15,7 @@ import signal
 
 PORT = 1337
 #BIND = None
-#BIND = 'localhost'
-BIND = '147.94.79.182'
+BIND = 'localhost'
 THREAD_COUNT = 10
 SOCK_TIMEOUT = 5
 
