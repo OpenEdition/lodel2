@@ -91,9 +91,9 @@ class EmBackendGraphviz(EmBackendDummy):
             for f in [ f for f in c.fields() if f.name not in c.em_class.default_fields_list().keys()]:
                 if f.rel_field_id is None:
                     if f.fieldtype == 'rel2type':
-                        rel_node_id = '%s%s'%(EmBackendGraphviz._component_id(c), EmBackendGraphviz._component_id(em.component(f.rel_to_type_id)))
+                        rel_node_id = '%s%s%s'%(EmBackendGraphviz._component_id(c), EmBackendGraphviz._component_id(em.component(f.rel_to_type_id)), f.uid)
 
-                        rel_node = '\t%s [ label="rel_to_type'%rel_node_id
+                        rel_node = '\t%s [ label="rel2type %s'% (rel_node_id, f.name)
 
                         if len(f.rel_to_type_fields()) > 0:
                             #rel_node += '| {'
@@ -104,7 +104,8 @@ class EmBackendGraphviz(EmBackendDummy):
                                     rel_node += '{ '
                                     first = False
                                 rel_node += rf.name
-                        rel_node += '}" shape="record"]\n'
+                        rel_node += '}' if len(f.rel_to_type_fields()) > 0 else ''
+                        rel_node += '" shape="record"]\n'
 
                         rel_field += rel_node
 

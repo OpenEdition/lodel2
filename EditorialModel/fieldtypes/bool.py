@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 
-from .generic import GenericFieldType
+from .generic import SingleValueFieldType
 
 
-class EmFieldType(GenericFieldType):
+class EmFieldType(SingleValueFieldType):
 
     help = 'A basic boolean field'
 

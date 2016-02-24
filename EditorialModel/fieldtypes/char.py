@@ -10,6 +10,6 @@ class EmFieldType(SingleValueFieldType):
     ## @brief A char field
     # @brief max_length int : The maximum length of this field
     def __init__(self, max_length=64, **kwargs):
-        self.max_length = max_length
+        self.max_length = int(max_length)
         super().__init__(**kwargs)
 
