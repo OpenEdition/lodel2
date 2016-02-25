@@ -13,7 +13,7 @@ from mosql.query import select, insert, update, delete, join, left_join
 from mosql.util import raw, or_
 import mosql.mysql
 
-from DataSource.dummy.leapidatasource import DummyDatasource
+import DataSource.dummy.leapidatasource
 from DataSource.MySQL import utils
 from EditorialModel.classtypes import EmNature
 from EditorialModel.fieldtypes.generic import MultiValueFieldType
@@ -22,18 +22,14 @@ from Lodel.settings import Settings
 from .fieldtypes import fieldtype_cast
 
 ## MySQL DataSource for LeObject
-class LeDataSourceSQL(DummyDatasource):
+class LeapiDataSource(DataSource.dummy.leapidatasource.LeapiDataSource):
 
     RELATIONS_POSITIONS_FIELDS = {REL_SUP: 'superior_id', REL_SUB: 'subordinate_id'}
 
-    def __init__(self, module=pymysql, conn_args=None):
-        super(LeDataSourceSQL, self).__init__()
+    def __init__(self, module = pymysql, **kwargs):
+        super().__init__()
         self.module = module
-        if conn_args is None:
-            conn_args = copy.copy(Settings.get('datasource')['default'])
-            self.module = conn_args['module']
-            del conn_args['module']
-        self.connection = Database(self.module, **conn_args)
+        self.connection = Database(self.module, **kwargs)
 
     ## @brief select lodel editorial components using given filters
     # @param target_cls LeCrud(class): The component class concerned by the select (a LeCrud child class (not instance !) )

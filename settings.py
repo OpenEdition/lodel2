@@ -12,6 +12,9 @@ debug_sql = False
 
 plugins = ['dummy', 'dummy_auth']
 
+ds_package = 'dummy'
+datasource_options = {}
+""" #example
 datasource = {
     'default': {
         'module':pymysql,
@@ -21,6 +24,7 @@ datasource = {
         'db': None,
     }
 }
+"""
 
 migration_options = {
     'dryrun': False,

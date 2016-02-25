@@ -19,7 +19,7 @@ import leapi.test.utils #Code generation functions
 
 from Lodel.settings import Settings
 import DataSource.MySQL
-from DataSource.MySQL.leapidatasource import LeDataSourceSQL as DataSource
+from DataSource.MySQL.leapidatasource import LeapiDataSource as DataSource
 import DataSource.MySQL.utils as db_utils
 from EditorialModel.classtypes import common_fields, relations_common_fields
 from EditorialModel.fieldtypes.generic import MultiValueFieldType
@@ -38,23 +38,12 @@ class DataSourceTestCase(TestCase):
     def test_init(self):
         """ Test __init__ for datasource """
         with patch.object(mosql.db.Database, '__init__', return_value=None) as mock_db:
-            #Test __init__ without arguments
-            DataSource()
-            conn_args = Settings.get('datasource')['default']
-            db_module = conn_args['module']
-            del(conn_args['module'])
-            mock_db.assert_called_once_with(db_module, **conn_args)
-
-            mock_db.reset_mock()
             #test with arguments
             conn_args = { 'hello': 'world', 'answer': 42 }
-            DataSource(mosql, conn_args)
+            DataSource(mosql, **conn_args)
             mock_db.assert_called_once_with(mosql, **conn_args)
 
             mock_db.reset_mock()
-
-            DataSource(conn_args = conn_args)
-            mock_db.assert_called_once_with(pymysql, **conn_args)
     
     def test_insert_leobject(self):
         """ Test the insert method on LeObjects """

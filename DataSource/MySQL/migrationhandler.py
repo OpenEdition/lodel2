@@ -13,7 +13,7 @@ from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
 from DataSource.MySQL import fieldtypes as fieldtypes_utils
 from DataSource.MySQL import utils
-from DataSource.dummy.migrationhandler import DummyMigrationHandler
+import DataSource.dummy
 
 # The global MH algorithm is as follow :
 # A create_table(table_name, pk_name, pk_opt) method that create a table
@@ -41,7 +41,7 @@ from DataSource.dummy.migrationhandler import DummyMigrationHandler
 
 
 ## @brief Modify a MySQL database given editorial model changes
-class MysqlMigrationHandler(DummyMigrationHandler):
+class MigrationHandler(DataSource.dummy.MigrationHandler):
 
     ## @brief Construct a MysqlMigrationHandler
     # @param module : sql module

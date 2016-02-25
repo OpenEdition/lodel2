@@ -4,8 +4,11 @@
 #
 # This class has to be extended to apply to a real datasource
 # But it can be used as an empty and debug datasource
-class DummyDatasource(object):
-
+#
+# @todo Settings fetch/pass generalisation for datasources.
+class LeapiDataSource(object):
+    
+    ## @todo Settings fetch/pass generalisation for datasources.
     def __init__(self, module=None, *conn_args, **conn_kargs):
         self.module = module
         self.conn_args = conn_args

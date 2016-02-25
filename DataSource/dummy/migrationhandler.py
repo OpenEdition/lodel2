@@ -8,7 +8,7 @@
 
 
 ## Manage Model changes
-class DummyMigrationHandler(object):
+class MigrationHandler(object):
 
     def __init__(self, debug=False):
         self.debug = debug
