@@ -14,6 +14,14 @@ def parse_request(env):
     env['POST'] = {}
     env['FILES'] = {}
 
+    if 'HTTP_COOKIE' in env:
+        cookie_string = env['HTTP_COOKIE']
+        cookie_elements = cookie_string.split('; ')
+        env['HTTP_COOKIE'] = {}
+        for cookie_element in cookie_elements:
+            cookie_split = cookie_element.split('=')
+            env['HTTP_COOKIE'][cookie_split[0]] = cookie_split[1]
+
     arg_fields = cgi.FieldStorage(fp=env['wsgi.input'], environ=env, keep_blank_values=True)
 
     for arg_field in arg_fields.list:
