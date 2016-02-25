@@ -58,7 +58,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         ndatas = [
@@ -81,7 +81,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
             dsmock.assert_called_once_with(Numero, **expt_dats)
             dsmock.reset_mock()
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Personne, Article, RelTextesPersonneAuteur
 
@@ -98,7 +98,7 @@ class LeObjectMockDatasourceTestCase(TestCase):
                 dsmock.assert_called_once_with(instance.__class__, instance.uidget(), **datas)
                 dsmock.reset_mock()
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject, LeType, LeRelation
         

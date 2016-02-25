@@ -69,7 +69,7 @@ class LeRelationTestCase(TestCase):
             for i in range(3):
                 self.assertEqual(filter_res[i], res[i], "%s != %s"%(filter_res, res))
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -81,7 +81,7 @@ class LeRelationTestCase(TestCase):
 
 class LeHierarch(LeRelationTestCase):
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.select')
     def test_get(self, dsmock):
         """ Tests the LeHierarch.get() method without limit group order etc."""
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -123,7 +123,7 @@ class LeHierarch(LeRelationTestCase):
 
             dsmock.reset_mock()
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert(self, dsmock):
         """ Testing LeHierarch insert method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -194,7 +194,7 @@ class LeHierarch(LeRelationTestCase):
             dsmock.reset_mock()
     
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.delete')
     def test_delete(self, dsmock):
         """ Testing LeHierarch delete method """
         from dyncode import LeCrud, Publication, Numero, Personnes, LeObject, Rubrique, LeHierarch, LeRelation
@@ -203,7 +203,7 @@ class LeHierarch(LeRelationTestCase):
         dsmock.assert_called_once_with(LeHierarch, 10)
         
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.update')
     def test_update(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeHierarch
@@ -214,7 +214,7 @@ class LeHierarch(LeRelationTestCase):
 
 class LeRel2TypeTestCase(LeRelationTestCase):
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeObject, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur
@@ -265,7 +265,7 @@ class LeRel2TypeTestCase(LeRelationTestCase):
             dsmock.assert_called_once_with(RelTextesPersonneAuteur, **eres)
             dsmock.reset_mock()
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert_fails(self, dsmock):
         """ test LeHierach update method"""
         from dyncode import LeObject, Rubrique, Numero, Article, Textes, Personne, Personnes, LeHierarch, LeRel2Type, RelTextesPersonneAuteur

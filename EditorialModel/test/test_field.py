@@ -1,5 +1,6 @@
 import os
 
+import unittest
 from unittest import TestCase
 from EditorialModel.fields import EmField
 from EditorialModel.model import Model
@@ -63,6 +64,7 @@ class TestField(FieldTestCase):
         with self.assertRaises(ValueError, msg="Only common_fields should be internal='object'"):
             field = EM_TEST_OBJECT.create_component(EmField.__name__, {'name': 'testbadinternal','internal': 'object', 'class_id': self.test_class.uid, 'fieldtype': self.test_fieldtype})
 
+    @unittest.skip("rel2type are not uniq like this anymore")
     def test_double_rel2type(self):
         """ Test the rel2type unicity """
         em = EM_TEST_OBJECT

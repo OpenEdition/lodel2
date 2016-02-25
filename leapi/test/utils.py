@@ -5,15 +5,13 @@ import sys
 from EditorialModel.model import Model
 import leapi
 from EditorialModel.backend.json_backend import EmBackendJson
-from DataSource.MySQL.leapidatasource import DummyDatasource
+from DataSource.dummy.leapidatasource import LeapiDataSource
 from leapi.lefactory import LeFactory
 
 
 
 genepy_args = {
     'model' : Model(EmBackendJson(json_file = 'EditorialModel/test/me.json')),
-    'datasource_cls': DummyDatasource,
-    'datasource_args': {}
 }
 
 def tmp_load_factory_code(name='dyncode'):

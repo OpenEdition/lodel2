@@ -102,7 +102,7 @@ class LeTypeMockDsTestCase(TestCase):
         """ Remove the temporary directory created at class setup """
         leapi.test.utils.cleanup(cls.tmpdir)
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.select')
     def test_populate(self, dsmock):
         from dyncode import Publication, Numero, LeObject
 
@@ -112,7 +112,7 @@ class LeTypeMockDsTestCase(TestCase):
             num.populate()
             dsmock.assert_called_once_with(Numero, missing_fields, [('lodel_id','=',1)],[])
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -125,7 +125,7 @@ class LeTypeMockDsTestCase(TestCase):
             mock_populate.assert_called_once_with()
             dsmock.assert_called_once_with(Numero, num.uidget(), **datas)
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.delete')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.delete')
     def test_delete(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         

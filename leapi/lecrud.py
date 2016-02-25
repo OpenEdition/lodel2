@@ -10,6 +10,7 @@ import importlib
 import re
 
 from Lodel import logger
+from Lodel.settings import Settings
 from EditorialModel.fieldtypes.generic import DatasConstructor
 from Lodel.hooks import LodelHook
 
@@ -44,9 +45,29 @@ class LeApiQueryError(LeApiErrors): pass
 ## @brief When an error concerns a datas
 class LeApiDataCheckError(LeApiErrors): pass
     
+class _MetaLeCrud(type):
+     def __getattribute__(self, name):
+        if name == '_datasource':
+            if super().__getattribute__('_datasource') is None:
+                module = importlib.import_module("DataSource.{pkg_name}.leapidatasource".format(
+                    pkg_name = Settings.ds_package,
+                    mod_name = 'leapidatasource'
+                ))
+                ds_cls = getattr(module, 'LeapiDataSource')
+                super().__setattr__('_datasource', ds_cls(**Settings.datasource_options))
+        return super().__getattribute__(name)
+
+
+        if 'leapidatasource' in globals():
+            if name == '_datasource' and isinstance(self._datasource, DummyDatasource):
+                #if name == '_datasource' and self._datasource == None:
+                leapids = globals()['leapidatasource']
+                if not isinstance(leapids, DummyDatasource):
+                    self._datasource = leapids({})
+        return super().__getattribute__(name)
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
-class _LeCrud(object):
+class _LeCrud(object, metaclass = _MetaLeCrud):
     ## @brief The datasource
     _datasource = None
 
@@ -101,6 +122,11 @@ class _LeCrud(object):
 
         ## @brief A flag to indicate if the object was fully intanciated or not
         self._instanciation_complete = len(kwargs) + 1 == len(self.fieldlist())
+
+    def __getattribute__(self, name):
+        if name == '_datasource':
+            return _MetaLeCrud.__getattribute__(self.__class__, name)
+        return super().__getattribute__(name)
 
     ## @brief Convert an EmType or EmClass name in a python class name
     # @param name str : The name

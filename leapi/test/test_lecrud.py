@@ -179,7 +179,7 @@ class LeCrudTestCase(TestCase):
     #   Tests mocking the datasource
     # 
 
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Personne, Article
         ndatas = [
@@ -205,7 +205,7 @@ class LeCrudTestCase(TestCase):
             dsmock.reset_mock()
     
     ## @todo try failing on inserting from LeClass child or LeObject
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.insert')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.insert')
     def test_insert_fails(self, dsmock):
         from dyncode import Publication, Numero, LeObject, Personne, Article
         ndatas = [
@@ -221,7 +221,7 @@ class LeCrudTestCase(TestCase):
                 assert not dsmock.called
         pass
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.update')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.update')
     def test_update(self, dsmock):
         from dyncode import Publication, Numero, LeObject
         
@@ -242,7 +242,7 @@ class LeCrudTestCase(TestCase):
             dsmock.assert_called_once_with(ccls, eid, **qdatas)
     
     ## @todo test invalid get
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.select')
     def test_get(self, dsmock):
         """ Test the select method without group, limit, sort or offset """
         from dyncode import Publication, Numero, LeObject, Textes
@@ -321,7 +321,7 @@ class LeCrudTestCase(TestCase):
                                     )
             dsmock.reset_mock()
     
-    @patch('DataSource.dummy.leapidatasource.DummyDatasource.select')
+    @patch('DataSource.dummy.leapidatasource.LeapiDataSource.select')
     def test_get_complete(self, dsmock):
         """ Test the select method with group limit sort and offset arguments """
         from dyncode import Numero

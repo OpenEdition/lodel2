@@ -57,9 +57,10 @@ class EmField(EmComponent):
         self._fieldtype_args = kwargs
         self._fieldtype_args.update({'nullable': nullable, 'uniq': uniq, 'internal': self.internal})
         self.set_fieldtype_options(**self._fieldtype_args)
+        fieldtype_instance = self._fieldtype_cls(**self._fieldtype_args)
 
         if 'default' in kwargs:
-            if not fieldtype_instance.check(default):
+            if not fieldtype_instance.check_data_value(kwargs['default']):
                 raise TypeError("Default value ('%s') is not valid given the fieldtype '%s'" % (default, fieldtype))
 
         super(EmField, self).__init__(model=model, uid=uid, name=name, string=string, help_text=help_text, date_update=date_update, date_create=date_create, rank=rank)

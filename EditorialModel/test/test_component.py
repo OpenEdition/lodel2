@@ -9,7 +9,7 @@ from EditorialModel.fields import EmField
 from Lodel.utils.mlstring import MlString
 
 from EditorialModel.backend.json_backend import EmBackendJson
-from DataSource.dummy.migrationhandler import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import MigrationHandler
 
 
 class TestEmComponent(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestEmComponent(unittest.TestCase):
     def test_hashes(self):
         """ Testing __hash__ and __eq__ methods """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=MigrationHandler())
 
         for comp_class in [EmClass, EmType, EmField]:
             comp_l1 = me1.components(comp_class)

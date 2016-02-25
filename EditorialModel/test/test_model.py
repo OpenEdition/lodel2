@@ -11,7 +11,7 @@ from Lodel.utils.mlstring import MlString
 
 from EditorialModel.backend.json_backend import EmBackendJson
 from EditorialModel.backend.dummy_backend import EmBackendDummy
-from DataSource.dummy.migrationhandler import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import MigrationHandler
 
 
 class TestModel(unittest.TestCase):
@@ -24,15 +24,15 @@ class TestModel(unittest.TestCase):
         model = Model(EmBackendJson('EditorialModel/test/me.json'))
         self.assertTrue(isinstance(model, Model))
 
-        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
+        model = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=MigrationHandler())
         self.assertTrue(isinstance(model, Model))
 
     def test_bad_init(self):
         """ Test initialisation with bad arguments """
-        for bad in [None, int, EmBackendDummy, DummyMigrationHandler, 'foobar']:
+        for bad in [None, int, EmBackendDummy, MigrationHandler, 'foobar']:
             with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a bad backend"):
                 Model(bad)
-        for bad in [int, EmBackendDummy, DummyMigrationHandler, 'foobar']:
+        for bad in [int, EmBackendDummy, MigrationHandler, 'foobar']:
             with self.assertRaises(TypeError, msg="Tried to instanciate a Model with a migration_handler"):
                 Model(EmBackendDummy(), bad)
 
@@ -246,8 +246,8 @@ class TestModel(unittest.TestCase):
             for nat, sup_l in emtype.superiors().items():
                 superiors_list_orig[nat] = [sup.uid for sup in sup_l]
 
-        with patch.object(DummyMigrationHandler, 'register_change', return_value=None) as mh_mock:
-            self.ed_mod.migrate_handler(DummyMigrationHandler())
+        with patch.object(MigrationHandler, 'register_change', return_value=None) as mh_mock:
+            self.ed_mod.migrate_handler(MigrationHandler())
             #Getting cloned EM instance
             new_me = mh_mock.mock_calls[-1][1][0]
             for emtype in new_me.components(EmType):
@@ -269,8 +269,8 @@ class TestModel(unittest.TestCase):
 
     def test_migrate_handler_hashes(self):
         """ Testing that the migrate_handler() method create an EM with the same hash as the original EM """
-        with patch.object(DummyMigrationHandler, 'register_change', return_value=None) as mh_mock:
-            self.ed_mod.migrate_handler(DummyMigrationHandler())
+        with patch.object(MigrationHandler, 'register_change', return_value=None) as mh_mock:
+            self.ed_mod.migrate_handler(MigrationHandler())
             #Getting the cloned EM instance
             last_call = mh_mock.mock_calls[-1]
             self.assertEqual(hash(last_call[1][0]), hash(self.ed_mod))
@@ -278,7 +278,7 @@ class TestModel(unittest.TestCase):
     def test_hash(self):
         """ Test that __hash__ and __eq__ work properly on models """
         me1 = Model(EmBackendJson('EditorialModel/test/me.json'))
-        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=DummyMigrationHandler())
+        me2 = Model(EmBackendJson('EditorialModel/test/me.json'), migration_handler=MigrationHandler())
 
         self.assertEqual(hash(me1), hash(me2), "When instanciate from the same backend & file but with another migration handler the hashes differs")
         self.assertTrue(me1.__eq__(me2))

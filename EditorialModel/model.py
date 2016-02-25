@@ -4,7 +4,7 @@
 # Contains the class managing and editorial model
 
 import EditorialModel
-from DataSource.dummy.migrationhandler import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import MigrationHandler
 from EditorialModel.backend.dummy_backend import EmBackendDummy
 from EditorialModel.classes import EmClass
 from EditorialModel.fields import EmField
@@ -24,8 +24,8 @@ class Model(object):
     # @param migration_handler : A migration handler
     def __init__(self, backend, migration_handler=None):
         if migration_handler is None:
-            self.migration_handler = DummyMigrationHandler()
-        elif issubclass(migration_handler.__class__, DummyMigrationHandler):
+            self.migration_handler = MigrationHandler()
+        elif issubclass(migration_handler.__class__, MigrationHandler):
             self.migration_handler = migration_handler
         else:
             raise TypeError("migration_handler should be an instance from a subclass of DummyMigrationhandler")

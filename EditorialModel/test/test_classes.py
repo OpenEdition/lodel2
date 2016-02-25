@@ -15,7 +15,7 @@ from EditorialModel.types import EmType
 from EditorialModel.fields import EmField
 from EditorialModel.model import Model
 from EditorialModel.backend.json_backend import EmBackendJson
-from DataSource.dummy.migrationhandler import DummyMigrationHandler
+from DataSource.dummy.migrationhandler import MigrationHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Lodel.settings")
 EM_TEST = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'me.json')
@@ -26,7 +26,7 @@ EM_TEST_OBJECT = None
 def setUpModule():
     global EM_TEST_OBJECT
     #EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DjandoMigrationHandler('LodelTestInstance'))
-    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=DummyMigrationHandler())
+    EM_TEST_OBJECT = Model(EmBackendJson(EM_TEST), migration_handler=MigrationHandler())
     logging.basicConfig(level=logging.CRITICAL)
 
 

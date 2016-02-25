@@ -38,9 +38,9 @@ class LeFactory(object):
     
     ## @brief Write generated code to a file
     # @todo better options/params for file creation
-    def create_pyfile(self, model, datasource_cls, datasource_args):
+    def create_pyfile(self, model):
         with open(self._code_filename, "w+") as dynfp:
-            dynfp.write(self.generate_python(model, datasource_cls, datasource_args))
+            dynfp.write(self.generate_python(model))
 
     ## @brief Generate fieldtypes for concret classes
     # @param ft_dict dict : key = fieldname value = fieldtype __init__ args
@@ -176,7 +176,7 @@ class {classname}(LeRel2Type):
     # @param datasource_cls Datasource : A datasource class
     # @param datasource_args dict : A dict representing arguments for datasource_cls instanciation
     # @return A string representing python code
-    def generate_python(self, model, datasource_cls, datasource_args):
+    def generate_python(self, model):
         self.needed_fieldtypes = set() #Stores the list of fieldtypes that will be used by generated code
 
         model = model
@@ -199,11 +199,6 @@ from leapi.leclass import _LeClass
 from leapi.letype import _LeType
 """
 
-        result += """
-import %s
-
-""" % (datasource_cls.__module__)
-
         #Generating the code for LeObject class
         leobj_me_uid = dict()
         for comp in model.components('EmType') + model.components('EmClass'):
@@ -224,7 +219,6 @@ import %s
 ## @brief _LeCrud concret class
 # @see leapi.lecrud._LeCrud
 class LeCrud(leapi.lecrud._LeCrud):
-    _datasource = {ds_classname}(**{ds_kwargs})
     _uid_fieldtype = None
 
 ## @brief _LeObject concret class
@@ -257,8 +251,6 @@ class LeClass(LeObject, _LeClass):
 class LeType(LeClass, _LeType):
     pass
 """.format(
-            ds_classname = datasource_cls.__module__ + '.' + datasource_cls.__name__,
-            ds_kwargs = repr(datasource_args),
             me_uid_l = repr(leobj_me_uid),
             leo_uid_fieldtype = leobj_uid_fieldtype,
             leo_fieldtypes = '{\n\t' + (',\n\t'.join(leobj_fieldtypes))+ '\n\t}',
