@@ -19,6 +19,7 @@ from plugins import * #Load activated plugins
 if os.path.isfile(Settings.dynamic_code_file):
     from dynleapi import *
 
+""" # useless ?
 # Import wanted datasource objects
 for db_modname in ['leapidatasource', 'migrationhandler']:
     mod = importlib.import_module("DataSource.{pkg_name}.{mod_name}".format(
@@ -28,6 +29,8 @@ for db_modname in ['leapidatasource', 'migrationhandler']:
     )
     # Expose the module in globals
     globals()[db_modname] = mod
+"""
+
 
 if __name__ == '__main__':
     import code

@@ -14,8 +14,7 @@ em_file = 'em.json'
 dynamic_code_file = 'dynleapi.py'
 
 ds_package = 'MySQL'
-mh_classname = 'MysqlMigrationHandler'
-datasource = {
+datasource_options = {
     'default': {
         'module': pymysql,
         'host': '127.0.0.1',
@@ -24,3 +23,8 @@ datasource = {
         'db': 'DBNAME'
     }
 }
+
+""" # example
+ds_package = 'jsondiff'
+datasource_options = { 'json_file': 'output.json' }
+"""

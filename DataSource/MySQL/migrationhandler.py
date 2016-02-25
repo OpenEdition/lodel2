@@ -41,27 +41,38 @@ import DataSource.dummy
 
 
 ## @brief Modify a MySQL database given editorial model changes
-class MigrationHandler(DataSource.dummy.MigrationHandler):
+class MigrationHandler(DataSource.dummy.migrationhandler.MigrationHandler):
 
     ## @brief Construct a MysqlMigrationHandler
     # @param module : sql module
     # @param conn_args dict : A dict containing connection options
     # @param db_engine str : Name of a MySQL db engine (default is InnoDB, don't change it ! ;) ) 
     # @param **kwargs : arguement given to the module.connect() method
-    def __init__(self, module=pymysql, conn_args=None, db_engine='InnoDB', **kwargs):
+    def __init__(self, module=pymysql, conn_args=None, db_engine='InnoDB'):
         # Database connection
         self._dbmodule = module
         if conn_args is None:
-            conn_args = copy.copy(Settings.get('datasource')['default'])
+            conn_args = copy.copy(Settings.datasource_options['default'])
             self._dbmodule = conn_args['module']
             del conn_args['module']
         self.db_conn = self._dbmodule.connect(**conn_args)
         # Fetch options
-        mh_settings = Settings.migration_options
-        self.debug = kwargs['debug'] if 'debug' in kwargs else Settings.debug_sql
-        self.dryrun = kwargs['dryrun'] if 'dryrun' in kwargs else mh_settings['dryrun']
-        self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else mh_settings['foreign_keys']
-        self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_if_exists' in kwargs else mh_settings['drop_if_exists']
+        mh_settings = Settings.migrationhandler_options
+
+        defaults = {
+            'debug': False,
+            'dryrun': False,
+            'foreign_keys': True,
+            'drop_if_exists': False
+        }
+
+        for opt_name in defaults:
+            if opt_name in mh_settings:
+                opt_val = mh_settings[opt_name]
+            else:
+                opt_val = defaults[opt_name]
+            setattr(self, opt_name, opt_val)
+
         self.db_engine = db_engine
         #Create default tables
         self._create_default_tables(self.drop_if_exists)

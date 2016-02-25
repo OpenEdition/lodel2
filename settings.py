@@ -14,8 +14,10 @@ plugins = ['dummy', 'dummy_auth']
 
 ds_package = 'dummy'
 datasource_options = {}
-""" #example
-datasource = {
+migrationhandler_options = {}
+""" # MySQL example
+ds_package = 'MySQL'
+datasource_options = {
     'default': {
         'module':pymysql,
         'host': None,
@@ -24,13 +26,13 @@ datasource = {
         'db': None,
     }
 }
-"""
 
-migration_options = {
+migrationhandler_options = {
     'dryrun': False,
     'foreign_keys': True,
     'drop_if_exists': False,
 }
+"""
 
 em_graph_format = 'png'
 em_graph_output = '/tmp/em_%s_graph.png'

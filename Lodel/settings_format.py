@@ -11,7 +11,7 @@ MANDATORY = [
     'dynamic_code_file',
     'ds_package',
     'datasource_options',
-    'migration_options',
+    'migrationhandler_options',
     'base_path',
     'plugins',
     'logging',
