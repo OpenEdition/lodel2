@@ -5,7 +5,6 @@ from werkzeug.wrappers import Response
 
 
 def admin(request, start_response):
-
     loader = TemplateLoader()
     response = Response(loader.render_to_response('Lodel/templates/admin/admin.html'), mimetype='text/html')
     response.set_cookie('name', 'value')
