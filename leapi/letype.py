@@ -52,7 +52,8 @@ class _LeType(_LeClass):
             return list(set(cls._fields + cls.name2class('LeObject').fieldlist()))
 
     @classmethod
-    def get(cls, query_filters, field_list = None, order = None, group = None, limit = None, offset = 0):
+    def get(cls, query_filters = None, field_list = None, order = None, group = None, limit = None, offset = 0):
+        query_filters = list() if query_filters is None else query_filters
         query_filters.append(('type_id', '=', cls._type_id))
         return super().get(
                             query_filters = query_filters,

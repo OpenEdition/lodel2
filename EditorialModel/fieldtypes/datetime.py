@@ -2,6 +2,7 @@
 
 from .generic import SingleValueFieldType
 
+import datetime
 
 class EmFieldType(SingleValueFieldType):
 
@@ -15,3 +16,12 @@ class EmFieldType(SingleValueFieldType):
         self.now_on_update = now_on_update
         self.now_on_create = now_on_create
         super(EmFieldType, self).__init__(**kwargs)
+
+    def construct_data(self, lec, fname, datas, cur_value):
+        if self.now_on_update:
+            return datetime.datetime.now()
+        elif cur_value is None:
+            if self.now_on_create:
+                return datetime.datetime.now()
+        return super().construct_data(self, lec, fname, datas, cur_value)
+            

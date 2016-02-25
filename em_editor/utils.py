@@ -9,7 +9,6 @@ def refreshdyn():
     from EditorialModel.model import Model
     from leapi.lefactory import LeFactory
     from EditorialModel.backend.json_backend import EmBackendJson
-    from DataSource.MySQL.leapidatasource import LeDataSourceSQL
     OUTPUT = Settings.dynamic_code_file
     EMJSON = Settings.em_file
     # Load editorial model
@@ -17,13 +16,14 @@ def refreshdyn():
     # Generate dynamic code
     fact = LeFactory(OUTPUT)
     # Create the python file
-    fact.create_pyfile(em, LeDataSourceSQL, {})
+    fact.create_pyfile(em)
 
 
 def db_init():
     from EditorialModel.backend.json_backend import EmBackendJson
     from EditorialModel.model import Model
-    mh = getattr(migrationhandler,Settings.mh_classname)()
+    import DataSource.utils
+    mh = DataSource.utils.get_migrationhandler_instance()
     em = Model(EmBackendJson(Settings.em_file))
     em.migrate_handler(mh)
 

@@ -396,7 +396,8 @@ class _LeCrud(object, metaclass = _MetaLeCrud):
     # @return A list of lodel editorial components instance
     # @todo think about LeObject and LeClass instanciation (partial instanciation, etc)
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+    def get(cls, query_filters = None, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+        query_filters = list() if query_filters is None else query_filters
         kwargs = locals()
         del(kwargs['cls'])
         kwargs = LodelHook.call_hook('leapi_get_pre', cls, kwargs)

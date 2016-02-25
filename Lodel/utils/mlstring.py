@@ -77,6 +77,8 @@ class MlString(object):
     ## @brief Equivalent to json_dumps
     def dumps(self): return self.json_dumps()
 
+    def to_JSON(self): return self.json_dumps()
+
     ## Test if two MlString instance are equivalent
     # @param other MlString|str : Another MlString instance or a string (json formated)
     # @return True or False

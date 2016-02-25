@@ -2,7 +2,7 @@
 
 import EditorialModel
 from EditorialModel import fieldtypes
-from EditorialModel.fieldtypes import naturerelation, leo, datetime, dictionary, rank, namerelation, pk, bool, i18n, char, integer, emuid
+from EditorialModel.fieldtypes import pk, dictionary, integer, leo, rank, bool, char, emuid, datetime, namerelation, naturerelation, i18n
 from Lodel.utils.mlstring import MlString
 
 import leapi
@@ -12,27 +12,23 @@ import leapi.lerelation
 from leapi.leclass import _LeClass
 from leapi.letype import _LeType
 
-import DataSource.MySQL.leapidatasource
-
-
 ## @brief _LeCrud concret class
 # @see leapi.lecrud._LeCrud
 class LeCrud(leapi.lecrud._LeCrud):
-    _datasource = DataSource.MySQL.leapidatasource.LeDataSourceSQL(**{})
     _uid_fieldtype = None
 
 ## @brief _LeObject concret class
 # @see leapi.leobject._LeObject
 class LeObject(LeCrud, leapi.leobject._LeObject):
-    _me_uid = {32: 'Emclass', 33: 'Emtype', 34: 'Emfield', 22: 'Emcomponent', 1: '_Editorialmodel', 8: '_Classtype', 15: '_Hierarchy', 29: 'Classtype', 30: 'Hierarchyoptions', 31: 'Editorialmodel'}
+    _me_uid = {1: '_Editorialmodel', 36: 'Classtype', 37: 'Hierarchyoptions', 38: 'Editorialmodel', 39: 'Emclass', 40: 'Emtype', 41: 'Emfield', 42: 'Emmodification', 15: '_Hierarchy', 8: '_Classtype', 22: 'Emcomponent', 29: '_Emmodification'}
     _me_uid_field_names = ('class_id', 'type_id')
-    _uid_fieldtype = { 'lodel_id': EditorialModel.fieldtypes.pk.EmFieldType(**{'uniq': False, 'nullable': False, 'immutable': True, 'internal': 'autosql', 'string': '{"___": "", "fre": "identifiant lodel", "eng": "lodel identifier"}'}) }
+    _uid_fieldtype = { 'lodel_id': EditorialModel.fieldtypes.pk.EmFieldType(**{'immutable': True, 'string': '{"___": "", "fre": "identifiant lodel", "eng": "lodel identifier"}', 'nullable': False, 'uniq': False, 'internal': 'autosql'}) }
     _leo_fieldtypes = {
-	'class_id': EditorialModel.fieldtypes.emuid.EmFieldType(**{'uniq': False, 'nullable': False, 'immutable': True, 'internal': 'automatic', 'string': '{"___": "", "fre": "identifiant de la classe", "eng": "class identifier"}', 'is_id_class': True}),
-	'type_id': EditorialModel.fieldtypes.emuid.EmFieldType(**{'uniq': False, 'nullable': False, 'immutable': True, 'internal': 'automatic', 'string': '{"___": "", "fre": "identifiant de la type", "eng": "type identifier"}', 'is_id_class': False}),
-	'modification_date': EditorialModel.fieldtypes.datetime.EmFieldType(**{'uniq': False, 'internal': 'autosql', 'now_on_update': True, 'immutable': True, 'nullable': False, 'now_on_create': True, 'string': '{"___": "", "fre": "Date de modification", "eng": "Modification date"}'}),
+	'class_id': EditorialModel.fieldtypes.emuid.EmFieldType(**{'immutable': True, 'is_id_class': True, 'string': '{"___": "", "fre": "identifiant de la classe", "eng": "class identifier"}', 'nullable': False, 'uniq': False, 'internal': 'automatic'}),
+	'type_id': EditorialModel.fieldtypes.emuid.EmFieldType(**{'immutable': True, 'is_id_class': False, 'string': '{"___": "", "fre": "identifiant de la type", "eng": "type identifier"}', 'nullable': False, 'uniq': False, 'internal': 'automatic'}),
 	'string': None,
-	'creation_date': EditorialModel.fieldtypes.datetime.EmFieldType(**{'uniq': False, 'internal': 'autosql', 'now_on_create': True, 'immutable': True, 'nullable': False, 'string': '{"___": "", "fre": "Date de création", "eng": "Creation date"}'})
+	'creation_date': EditorialModel.fieldtypes.datetime.EmFieldType(**{'immutable': True, 'string': '{"___": "", "fre": "Date de création", "eng": "Creation date"}', 'now_on_create': True, 'nullable': False, 'uniq': False, 'internal': 'autosql'}),
+	'modification_date': EditorialModel.fieldtypes.datetime.EmFieldType(**{'immutable': True, 'string': '{"___": "", "fre": "Date de modification", "eng": "Modification date"}', 'now_on_create': True, 'nullable': False, 'uniq': False, 'internal': 'autosql', 'now_on_update': True})
 	}
 
 ## @brief _LeRelation concret class
@@ -40,12 +36,12 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     _uid_fieldtype = { 'id_relation': EditorialModel.fieldtypes.pk.EmFieldType(**{'immutable': True, 'internal': 'autosql'}) }
     _rel_fieldtypes = {
-	'relation_name': EditorialModel.fieldtypes.namerelation.EmFieldType(**{'max_length': 128, 'immutable': True}),
-	'nature': EditorialModel.fieldtypes.naturerelation.EmFieldType(**{'immutable': True}),
-	'superior': EditorialModel.fieldtypes.leo.EmFieldType(**{'immutable': True, 'superior': True}),
 	'depth': EditorialModel.fieldtypes.integer.EmFieldType(**{'immutable': True, 'internal': 'automatic'}),
+	'subordinate': EditorialModel.fieldtypes.leo.EmFieldType(**{'immutable': True, 'superior': False}),
+	'superior': EditorialModel.fieldtypes.leo.EmFieldType(**{'immutable': True, 'superior': True}),
+	'relation_name': EditorialModel.fieldtypes.namerelation.EmFieldType(**{'immutable': True, 'max_length': 128}),
 	'rank': EditorialModel.fieldtypes.rank.EmFieldType(**{'immutable': True, 'internal': 'automatic'}),
-	'subordinate': EditorialModel.fieldtypes.leo.EmFieldType(**{'immutable': True, 'superior': False})
+	'nature': EditorialModel.fieldtypes.naturerelation.EmFieldType(**{'immutable': True})
 	}
     ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _superior_field_name = 'superior'
@@ -92,51 +88,65 @@ class Emcomponent(LeClass, LeObject):
     ml_string = MlString('EmComponent')
 
 
+## @brief EmClass _Emmodification LeClass child class
+# @see leapi.leclass.LeClass
+class _Emmodification(LeClass, LeObject):
+    _class_id = 29
+    ml_string = MlString('_EmModification')
+
+
 ## @brief EmType Classtype LeType child class
 # @see leobject::letype::LeType
 class Classtype(LeType, _Classtype):
-    _type_id = 29
+    _type_id = 36
     ml_string = MlString('ClassType')
 
 
 ## @brief EmType Hierarchyoptions LeType child class
 # @see leobject::letype::LeType
 class Hierarchyoptions(LeType, _Hierarchy):
-    _type_id = 30
+    _type_id = 37
     ml_string = MlString('HierarchyOptions')
 
 
 ## @brief EmType Editorialmodel LeType child class
 # @see leobject::letype::LeType
 class Editorialmodel(LeType, _Editorialmodel):
-    _type_id = 31
+    _type_id = 38
     ml_string = MlString('EditorialModel')
 
 
 ## @brief EmType Emclass LeType child class
 # @see leobject::letype::LeType
 class Emclass(LeType, Emcomponent):
-    _type_id = 32
+    _type_id = 39
     ml_string = MlString('EmClass')
+
+
+## @brief EmType Emmodification LeType child class
+# @see leobject::letype::LeType
+class Emmodification(LeType, _Emmodification):
+    _type_id = 42
+    ml_string = MlString('EmModification')
 
 
 ## @brief EmType Emtype LeType child class
 # @see leobject::letype::LeType
 class Emtype(LeType, Emcomponent):
-    _type_id = 33
+    _type_id = 40
     ml_string = MlString('EmType')
 
 
 ## @brief EmType Emfield LeType child class
 # @see leobject::letype::LeType
 class Emfield(LeType, Emcomponent):
-    _type_id = 34
+    _type_id = 41
     ml_string = MlString('EmField')
 
 
 class Rel_ClasstypeHierarchyoptionsHierarchy_Specs(LeRel2Type):
     _rel_attr_fieldtypes = {
-    'nature': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 10, 'uniq': False, 'nullable': False})
+    'nature': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 10, 'internal': False})
 }
     _superior_cls = _Classtype
     _subordinate_cls = Hierarchyoptions
@@ -177,7 +187,7 @@ class RelEmcomponentEmfieldSelected_Field(LeRel2Type):
 
 class RelEmcomponentEmtypeSuperiors(LeRel2Type):
     _rel_attr_fieldtypes = {
-    'nature': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': '10', 'uniq': False, 'nullable': False})
+    'nature': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 10, 'internal': False})
 }
     _superior_cls = Emcomponent
     _subordinate_cls = Emtype
@@ -194,19 +204,19 @@ class RelEmcomponentEmfieldRel_Field(LeRel2Type):
 
 #Initialisation of _Editorialmodel class attributes
 _Editorialmodel._fieldtypes = {
-    'description': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 4096, 'uniq': False, 'nullable': False}),
-    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': 'automatic', 'max_length': 128, 'immutable': False, 'uniq': False, 'nullable': True}),
-    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 56, 'uniq': False, 'nullable': False})
+    'description': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 4096, 'internal': False}),
+    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'immutable': False, 'nullable': True, 'max_length': 128, 'internal': 'automatic', 'uniq': False}),
+    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 56, 'internal': False})
 }
 _Editorialmodel.ml_fields_strings = {
    'class_id': MlString({"___": "class_id", "eng": "class identifier", "fre": "identifiant de la classe"}),
    'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
-   'name': MlString({"___": "name"}),
-   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
-   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"}),
    'string': MlString({"___": "string", "eng": "String representation", "fre": "Repr\u00e9sentation textuel"}),
    'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
-   'description': MlString({"___": "description"})
+   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
+   'name': MlString({"___": "name"}),
+   'description': MlString({"___": "description"}),
+   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"})
 }
 _Editorialmodel._linked_types = {
 }
@@ -214,19 +224,19 @@ _Editorialmodel._classtype = 'entity'
 
 #Initialisation of _Classtype class attributes
 _Classtype._fieldtypes = {
-    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': 'automatic', 'max_length': 128, 'immutable': False, 'uniq': False, 'nullable': True}),
-    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 56, 'uniq': False, 'nullable': False})
+    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'immutable': False, 'nullable': True, 'max_length': 128, 'internal': 'automatic', 'uniq': False}),
+    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 56, 'internal': False})
 }
 _Classtype.ml_fields_strings = {
    'class_id': MlString({"___": "class_id", "eng": "class identifier", "fre": "identifiant de la classe"}),
+   'hierarchy_specs': MlString({"___": "hierarchy_specs"}),
+   'nature': MlString({"___": "nature"}),
    'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
-   'name': MlString({"___": "name"}),
-   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
-   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"}),
    'string': MlString({"___": "string", "eng": "String representation", "fre": "Repr\u00e9sentation textuel"}),
    'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
-   'hierarchy_specs': MlString({"___": "hierarchy_specs"}),
-   'nature': MlString({"___": "nature"})
+   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
+   'name': MlString({"___": "name"}),
+   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"})
 }
 _Classtype._linked_types = {
     'hierarchy_specs': Hierarchyoptions
@@ -235,23 +245,23 @@ _Classtype._classtype = 'entity'
 
 #Initialisation of _Hierarchy class attributes
 _Hierarchy._fieldtypes = {
-    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': 'automatic', 'max_length': 128, 'immutable': False, 'uniq': False, 'nullable': True}),
-    'attach': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 10, 'uniq': False, 'nullable': False}),
-    'maxdepth': EditorialModel.fieldtypes.integer.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False}),
-    'maxchildren': EditorialModel.fieldtypes.integer.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False}),
-    'automatic': EditorialModel.fieldtypes.bool.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False})
+    'automatic': EditorialModel.fieldtypes.bool.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False}),
+    'maxchildren': EditorialModel.fieldtypes.integer.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False}),
+    'maxdepth': EditorialModel.fieldtypes.integer.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False}),
+    'attach': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 10, 'internal': False}),
+    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'immutable': False, 'nullable': True, 'max_length': 128, 'internal': 'automatic', 'uniq': False})
 }
 _Hierarchy.ml_fields_strings = {
-   'maxchildren': MlString({"___": "maxchildren"}),
    'class_id': MlString({"___": "class_id", "eng": "class identifier", "fre": "identifiant de la classe"}),
-   'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
-   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
-   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"}),
    'automatic': MlString({"___": "automatic"}),
+   'maxdepth': MlString({"___": "maxdepth"}),
+   'maxchildren': MlString({"___": "maxchildren"}),
+   'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
    'string': MlString({"___": "string", "eng": "String representation", "fre": "Repr\u00e9sentation textuel"}),
    'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
+   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
    'attach': MlString({"___": "attach"}),
-   'maxdepth': MlString({"___": "maxdepth"})
+   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"})
 }
 _Hierarchy._linked_types = {
 }
@@ -259,46 +269,60 @@ _Hierarchy._classtype = 'entity'
 
 #Initialisation of Emcomponent class attributes
 Emcomponent._fieldtypes = {
-    'fieldtype': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False}),
-    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': False, 'max_length': 56, 'uniq': False, 'nullable': False}),
-    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'internal': 'automatic', 'max_length': 128, 'immutable': False, 'uniq': False, 'nullable': True}),
-    'help_text': EditorialModel.fieldtypes.i18n.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False}),
-    'fieldtype_options': EditorialModel.fieldtypes.dictionary.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False}),
-    'date_update': EditorialModel.fieldtypes.datetime.EmFieldType(**{'now_on_update': True, 'nullable': False, 'uniq': False, 'internal': False}),
-    'date_create': EditorialModel.fieldtypes.datetime.EmFieldType(**{'now_on_create': True, 'internal': False, 'uniq': False, 'nullable': False}),
-    'rank': EditorialModel.fieldtypes.integer.EmFieldType(**{'internal': False, 'uniq': False, 'nullable': False})
+    'date_update': EditorialModel.fieldtypes.datetime.EmFieldType(**{'now_on_update': True, 'nullable': False, 'uniq': False, 'internal': 'automatic'}),
+    'fieldtype': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False}),
+    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'immutable': False, 'nullable': True, 'max_length': 128, 'internal': 'automatic', 'uniq': False}),
+    'name': EditorialModel.fieldtypes.char.EmFieldType(**{'uniq': False, 'nullable': False, 'max_length': 56, 'internal': False}),
+    'help_text': EditorialModel.fieldtypes.i18n.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False, 'default': {'en': 'no help'}}),
+    'fieldtype_options': EditorialModel.fieldtypes.dictionary.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': False}),
+    'date_create': EditorialModel.fieldtypes.datetime.EmFieldType(**{'uniq': False, 'nullable': False, 'internal': 'automatic', 'now_on_create': True})
 }
 Emcomponent.ml_fields_strings = {
-   'superiors': MlString({"___": "superiors"}),
-   'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
-   'name': MlString({"___": "name"}),
-   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
-   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"}),
-   'parent_class': MlString({"___": "parent_class"}),
-   'fieldtype_options': MlString({"___": "fieldtype_options"}),
-   'help_text': MlString({"___": "help_text"}),
-   'rank': MlString({"___": "rank"}),
-   'sort_column': MlString({"___": "sort_column"}),
-   'fieldtype': MlString({"___": "fieldtype"}),
    'class_id': MlString({"___": "class_id", "eng": "class identifier", "fre": "identifiant de la classe"}),
-   'selected_field': MlString({"___": "selected_field"}),
+   'classtype': MlString({"___": "classtype"}),
    'rel_field': MlString({"___": "rel_field"}),
+   'superiors': MlString({"___": "superiors"}),
    'string': MlString({"___": "string", "eng": "String representation", "fre": "Repr\u00e9sentation textuel"}),
    'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
-   'classtype': MlString({"___": "classtype"}),
+   'fieldtype': MlString({"___": "fieldtype"}),
+   'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
+   'selected_field': MlString({"___": "selected_field"}),
+   'fieldtype_options': MlString({"___": "fieldtype_options"}),
    'date_create': MlString({"___": "date_create"}),
-   'nature': MlString({"___": "nature"}),
-   'date_update': MlString({"___": "date_update"})
+   'date_update': MlString({"___": "date_update"}),
+   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"}),
+   'name': MlString({"___": "name"}),
+   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
+   'sort_column': MlString({"___": "sort_column"}),
+   'help_text': MlString({"___": "help_text"}),
+   'parent_class': MlString({"___": "parent_class"}),
+   'nature': MlString({"___": "nature"})
 }
 Emcomponent._linked_types = {
+    'classtype': Classtype,
     'superiors': Emtype,
     'rel_field': Emfield,
-    'classtype': Classtype,
-    'parent_class': Emclass,
     'sort_column': Emfield,
-    'selected_field': Emfield
+    'selected_field': Emfield,
+    'parent_class': Emclass
 }
 Emcomponent._classtype = 'entity'
+
+#Initialisation of _Emmodification class attributes
+_Emmodification._fieldtypes = {
+    'string': EditorialModel.fieldtypes.char.EmFieldType(**{'immutable': False, 'nullable': True, 'max_length': 128, 'internal': 'automatic', 'uniq': False})
+}
+_Emmodification.ml_fields_strings = {
+   'class_id': MlString({"___": "class_id", "eng": "class identifier", "fre": "identifiant de la classe"}),
+   'type_id': MlString({"___": "type_id", "eng": "type identifier", "fre": "identifiant de la type"}),
+   'string': MlString({"___": "string", "eng": "String representation", "fre": "Repr\u00e9sentation textuel"}),
+   'creation_date': MlString({"___": "creation_date", "eng": "Creation date", "fre": "Date de cr\u00e9ation"}),
+   'lodel_id': MlString({"___": "lodel_id", "eng": "lodel identifier", "fre": "identifiant lodel"}),
+   'modification_date': MlString({"___": "modification_date", "eng": "Modification date", "fre": "Date de modification"})
+}
+_Emmodification._linked_types = {
+}
+_Emmodification._classtype = 'entity'
 
 #Initialisation of Classtype class attributes
 Classtype._fields = ['name']
@@ -316,19 +340,24 @@ Editorialmodel._superiors = {}
 Editorialmodel._leclass = _Editorialmodel
 
 #Initialisation of Emclass class attributes
-Emclass._fields = ['name', 'help_text', 'date_update', 'date_create', 'rank']
+Emclass._fields = ['name', 'help_text', 'date_update', 'date_create']
 Emclass._superiors = {'parent': [Editorialmodel]}
 Emclass._leclass = Emcomponent
 
+#Initialisation of Emmodification class attributes
+Emmodification._fields = []
+Emmodification._superiors = {}
+Emmodification._leclass = _Emmodification
+
 #Initialisation of Emtype class attributes
-Emtype._fields = ['name', 'help_text', 'date_update', 'date_create', 'rank']
+Emtype._fields = ['name', 'help_text', 'date_update', 'date_create']
 Emtype._superiors = {'parent': [Emclass]}
 Emtype._leclass = Emcomponent
 
 #Initialisation of Emfield class attributes
-Emfield._fields = ['name', 'help_text', 'date_update', 'date_create', 'rank', 'fieldtype', 'fieldtype_options']
+Emfield._fields = ['name', 'help_text', 'date_update', 'date_create', 'fieldtype', 'fieldtype_options']
 Emfield._superiors = {'parent': [Emtype]}
 Emfield._leclass = Emcomponent
 
 ## @brief Dict for getting LeClass and LeType child classes given an EM uid
-LeObject._me_uid = {32: Emclass, 1: _Editorialmodel, 34: Emfield, 22: Emcomponent, 33: Emtype, 8: _Classtype, 31: Editorialmodel, 29: Classtype, 30: Hierarchyoptions, 15: _Hierarchy}
+LeObject._me_uid = {1: _Editorialmodel, 36: Classtype, 37: Hierarchyoptions, 38: Editorialmodel, 39: Emclass, 40: Emtype, 41: Emfield, 42: Emmodification, 15: _Hierarchy, 8: _Classtype, 22: Emcomponent, 29: _Emmodification}
