@@ -108,6 +108,7 @@ class _LeCrud(object, metaclass = _MetaLeCrud):
     # @param **kwargs : datas !
     # @throw NotImplementedError if trying to instanciate a class that cannot be instanciated
     # @todo see if instance methods bindings HAS TO be in the constructor
+    # @note for todo : try bounded = classmethod(types.MethodType(method, self)) or see https://docs.python.org/3/library/functools.html#functools.partial and https://docs.python.org/3/library/functools.html#functools.partialmethod
     def __init__(self, uid, **kwargs):
         if len(kwargs) > 0:
             if not self.implements_leobject() and not self.implements_lerelation():
