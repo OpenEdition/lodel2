@@ -7,6 +7,6 @@ test_package_name='test'
 
 for d in $(find . -type d -name "$test_package_name")
 do
-	echo -e "\tTesting\t$(dirname $d)\n"
+	echo -e "\n\tTesting\t$(dirname $d)"
 	python -W ignore -m unittest discover -qf -s "$d" || break
 done

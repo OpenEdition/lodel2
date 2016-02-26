@@ -8,8 +8,10 @@ import copy
 import warnings
 import importlib
 import re
+import types
 
 from Lodel import logger
+from Lodel.plugins import LeapiPluginsMethods
 from Lodel.settings import Settings
 from EditorialModel.fieldtypes.generic import DatasConstructor
 from Lodel.hooks import LodelHook
@@ -44,9 +46,15 @@ class LeApiQueryError(LeApiErrors): pass
 
 ## @brief When an error concerns a datas
 class LeApiDataCheckError(LeApiErrors): pass
-    
+
+## @brief Metaclass for _LeCrud
+#
+# Implements __getattribute__ for static class attr access ( for the 
+# _datasource lazy instanciation from settings).
 class _MetaLeCrud(type):
-     def __getattribute__(self, name):
+    
+    ## @brief Handles the lazy instancation of datasource (from settings)
+    def __getattribute__(self, name):
         if name == '_datasource':
             if super().__getattribute__('_datasource') is None:
                 module = importlib.import_module("DataSource.{pkg_name}.leapidatasource".format(
@@ -57,17 +65,29 @@ class _MetaLeCrud(type):
                 super().__setattr__('_datasource', ds_cls(**Settings.datasource_options))
         return super().__getattribute__(name)
 
-
-        if 'leapidatasource' in globals():
-            if name == '_datasource' and isinstance(self._datasource, DummyDatasource):
-                #if name == '_datasource' and self._datasource == None:
-                leapids = globals()['leapidatasource']
-                if not isinstance(leapids, DummyDatasource):
-                    self._datasource = leapids({})
-        return super().__getattribute__(name)
+## @brief Metaclass for dynamically generated leapi objects
+#
+# Implements the __init__ method in order to bin registered plugins method
+# ( see @ref Lodel.plugins.leapi_method )
+class MetaDynLeapi(_MetaLeCrud):
+    def __init__(self, *args):
+        self.__bind_plugins_method()
+        super().__init__(*args)
+    
+    ## @brief Handles methods binding
+    def __bind_plugins_method(self):
+        to_bind = LeapiPluginsMethods.get_methods(class_method = True, call_cls = self)
+        for name, method in to_bind.items():
+            if hasattr(self, name):
+                logger.debug("Classmethod '%s' bind overwrite existing attribute (probably parent class bound method)" % name)
+            logger.info("Binding classmethod %s to class %s as %s" % (method.__name__, self, name))
+            bounded = types.MethodType(method, self)
+            setattr(self, name, bounded)
+        
 
 ## @brief Main class to handler lodel editorial components (relations and objects)
 class _LeCrud(object, metaclass = _MetaLeCrud):
+
     ## @brief The datasource
     _datasource = None
 
@@ -87,6 +107,7 @@ class _LeCrud(object, metaclass = _MetaLeCrud):
     # @param uid int : lodel_id if LeObject, id_relation if its a LeRelation
     # @param **kwargs : datas !
     # @throw NotImplementedError if trying to instanciate a class that cannot be instanciated
+    # @todo see if instance methods bindings HAS TO be in the constructor
     def __init__(self, uid, **kwargs):
         if len(kwargs) > 0:
             if not self.implements_leobject() and not self.implements_lerelation():
@@ -106,6 +127,15 @@ class _LeCrud(object, metaclass = _MetaLeCrud):
             warnings.warn("When instanciating the uid was given in the uid argument but was also provided in kwargs. Droping the kwargs uid")
             del(kwargs[uid_name])
         
+        # Binding instance methods from plugins
+        to_bind = LeapiPluginsMethods.get_methods(class_method = False, call_cls = self.__class__)
+        for name, method in to_bind.items():
+            if hasattr(self, name):
+                logger.debug("Method '%s' bind overwrite existing attribute" % name)
+            logger.info("Binding method %s to an instance of %s as %s" %(method.__name__, self.__class__, name))
+            bounded = types.MethodType(method, self)
+            setattr(self, name, bounded)
+
         # Populating the object with given datas
         errors = dict()
         for name, value in kwargs.items():

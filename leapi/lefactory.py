@@ -87,7 +87,7 @@ class LeFactory(object):
                 attr_l[attr.name] = LeFactory.fieldtype_construct_from_field(attr)
 
             rel_code = """
-class {classname}(LeRel2Type):
+class {classname}(LeRel2Type, metaclass = leapi.lecrud.MetaDynLeapi):
     _rel_attr_fieldtypes = {attr_dict}
     _superior_cls = {supcls}
     _subordinate_cls = {subcls}
@@ -218,12 +218,12 @@ from leapi.letype import _LeType
         result += """
 ## @brief _LeCrud concret class
 # @see leapi.lecrud._LeCrud
-class LeCrud(leapi.lecrud._LeCrud):
+class LeCrud(leapi.lecrud._LeCrud, metaclass = leapi.lecrud.MetaDynLeapi):
     _uid_fieldtype = None
 
 ## @brief _LeObject concret class
 # @see leapi.leobject._LeObject
-class LeObject(LeCrud, leapi.leobject._LeObject):
+class LeObject(LeCrud, leapi.leobject._LeObject, metaclass = leapi.lecrud.MetaDynLeapi):
     _me_uid = {me_uid_l}
     _me_uid_field_names = ({class_id}, {type_id})
     _uid_fieldtype = {leo_uid_fieldtype}
@@ -231,7 +231,7 @@ class LeObject(LeCrud, leapi.leobject._LeObject):
 
 ## @brief _LeRelation concret class
 # @see leapi.lerelation._LeRelation
-class LeRelation(LeCrud, leapi.lerelation._LeRelation):
+class LeRelation(LeCrud, leapi.lerelation._LeRelation, metaclass = leapi.lecrud.MetaDynLeapi):
     _uid_fieldtype = {lerel_uid_fieldtype}
     _rel_fieldtypes = {lerel_fieldtypes}
     ## WARNING !!!! OBSOLETE ! DON'T USE IT
@@ -239,16 +239,16 @@ class LeRelation(LeCrud, leapi.lerelation._LeRelation):
     ## WARNING !!!! OBSOLETE ! DON'T USE IT
     _subordinate_field_name = {lesub_name}
 
-class LeHierarch(LeRelation, leapi.lerelation._LeHierarch):
+class LeHierarch(LeRelation, leapi.lerelation._LeHierarch, metaclass = leapi.lecrud.MetaDynLeapi):
     pass
 
-class LeRel2Type(LeRelation, leapi.lerelation._LeRel2Type):
+class LeRel2Type(LeRelation, leapi.lerelation._LeRel2Type, metaclass = leapi.lecrud.MetaDynLeapi):
     pass
 
-class LeClass(LeObject, _LeClass):
+class LeClass(LeObject, _LeClass, metaclass = leapi.lecrud.MetaDynLeapi):
     pass
 
-class LeType(LeClass, _LeType):
+class LeType(LeClass, _LeType, metaclass = leapi.lecrud.MetaDynLeapi):
     pass
 """.format(
             me_uid_l = repr(leobj_me_uid),
@@ -272,7 +272,7 @@ class LeType(LeClass, _LeType):
             result += """
 ## @brief EmClass {name} LeClass child class
 # @see leapi.leclass.LeClass
-class {name}(LeClass, LeObject):
+class {name}(LeClass, LeObject, metaclass = leapi.lecrud.MetaDynLeapi):
     _class_id = {uid}
     ml_string = MlString({name_translations})
 
@@ -288,7 +288,7 @@ class {name}(LeClass, LeObject):
             result += """
 ## @brief EmType {name} LeType child class
 # @see leobject::letype::LeType
-class {name}(LeType, {leclass}):
+class {name}(LeType, {leclass}, metaclass = leapi.lecrud.MetaDynLeapi):
     _type_id = {uid}
     ml_string = MlString({name_translations})
 
