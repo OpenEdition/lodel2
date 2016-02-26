@@ -22,6 +22,9 @@ def parse_request(env):
             cookie_split = cookie_element.split('=')
             env['HTTP_COOKIE'][cookie_split[0]] = cookie_split[1]
 
+        if 'sid' in env['HTTP_COOKIE']:
+            env['SESSION_ID'] = env['HTTP_COOKIE']['sid']
+
     arg_fields = cgi.FieldStorage(fp=env['wsgi.input'], environ=env, keep_blank_values=True)
 
     for arg_field in arg_fields.list:
