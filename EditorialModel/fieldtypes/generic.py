@@ -36,7 +36,7 @@ class GenericFieldType(object):
     
     ## @return True if a fieldtype is internal
     def is_internal(self):
-        return self.internal != False
+        return self.internal is not False
     
     ## @brief Take care to call the fieldtype defined _check_data_value() method
     # @return a tuple (value, error|None)

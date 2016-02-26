@@ -518,14 +518,28 @@ class _LeCrud(object, metaclass = _MetaLeCrud):
     # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
     # @return A new dict of datas
+    # @todo change the internal value 'autosql' to 'auto_datasource'
     @classmethod
     def _construct_datas(cls, datas):
         constructor = DatasConstructor(cls, datas, cls.fieldtypes())
-        ret = {
-                fname:constructor[fname]
-                for fname, ftype in cls.fieldtypes().items()
-                if not ftype.is_internal() or ftype.internal != 'autosql'
-        }
+        ret = dict()
+
+        for fname, ftype in cls.fieldtypes().items():
+            construct = True
+            for autods_ftype in cls._datasource.autohandled_fieldtypes:
+                if isinstance(ftype, autods_ftype['ftype']):
+                    test_false = False
+                    for optname, optval in autods_ftype.items():
+                        if optname != 'ftype':
+                            if not hasattr(ftype, optname) or getattr(ftype, optname) != optval:
+                                test_false = True
+                                break
+                    if not test_false:
+                        construct = False
+                        break
+
+            if construct:
+                ret[fname] = constructor[fname]
         return ret
 
     ## @brief Check datas consistency

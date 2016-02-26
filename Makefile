@@ -2,7 +2,7 @@ all: check doc pip
 
 # Running unit tests
 check:
-	python -m unittest -v
+	./runtest
 
 # Rule to update libs
 pip: cleanpycache

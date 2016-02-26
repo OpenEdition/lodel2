@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+from EditorialModel.fieldtypes import pk, rank, datetime
+
 ## @brief Dummy datasource for LeObject
 #
 # This class has to be extended to apply to a real datasource
@@ -8,6 +10,14 @@
 # @todo Settings fetch/pass generalisation for datasources.
 class LeapiDataSource(object):
     
+    ## @brief List of fieldtypes that should not try to construct their values
+    autohandled_fieldtypes = [
+        {'ftype': pk.EmFieldType},
+        {'ftype': datetime.EmFieldType, 'now_on_update': True},
+        {'ftype': datetime.EmFieldType, 'now_on_create': True},
+        {'ftype': rank.EmFieldType, 'internal': 'autosql'}
+    ]
+
     ## @todo Settings fetch/pass generalisation for datasources.
     def __init__(self, module=None, *conn_args, **conn_kargs):
         self.module = module

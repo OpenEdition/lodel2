@@ -18,6 +18,8 @@ from DataSource.MySQL import utils
 from EditorialModel.classtypes import EmNature
 from EditorialModel.fieldtypes.generic import MultiValueFieldType
 
+from EditorialModel.fieldtypes import datetime, rank, pk
+
 from Lodel.settings import Settings
 from .fieldtypes import fieldtype_cast
 
@@ -25,6 +27,14 @@ from .fieldtypes import fieldtype_cast
 class LeapiDataSource(DataSource.dummy.leapidatasource.LeapiDataSource):
 
     RELATIONS_POSITIONS_FIELDS = {REL_SUP: 'superior_id', REL_SUB: 'subordinate_id'}
+    
+    ## @brief List of fieldtypes that should not try to construct their values
+    autohandled_fieldtypes = [
+        {'ftype': pk.EmFieldType},
+        {'ftype': datetime.EmFieldType, 'now_on_update': True},
+        {'ftype': datetime.EmFieldType, 'now_on_create': True},
+        {'ftype': rank.EmFieldType, 'internal': 'autosql'}
+    ]
 
     def __init__(self, module = pymysql, **kwargs):
         super().__init__()

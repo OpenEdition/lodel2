@@ -3,10 +3,13 @@
 import os, os.path
 import pickle
 import re
+import copy
 from collections import OrderedDict
-from Lodel import logger
 
 from Lodel.settings import Settings
+from Lodel import logger
+
+from EditorialModel.fieldtypes import pk
 
 ## @brief Datasource designed to stores datas and datas diff in pickle files
 # 
@@ -22,10 +25,14 @@ from Lodel.settings import Settings
 #  - modifications_datas : dict with action key and arguements for actions (example : { 'action': 'insert', 'target_class': EmClass, 'datas': dict() }
 #
 class LeapiDataSource(object):
-    
+ 
+    autohandled_fieldtypes = [
+        {'ftype': pk.EmFieldType}
+    ]
+
     def __init__(self, filename = None):
         if filename is None:
-            filename = Settings.datasource['default']['filename']
+            filename = Settings.datasource_options['filename']
         self.__filename = filename
         self.__content = None
         self.__load_file()
@@ -64,7 +71,7 @@ class LeapiDataSource(object):
                         lodel_ids = [ lid for lid in lodel_ids if self.__field_value(lodel_id, field) < value]
         # Now we got filtered lodel_id list in lodel_ids
         result = []
-        for datas in [ self.__content['editorial_model']['components'][lodel_id] for lodel_id in lodel_ids ]:
+        for datas in [ copy.copy(self.__content['editorial_model']['components'][lodel_id]) for lodel_id in lodel_ids ]:
             comp_class = target_cls.name2class(datas['__component_leapi_class__'])
             del(datas['__component_leapi_class__'])
 

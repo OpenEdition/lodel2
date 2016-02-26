@@ -66,6 +66,9 @@ class MlString(object):
     # @return A json dump of the MlString::translations dict
     def __str__(self):
         return self.get_default()
+
+    def __repr__(self):
+        return "<MlString : %s >" % self.dumps()
     
     ## @brief Serialize the MlString in Json
     def json_dumps(self):

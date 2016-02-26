@@ -47,9 +47,16 @@ class _LeObject(_LeCrud):
     # @todo check class
     def __eq__(self, other):
         uid_fname = self.uidname()
-        if not hasattr(other, uid_fname):
+        if not hasattr(other, uid_fname) \
+            or self.uidget() != other.uidget() \
+            or self.__class__ != other.__class__:
             return False
-        return getattr(self, uid_fname) == getattr(other, uid_fname)
+        if self.is_complete() and other.is_complete():
+            for fname in self.fieldlist():
+                if not hasattr(other, fname) or getattr(other, fname) != getattr(self, fname):
+                    print(fname, 'differ', getattr(other, fname), getattr(self, fname))
+                    return False
+        return True
         
         
     ## @brief Quick str cast method implementation
