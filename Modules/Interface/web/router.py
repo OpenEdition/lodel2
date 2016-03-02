@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from .request import *
 from .LodelRequest import LodelRequest
 
 from Modules.Interface.web.controllers import *
