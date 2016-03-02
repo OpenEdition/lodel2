@@ -17,7 +17,7 @@ def get_controller(env):
     for regex, callback in url_rules:
         match = re.search(regex, request.PATH)
         if match is not None:
-            environ['url_args'] = match.groups()
+            env['url_args'] = match.groups()
             return callback
 
     return not_found
