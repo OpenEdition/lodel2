@@ -14,6 +14,12 @@ def get_controller(env):
 
     env = parse_request(env)
 
+    # Management of the user context
+    if 'sid' in env['HTTP_COOKIES']:
+        # Un usercontext est présent dans le cookie transmis par le navigateur
+    else:
+        # Aucun usercontext
+
     # Returning the right controller to call
     for regex, callback in url_rules:
         match = re.search(regex, env['PATH'])
