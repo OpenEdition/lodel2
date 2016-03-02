@@ -94,12 +94,15 @@ class UserIdentityTestCase(unittest.TestCase):
         self.assertFalse(anon.is_identified)
 
 class UserContextTestCase(unittest.TestCase):
-    
+
+    '''
     def test_static(self):
         """ Testing that the class is static """
         with self.assertRaises(NotImplementedError):
             UserContext()
+    '''
 
+    '''
     def test_not_init(self):
         """ Testing method call with a non initialised class """
         UserContext.__reset__()
@@ -107,29 +110,33 @@ class UserContextTestCase(unittest.TestCase):
             UserContext.identity()
         with self.assertRaises(AssertionError):
             UserContext.authenticate('login', 'foobar')
-
+    '''
     def test_anon_init(self):
         """ Testing class initialisation """
         identification_method.__reset__()
         authentication_method.__reset__()
-        UserContext.__reset__()
+        # UserContext.__reset__()
         auth_id = UserIdentity(43, 'loggedlogin', authenticated = True)
         # Add a fake authentication method
         auth_mock = Mock(return_value = auth_id)
         authentication_method(auth_mock)
         # Are we anonymous ?
-        UserContext.init('localhost')
-        self.assertEqual(UserContext.identity(), UserIdentity.anonymous())
+        #UserContext.init('localhost')
+        user_context = UserContext('localhost')
+        self.assertEqual(user_context.identity(), UserIdentity.anonymous())
+        #self.assertEqual(UserContext.identity(), UserIdentity.anonymous())
         # Can we authenticate ourself ?
-        UserContext.authenticate('login', 'pass')
+        #UserContext.authenticate('login', 'pass')
+        user_context.authenticate('login', 'pass')
         auth_mock.assert_called_once_with('login', 'pass')
-        self.assertEqual(auth_id, UserContext.identity())
+        #self.assertEqual(auth_id, UserContext.identity())
+        self.assertEqual(auth_id, user_context.identity())
 
     def test_init(self):
         """ Testing class initialisation being identified by client_infos"""
         identification_method.__reset__()
         authentication_method.__reset__()
-        UserContext.__reset__()
+        # UserContext.__reset__()
         user_id = UserIdentity(42, 'login', identified = True)
         auth_id = UserIdentity(43, 'loggedlogin', authenticated = True)
         # Add a fake id method
@@ -139,17 +146,20 @@ class UserContextTestCase(unittest.TestCase):
         auth_mock = Mock(return_value = auth_id)
         authentication_method(auth_mock)
         # testing lazy identification
-        UserContext.init('localhost')
+        #UserContext.init('localhost')
+        user_context = UserContext('localhost')
         id_mock.assert_not_called()
         auth_mock.assert_not_called() # should really not be called yet
         # triggering identification
-        ret_id = UserContext.identity()
+        ret_id = user_context.identity()  # UserContext.identity()
         id_mock.assert_called_once_with('localhost')
         self.assertEqual(ret_id, user_id)
         auth_mock.assert_not_called() # should really not be called yet
         id_mock.reset_mock()
         # Trying to auth
-        UserContext.authenticate('identifier', 'superproof')
+        #UserContext.authenticate('identifier', 'superproof')
+        user_context.authenticate('identifier', 'superproof')
         id_mock.assert_not_called()
         auth_mock.assert_called_once_with('identifier', 'superproof')
-        self.assertEqual(UserContext.identity(), auth_id)
+        #self.assertEqual(UserContext.identity(), auth_id)
+        self.assertEqual(user_context.identity(), auth_id)

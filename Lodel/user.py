@@ -199,6 +199,41 @@ class identification_method(object):
         cls.__methods = set()
 
 
+## @brief handles user context
+class UserContext(object):
+
+    ## @brief User context constructor
+    # @param client_infos * : datas for client identification (typically IP address)
+    # @param **kwargs dict : context
+    # @todo find another exception to raise
+    def __init__(self, client_infos, **kwargs):
+        if client_infos is None:
+            raise ValueError("Argument client_infos cannot be None")
+        self.__client_infos = client_infos
+        self.__context = kwargs
+        self.__identity = False
+
+    ## @brief Identity getter (lazy identification implementation)
+    # @return UserIdentity
+    def identity(self):
+        if self.__identity is False:
+            ret = identification_method.identify(self.__client_infos)
+            self.__identity = UserIdentity.anonymous() if ret is False else ret
+        return self.__identity
+
+    ## @brief authenticates a user
+    # @param identifier * : user identifier
+    # @param proof * : proof of identity
+    # @throw an exception if it fails
+    # @todo find a better exception to raise when authentication fails
+    def authenticate(self, identifier, proof):
+        ret = authentication_method.authenticate(identifier, proof)
+        if ret is False:
+            raise RuntimeError("Authentication failure")
+        self.__identity = ret
+
+
+'''
 ## @brief Static class designed to handle user context
 class UserContext(object):
 
@@ -280,3 +315,4 @@ class UserContext(object):
         cls.__client_infos = None
         cls.__identity = None
         cls.__context = None
+'''
