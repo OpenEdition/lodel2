@@ -12,13 +12,8 @@ def application(env, start_response):
     sid = request.cookies.get('sid')
     if sid is None:
         request.session = session_store.new()
-        print('sid is None')
-        print(request.session.sid)
     else:
         request.session = session_store.get(sid)
-        print('sid existant')
-        print(request.session['user'])
-        print(request.session.sid)
 
     controller = get_controller(request)
     response = controller(request)
