@@ -6,8 +6,7 @@ from Modules.Interface.web.controllers import *
 import Modules.Interface.web.urls as main_urls
 
 
-def get_controller(env):
-    request = LodelRequest(env)
+def get_controller(request):
 
     url_rules = []
     for url in main_urls.urls:
@@ -17,7 +16,7 @@ def get_controller(env):
     for regex, callback in url_rules:
         match = re.search(regex, request.PATH)
         if match is not None:
-            env['url_args'] = match.groups()
+            request.url_args = match.groups()
             return callback
 
     return not_found
