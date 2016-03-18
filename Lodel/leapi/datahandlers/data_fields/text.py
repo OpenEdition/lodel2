@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class Text(DataField):
+class EmDataField(DataField):
     help = 'A text field (big string)'
     ftype = 'text'
 

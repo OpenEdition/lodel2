@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class Datetime(DataField):
+class EmDataField(DataField):
 
     help = 'A datetime field. Take two boolean options now_on_update and now_on_create'
 

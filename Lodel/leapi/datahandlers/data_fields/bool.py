@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class Bool(DataField):
+class EmDataField(DataField):
 
     help = 'A basic boolean field'
     ftype = 'bool'
