@@ -25,5 +25,9 @@ class FieldDataHandler(object):
         mod = importlib.import_module(FieldDataHandler.module_name(fieldtype_name))
         return mod.EmDataField
 
+    ## @brief get a module name given a fieldtype name
+    # @param fieldtype_name str : a field type name
+    # @return a string representing a python module name
+    @staticmethod
     def module_name(self, fieldtype_name):
         return 'leapi.datahandlers.data_fields.%s' % fieldtype_name
