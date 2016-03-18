@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from .integer import EmDataField
+from .integer import EmDataField as IntegerDataField
 
 
-class EmDataField(EmDataField):
+class EmDataField(IntegerDataField):
 
     help = 'Fieldtype designed to handle editorial model UID'
 
