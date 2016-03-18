@@ -1,6 +1,11 @@
-PyMySQL==0.6.7
-mosql==0.11
+astroid==1.4.4
+itsdangerous==0.24
+Jinja2==2.8
+lazy-object-proxy==1.2.1
+logilab-common==1.2.0
+MarkupSafe==0.23
 pep8==1.6.2
 pylint==1.4.4
-jinja2==2.8
-Flask==0.10.1
+six==1.10.0
+Werkzeug==0.11.4
+wrapt==1.10.6
