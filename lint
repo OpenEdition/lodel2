@@ -1,3 +1,0 @@
-#!/bin/bash
-pep8 --ignore=E501,E265,E266 $@
-pylint -rn -d C0301,C0111 $@
