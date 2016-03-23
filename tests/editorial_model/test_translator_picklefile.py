@@ -14,11 +14,11 @@ class PickleFileTestCase(unittest.TestCase):
     def test_save(self):
         model = EditorialModel("test model", description = "Test EM")
         cls1 = model.new_class('testclass1', display_name = 'Classe de test 1', help_text = 'super aide')
-        c1f1 = cls1.new_field('testfield1', data_handler = None)
-        c1f2 = cls1.new_field('testfield2', data_handler = None)
+        c1f1 = cls1.new_field('testfield1', data_handler = 'varchar')
+        c1f2 = cls1.new_field('testfield2', data_handler = 'varchar')
         cls2 = model.new_class('testclass2')
-        c2f1 = cls2.new_field('testfield1', data_handler = None)
-        c2f2 = cls2.new_field('testfield2', data_handler = None)
+        c2f1 = cls2.new_field('testfield1', data_handler = 'varchar')
+        c2f2 = cls2.new_field('testfield2', data_handler = 'varchar')
 
         grp1 = model.new_group('testgroup1')
         grp1.add_components((cls1, c1f1))

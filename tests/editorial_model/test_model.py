@@ -13,11 +13,11 @@ class EditorialModelTestCase(unittest.TestCase):
         """ Test the deterministic hash method """
         model = EditorialModel("test model", description = "Test EM")
         cls1 = model.new_class('testclass1', display_name = 'Classe de test 1', help_text = 'super aide')
-        c1f1 = cls1.new_field('c1testfield1', data_handler = None)
-        c1f2 = cls1.new_field('c1testfield2', data_handler = None)
+        c1f1 = cls1.new_field('c1testfield1', data_handler = 'varchar')
+        c1f2 = cls1.new_field('c1testfield2', data_handler = 'varchar')
         cls2 = model.new_class('testclass2')
-        c2f1 = cls2.new_field('c2testfield1', data_handler = None)
-        c2f2 = cls2.new_field('c2testfield2', data_handler = None)
+        c2f1 = cls2.new_field('c2testfield1', data_handler = 'varchar')
+        c2f2 = cls2.new_field('c2testfield2', data_handler = 'varchar')
         grp1 = model.new_group('testgroup1')
         grp1.add_components((cls1, c1f1))
         grp2 = model.new_group('testgroup2')
@@ -51,9 +51,9 @@ class EmClassTestCase(unittest.TestCase):
     def test_fields(self):
         """ Bad test on add field method (only check uid presence) """
         cls = EmClass('testClass', 'test_class', 'A test class')
-        cls.new_field('name', data_handler = None)
-        cls.new_field('string', data_handler = None)
-        cls.new_field('lodel_id', data_handler = None)
+        cls.new_field('name', data_handler = 'varchar')
+        cls.new_field('string', data_handler = 'varchar')
+        cls.new_field('lodel_id', data_handler = 'varchar')
 
         fields = cls.fields()
         self.assertEqual(len(fields), 3)
