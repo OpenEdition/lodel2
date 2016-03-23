@@ -15,7 +15,7 @@ class FieldDataHandler(object):
     # @param **args
     # @throw NotImplementedError if it is instanciated directly
     def __init__(self, internal=False, immutable=False, **args):
-        if self.__class__ == GenericFieldType:
+        if self.__class__ == FieldDataHandler:
             raise NotImplementedError("Abstract class")
 
         self.internal = internal  # Check this value ?
