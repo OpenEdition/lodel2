@@ -8,7 +8,7 @@ class EmDataField(DataField):
     ftype = 'int'
 
     def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(ftype='int', **kwargs)
+        super().__init__(ftype='int', **kwargs)
 
     def _check_data_value(self, value):
         error = None

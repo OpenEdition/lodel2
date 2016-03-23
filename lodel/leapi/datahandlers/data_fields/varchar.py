@@ -9,4 +9,4 @@ class EmDataField(DataField):
     # @brief max_length int: The maximum length of this field
     def __init__(self, max_length=64, **kwargs):
         self.max_length = int(max_length)
-        super(self.__class__, self).__init__(**kwargs)
+        super().__init__(**kwargs)

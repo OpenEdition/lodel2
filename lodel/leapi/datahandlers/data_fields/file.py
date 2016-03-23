@@ -9,4 +9,4 @@ class EmDataField(DataField):
     # @param **kwargs
     def __init__(self, upload_path=None, **kwargs):
         self.upload_path = upload_path
-        super(self.__class__, self).__init__(ftype='file', **kwargs)
+        super().__init__(ftype='file', **kwargs)

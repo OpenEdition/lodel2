@@ -15,13 +15,13 @@ class DataField(FieldDataHandler):
         if self.__class__ == DataField:
             raise NotImplementedError("Abstract class")
 
-        super(self.__class__, self).__init__(internal, **kwargs)
+        super().__init__(internal, **kwargs)
 
         self.nullable = nullable
         self.uniq = uniq
         self.primary = primary
-        if 'defaults' in args:
-            self.default, error = self.check_data_value(args['default'])
+        if 'defaults' in kwargs:
+            self.default, error = self.check_data_value(kwargs['default'])
             if error:
                 raise error
             del(args['default'])

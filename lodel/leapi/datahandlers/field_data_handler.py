@@ -85,7 +85,7 @@ class FieldDataHandler(object):
     # @return a string representing a python module name
     @staticmethod
     def module_name(fieldtype_name):
-        return 'leapi.datahandlers.data_fields.%s' % fieldtype_name
+        return 'lodel.leapi.datahandlers.data_fields.%s' % fieldtype_name
 
     ## @brief __hash__ implementation for fieldtypes
     def __hash__(self):

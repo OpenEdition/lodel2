@@ -15,4 +15,4 @@ class EmDataField(VarcharDataField):
     def __init__(self, format_string, field_list, max_length, **kwargs):
         self._field_list = field_list
         self._format_string = format_string
-        super(self.__class__, self).__init__(internal='automatic', max_length=max_length)
+        super().__init__(internal='automatic', max_length=max_length)

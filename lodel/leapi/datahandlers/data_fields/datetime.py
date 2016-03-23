@@ -13,4 +13,4 @@ class EmDataField(DataField):
     def __init__(self, now_on_update=False, now_on_create=False, **kwargs):
         self.now_on_update = now_on_update
         self.now_on_create = now_on_create
-        super(self.__class__, self).__init__(**kwargs)
+        super().__init__(**kwargs)
