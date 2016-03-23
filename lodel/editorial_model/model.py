@@ -2,7 +2,7 @@
 from lodel.utils.mlstring import MlString
 
 from lodel.editorial_model.exceptions import *
-from lodel.editorial_model.component import EmClass, EmField
+from lodel.editorial_model.components import EmClass, EmField
 
 ## @brief Describe an editorial model
 class EditorialModel(object):
