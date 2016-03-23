@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import hashlib
 import copy
 import json
 
@@ -32,8 +33,9 @@ class MlString(object):
             raise ValueError('<class str>, <class dict> or <class MlString> expected, but %s found' % type(arg))
     
     ## @brief Return a translation given a lang
-    # @param lang str
-    def get(self, lang):
+    # @param lang str | None : If None return default lang translation
+    def get(self, lang = None):
+        lang = self.__default_lang if lang is None else lang
         if not self.lang_is_valid(lang):
             raise ValueError("Invalid lang : '%s'" % lang)
         elif lang in self.values:
@@ -78,10 +80,10 @@ class MlString(object):
         return MlString(json.loads(json_str))
 
     def __hash__(self):
-        res = ''
+        m = hashlib.md5()
         for lang in sorted(list(self.values.keys())):
-            res = hash((res, lang, self.values[lang]))
-        return res
+            m.update(bytes(lang+";"+self.values[lang], 'utf-8'))
+        return int.from_bytes(m.digest(), byteorder='big')
 
     def __eq__(self, a):
         return hash(self) == hash(a)

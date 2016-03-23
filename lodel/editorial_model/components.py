@@ -3,6 +3,7 @@
 import itertools
 import warnings
 import copy
+import hashlib
 
 from lodel.utils.mlstring import MlString
 
@@ -28,6 +29,18 @@ class EmComponent(object):
         if self.display_name is None:
             return str(self.uid)
         return str(self.display_name)
+
+    def __hash__(self):
+        m = hashlib.md5()
+        for data in (
+                        self.uid,
+                        str(hash(self.display_name)),
+                        str(hash(self.help_text)),
+                        str(hash(self.group)),
+        ):
+            m.update(bytes(data, 'utf-8'))
+        return int.from_bytes(m.digest(), byteorder='big')
+
 
 ## @brief Handles editorial model objects classes
 #
@@ -84,12 +97,21 @@ class EmClass(EmComponent):
             raise EditorialModelException("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
         self.__fields[emfield.uid] = emfield
         emfield._emclass = self
+        return emfield
     
     ## @brief Create a new EmField and add it to the EmClass
     # @param uid str : the EmField uniq id
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() ) 
     def new_field(self, uid, **field_kwargs):
         return self.add_field(EmField(uid, **field_kwargs))
+
+    def __hash__(self):
+        m = hashlib.md5()
+        payload = str(super().__hash__()) + "1" if self.abstract else "0"
+        for p in sorted(self.parents):
+            payload += str(hash(p))
+        m.update(bytes(payload, 'utf-8'))
+        return int.from_bytes(m.digest(), byteorder='big')
 
 
 ## @brief Handles editorial model classes fields
@@ -108,6 +130,16 @@ class EmField(EmComponent):
         self.data_handler_options = handler_kwargs
         ## @brief Stores the emclass that contains this field (set by EmClass.add_field() method)
         self._emclass = None
+
+    ## @warning Not complete !
+    # @todo Complete the hash when data handlers becomes available
+    def __hash__(self):
+        return int.from_bytes(hashlib.md5(
+                        bytes(
+                                "%s%s" % (  super().__hash__(),
+                                            hash(self.data_handler)), 
+                                'utf-8')
+        ).digest(), byteorder='big')
 
 
 ## @brief Handles functionnal group of EmComponents
@@ -184,9 +216,29 @@ class EmGroup(object):
     def __circular_dependencie(self, new_dep):
         return self.uid in new_dep.dependencies(True)
 
+    ## @brief Fancy string representation of an EmGroup
+    # @return a string
     def __str__(self):
-        return "<class EmGroup '%s'>" % self.uid
+        if self.display_name is None:
+            return self.uid
+        else:
+            return self.display_name.get()
+
+    def __hash__(self):
+        
+        payload = "%s%s%s" % (self.uid, hash(self.display_name), hash(self.help_text))
+        for recurs in (False, True):
+            deps = self.dependencies(recurs)
+            for dep_uid in sorted(deps.keys()):
+                payload += str(hash(deps[dep_uid]))
+        for req_by_uid in self.required_by:
+            payload += req_by_uid
+        return int.from_bytes(
+                                bytes(payload, 'utf-8'),
+                                byteorder = 'big'
+        )
     
-    ## @todo better implementation
+    ## @brief Complete string representation of an EmGroup
+    # @return a string
     def __repr__(self):
-        return self.__str__()
+        return "<class EmGroup '%s' depends : [%s]>" % (self.uid, ', '.join([duid for duid in self.dependencies(False)]) )
