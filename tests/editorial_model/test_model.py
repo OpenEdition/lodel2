@@ -2,15 +2,43 @@
 
 import unittest
 
+from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import EmComponent, EmClass, EmField, EmGroup
 from lodel.utils.mlstring import MlString
 from lodel.editorial_model.exceptions import *
+
+class EditorialModelTestCase(unittest.TestCase):
+    
+    def test_d_hash(self):
+        """ Test the deterministic hash method """
+        model = EditorialModel("test model", description = "Test EM")
+        cls1 = model.new_class('testclass1', display_name = 'Classe de test 1', help_text = 'super aide')
+        c1f1 = cls1.new_field('c1testfield1', data_handler = None)
+        c1f2 = cls1.new_field('c1testfield2', data_handler = None)
+        cls2 = model.new_class('testclass2')
+        c2f1 = cls2.new_field('c2testfield1', data_handler = None)
+        c2f2 = cls2.new_field('c2testfield2', data_handler = None)
+        grp1 = model.new_group('testgroup1')
+        grp1.add_components((cls1, c1f1))
+        grp2 = model.new_group('testgroup2')
+        grp2.add_components((cls2, c1f2, c2f1, c2f2))
+        grp2.add_dependencie(grp1)
+        e_hash = 105398984207109703509695004279282115094
+        self.assertEqual(model.d_hash(), e_hash)
+
+        c2f1.uid = 'foobar'
+        self.assertNotEqual(model.d_hash(), e_hash)
+
+        c2f1.uid = 'c2testfield1'
+        self.assertEqual(model.d_hash(), e_hash)
+
 
 class EmComponentTestCase(unittest.TestCase):
     
     def test_abstract_init(self):
         with self.assertRaises(NotImplementedError):
             EmComponent('test')
+
 
 class EmClassTestCase(unittest.TestCase):
 
@@ -33,6 +61,14 @@ class EmClassTestCase(unittest.TestCase):
             set([f.uid for f in fields]),
             set(['name', 'string', 'lodel_id'])
         )
+
+    def test_d_hash(self):
+        """ Test the deterministic hash method """
+        field = EmField('test field', 'foobar')
+        e_hash = 16085043663725855508634914630594968402
+        self.assertEqual(field.d_hash(), e_hash)
+        field.uid = 'test field.'
+        self.assertNotEqual(field.d_hash(), e_hash)
 
 class EmGroupTestCase(unittest.TestCase):
     
@@ -120,3 +156,9 @@ class EmGroupTestCase(unittest.TestCase):
             for j in range(i+1,10):
                 with self.assertRaises(EditorialModelError):
                     grps[i].add_dependencie(grps[j])
+
+    def test_d_hash(self):
+        """ Test the deterministic hash method """
+        grp = EmGroup('testgrp', display_name = "Test group", help_text="No Help")
+        self.assertEqual(grp.d_hash(), 2280847427800301892840867965375148376323815160723628142616247375345365409972670566216414157235977332113867542043807295933781561540623070667142779076339712861412992217365501372435232184530261327450635383095)
+

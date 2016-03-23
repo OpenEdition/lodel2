@@ -110,6 +110,9 @@ class EmClass(EmComponent):
         payload = str(super().d_hash()) + ("1" if self.abstract else "0")
         for p in sorted(self.parents):
             payload += str(p.d_hash())
+        for fuid in sorted(self.__fields.keys()):
+            payload += str(self.__fields[fuid].d_hash())
+            
         m.update(bytes(payload, 'utf-8'))
         return int.from_bytes(m.digest(), byteorder='big')
 
@@ -226,7 +229,11 @@ class EmGroup(object):
 
     def d_hash(self):
         
-        payload = "%s%s%s" % (self.uid, hash(self.display_name), hash(self.help_text))
+        payload = "%s%s%s" % (
+                                self.uid,
+                                'NODNAME' if self.display_name is None else self.display_name.d_hash(),
+                                'NOHELP' if self.help_text is None else self.help_text.d_hash()
+        )
         for recurs in (False, True):
             deps = self.dependencies(recurs)
             for dep_uid in sorted(deps.keys()):

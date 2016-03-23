@@ -89,11 +89,14 @@ class EditorialModel(object):
     ## @brief Private getter for __groups or __classes
     # @see classes() groups()
     def __elt_getter(self, elts, uid):
-        return iter(elts.values()) if uid is None else elts[uid]
+        return list(elts.values()) if uid is None else elts[uid]
     
     ## @brief Lodel hash
     def d_hash(self):
-        payload = "%s%s" % (self.name,hash(self.description))
+        payload = "%s%s" % (
+                            self.name,
+                            'NODESC' if self.description is None else self.description.d_hash()
+        )
         for guid in sorted(self.__groups):
             payload += str(self.__groups[guid].d_hash())
         for cuid in sorted(self.__classes):
