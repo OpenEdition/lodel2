@@ -90,13 +90,14 @@ class EditorialModel(object):
     # @see classes() groups()
     def __elt_getter(self, elts, uid):
         return iter(elts.values()) if uid is None else elts[uid]
-
-    def __hash__(self):
+    
+    ## @brief Lodel hash
+    def d_hash(self):
         payload = "%s%s" % (self.name,hash(self.description))
         for guid in sorted(self.__groups):
-            payload += str(hash(self.__groups[guid]))
+            payload += str(self.__groups[guid].d_hash())
         for cuid in sorted(self.__classes):
-            payload += str(hash(self.__classes[cuid]))
+            payload += str(self.__classes[cuid].d_hash())
         return int.from_bytes(
                                 hashlib.md5(bytes(payload, 'utf-8')).digest(),
                                 byteorder='big'

@@ -80,6 +80,12 @@ class MlString(object):
         return MlString(json.loads(json_str))
 
     def __hash__(self):
+        res = ''
+        for lang in sorted(list(self.values.keys())):
+            res = hash((res, lang, self.values[lang]))
+        return res
+
+    def d_hash(self):
         m = hashlib.md5()
         for lang in sorted(list(self.values.keys())):
             m.update(bytes(lang+";"+self.values[lang], 'utf-8'))

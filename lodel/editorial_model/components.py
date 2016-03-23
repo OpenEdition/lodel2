@@ -30,13 +30,13 @@ class EmComponent(object):
             return str(self.uid)
         return str(self.display_name)
 
-    def __hash__(self):
+    def d_hash(self):
         m = hashlib.md5()
         for data in (
                         self.uid,
-                        str(hash(self.display_name)),
-                        str(hash(self.help_text)),
-                        str(hash(self.group)),
+                        'NODISPNAME' if self.display_name is None else str(self.display_name.d_hash()),
+                        'NOHELP' if self.help_text is None else str(self.help_text.d_hash()),
+                        'NOGROUP' if self.group is None else str(self.group.d_hash()),
         ):
             m.update(bytes(data, 'utf-8'))
         return int.from_bytes(m.digest(), byteorder='big')
@@ -105,11 +105,11 @@ class EmClass(EmComponent):
     def new_field(self, uid, **field_kwargs):
         return self.add_field(EmField(uid, **field_kwargs))
 
-    def __hash__(self):
+    def d_hash(self):
         m = hashlib.md5()
-        payload = str(super().__hash__()) + "1" if self.abstract else "0"
+        payload = str(super().d_hash()) + ("1" if self.abstract else "0")
         for p in sorted(self.parents):
-            payload += str(hash(p))
+            payload += str(p.d_hash())
         m.update(bytes(payload, 'utf-8'))
         return int.from_bytes(m.digest(), byteorder='big')
 
@@ -133,11 +133,11 @@ class EmField(EmComponent):
 
     ## @warning Not complete !
     # @todo Complete the hash when data handlers becomes available
-    def __hash__(self):
+    def d_hash(self):
         return int.from_bytes(hashlib.md5(
                         bytes(
-                                "%s%s" % (  super().__hash__(),
-                                            hash(self.data_handler)), 
+                                "%s%s" % (  super().d_hash(),
+                                            self.data_handler), 
                                 'utf-8')
         ).digest(), byteorder='big')
 
@@ -224,13 +224,13 @@ class EmGroup(object):
         else:
             return self.display_name.get()
 
-    def __hash__(self):
+    def d_hash(self):
         
         payload = "%s%s%s" % (self.uid, hash(self.display_name), hash(self.help_text))
         for recurs in (False, True):
             deps = self.dependencies(recurs)
             for dep_uid in sorted(deps.keys()):
-                payload += str(hash(deps[dep_uid]))
+                payload += str(deps[dep_uid].d_hash())
         for req_by_uid in self.required_by:
             payload += req_by_uid
         return int.from_bytes(
