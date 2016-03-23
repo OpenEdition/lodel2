@@ -84,7 +84,7 @@ class FieldDataHandler(object):
     # @param fieldtype_name str : a field type name
     # @return a string representing a python module name
     @staticmethod
-    def module_name(cls, fieldtype_name):
+    def module_name(fieldtype_name):
         return 'leapi.datahandlers.data_fields.%s' % fieldtype_name
 
     ## @brief __hash__ implementation for fieldtypes
