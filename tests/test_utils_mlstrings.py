@@ -80,3 +80,8 @@ class MlStringTestCase(unittest.TestCase):
         self.assertTrue(mls1 != mls2)
         self.assertNotEqual(hash(mls1), hash(mls2))
 
+
+    def test_hash(self):
+        """ Test if the hash method is deterministic """
+        mls1 = MlString('Hello world !')
+        self.assertEqual(hash(mls1),1631096711380631894)
