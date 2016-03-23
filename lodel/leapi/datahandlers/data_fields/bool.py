@@ -11,9 +11,9 @@ class EmDataField(DataField):
     def __init__(self, **kwargs):
         if 'check_data_value' not in kwargs:
             kwargs['check_data_value'] = self.check_value
-        super(Bool, self).__init__(ftype='bool', **kwargs)
+        super(self.__class__, self).__init__(ftype='bool', **kwargs)
 
-    def check_value(self, value):
+    def _check_data_value(self, value):
         error = None
         try:
             value = bool(value)

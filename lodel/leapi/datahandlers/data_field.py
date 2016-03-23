@@ -15,7 +15,7 @@ class DataField(FieldDataHandler):
         if self.__class__ == DataField:
             raise NotImplementedError("Abstract class")
 
-        super().__init__(internal, **kwargs)
+        super(self.__class__, self).__init__(internal, **kwargs)
 
         self.nullable = nullable
         self.uniq = uniq
