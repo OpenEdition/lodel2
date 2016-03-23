@@ -142,8 +142,9 @@ class EmField(EmComponent):
     def d_hash(self):
         return int.from_bytes(hashlib.md5(
                         bytes(
-                                "%s%s" % (  super().d_hash(),
-                                            self.data_handler), 
+                                "%s%s%s" % (  super().d_hash(),
+                                            self.data_handler_name,
+                                            self.data_handler_options), 
                                 'utf-8')
         ).digest(), byteorder='big')
 
