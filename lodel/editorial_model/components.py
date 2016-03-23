@@ -131,7 +131,7 @@ class EmField(EmComponent):
     def __init__(self, uid, data_handler, display_name = None, help_text = None, group = None, **handler_kwargs):
         super().__init__(uid, display_name, help_text, group)
         self.data_handler_name = data_handler
-        self.data_handler_cls = FieldDataHandler(data_handler)
+        self.data_handler_cls = FieldDataHandler.from_name(data_handler)
         self.data_handler_options = handler_kwargs
         self.data_handler_instance = self.data_handler_cls(**handler_kwargs)
         ## @brief Stores the emclass that contains this field (set by EmClass.add_field() method)
