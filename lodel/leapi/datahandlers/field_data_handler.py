@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import importlib
 
+
 class FieldDataHandler(object):
 
     help_text = 'Generic Field Data Handler'
@@ -12,7 +13,11 @@ class FieldDataHandler(object):
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is designed globally and immutable
     # @param **args
+    # @throw NotImplementedError if it is instanciated directly
     def __init__(self, internal=False, immutable=False, **args):
+        if self.__class__ == GenericFieldType:
+            raise NotImplementedError("Abstract class")
+
         self.internal = internal  # Check this value ?
         self.immutable = bool(immutable)
 
@@ -28,7 +33,7 @@ class FieldDataHandler(object):
     ## @brief checks if a fieldtype is internal
     # @return bool
     def is_internal(self):
-        return self.internal != False
+        return self.internal is not False
 
     ## @brief calls the data_field defined _check_data_value() method
     # @return tuple (value, error|None)
@@ -37,6 +42,35 @@ class FieldDataHandler(object):
 
     def _check_data_value(self, value):
         return (value, None)
+
+    ## @brief Build field value
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname str : The field name
+    # @param datas dict : dict storing fields values (from the component)
+    # @param cur_value : the value from the current field (identified by fieldname)
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        emcomponent_fields = emcomponent.fields()
+        fname_data_handler = None
+        if fname in emcomponent_fields:
+            fname_data_handler = FieldDataHandler.from_name(emcomponent_fields[fname])
+
+        if fname in datas.keys():
+            return cur_value
+        elif fname_data_handler is not None and hasattr(fname_data_handler, 'default'):
+                return fname_data_handler.default
+        elif fname_data_handler is not None and fname_data_handler.nullable:
+                return None
+
+        raise RuntimeError("Unable to construct data for field %s", fname)
+
+    ## @brief Check datas consistency
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname : the field name
+    # @param datas dict : dict storing fields values
+    # @return an Exception instance if fails else True
+    # @todo A implémenter
+    def check_data_consistency(self, emcomponent, fname, datas):
+        return True
 
     ## @brief given a field type name, returns the associated python class
     # @param fieldtype_name str : A field type name

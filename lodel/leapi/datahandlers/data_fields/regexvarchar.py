@@ -15,7 +15,7 @@ class EmDataField(VarcharDataField):
         self.regex = regex
         self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
 
-        super().__init__(max_length=max_length, **kwargs)
+        super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
     def _check_data_value(self, value):
         error = None
