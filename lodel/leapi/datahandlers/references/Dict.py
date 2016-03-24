@@ -28,3 +28,13 @@ class Dict(Reference):
                 return False
 
         return True
+
+    ## @brief adds a referenced element
+    # @param ref_name str : key of the item in the reference dict
+    # @param emclass EmClass
+    # @return bool
+    def add_ref(self, ref_name, emclass):
+        if isinstance(emclass, EmClass) and isinstance(ref_name, str):
+            self._refs[ref_name] = emclass
+            return True
+        return False

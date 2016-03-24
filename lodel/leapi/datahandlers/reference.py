@@ -33,4 +33,3 @@ class Reference(FieldDataHandler):
                 return False
 
         return True
-
