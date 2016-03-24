@@ -5,14 +5,16 @@ from lodel.editorial_model.components import EmClass
 class Reference(FieldDataHandler):
 
     ## @brief Instanciation
-    # @param allowed bool
+    # @param allowed list
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
-    def __init__(self, allowed=True, internal=False, **kwargs):
+    def __init__(self, allowed=[], internal=False, **kwargs):
         self.allowed = allowed
         self.internal = internal
+        '''
         if not self.is_ref_valid():
             raise ValueError("The target of the reference is not valid")
+        '''
         super().__init__(internal=self.internal, **kwargs)
 
     ## @brief gets the target of the reference
@@ -20,6 +22,7 @@ class Reference(FieldDataHandler):
         return self._refs
 
     ## @brief checks if the target is valid
+    '''
     def is_ref_valid(self):
         relateds = self.get_relateds()
         if not isinstance(relateds, self._refs_class):
@@ -33,3 +36,4 @@ class Reference(FieldDataHandler):
                 return False
 
         return True
+    '''

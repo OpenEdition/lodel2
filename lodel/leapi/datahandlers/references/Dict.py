@@ -7,16 +7,17 @@ class Dict(Reference):
 
     ## @brief instanciates a dict reference
     # @param emclasses dict : Dict of EmClass objects
-    # @param allowed bool
+    # @param allowed list
     # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
-    def __init__(self, emclasses, allowed=True, internal=False, **kwargs):
+    def __init__(self, emclasses, allowed=[], internal=False, **kwargs):
         self._refs = set(emclasses)
         self._refs_class = dict
         super().__init__(allowed=allowed, internal=internal, **kwargs)
 
     ## @brief checks if the given target is valid
     # @return bool
+    '''
     def is_target_valid(self):
         relateds = self.get_relateds()
 
@@ -28,7 +29,7 @@ class Dict(Reference):
                 return False
 
         return True
-
+    '''
     ## @brief adds a referenced element
     # @param ref_name str : key of the item in the reference dict
     # @param emclass EmClass
