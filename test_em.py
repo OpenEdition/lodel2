@@ -90,7 +90,7 @@ editorial_group = em.new_group( 'editorial_abstract',
                                 help_text = {
                                     'eng': 'Contains abstract class to handler editorial contents',
                                     'fre': 'Contient les classes abstraites permetant la gestion de contenu éditorial'
-                                }
+                                },
                                 depends = (base_group,)
 )
 
@@ -99,7 +99,7 @@ texte = em.new_class(   'text',
                         display_name = 'Text',
                         help_text = 'Abstract class that represent texts',
                         group = editorial_group,
-                        abtract = True,
+                        abstract = True,
 )
 
 texte.new_field(    'title',
@@ -126,4 +126,5 @@ collection.new_field(   'title',
                         display_name = 'Title',
                         group = editorial_group,
                         abstract = True,
+                        data_handler = 'varchar'
 )
