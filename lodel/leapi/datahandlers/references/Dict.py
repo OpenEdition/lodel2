@@ -17,19 +17,18 @@ class Dict(Reference):
 
     ## @brief checks if the given target is valid
     # @return bool
-    '''
-    def is_target_valid(self):
+    def _check_data_value(self, value):
         relateds = self.get_relateds()
 
         if not isinstance(relateds, self._refs_class):
-            return False
+            return
 
         for related in relateds.values():
             if not isinstance(related, EmClass):
                 return False
 
         return True
-    '''
+
     ## @brief adds a referenced element
     # @param ref_name str : key of the item in the reference dict
     # @param emclass EmClass

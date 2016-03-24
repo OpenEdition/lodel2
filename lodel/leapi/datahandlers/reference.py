@@ -11,10 +11,6 @@ class Reference(FieldDataHandler):
     def __init__(self, allowed=[], internal=False, **kwargs):
         self.allowed = allowed
         self.internal = internal
-        '''
-        if not self.is_ref_valid():
-            raise ValueError("The target of the reference is not valid")
-        '''
         super().__init__(internal=self.internal, **kwargs)
 
     ## @brief gets the target of the reference
@@ -22,18 +18,20 @@ class Reference(FieldDataHandler):
         return self._refs
 
     ## @brief checks if the target is valid
-    '''
-    def is_ref_valid(self):
-        relateds = self.get_relateds()
-        if not isinstance(relateds, self._refs_class):
-            return False
 
-        if isinstance(relateds, EmClass):
-            relateds = [relateds]
+    def check_data_value(self, value):
 
-        for related in relateds:
+        if not isinstance(value, self._refs_class):
+            return (value, "The reference should be an instance of %s, %s gotten" % (self._refs_class, value.__class__))
+
+        if isinstance(value, EmClass):
+            value = [value]
+
+        if isinstance(value, dict):
+            ref_values = value.values()
+            
+        for related in value:
             if not isinstance(related, EmClass):
-                return False
+                return (value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name, related.__class__))
 
-        return True
-    '''
+        return (value, None)
