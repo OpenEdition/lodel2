@@ -14,5 +14,5 @@ class Reference(FieldDataHandler):
         super().__init__(internal=self.internal, **kwargs)
 
     ## @brief gets the target of the reference
-    def get_target(self):
+    def get_related(self):
         return self._target
