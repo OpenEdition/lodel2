@@ -23,7 +23,7 @@ class EditorialModelTestCase(unittest.TestCase):
         grp2 = model.new_group('testgroup2')
         grp2.add_components((cls2, c1f2, c2f1, c2f2))
         grp2.add_dependencie(grp1)
-        e_hash = 94953339620599825962088463313192727554
+        e_hash = 0x476f5917265b6fbd06d94b81f4e9b402
         self.assertEqual(model.d_hash(), e_hash)
 
         c2f1.uid = 'foobar'
@@ -65,7 +65,7 @@ class EmClassTestCase(unittest.TestCase):
     def test_d_hash(self):
         """ Test the deterministic hash method """
         field = EmField('test field', 'varchar')
-        e_hash = 46862393036804483771609032070241291172
+        e_hash = 0x23415e5cab5cabf29ab2d2db99998ba4
         self.assertEqual(field.d_hash(), e_hash)
         field.uid = 'test field.'
         self.assertNotEqual(field.d_hash(), e_hash)
@@ -160,5 +160,6 @@ class EmGroupTestCase(unittest.TestCase):
     def test_d_hash(self):
         """ Test the deterministic hash method """
         grp = EmGroup('testgrp', display_name = "Test group", help_text="No Help")
-        self.assertEqual(grp.d_hash(), 2280847427800301892840867965375148376323815160723628142616247375345365409972670566216414157235977332113867542043807295933781561540623070667142779076339712861412992217365501372435232184530261327450635383095)
+        e_hash = 0x74657374677270333130363537393137343730343438343139303233393838303936373730323936353536393032313839313536333632313037343435323138313735343936303237373532343436303639363137
+        self.assertEqual(grp.d_hash(), e_hash)
 
