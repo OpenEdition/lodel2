@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from ..reference import Reference
+from lodel.leapi.datahandlers.reference import Reference
+from lodel.editorial_model.components import EmClass
 
 
 class Link(Reference):
@@ -10,7 +11,6 @@ class Link(Reference):
     # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
     def __init__(self, emclass, allowed=True, internal=False, **kwargs):
-        self._target = emclass
+        self._refs = emclass
+        self._refs_class = EmClass
         super().__init__(allowed=allowed, internal=internal, **kwargs)
-
-
