@@ -16,8 +16,3 @@ class Relation(FieldDataHandler):
         self.backref_ref = reference
         super().__init__(**kwargs)
 
-    def _check_data_value(self, value):
-        pass
-
-    def construct_data(self, emcomponent, fname, datas, cur_value):
-        pass
