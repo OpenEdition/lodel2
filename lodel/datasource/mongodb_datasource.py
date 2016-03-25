@@ -15,14 +15,17 @@ class MongoDbDataSource(object):
         self.connection = MongoClient(connection_args['host'], connection_args['port'])
         self.database = self.connection[connection_args['dbname']]
 
+    def insert(self):
+        pass
+
     def select(self):
         pass
-
-    def delete(self):
-        pass
-
+    
     def update(self):
         pass
 
-    def insert(self):
-        pass
+    def delete(self, target_cls, uid):
+        uidname = target_cls.uidname
+        collection_name = target_cls.collection_name
+        result = self.database[collection_name].delete_many({uidname: uid})
+        return result.deteled_count
