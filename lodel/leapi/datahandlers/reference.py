@@ -2,6 +2,7 @@
 from lodel.leapi.datahandlers.field_data_handler import FieldDataHandler
 from lodel.editorial_model.components import EmClass
 
+
 class Reference(FieldDataHandler):
 
     ## @brief Instanciation
@@ -29,7 +30,7 @@ class Reference(FieldDataHandler):
 
         if isinstance(value, dict):
             ref_values = value.values()
-            
+
         for related in value:
             if not isinstance(related, EmClass):
                 return (value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name, related.__class__))
