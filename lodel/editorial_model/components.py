@@ -93,18 +93,25 @@ class EmClass(EmComponent):
     # @param emfield EmField : an EmField instance
     # @warning do not add an EmField allready in another class !
     # @throw EditorialModelException if an EmField with same uid allready in this EmClass (overwritting allowed from parents)
+    # @todo End the override checks (needs methods in data_handlers)
     def add_field(self, emfield):
         if emfield.uid in self.__fields:
             raise EditorialModelException("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
+        # Incomplete field override check
+        if emfield.uid in self.__all_fields:
+            parent_field = self.__all_fields[emfield.uid]
+            if emfield.data_handler_name != parent_field.data_handler_name:
+                raise AttributeError("'%s' field override a parent field, but data_handles are not compatible" % emfield.uid)
         self.__fields[emfield.uid] = emfield
         emfield._emclass = self
         return emfield
     
     ## @brief Create a new EmField and add it to the EmClass
+    # @param data_handler str : A DataHandler name
     # @param uid str : the EmField uniq id
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() ) 
-    def new_field(self, uid, **field_kwargs):
-        return self.add_field(EmField(uid, **field_kwargs))
+    def new_field(self, uid, data_handler, **field_kwargs):
+        return self.add_field(EmField(uid, data_handler, **field_kwargs))
 
     def d_hash(self):
         m = hashlib.md5()
