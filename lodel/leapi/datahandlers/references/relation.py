@@ -11,8 +11,11 @@ class DataHandler(FieldDataHandler):
     # @param kwargs
     def __init__(self, datahandler, datahandler_args, reference, **kwargs):
 
+        # Data Handler
         data_handler_class = FieldDataHandler.from_name(datahandler)
         self.data_handler = data_handler_class(**datahandler_args)
-        self.backref_ref = reference
-        super().__init__(**kwargs)
 
+        # Reference
+        self.backref_ref = reference
+
+        super().__init__(**kwargs)
