@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class EmDataField(DataField):
+class DataHandler(DataField):
 
     ## @brief a file field
     # @param upload_path str : None by default

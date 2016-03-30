@@ -73,6 +73,41 @@ person = em.new_class(  'person',
                         parents = em_object,
 )
 
+person.new_field(   'firstname',
+                    display_name = {
+                        'eng': 'Firstname',
+                        'fre': 'Prénom',
+                    },
+                    data_handler = 'varchar',
+)
+person.new_field(   'lastname',
+                    display_name = {
+                        'eng': 'Lastname',
+                        'fre': 'Nom de famille',
+                    },
+                    data_handler = 'varchar',
+)
+person.new_field(   'fullname',
+                    display_name = {
+                        'eng': 'Fullname',
+                        'fre': 'Nom complet',
+                    },
+                    group = base_group,
+                    data_handler = 'varchar', # <-- should be concat type
+                    internal = True,
+                    immutable = True,
+)
+person.new_field(   'alias',
+                    display_name = 'alias',
+                    help_text = {
+                        'eng': 'Link to other person class instance that represent the same person',
+                        'fre': 'Lien vers un ensemble d\'instances de la classe personne représentant le même individu',
+                    },
+                    data_handler = 'set',
+                    allowed_classes = [person],
+)
+
+
 entry = em.new_class(   'entry',
                         display_name = 'Entry',
                         help_text = 'Replace olf entry classtype',
@@ -95,19 +130,19 @@ editorial_group = em.new_group( 'editorial_abstract',
 )
 
 # Classe texte
-texte = em.new_class(   'text',
+text = em.new_class(   'text',
                         display_name = 'Text',
                         help_text = 'Abstract class that represent texts',
                         group = editorial_group,
                         abstract = True,
 )
 
-texte.new_field(    'title',
+text.new_field(    'title',
                     display_name = {'eng': 'Title', 'fre': 'Titre'},
                     group = editorial_group,
                     data_handler = 'varchar',
 )
-texte.new_field(    'subtitle',
+text.new_field(    'subtitle',
                     display_name = {
                         'eng': 'Subtitle',
                         'fre': 'Sous-titre',
@@ -128,3 +163,84 @@ collection.new_field(   'title',
                         abstract = True,
                         data_handler = 'varchar'
 )
+
+#####################
+# Persons & authors #
+#####################
+
+editorial_person_group = em.new_group(  'editorial_person',
+                                        display_name = 'Editorial person',
+                                        help_text = {
+                                            'eng': 'Introduce the concept of editorial person (authors, translator etc)',
+                                            'fre': 'Contient les classes servant à la gestion des personnes editorials (auteurs, traducteur...)',
+                                        },
+                                        depends = (editorial_group,)
+)
+text_person = em.new_class( 'text_person',
+                            display_name = {
+                                'eng': 'TextPerson',
+                                'fre': 'TextePersonne',
+                            },
+                            help_text = {
+                                'eng': 'Represent a link between someone and a text',
+                                'fre': 'Représente un lien entre une personne et un texte',
+                            },
+                            group = editorial_person_group,
+                            abstract = True,
+)
+bref_textperson_text = text_person.new_field(  'text',
+                                                display_name = {
+                                                    'eng': 'Linked text',
+                                                    'fre': 'Texte lié',
+                                                },
+                                                data_handler = 'link',
+                                                allowed_classes = [text],
+                                                group = editorial_person_group
+)
+bref_textperson_person = text_person.new_field( 'person',
+                                                display_name = {
+                                                    'eng': 'Linked person',
+                                                    'fre': 'Personne liée',
+                                                },
+                                                data_handler = 'link',
+                                                allowed_classes = [person],
+                                                group = editorial_person_group,
+)
+text_person.new_field(  'role',
+                        display_name = {
+                            'eng': 'Person role',
+                            'fre': 'Role de la personne',
+                        },
+                        data_handler = 'varchar',
+                        group = editorial_person_group
+)
+"""
+person.new_field(   'linked_texts',
+                    display_name = {
+                        'eng': 'Linked texts',
+                        'fre': 'Textes liés',
+                    },
+                    data_handler = 'relation',
+                    data_handler_kwargs = {
+                        'data_handler': 'list',
+                        'allowed_class': text_person,
+                        'backreference': bref_textperson_text,
+                    },
+                    group = editorial_person_group,
+)
+text.new_field( 'linked_persons',
+                display_name = {
+                    'eng': 'Linked persons',
+                    'fre': 'Personnes liées',
+                },
+                data_handler = 'relation',
+                data_handler_kwargs = {
+                    'data_handler': 'list',
+                    'allowed_class': text_person,
+                    'backreference': bref_textperson_person,
+
+                },
+                group = editorial_person_group,
+)
+"""
+

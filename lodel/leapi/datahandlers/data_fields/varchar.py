@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class EmDataField(DataField):
+class DataHandler(DataField):
     help = 'Basic string (varchar) field. Default size is 64 characters'
 
     ## @brief A string field

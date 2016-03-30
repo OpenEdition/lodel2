@@ -3,17 +3,14 @@ from lodel.editorial_model.components import EmClass
 from lodel.leapi.datahandlers.reference import Reference
 
 
-class Set(Reference):
+class DataHandler(Reference):
 
     ## @brief instanciates a set reference
-    # @param emclasses list : List of EmClass objects
-    # @param allowed list
+    # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
-    def __init__(self, emclasses, allowed=[], internal=False, **kwargs):
-        self._refs = set(emclasses)
-        self._refs_class = set
-        super().__init__(allowed=allowed, internal=internal, **kwargs)
+    def __init__(self, allowed_classes = None, internal=False, **kwargs):
+        super().__init__(allowed_classes=allowed_classes, internal=internal, **kwargs)
 
     ## @brief adds a referenced element
     # @param emclass EmClass

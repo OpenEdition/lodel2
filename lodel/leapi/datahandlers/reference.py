@@ -6,13 +6,12 @@ from lodel.editorial_model.components import EmClass
 class Reference(FieldDataHandler):
 
     ## @brief Instanciation
-    # @param allowed list
+    # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
-    def __init__(self, allowed=[], internal=False, **kwargs):
-        self.allowed = allowed
-        self.internal = internal
-        super().__init__(internal=self.internal, **kwargs)
+    def __init__(self, allowed_classes = None, internal=False, **kwargs):
+        self.allowed_classes = None if allowed_classes is None else set(allowed_classes)
+        super().__init__(internal=internal, **kwargs)
 
     ## @brief gets the target of the reference
     def get_relateds(self):

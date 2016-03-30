@@ -3,7 +3,7 @@ import warnings
 from .varchar import EmDataField as VarcharDataField
 
 
-class EmDataField(VarcharDataField):
+class DataHandler(VarcharDataField):
 
     help = 'Automatic string field, designed to use the str % operator to build its content'
 

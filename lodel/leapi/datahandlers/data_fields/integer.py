@@ -2,7 +2,7 @@
 from ..data_field import DataField
 
 
-class EmDataField(DataField):
+class DataHandler(DataField):
 
     help = 'Basic integer field'
     ftype = 'int'

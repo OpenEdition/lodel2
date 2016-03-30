@@ -3,17 +3,14 @@ from lodel.leapi.datahandlers.reference import Reference
 from lodel.editorial_model.components import EmClass
 
 
-class Dict(Reference):
+class DataHandler(Reference):
 
     ## @brief instanciates a dict reference
-    # @param emclasses dict : Dict of EmClass objects
-    # @param allowed list
+    # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
-    def __init__(self, emclasses, allowed=[], internal=False, **kwargs):
-        self._refs = set(emclasses)
-        self._refs_class = dict
-        super().__init__(allowed=allowed, internal=internal, **kwargs)
+    def __init__(self, allowed_classes = None, internal=False, **kwargs):
+        super().__init__(allowed_classes=allowed_classes, internal=internal, **kwargs)
 
     ## @brief checks if the given target is valid
     # @return bool

@@ -3,7 +3,7 @@ import re
 from .varchar import EmDataField as VarcharDataField
 
 
-class EmDataField(VarcharDataField):
+class DataHandler(VarcharDataField):
 
     help = 'String field validated with a regex. Takes two options : max_length and regex'
 

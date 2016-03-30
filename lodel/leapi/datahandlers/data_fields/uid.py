@@ -2,7 +2,7 @@
 from .integer import EmDataField as IntegerDataField
 
 
-class EmDataField(IntegerDataField):
+class DataHandler(IntegerDataField):
 
     help = 'Fieldtype designed to handle editorial model UID'
 

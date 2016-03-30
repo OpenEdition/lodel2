@@ -76,16 +76,27 @@ class FieldDataHandler(object):
     # @param fieldtype_name str : A field type name
     # @return DataField child class
     @staticmethod
-    def from_name(fieldtype_name):
-        mod = importlib.import_module(FieldDataHandler.module_name(fieldtype_name))
-        return mod.EmDataField
+    def from_name(data_handler_name):
+        data_handler_name = data_handler_name.lower()
+        mod = None
+        for mname in FieldDataHandler.modules_name(data_handler_name):
+            try:
+                mod = importlib.import_module(mname)
+            except ImportError:
+                pass
+        if mod is None:
+            raise NameError("Unknown data_handler name : '%s'" % data_handler_name)
+        return mod.DataHandler
 
     ## @brief get a module name given a fieldtype name
     # @param fieldtype_name str : a field type name
     # @return a string representing a python module name
     @staticmethod
-    def module_name(fieldtype_name):
-        return 'lodel.leapi.datahandlers.data_fields.%s' % fieldtype_name
+    def modules_name(fieldtype_name):
+        return (
+                'lodel.leapi.datahandlers.data_fields.%s' % fieldtype_name,
+                'lodel.leapi.datahandlers.references.%s' % fieldtype_name
+        )
 
     ## @brief __hash__ implementation for fieldtypes
     def __hash__(self):
