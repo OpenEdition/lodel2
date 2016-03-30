@@ -57,6 +57,8 @@ class FieldDataHandler(object):
     # @param fname str : The field name
     # @param datas dict : dict storing fields values (from the component)
     # @param cur_value : the value from the current field (identified by fieldname)
+    # @return the value
+    # @throw RunTimeError if data construction fails
     def construct_data(self, emcomponent, fname, datas, cur_value):
         emcomponent_fields = emcomponent.fields()
         fname_data_handler = None
@@ -70,7 +72,7 @@ class FieldDataHandler(object):
         elif fname_data_handler is not None and fname_data_handler.nullable:
                 return None
 
-        raise RuntimeError("Unable to construct data for field %s", fname)
+        return RuntimeError("Unable to construct data for field %s", fname)
 
     ## @brief Check datas consistency
     # @param emcomponent EmComponent : An EmComponent child class instance
