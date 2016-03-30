@@ -214,7 +214,7 @@ text_person.new_field(  'role',
                         data_handler = 'varchar',
                         group = editorial_person_group
 )
-"""
+
 person.new_field(   'linked_texts',
                     display_name = {
                         'eng': 'Linked texts',
@@ -228,6 +228,7 @@ person.new_field(   'linked_texts',
                     },
                     group = editorial_person_group,
 )
+
 text.new_field( 'linked_persons',
                 display_name = {
                     'eng': 'Linked persons',
@@ -242,5 +243,4 @@ text.new_field( 'linked_persons',
                 },
                 group = editorial_person_group,
 )
-"""
 
