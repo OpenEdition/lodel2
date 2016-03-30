@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import pymongo
 from pymongo import MongoClient
+from pymongo.errors import BulkWriteError
+
 import urllib
 
 # TODO Positionner cette variable dans les settings
@@ -22,10 +24,25 @@ class MongoDbDataSource(object):
         self.connection = MongoClient(connection_string)
         self.database = self.connection[connection_args['dbname']]
 
-    def insert(self):
-        pass
+    ## @brief Inserts a list of records in a given collection
+    #
+    # @param collection_name str : name of the MongoDB collection in which we will insert the records
+    # @param datas list : list of dictionaries corresponding to the records
+    # @throw BulkWriteError : is thrown when an error occurs during the execution of the ordered bulk operations
+    def insert(self, collection_name, datas):
+        collection = self.database[collection_name]
+        bulk = collection.initialize_ordered_bulk_op()
+        # TODO check if all the elements of the list are dictionaries
+        bulk.insert_many(datas)
+        try:
+            result = bulk.execute()
+        except BulkWriteError as bwe:
+            pass  # TODO Add the behavior in case of an exception => bwe.details['writeErrors'], is a list of error info dicts
+
+        return result['nInserted']
 
     def select(self):
+
         pass
     
     def update(self):
