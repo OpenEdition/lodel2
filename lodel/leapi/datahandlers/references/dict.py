@@ -12,20 +12,6 @@ class DataHandler(Reference):
     def __init__(self, allowed_classes=None, internal=False, **kwargs):
         super().__init__(allowed_classes=allowed_classes, internal=internal, **kwargs)
 
-    ## @brief checks if the given target is valid
-    # @return bool
-    def _check_data_value(self, value):
-        relateds = self.get_relateds()
-
-        if not isinstance(relateds, self._refs_class):
-            return
-
-        for related in relateds.values():
-            if not isinstance(related, EmClass):
-                return False
-
-        return True
-
     ## @brief adds a referenced element
     # @param ref_name str : key of the item in the reference dict
     # @param emclass EmClass
