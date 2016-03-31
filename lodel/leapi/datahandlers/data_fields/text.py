@@ -13,3 +13,10 @@ class DataHandler(DataField):
         if data_handler.__class__.base_type != self.__class__.base_type:
             return False
         return True
+
+    def can_override(self, data_handler):
+
+        if data_handler.__class__.base_type != self.__class__.base_type:
+            return False
+
+        return True

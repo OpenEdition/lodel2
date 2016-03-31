@@ -6,6 +6,7 @@ from .varchar import EmDataField as VarcharDataField
 class DataHandler(VarcharDataField):
 
     help = 'String field validated with a regex. Takes two options : max_length and regex'
+    base_type = 'char'
 
     ## @brief A string field validated by a regex
     # @param regex str : a regex string (passed as argument to re.compile())
@@ -23,3 +24,10 @@ class DataHandler(VarcharDataField):
             value = ''
             error = TypeError('"%s" doesn\'t match the regex "%s"' % (value, self.regex))
         return (value, error)
+
+    def can_override(self, data_handler):
+        if data_handler.__class__.base_type != self.__class__.base_type:
+            return False
+        if data_handler.max_length != self.max_length:
+            return False
+        return True

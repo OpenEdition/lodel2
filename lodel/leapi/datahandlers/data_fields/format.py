@@ -6,6 +6,7 @@ from .varchar import EmDataField as VarcharDataField
 class DataHandler(VarcharDataField):
 
     help = 'Automatic string field, designed to use the str % operator to build its content'
+    base_type = 'char'
 
     ## @brief Build its content with a field list and a format string
     # @param format_string str
@@ -16,3 +17,11 @@ class DataHandler(VarcharDataField):
         self._field_list = field_list
         self._format_string = format_string
         super().__init__(internal='automatic', max_length=max_length)
+
+    def can_override(self, data_handler):
+        if data_handler.__class__.base_type != self.__class__.base_type:
+            return False
+        if data_handler.max_length != self.max_length:
+            return False
+
+        return True
