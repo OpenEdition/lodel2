@@ -15,10 +15,3 @@ class DataHandler(DataField):
         self.now_on_update = now_on_update
         self.now_on_create = now_on_create
         super().__init__(**kwargs)
-
-    def can_override(self, data_handler):
-
-        if data_handler.__class__.base_type != self.__class__.base_type:
-            return False
-
-        return True

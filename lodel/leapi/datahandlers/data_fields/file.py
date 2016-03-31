@@ -13,7 +13,4 @@ class DataHandler(DataField):
         self.upload_path = upload_path
         super().__init__(ftype='file', **kwargs)
 
-    def can_override(self, data_handler):
-        if data_handler.__class__.base_type != self.__class__.base_type:
-            return False
-        return True
+

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
-from .varchar import EmDataField as VarcharDataField
+from .varchar import DataHandler as VarcharDataHandler
 
 
-class DataHandler(VarcharDataField):
+class DataHandler(VarcharDataHandler):
 
     help = 'String field validated with a regex. Takes two options : max_length and regex'
     base_type = 'char'
@@ -26,8 +26,9 @@ class DataHandler(VarcharDataField):
         return (value, error)
 
     def can_override(self, data_handler):
-        if data_handler.__class__.base_type != self.__class__.base_type:
+        if not super().can_override(data_handler):
             return False
+
         if data_handler.max_length != self.max_length:
             return False
         return True

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from .integer import EmDataField as IntegerDataField
+from .integer import DataHandler as IntegerDataHandler
 
 
-class DataHandler(IntegerDataField):
+class DataHandler(IntegerDataHandler):
 
     help = 'Fieldtype designed to handle editorial model UID'
     base_type = 'int'
@@ -16,9 +16,3 @@ class DataHandler(IntegerDataField):
 
     def _check_data_value(self, value):
         return (value, None)
-
-    def can_override(self,data_handler):
-        if data_handler.__class__.base_type != self.__class__.base_type:
-            return False
-
-        return True

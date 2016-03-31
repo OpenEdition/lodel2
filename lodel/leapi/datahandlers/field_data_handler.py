@@ -43,6 +43,11 @@ class FieldDataHandler(object):
     def _check_data_value(self, value):
         return (value, None)
 
+    def can_override(self, data_handler):
+        if data_handler.__class__.base_type != self.__class__.base_type:
+            return False
+        return True
+
     ## @brief Build field value
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname str : The field name

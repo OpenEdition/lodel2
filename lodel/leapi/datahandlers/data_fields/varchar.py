@@ -15,7 +15,7 @@ class DataHandler(DataField):
 
     def can_override(self, data_handler):
 
-        if data_handler.__class__.base_type != self.__class__.base_type:
+        if not super().can_override(data_handler):
             return False
 
         if data_handler.max_length != self.max_length:

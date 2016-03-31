@@ -18,7 +18,3 @@ class DataHandler(FieldDataHandler):
             error = TypeError("The value '%s' is not, and will never, be an integer" % value)
         return (value, error)
 
-    def can_override(self, data_handler):
-        if data_handler.__class__.base_type != self.__class__.base_type:
-            return False
-        return True
