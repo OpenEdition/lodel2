@@ -20,7 +20,7 @@ class Reference(FieldDataHandler):
     ## @brief checks if the data value is valid
     # @param value
     # @return
-    def check_data_value(self, value):
+    def _check_data_value(self, value):
 
         if not isinstance(value, self._refs_class):
             return value, "The reference should be an instance of %s, %s gotten" % (self._refs_class, value.__class__)
@@ -35,4 +35,7 @@ class Reference(FieldDataHandler):
             if not isinstance(related, EmClass):
                 return value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name,
                                                                                                 related.__class__)
+            if self.allowed_classes is not None and related.__class__.display_name not in self.allowed_classes:
+                return value, "The reference %s should be an instance of either one of those classes : %s, %s gotten" % \
+                              (related.display_name, self.allowed_classes, related.__class__)
         return value, None
