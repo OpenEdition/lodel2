@@ -8,9 +8,3 @@ class DataHandler(DataField):
 
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__(ftype='text', **kwargs)
-
-    def can_override(self, data_handler):
-        if data_handler.__class__.base_type != self.__class__.base_type:
-            return False
-        return True
-

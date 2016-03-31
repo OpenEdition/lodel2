@@ -29,8 +29,8 @@ class DataField(FieldDataHandler):
     def check_data_value(self, value):
         if value is None:
             if not self.nullable:
-                return (None, TypeError("'None' value but field is not nullable"))
+                return None, TypeError("'None' value but field is not nullable")
 
-            return (None, None)
+            return None, None
         return super().check_data_value(value)
 

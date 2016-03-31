@@ -18,11 +18,10 @@ class DataHandler(VarcharDataHandler):
         self._format_string = format_string
         super().__init__(internal='automatic', max_length=max_length)
 
+
     def can_override(self, data_handler):
         if not super().can_override(data_handler):
             return False
-
         if data_handler.max_length != self.max_length:
             return False
-
         return True

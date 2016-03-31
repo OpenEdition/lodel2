@@ -17,12 +17,13 @@ class Reference(FieldDataHandler):
     def get_relateds(self):
         return self._refs
 
-    ## @brief checks if the target is valid
-
+    ## @brief checks if the data value is valid
+    # @param value
+    # @return
     def check_data_value(self, value):
 
         if not isinstance(value, self._refs_class):
-            return (value, "The reference should be an instance of %s, %s gotten" % (self._refs_class, value.__class__))
+            return value, "The reference should be an instance of %s, %s gotten" % (self._refs_class, value.__class__)
 
         if isinstance(value, EmClass):
             value = [value]
@@ -32,6 +33,6 @@ class Reference(FieldDataHandler):
 
         for related in value:
             if not isinstance(related, EmClass):
-                return (value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name, related.__class__))
-
-        return (value, None)
+                return value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name,
+                                                                                                related.__class__)
+        return value, None

@@ -1,8 +1,9 @@
 #-*- coding: utf-8 -*-
 
-import hashlib
 import copy
+import hashlib
 import json
+
 
 ## @brief Stores multilangage string
 class MlString(object):
@@ -41,7 +42,7 @@ class MlString(object):
         elif lang in self.values:
             return self.values[lang]
         else:
-           return str(self)
+            return str(self)
 
     ## @brief Set a translation
     # @param lang str : the lang
@@ -103,4 +104,3 @@ class MlString(object):
 
     def __repr__(self):
         return repr(self.values)
-    

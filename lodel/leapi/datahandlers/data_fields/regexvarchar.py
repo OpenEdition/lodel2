@@ -23,7 +23,7 @@ class DataHandler(VarcharDataHandler):
         if not self.compiled_re.match(value):
             value = ''
             error = TypeError('"%s" doesn\'t match the regex "%s"' % (value, self.regex))
-        return (value, error)
+        return value, error
 
     def can_override(self, data_handler):
         if not super().can_override(data_handler):

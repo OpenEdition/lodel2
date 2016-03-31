@@ -13,12 +13,12 @@ class DataHandler(DataField):
         self.max_length = int(max_length)
         super().__init__(**kwargs)
 
+    ## @brief checks if this class can override the given data handler
+    # @param data_handler DataHandler
+    # @return bool
     def can_override(self, data_handler):
-
         if not super().can_override(data_handler):
             return False
-
         if data_handler.max_length != self.max_length:
             return False
-
         return True

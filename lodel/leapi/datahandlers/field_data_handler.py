@@ -11,7 +11,8 @@ class FieldDataHandler(object):
 
     ## @brief constructor
     # @param internal False | str : define whether or not a field is internal
-    # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is designed globally and immutable
+    # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
+    #                         designed globally and immutable
     # @param **args
     # @throw NotImplementedError if it is instanciated directly
     def __init__(self, internal=False, immutable=False, **args):
@@ -41,8 +42,11 @@ class FieldDataHandler(object):
         return self._check_data_value(value)
 
     def _check_data_value(self, value):
-        return (value, None)
+        return value, None
 
+    ## @brief checks if this class can override the given data handler
+    # @param data_handler DataHandler
+    # @return bool
     def can_override(self, data_handler):
         if data_handler.__class__.base_type != self.__class__.base_type:
             return False

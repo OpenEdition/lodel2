@@ -19,4 +19,4 @@ class DataHandler(DataField):
             value = bool(value)
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be a boolean" % value)
-        return (value, error)
+        return value, error

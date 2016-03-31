@@ -9,7 +9,7 @@ class DataHandler(Reference):
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
-    def __init__(self, allowed_classes = None, internal=False, **kwargs):
+    def __init__(self, allowed_classes=None, internal=False, **kwargs):
         super().__init__(allowed_classes=allowed_classes, internal=internal, **kwargs)
 
     ## @brief adds a referenced element

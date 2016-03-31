@@ -16,5 +16,5 @@ class DataHandler(FieldDataHandler):
             value = int(value)
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be an integer" % value)
-        return (value, error)
+        return value, error
 
