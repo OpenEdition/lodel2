@@ -244,3 +244,4 @@ text.new_field( 'linked_persons',
                 group = editorial_person_group,
 )
 
+em.save('picklefile', filename = '/tmp/em_test.pickle')

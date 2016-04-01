@@ -24,11 +24,13 @@ class LeApiErrors(Exception):
 
 
 ## @brief When an error concern a query
-class LeApiQueryError(LeApiErrors): pass
+class LeApiQueryError(LeApiErrors):
+    pass
 
 
 ## @brief When an error concerns a datas
-class LeApiDataCheckError(LeApiErrors): pass
+class LeApiDataCheckError(LeApiErrors):
+    pass
 
 
 ## @brief Wrapper class for LeObject getter & setter
@@ -60,15 +62,21 @@ class LeObjectValues(object):
         
 
 class LeObject(object):
-    
+ 
+    ## @brief boolean that tells if an object is abtract or not
+    __abtract = None
     ## @brief A dict that stores DataHandler instances indexed by field name
     __fields = None
     ## @brief A tuple of fieldname (or a uniq fieldname) representing uid
     __uid = None 
 
+    ## @brief Construct an object representing an Editorial component
+    # @note Can be considered as EmClass instance
     def __init__(self, **kwargs):
+        if self.__abstract:
+            raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
         ## @brief A dict that stores fieldvalues indexed by fieldname
-        self.__datas = dict(fname:None for fname in self.__fields)
+        self.__datas = { fname:None for fname in self.__fields }
         ## @brief Store a list of initianilized fields when instanciation not complete else store True
         self.__initialized = list()
         ## @brief Datas accessor. Instance of @ref LeObjectValues
@@ -81,7 +89,8 @@ class LeObject(object):
             self.__datas[uid_name] = kwargs[uid_name]
             del(kwargs[uid_name])
             self.__initialized.append(uid_name)
-
+        
+        # Processing given fields
         allowed_fieldnames = self.fieldnames(include_ro = False)
         err_list = list()
         for fieldname, fieldval in kwargs.items():
@@ -118,6 +127,20 @@ class LeObject(object):
         else:
             return list(self.__fields.keys())
  
+    @classmethod
+    def name2objname(cls, name):
+        return name.title()
+    
+    ## @brief Return the datahandler asssociated with a LeObject field
+    # @param fieldname str : The fieldname
+    # @return A data handler instance
+    @classmethod
+    def data_handler(cls, fieldname):
+        if not fieldname in cls.__fields:
+            raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
+        return cls.__fields[fieldname]
+        
+
     ## @brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
     # @param name str : field name
@@ -126,7 +149,7 @@ class LeObject(object):
     # @throw NameError if name is not an existing field name
     def data(self, field_name):
         if field_name not in self.__fields.keys():
-            raise NameError("No such field in %s : %s" % (self.__class__.__name__, name)
+            raise NameError("No such field in %s : %s" % (self.__class__.__name__, name))
         if not self.initialized and name not in self.__initialized:
             raise RuntimeError("The field %s is not initialized yet (and have no value)" % name)
         return self.__datas[name]
@@ -220,8 +243,20 @@ class LeObject(object):
                     self.__datas[fname] = val
         return err_list if len(err_list) > 0 else None
 
-    #-------------------#
-    #   Crud methods    #
-    #-------------------#
+    #--------------------#
+    #   Other methods    #
+    #--------------------#
+    
+    ## @brief Temporary method to set private fields attribute at dynamic code generation
+    #
+    # This method is used in the generated dynamic code to set the __fields attribute
+    # at the end of the dyncode parse
+    # @warning This method is deleted once the dynamic code is parsed
+    # @param field_list list : list of EmField instance
+    @classmethod
+    def _set__fields(cls, field_list):
+        cls.__fields = field_list
+        
+
 
     

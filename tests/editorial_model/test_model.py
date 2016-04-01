@@ -32,6 +32,25 @@ class EditorialModelTestCase(unittest.TestCase):
         c2f1.uid = 'c2testfield1'
         self.assertEqual(model.d_hash(), e_hash)
 
+    def test_translator_from_name(self):
+        """ Test the translator_from_name method """
+        import lodel.editorial_model.translator.picklefile as expected
+        translator = EditorialModel.translator_from_name('picklefile')
+        self.assertEqual(translator, expected)
+
+    def test_invalid_translator_from_name(self):
+        """ Test the translator_from_name method when invalid names given as argument """
+        import lodel.editorial_model.translator.picklefile
+        invalid_names = [
+            lodel.editorial_model.translator.picklefile,
+            'foobar',
+            42,
+        ]
+
+        for name in invalid_names:
+            with self.assertRaises(NameError):
+                EditorialModel.translator_from_name(name)
+
 
 class EmComponentTestCase(unittest.TestCase):
     
@@ -104,6 +123,24 @@ class EmClassTestCase(unittest.TestCase):
         cls2 = EmClass('testClass2', parents = cls1)
         with self.assertRaises(AttributeError):
             cls2.new_field('test', data_handler = 'varchar', max_length = 2)
+
+    def test_parents_recc(self):
+        """ Test the reccursive parents property """
+        model = EditorialModel(
+                                    "test_model",
+                                    description = "Model for LeFactoryTestCase"
+        )
+        cls1 = model.new_class('testclass1')
+        cls2 = model.new_class('testclass2')
+        cls3 = model.new_class('testclass3', parents = [cls2])
+        cls4 = model.new_class('testclass4', parents = [cls1, cls3])
+        cls5 = model.new_class('testclass5', parents = [cls4])
+        cls6 = model.new_class('testclass6')
+
+        self.assertEqual(cls5.parents_recc, set((cls4, cls1, cls2, cls3)))
+        self.assertEqual(cls1.parents_recc, set())
+        self.assertEqual(cls4.parents_recc, set((cls1, cls2, cls3)))
+        self.assertEqual(cls3.parents_recc, set((cls2,)))
 
 class EmGroupTestCase(unittest.TestCase):
     

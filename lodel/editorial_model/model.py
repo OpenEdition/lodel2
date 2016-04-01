@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 
 import hashlib
+import importlib
 
 from lodel.utils.mlstring import MlString
 
@@ -77,6 +78,8 @@ class EditorialModel(object):
     # @param translator module : The translator module to use
     # @param **translator_args
     def save(self, translator, **translator_kwargs):
+        if isinstance(translator, str):
+            translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
     
     ## @brief Load a model
@@ -84,7 +87,23 @@ class EditorialModel(object):
     # @param **translator_args
     @classmethod
     def load(cls, translator, **translator_kwargs):
+        if isinstance(translator, str):
+            translator = cls.translator_from_name(translator)
         return translator.load(**translator_kwargs)
+
+    ## @brief Return a translator module given a translator name
+    # @param translator_name str : The translator name
+    # @return the translator python module
+    # @throw NameError if the translator does not exists
+    @staticmethod
+    def translator_from_name(translator_name):
+        pkg_name = 'lodel.editorial_model.translator.%s' % translator_name
+        try:
+            mod = importlib.import_module(pkg_name)
+        except ImportError:
+            raise NameError("No translator named %s")
+        return mod
+        
     
     ## @brief Private getter for __groups or __classes
     # @see classes() groups()

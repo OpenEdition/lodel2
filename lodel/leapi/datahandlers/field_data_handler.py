@@ -15,10 +15,11 @@ class FieldDataHandler(object):
     #                         designed globally and immutable
     # @param **args
     # @throw NotImplementedError if it is instanciated directly
-    def __init__(self, internal=False, immutable=False, **args):
+    def __init__(self, internal=False, immutable=False, primary_key = False, **args):
         if self.__class__ == FieldDataHandler:
             raise NotImplementedError("Abstract class")
-
+        
+        self.primary_key = primary_key
         self.internal = internal  # Check this value ?
         self.immutable = bool(immutable)
 
@@ -30,6 +31,9 @@ class FieldDataHandler(object):
     @staticmethod
     def name(cls):
         return cls.__module__.split('.')[-1]
+
+    def is_primary_key(self):
+        return self.primary_key
 
     ## @brief checks if a fieldtype is internal
     # @return bool
@@ -98,6 +102,22 @@ class FieldDataHandler(object):
         if mod is None:
             raise NameError("Unknown data_handler name : '%s'" % data_handler_name)
         return mod.DataHandler
+    
+    ## @brief Return the module name to import in order to use the datahandler
+    # @param data_handler_name str : Data handler name
+    # @return a str
+    @staticmethod
+    def module_name(data_handler_name):
+        data_handler_name = data_handler_name.lower()
+        for mname in FieldDataHandler.modules_name(data_handler_name):
+            try:
+                mod = importlib.import_module(mname)
+                module_name = mname
+            except ImportError:
+                pass
+        if mod is None:
+            raise NameError("Unknown data_handler name : '%s'" % data_handler_name)
+        return module_name
 
     ## @brief get a module name given a fieldtype name
     # @param fieldtype_name str : a field type name

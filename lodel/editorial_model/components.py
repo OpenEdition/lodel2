@@ -52,11 +52,15 @@ class EmClass(EmComponent):
     # @param uid str : uniq identifier
     # @param display_name MlString|str|dict : component display_name
     # @param abstract bool : set the class as asbtract if True
+    # @param pure_abstract bool : if True the EmClass will not be represented in leapi dyncode
     # @param parents list: parent EmClass list or uid list
     # @param help_text MlString|str|dict : help_text
-    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None):
+    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None, pure_abstract = False):
         super().__init__(uid, display_name, help_text, group)
         self.abstract = bool(abstract)
+        self.pure_abstract = bool(pure_abstract)
+        if self.pure_abstract:
+            self.abtract = True
         if parents is not None:
             if not isinstance(parents, list):
                 parents = [parents]
@@ -78,6 +82,19 @@ class EmClass(EmComponent):
         res.update(self.__fields)
         return res
 
+    ## @brief Return the list of all dependencies
+    #
+    # Reccursive parents listing
+    @property
+    def parents_recc(self):
+        if len(self.parents) == 0:
+            return set()
+
+        res = set(self.parents)
+        for parent in self.parents:
+            res |= parent.parents_recc
+        return res
+
     ## @brief EmField getter
     # @param uid None | str : If None returns an iterator on EmField instances else return an EmField instance
     # @param no_parents bool : If True returns only fields defined is this class and not the one defined in parents classes
@@ -96,7 +113,7 @@ class EmClass(EmComponent):
     # @todo End the override checks (needs methods in data_handlers)
     def add_field(self, emfield):
         if emfield.uid in self.__fields:
-            raise EditorialModelException("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
+            raise EditorialModelError("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
         # Incomplete field override check
         if emfield.uid in self.__all_fields:
             parent_field = self.__all_fields[emfield.uid]
@@ -124,6 +141,18 @@ class EmClass(EmComponent):
         m.update(bytes(payload, 'utf-8'))
         return int.from_bytes(m.digest(), byteorder='big')
 
+    def __str__(self):
+        return "<class EmClass %s>" % self.uid
+    
+    def __repr__(self):
+        if not self.abstract:
+            abstract = ''
+        elif self.pure_abstract:
+            abstract = 'PureAbstract'
+        else:
+            abstract = 'Abstract'
+        return "<class %s EmClass uid=%s>" % (abstract, repr(self.uid) )
+
 
 ## @brief Handles editorial model classes fields
 class EmField(EmComponent):
@@ -139,6 +168,8 @@ class EmField(EmComponent):
         super().__init__(uid, display_name, help_text, group)
         self.data_handler_name = data_handler
         self.data_handler_cls = FieldDataHandler.from_name(data_handler)
+        #if 'data_handler_kwargs' in handler_kwargs:
+        #    handler_kwargs = handler_kwargs['data_handler_kwargs']
         self.data_handler_options = handler_kwargs
         self.data_handler_instance = self.data_handler_cls(**handler_kwargs)
         ## @brief Stores the emclass that contains this field (set by EmClass.add_field() method)
