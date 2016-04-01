@@ -73,16 +73,16 @@ class EmClassTestCase(unittest.TestCase):
     def test_field_override(self):
         """ Test EmClass field overriding in inheritance """
         cls1 = EmClass('testClass', 'test class')
-        cls1.new_field('test', data_handler = 'varchar', max_length = 8)
+        cls1.new_field('test', data_handler = 'varchar', max_length = 16, nullable=True)
         cls1.new_field('test2', data_handler = 'integer', nullable = True)
 
         cls2 = EmClass('testClass2', parents = cls1)
-        cls2.new_field('test', data_handler = 'varchar', max_length = 16)
+        cls2.new_field('test', data_handler = 'varchar', max_length = 16, nullable=False)
         cls2.new_field('test2', data_handler = 'integer', nullable = False)
 
         self.assertEqual(len(cls1.fields()), len(cls2.fields()))
-        self.assertEqual(cls1.fields('test').data_handler_options['max_length'], 8)
-        self.assertEqual(cls2.fields('test').data_handler_options['max_length'], 16)
+        self.assertTrue(cls1.fields('test').data_handler_options['nullable'])
+        self.assertFalse(cls2.fields('test').data_handler_options['nullable'])
 
     ## @todo add more test when data handlers implements compatibility checks
     def test_field_invalid_type_override(self):
@@ -95,7 +95,6 @@ class EmClassTestCase(unittest.TestCase):
         with self.assertRaises(AttributeError):
             cls2.new_field('test', data_handler = 'integer')
 
-    @unittest.skip("Wait for data handlers to implements a method to check options compatibility")
     def test_field_invalid_options_overrid(self):
         """ Testing invalid fields overriding (incompatible data handler options) """
         cls1 = EmClass('testClass', 'test class')

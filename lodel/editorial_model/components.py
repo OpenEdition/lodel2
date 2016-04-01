@@ -100,7 +100,7 @@ class EmClass(EmComponent):
         # Incomplete field override check
         if emfield.uid in self.__all_fields:
             parent_field = self.__all_fields[emfield.uid]
-            if emfield.data_handler_name != parent_field.data_handler_name:
+            if not emfield.data_handler_instance.can_override(parent_field.data_handler_instance):
                 raise AttributeError("'%s' field override a parent field, but data_handles are not compatible" % emfield.uid)
         self.__fields[emfield.uid] = emfield
         emfield._emclass = self
