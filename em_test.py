@@ -215,6 +215,7 @@ text_person.new_field(  'role',
                         group = editorial_person_group
 )
 
+"""
 person.new_field(   'linked_texts',
                     display_name = {
                         'eng': 'Linked texts',
@@ -243,5 +244,6 @@ text.new_field( 'linked_persons',
                 },
                 group = editorial_person_group,
 )
+"""
 
 em.save('picklefile', filename = '/tmp/em_test.pickle')
