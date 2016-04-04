@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lodel.leapi.datahandlers.field_data_handler import FieldDataHandler
+from lodel.leapi.datahandlers.field_data_handler import FieldDataHandler, FieldValidationError
 from lodel.editorial_model.components import EmClass
 
 
@@ -10,32 +10,20 @@ class Reference(FieldDataHandler):
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, internal=False, **kwargs):
-        self.allowed_classes = None if allowed_classes is None else set(allowed_classes)
+        self.__allowed_classes = None if allowed_classes is None else set(allowed_classes)
         super().__init__(internal=internal, **kwargs)
 
-    ## @brief gets the target of the reference
-    def get_relateds(self):
-        return self._refs
-
-    ## @brief checks if the data value is valid
-    # @param value
-    # @return
+    ## @brief Check value
+    # @param value *
+    # @return tuple(value, exception)
     def _check_data_value(self, value):
-
-        if not isinstance(value, self._refs_class):
-            return value, "The reference should be an instance of %s, %s gotten" % (self._refs_class, value.__class__)
-
         if isinstance(value, EmClass):
             value = [value]
+        for elt in value:
+            if not issubclass(elt.__class__, EmClass):
+                return None, FieldValidationError("Some elements of this references are not EmClass instances")
+            if self.__allowed_classes is not None:
+                if not isinstance(elt, self.__allowed_classes):
+                    return None, FieldValidationError("Some element of this references are not valids (don't fit with allowed_classes")
+        return value
 
-        if isinstance(value, dict):
-            ref_values = value.values()
-
-        for related in value:
-            if not isinstance(related, EmClass):
-                return value, "The reference %s should be an instance of EmClass, %s gotten" % (related.display_name,
-                                                                                                related.__class__)
-            if self.allowed_classes is not None and related.__class__.display_name not in self.allowed_classes:
-                return value, "The reference %s should be an instance of either one of those classes : %s, %s gotten" % \
-                              (related.display_name, self.allowed_classes, related.__class__)
-        return value, None

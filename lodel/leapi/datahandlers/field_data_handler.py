@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import importlib
 
+class FieldValidationError(Exception):
+    pass
 
 class FieldDataHandler(object):
 

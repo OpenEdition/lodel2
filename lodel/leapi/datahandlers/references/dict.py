@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from lodel.leapi.datahandlers.field_data_handler import FieldValidationError
 from lodel.leapi.datahandlers.reference import Reference
 from lodel.editorial_model.components import EmClass
 
@@ -12,12 +13,13 @@ class DataHandler(Reference):
     def __init__(self, allowed_classes=None, internal=False, **kwargs):
         super().__init__(allowed_classes=allowed_classes, internal=internal, **kwargs)
 
-    ## @brief adds a referenced element
-    # @param ref_name str : key of the item in the reference dict
-    # @param emclass EmClass
-    # @return bool
-    def add_ref(self, ref_name, emclass):
-        if isinstance(emclass, EmClass) and isinstance(ref_name, str):
-            self._refs[ref_name] = emclass
-            return True
-        return False
+    ## @brief Check value
+    # @param value *
+    # @return tuple(value, exception)
+    def _check_data_value(self, value):
+        if not isinstance(value, dict):
+            return None, FieldValidationError("Values for dict fields should be dict")
+        val, expt = super()._check_data_value(value.values())
+        return (
+                None if isinstance(expt, Exception) else value,
+                expt)
