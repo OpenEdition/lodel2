@@ -8,6 +8,7 @@ import copy
 import importlib
 import inspect
 
+from lodel import logger
 
 class FieldValidationError(Exception):
     pass
@@ -121,7 +122,7 @@ class DataHandler(object):
                 module = importlib.import_module('lodel.leapi.datahandlers.%s' % module_name)
                 for name, obj in inspect.getmembers(module):
                     if inspect.isclass(obj):
-                        print("Data handler found : %s in %s" % (name, module_name))
+                        logger.debug("Load data handler %s.%s" % (obj.__module__, obj.__name__))
                         cls.__base_handlers[name.lower()] = obj
         return copy.copy(cls.__base_handlers)
 
