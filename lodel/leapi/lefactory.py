@@ -3,14 +3,16 @@
 import functools
 from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
-from lodel.leapi.datahandlers.field_data_handler import FieldDataHandler
+from lodel.leapi.datahandlers.base_classes import DataHandler
 
 ## @brief Generate python module code from a given model
 # @param model lodel.editorial_model.model.EditorialModel
 def dyncode_from_em(model):
     
     cls_code, modules, bootstrap_instr = generate_classes(model)
-    imports = "from lodel.leapi.leobject import LeObject\n"
+    imports = """from lodel.leapi.leobject import LeObject
+from lodel.leapi.datahandlers.base_classes import DataField
+"""
     for module in modules:
         imports += "import %s\n" % module
 
@@ -49,11 +51,11 @@ def emclass_sorted_by_deps(emclass_list):
 
 ## @brief Given an EmField returns the data_handler constructor suitable for dynamic code
 def data_handler_constructor(emfield):
-    dh_module_name = FieldDataHandler.module_name(emfield.data_handler_name)+'.DataHandler'
+    #dh_module_name = DataHandler.module_name(emfield.data_handler_name)+'.DataHandler'
+    get_handler_class_instr = 'DataField.from_name(%s)' % repr(emfield.data_handler_name)
     options = []
 
-    #dh_kwargs =  '{' + (', '.join(['%s: %s' % (repr(name), forge_optval(val)) for name, val in emfield.data_handler_options.items()])) + '}'
-    return ('%s(**{' % dh_module_name)+(', '.join([repr(name)+': '+forge_optval(val) for name, val in emfield.data_handler_options.items()])) + '})'
+    return ('%s(**{' % get_handler_class_instr)+(', '.join([repr(name)+': '+forge_optval(val) for name, val in emfield.data_handler_options.items()])) + '})'
             
 
 def forge_optval(optval):
@@ -87,7 +89,6 @@ def generate_classes(model):
         parents = list()    # List of parents EmClass
         # Determine pk
         for field in em_class.fields():
-            imports.append(FieldDataHandler.module_name(field.data_handler_name))
             if field.data_handler_instance.is_primary_key():
                 uid.append(field.uid)
         # Determine parent for inheritance

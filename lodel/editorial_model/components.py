@@ -6,7 +6,6 @@ import copy
 import hashlib
 
 from lodel.utils.mlstring import MlString
-from lodel.leapi.datahandlers.field_data_handler import FieldDataHandler
 
 from lodel.editorial_model.exceptions import *
 
@@ -156,7 +155,7 @@ class EmClass(EmComponent):
 
 ## @brief Handles editorial model classes fields
 class EmField(EmComponent):
-    
+
     ## @brief Instanciate a new EmField
     # @param uid str : uniq identifier
     # @param display_name MlString|str|dict : field display_name
@@ -165,9 +164,10 @@ class EmField(EmComponent):
     # @param group EmGroup :
     # @param **handler_kwargs : data handler arguments
     def __init__(self, uid, data_handler, display_name = None, help_text = None, group = None, **handler_kwargs):
+        from lodel.leapi.datahandlers.base_classes import DataHandler
         super().__init__(uid, display_name, help_text, group)
         self.data_handler_name = data_handler
-        self.data_handler_cls = FieldDataHandler.from_name(data_handler)
+        self.data_handler_cls = DataHandler.from_name(data_handler)
         #if 'data_handler_kwargs' in handler_kwargs:
         #    handler_kwargs = handler_kwargs['data_handler_kwargs']
         self.data_handler_options = handler_kwargs
