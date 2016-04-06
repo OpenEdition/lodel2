@@ -24,7 +24,7 @@ em_object.new_field(    'lodel_id',
                         display_name = 'Lodel identifier',
                         help_text = 'Uniq ID that identify every lodel object',
                         group = base_group,
-                        data_handler = 'integer',
+                        data_handler = 'uniqid',
                         internal = True,
 )
 em_object.new_field(    'help_text',
@@ -135,6 +135,7 @@ text = em.new_class(   'text',
                         help_text = 'Abstract class that represent texts',
                         group = editorial_group,
                         abstract = True,
+                        parents = entitie,
 )
 
 text.new_field(    'title',
@@ -156,6 +157,7 @@ collection = em.new_class(  'collection',
                             display_name = 'Collection',
                             group = editorial_group,
                             abstract = True,
+                            parents = entitie,
 )
 collection.new_field(   'title',
                         display_name = 'Title',
@@ -187,6 +189,7 @@ text_person = em.new_class( 'text_person',
                             },
                             group = editorial_person_group,
                             abstract = True,
+                            parents = entitie,
 )
 bref_textperson_text = text_person.new_field(  'text',
                                                 display_name = {
@@ -246,4 +249,4 @@ text.new_field( 'linked_persons',
 )
 """
 
-em.save('picklefile', filename = '/tmp/em_test.pickle')
+em.save('picklefile', filename = 'examples/em_test.pickle')

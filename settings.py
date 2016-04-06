@@ -33,7 +33,7 @@ em_graph_output = '/tmp/em_%s_graph.png'
 
 logging = {
     'stderr': {
-        'level': 'DEBUG',
+        'level': 'INFO',
         'context': False,
     },
     'logfile': {
