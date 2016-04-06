@@ -225,7 +225,7 @@ person.new_field(   'linked_texts',
                         'fre': 'Textes liés',
                     },
                     data_handler = 'list',
-                    back_reference = ('Text', 'lodel_id'),
+                    back_reference = ('Text', 'linked_persons'),
                     group = editorial_person_group,
 )
 
@@ -235,7 +235,7 @@ text.new_field( 'linked_persons',
                     'fre': 'Personnes liées',
                 },
                 data_handler = 'list',
-                back_reference = ('Person', 'lodel_id'),
+                back_reference = ('Person', 'linked_texts'),
                 group = editorial_person_group,
 )
 

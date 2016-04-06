@@ -199,13 +199,8 @@ class Reference(DataHandler):
         return self.__back_reference
 
     ## @brief Set the back reference for this field.
-    # 
-    # This method is designed to be called from LeObject child classes
-    # at dyncode load. LeObject dynamic childs classes are the objects that are
-    # able to fetch python classes from name.
-    def _set_back_reference(self, back_reference = None):
-        
-        pass
+    def _set_back_reference(self, back_reference):
+        self.__back_reference = back_reference
         
 
     ## @brief Check value
@@ -248,6 +243,6 @@ class SingleRef(Reference):
 class MultipleRef(Reference):
     
     def __init__(self, allowed_classes = None, **kwargs):
-        super().__init__(allowed_classes = allowed_classes)
- 
+        super().__init__(allowed_classes = allowed_classes, **kwargs)
+
 

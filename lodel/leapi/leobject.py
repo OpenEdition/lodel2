@@ -165,12 +165,14 @@ class LeObject(object):
     @classmethod
     def _backref_init(cls):
         for fname,field in cls._fields.items():
+            #if field.is_reference():
+            #    print(fname, field.back_reference)
             if field.is_reference() and field.back_reference is not None:
                 cls_name, field_name = field.back_reference
                 bref_leobject = cls.name2class(cls.name2objname(cls_name))
                 if field_name not in bref_leobject._fields:
                     raise NameError("LeObject %s doesn't have a field named '%s'" % (cls_name, field_name))
-                field.set_backreference(bref_leobject._fields[field_name])
+                field._set_back_reference(bref_leobject._fields[field_name])
 
     @classmethod
     def is_abstract(cls):
