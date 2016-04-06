@@ -218,18 +218,14 @@ text_person.new_field(  'role',
                         group = editorial_person_group
 )
 
-"""
+# simple example of linked text / person
 person.new_field(   'linked_texts',
                     display_name = {
                         'eng': 'Linked texts',
                         'fre': 'Textes liés',
                     },
-                    data_handler = 'relation',
-                    data_handler_kwargs = {
-                        'data_handler': 'list',
-                        'allowed_class': text_person,
-                        'backreference': bref_textperson_text,
-                    },
+                    data_handler = 'list',
+                    back_reference = ('Text', 'lodel_id'),
                     group = editorial_person_group,
 )
 
@@ -238,15 +234,10 @@ text.new_field( 'linked_persons',
                     'eng': 'Linked persons',
                     'fre': 'Personnes liées',
                 },
-                data_handler = 'relation',
-                data_handler_kwargs = {
-                    'data_handler': 'list',
-                    'allowed_class': text_person,
-                    'backreference': bref_textperson_person,
-
-                },
+                data_handler = 'list',
+                back_reference = ('Person', 'lodel_id'),
                 group = editorial_person_group,
 )
-"""
 
+print(person.parents_recc)
 em.save('picklefile', filename = 'examples/em_test.pickle')
