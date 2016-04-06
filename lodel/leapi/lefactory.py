@@ -9,18 +9,30 @@ from lodel.leapi.datahandlers.base_classes import DataHandler
 # @param model lodel.editorial_model.model.EditorialModel
 def dyncode_from_em(model):
     
+    # Generation of LeObject child classes code
     cls_code, modules, bootstrap_instr = generate_classes(model)
+    # Completing bootstrap with back_reference bootstraping
+    for leoname in [ LeObject.name2objname(emcls.uid) for emcls in get_classes(model) ]:
+        bootstrap_instr += """
+{leobject}._backref_init()
+""".format(leobject = leoname)
+    bootstrap_instr += """
+del(LeObject._set__fields)
+del(LeObject._backref_init)
+"""
+
+    # Header
     imports = """from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataField
 """
     for module in modules:
         imports += "import %s\n" % module
-
+    
+    # formating all components of output
     res_code = """#-*- coding: utf-8 -*-
 {imports}
 {classes}
 {bootstrap_instr}
-del(LeObject._set__fields)
 """.format(
             imports = imports,
             classes = cls_code,
@@ -48,6 +60,10 @@ def emclass_sorted_by_deps(emclass_list):
         else:
             return 0
     return sorted(emclass_list, key = functools.cmp_to_key(emclass_deps_cmp))
+
+## @brief Returns a list of EmClass that will be represented as LeObject child classes
+def get_classes(model):
+    return [ cls for cls in emclass_sorted_by_deps(model.classes()) if not cls.pure_abstract ]
 
 ## @brief Given an EmField returns the data_handler constructor suitable for dynamic code
 def data_handler_constructor(emfield):
@@ -84,7 +100,7 @@ def generate_classes(model):
     imports = list()
     bootstrap = ""
     # Generating field list for LeObjects generated from EmClass
-    for em_class in [ cls for cls in emclass_sorted_by_deps(model.classes()) if not cls.pure_abstract ]:
+    for em_class in get_classes(model):
         uid = list()        # List of fieldnames that are part of the EmClass primary key
         parents = list()    # List of parents EmClass
         # Determine pk
@@ -101,9 +117,9 @@ def generate_classes(model):
         # Dynamic code generation for LeObject childs classes
         em_cls_code = """
 class {clsname}({parents}):
-    __abstract = {abstract}
-    __fields = None
-    __uid = {uid_list}
+    _abstract = {abstract}
+    _fields = None
+    _uid = {uid_list}
 
 """.format(
     clsname = LeObject.name2objname(em_class.uid),

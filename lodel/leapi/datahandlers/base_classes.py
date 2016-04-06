@@ -34,21 +34,33 @@ class DataHandler(object):
     #                         designed globally and immutable
     # @param **args
     # @throw NotImplementedError if it is instanciated directly
-    def __init__(self, internal=False, immutable=False, primary_key = False, **args):
+    def __init__(self, **kwargs):
         if self.__class__ == DataHandler:
             raise NotImplementedError("Abstract class")
         
-        self.primary_key = primary_key
-        self.internal = internal  # Check this value ?
-        self.immutable = bool(immutable)
+        self.__arguments = kwargs
 
-        for argname, argval in args.items():
+        self.nullable = True
+        self.uniq = False
+        self.immutable = False
+        self.primary_key = False
+        if 'defaults' in kwargs:
+            self.default, error = self.check_data_value(kwargs['default'])
+            if error:
+                raise error
+            del(args['default'])
+
+        for argname, argval in kwargs.items():
             setattr(self, argname, argval)
 
     ## Fieldtype name
     @staticmethod
     def name(cls):
         return cls.__module__.split('.')[-1]
+
+    @classmethod
+    def is_reference(cls):
+        return issubclass(cls, Reference)
 
     def is_primary_key(self):
         return self.primary_key
@@ -61,10 +73,12 @@ class DataHandler(object):
     ## @brief calls the data_field defined _check_data_value() method
     # @return tuple (value, error|None)
     def check_data_value(self, value):
-        return self._check_data_value(value)
+        if value is None:
+            if not self.nullable:
+                return None, TypeError("'None' value but field is not nullable")
 
-    def _check_data_value(self, value):
-        return value, None
+            return None, None
+        return self._check_data_value(value)
 
     ## @brief checks if this class can override the given data handler
     # @param data_handler DataHandler
@@ -159,37 +173,7 @@ class DataHandler(object):
 
 ## @brief Base class for datas data handler (by opposition with references)
 class DataField(DataHandler):
-
-    ## @brief Instanciates a new fieldtype
-    # @param nullable bool : is None allowed as value ?
-    # @param uniq bool : Indicates if a field should handle a uniq value
-    # @param primary bool : If true the field is a primary key
-    # @param internal str|False: if False, that field is not internal. Other values cans be "autosql" or "internal"
-    # @param **kwargs : Other arguments
-    # @throw NotImplementedError if called from bad class
-    def __init__(self, internal=False, nullable=True, uniq=False, primary=False, **kwargs):
-        if self.__class__ == DataField:
-            raise NotImplementedError("Abstract class")
-
-        super().__init__(internal, **kwargs)
-
-        self.nullable = nullable
-        self.uniq = uniq
-        self.primary = primary
-        if 'defaults' in kwargs:
-            self.default, error = self.check_data_value(kwargs['default'])
-            if error:
-                raise error
-            del(args['default'])
-
-    def check_data_value(self, value):
-        if value is None:
-            if not self.nullable:
-                return None, TypeError("'None' value but field is not nullable")
-
-            return None, None
-        return super().check_data_value(value)
-
+    pass
 
 ## @brief Abstract class for all references
 #
@@ -199,11 +183,30 @@ class Reference(DataHandler):
 
     ## @brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
+    # @param back_reference tuple | None : tuple containing (EmClass name, EmField name)
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
-    def __init__(self, allowed_classes = None, internal=False, **kwargs):
+    def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
         self.__allowed_classes = None if allowed_classes is None else set(allowed_classes)
+        if back_reference is not None:
+            if len(back_reference) != 2:
+                raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
+        self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
+    
+    @property
+    def back_reference(self):
+        return self.__back_reference
+
+    ## @brief Set the back reference for this field.
+    # 
+    # This method is designed to be called from LeObject child classes
+    # at dyncode load. LeObject dynamic childs classes are the objects that are
+    # able to fetch python classes from name.
+    def _set_back_reference(self, back_reference = None):
+        
+        pass
+        
 
     ## @brief Check value
     # @param value *

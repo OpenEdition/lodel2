@@ -30,7 +30,7 @@ class Integer(DataField):
     base_type = 'int'
 
     def __init__(self, **kwargs):
-        super().__init__(base_type='int', **kwargs)
+        super().__init__( **kwargs)
 
     def _check_data_value(self, value):
         error = None

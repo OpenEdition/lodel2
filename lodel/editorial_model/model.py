@@ -39,6 +39,27 @@ class EditorialModel(object):
             return self.__elt_getter(self.__groups, uid)
         except KeyError:
             raise EditorialModelException("EmGroup not found : '%s'" % uid)
+    
+    ## @brief EmField getter
+    # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
+    # @return Fals or an EmField instance
+    #
+    # @todo delete it, useless...
+    def field(self, uid = None):
+        spl = uid.split('.')
+        if len(spl) != 2:
+            raise ValueError("Malformed EmField identifier : '%s'" % uid)
+        cls_uid = spl[0]
+        field_uid = spl[1]
+        try:
+            emclass = self.classes(cls_uid)
+        except KeyError:
+            return False
+        try:
+            return emclass.fields(field_uid)
+        except KeyError:
+            pass
+        return False
 
     ## @brief Add a class to the editorial model
     # @param emclass EmClass : the EmClass instance to add

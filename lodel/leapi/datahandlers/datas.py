@@ -65,10 +65,9 @@ class UniqID(Integer):
 
     ## @brief A uid field
     # @param **kwargs
-    def __init__(self, is_id_class, **kwargs):
-        self._is_id_class = is_id_class
+    def __init__(self, **kwargs):
         kwargs['internal'] = 'automatic'
-        super(self.__class__, self).__init__(is_id_class=is_id_class, **kwargs)
+        super(self.__class__, self).__init__(primary_key = True, **kwargs)
 
     def _check_data_value(self, value):
         return value, None

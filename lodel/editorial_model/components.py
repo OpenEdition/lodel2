@@ -11,6 +11,7 @@ from lodel.editorial_model.exceptions import *
 
 ## @brief Abstract class to represent editorial model components
 # @see EmClass EmField
+# @todo forbid '.' in uid
 class EmComponent(object):
     
     ## @brief Instanciate an EmComponent
@@ -43,8 +44,6 @@ class EmComponent(object):
 
 
 ## @brief Handles editorial model objects classes
-#
-# @note The inheritance system allow child classes to overwrite parents EmField. But it's maybe not a good idea
 class EmClass(EmComponent):
     
     ## @brief Instanciate a new EmClass
@@ -166,12 +165,14 @@ class EmField(EmComponent):
     def __init__(self, uid, data_handler, display_name = None, help_text = None, group = None, **handler_kwargs):
         from lodel.leapi.datahandlers.base_classes import DataHandler
         super().__init__(uid, display_name, help_text, group)
+        ## @brief The data handler name
         self.data_handler_name = data_handler
+        ## @brief The data handler class
         self.data_handler_cls = DataHandler.from_name(data_handler)
-        #if 'data_handler_kwargs' in handler_kwargs:
-        #    handler_kwargs = handler_kwargs['data_handler_kwargs']
-        self.data_handler_options = handler_kwargs
+        ## @brief The data handler instance associated with this EmField
         self.data_handler_instance = self.data_handler_cls(**handler_kwargs)
+        ## @brief Stores data handler instanciation options
+        self.data_handler_options = handler_kwargs
         ## @brief Stores the emclass that contains this field (set by EmClass.add_field() method)
         self._emclass = None
 

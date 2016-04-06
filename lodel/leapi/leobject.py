@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+import importlib
+
 class LeApiErrors(Exception):
     ## @brief Instanciate a new exceptions handling multiple exceptions
     # @param msg str : Exception message
@@ -64,26 +66,26 @@ class LeObjectValues(object):
 class LeObject(object):
  
     ## @brief boolean that tells if an object is abtract or not
-    __abtract = None
+    _abstract = None
     ## @brief A dict that stores DataHandler instances indexed by field name
-    __fields = None
+    _fields = None
     ## @brief A tuple of fieldname (or a uniq fieldname) representing uid
-    __uid = None 
+    _uid = None 
 
     ## @brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance
     def __init__(self, **kwargs):
-        if self.__abstract:
+        if self._abstract:
             raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
         ## @brief A dict that stores fieldvalues indexed by fieldname
-        self.__datas = { fname:None for fname in self.__fields }
+        self.__datas = { fname:None for fname in self._fields }
         ## @brief Store a list of initianilized fields when instanciation not complete else store True
         self.__initialized = list()
         ## @brief Datas accessor. Instance of @ref LeObjectValues
         self.d = LeObjectValues(self.fieldnames, self.set_data, self.data)
 
         # Checks that uid is given
-        for uid_name in self.__uid:
+        for uid_name in self._uid:
             if uid_name not in kwargs:
                 raise AttributeError("Cannot instanciate a LeObject without it's identifier")
             self.__datas[uid_name] = kwargs[uid_name]
@@ -95,7 +97,7 @@ class LeObject(object):
         err_list = list()
         for fieldname, fieldval in kwargs.items():
             if fieldname not in allowed_fieldnames:
-                if fieldname in self.__fields:
+                if fieldname in self._fields:
                     err_list.append(
                         AttributeError("Value given for internal field : '%s'" % fieldname)
                     )
@@ -123,9 +125,9 @@ class LeObject(object):
     @classmethod
     def fieldnames(cls, include_ro = False):
         if not include_ro:
-            return [ fname for fname in self.__fields if not self.__fields[fname].is_internal() ]
+            return [ fname for fname in self._fields if not self._fields[fname].is_internal() ]
         else:
-            return list(self.__fields.keys())
+            return list(self._fields.keys())
  
     @classmethod
     def name2objname(cls, name):
@@ -136,10 +138,43 @@ class LeObject(object):
     # @return A data handler instance
     @classmethod
     def data_handler(cls, fieldname):
-        if not fieldname in cls.__fields:
+        if not fieldname in cls._fields:
             raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
-        return cls.__fields[fieldname]
-        
+        return cls._fields[fieldname]
+ 
+    ## @brief Return a LeObject child class from a name
+    # @warning This method has to be called from dynamically generated LeObjects
+    # @param leobject_name str : LeObject name
+    # @return A LeObject child class
+    # @throw NameError if invalid name given
+    @classmethod
+    def name2class(cls, leobject_name):
+        if cls.__module__ == 'lodel.leapi.leobject':
+            raise NotImplementedError("Abstract method")
+        mod = importlib.import_module(cls.__module__)
+        try:
+            return getattr(mod, leobject_name)
+        except AttributeError:
+            raise NameError("No LeObject named '%s'" % leobject_name)
+    
+    ## @brief Method designed to "bootstrap" fields by settings their back references
+    # 
+    # @note called once at dyncode load
+    # @note doesn't do any consistency checks, it assume that checks has been done EM side
+    # @warning after dyncode load this method is deleted
+    @classmethod
+    def _backref_init(cls):
+        for fname,field in cls._fields.items():
+            if field.is_reference() and field.back_reference is not None:
+                cls_name, field_name = field.back_reference
+                bref_leobject = cls.name2class(cls.name2objname(cls_name))
+                if field_name not in bref_leobject._fields:
+                    raise NameError("LeObject %s doesn't have a field named '%s'" % (cls_name, field_name))
+                field.set_backreference(bref_leobject._fields[field_name])
+
+    @classmethod
+    def is_abstract(cls):
+        return cls._abstract
 
     ## @brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
@@ -148,7 +183,7 @@ class LeObject(object):
     # @throw RuntimeError if the field is not initialized yet
     # @throw NameError if name is not an existing field name
     def data(self, field_name):
-        if field_name not in self.__fields.keys():
+        if field_name not in self._fields.keys():
             raise NameError("No such field in %s : %s" % (self.__class__.__name__, name))
         if not self.initialized and name not in self.__initialized:
             raise RuntimeError("The field %s is not initialized yet (and have no value)" % name)
@@ -163,7 +198,7 @@ class LeObject(object):
     # @throw AttributeError if the field is not writtable
     def set_data(self, fname, fval):
         if field_name not in self.fieldnames(include_ro = False):
-            if field_name not in self.__fields.keys():
+            if field_name not in self._fields.keys():
                 raise NameError("No such field in %s : %s" % (self.__class__.__name__, name))
             else:
                 raise AttributeError("The field %s is read only" % fname)
@@ -182,7 +217,7 @@ class LeObject(object):
         else:
             # Doing value check on modified field
             # We skip full validation here because the LeObject is not fully initialized yet
-            val, err = self.__fields[fname].check_data_value(fval)
+            val, err = self._fields[fname].check_data_value(fval)
             if isinstance(err, Exception):
                 #Revert change to be in valid state
                 del(self.__datas[fname])
@@ -196,7 +231,7 @@ class LeObject(object):
     # Check the list of initialized fields and set __initialized to True if all fields initialized
     def __set_initialized(self):
         if isinstance(self.__initialized, list):
-            expected_fields = self.fieldnames(include_ro = False) + self.__uid
+            expected_fields = self.fieldnames(include_ro = False) + self._uid
             if set(expected_fields) == set(self.__initialized):
                 self.__initialized = True
 
@@ -209,7 +244,7 @@ class LeObject(object):
         if self.__initialized is True:
             # Data value check
             for fname in self.fieldnames(include_ro = False):
-                val, err = self.__fields[fname].check_data_value(self.__datas[fname])
+                val, err = self._fields[fname].check_data_value(self.__datas[fname])
                 if err is not None:
                     err_list[fname] = err
                 else:
@@ -218,7 +253,7 @@ class LeObject(object):
             if len(err_list) == 0:
                 for fname in self.fieldnames(include_ro = True):
                     try:
-                        field = self.__fields[fname]
+                        field = self._fields[fname]
                         self.__datas[fname] = fields.construct_data(    self,
                                                                         fname,
                                                                         self.__datas,
@@ -229,14 +264,14 @@ class LeObject(object):
             # Datas consistency check
             if len(err_list) == 0:
                 for fname in self.fieldnames(include_ro = True):
-                    field = self.__fields[fname]
+                    field = self._fields[fname]
                     ret = field.check_data_consistency(self, fname, self.__datas)
                     if isinstance(ret, Exception):
                         err_list[fname] = ret
         else:
             # Data value check for initialized datas
             for fname in self.__initialized:
-                val, err = self.__fields[fname].check_data_value(self.__datas[fname])
+                val, err = self._fields[fname].check_data_value(self.__datas[fname])
                 if err is not None:
                     err_list[fname] = err
                 else:
@@ -249,13 +284,13 @@ class LeObject(object):
     
     ## @brief Temporary method to set private fields attribute at dynamic code generation
     #
-    # This method is used in the generated dynamic code to set the __fields attribute
+    # This method is used in the generated dynamic code to set the _fields attribute
     # at the end of the dyncode parse
-    # @warning This method is deleted once the dynamic code is parsed
+    # @warning This method is deleted once the dynamic code loaded
     # @param field_list list : list of EmField instance
     @classmethod
     def _set__fields(cls, field_list):
-        cls.__fields = field_list
+        cls._fields = field_list
         
 
 
