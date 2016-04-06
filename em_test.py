@@ -239,5 +239,4 @@ text.new_field( 'linked_persons',
                 group = editorial_person_group,
 )
 
-print(person.parents_recc)
 em.save('picklefile', filename = 'examples/em_test.pickle')
