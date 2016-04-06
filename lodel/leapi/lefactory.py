@@ -46,20 +46,9 @@ from lodel.leapi.datahandlers.base_classes import DataField
 # @return a list of EmClass instances
 def emclass_sorted_by_deps(emclass_list):
     def emclass_deps_cmp(cls_a, cls_b):
-        if len(cls_a.parents) + len(cls_b.parents) == 0:
-            return 0
-        elif len(cls_a.parents) == 0:
-            return -1
-        elif len(cls_b.parents) == 0:
-            return 1
-
-        if cls_a in cls_b.parents_recc:
-            return -1
-        elif cls_b in cls_a.parents_recc:
-            return 1
-        else:
-            return 0
-    return sorted(emclass_list, key = functools.cmp_to_key(emclass_deps_cmp))
+        return len(cls_a.parents_recc) - len(cls_b.parents_recc)
+    ret = sorted(emclass_list, key = functools.cmp_to_key(emclass_deps_cmp))
+    return ret
 
 ## @brief Returns a list of EmClass that will be represented as LeObject child classes
 def get_classes(model):

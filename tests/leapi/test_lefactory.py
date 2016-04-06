@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
 import unittest
+import random
+
 from lodel.editorial_model.model import EditorialModel
 from lodel.leapi import lefactory
 
@@ -20,7 +22,7 @@ class LeFactoryTestCase(unittest.TestCase):
         cls3 = model.new_class('testclass3', parents = [cls2])
         cls4 = model.new_class('testclass4', parents = [cls1, cls3])
         cls5 = model.new_class('testclass5', parents = [cls4])
-        cls6 = model.new_class('testclass6')
+        cls6 = model.new_class('testclass6', parents = [cls5])
 
         cls1.new_field('testfield1', data_handler='varchar')
         cls1.new_field('testfield2', data_handler='varchar', nullable = True)
@@ -35,12 +37,13 @@ class LeFactoryTestCase(unittest.TestCase):
     def test_emclass_sorted_by_deps(self):
         """ Test the function that sort EmClass by dependencies """
         cls_list = self.model.classes()
-        sorted_cls = lefactory.emclass_sorted_by_deps(cls_list)
-        seen = set() # Stores the EmClass allready seen will walking through array
         
-        for _ in range(10): #Bad sorts algorithm can have random behavior
+        for _ in range(100): #Bad sorts algorithm can have random behavior
+            random.shuffle(cls_list)
+            sorted_cls = lefactory.emclass_sorted_by_deps(cls_list)
+            seen = set() # Stores the EmClass allready seen will walking through array
             for emclass in sorted_cls:
-                for parent in emclass.parents:
+                for parent in emclass.parents_recc:
                     self.assertIn(parent, seen)
                 seen |= set((emclass,))
 
