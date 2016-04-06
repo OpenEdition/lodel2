@@ -244,7 +244,14 @@ class SingleRef(Reference):
 # @note SQL implementation could be tricky
 class MultipleRef(Reference):
     
-    def __init__(self, allowed_classes = None, **kwargs):
-        super().__init__(allowed_classes = allowed_classes, **kwargs)
+    ##
+    # @param max_item int | None : indicate the maximum number of item referenced by this field, None mean no limit
+    def __init__(self, max_item = None, **kwargs):
+        super().__init__(**kwargs)
 
+        
+    def _check_data_value(self, value):
+        if self.max_item is not None:
+            if self.max_item < len(value):
+                return None, FieldValidationError("To many items")
 

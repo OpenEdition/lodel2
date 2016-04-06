@@ -1,7 +1,8 @@
 dyncode_filename='lodel/leapi/dyncode.py'
 
-all: test doc refresh_dyn
+all: tests doc dyncode
 
+# generate doxygen documentation
 doc: cleandoc
 	doxygen
 
@@ -9,9 +10,11 @@ doc: cleandoc
 em_test:
 	python3 em_test.py
 
+# generate leapi dynamic code
 dyncode: clean_dyn em_test
 	python3 scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
+# run tests
 tests:
 	./runtest -v
 
