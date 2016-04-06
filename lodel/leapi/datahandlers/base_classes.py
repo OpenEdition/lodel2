@@ -183,7 +183,7 @@ class Reference(DataHandler):
 
     ## @brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param back_reference tuple | None : tuple containing (EmClass name, EmField name)
+    # @param back_reference tuple | None : tuple containing (LeObject child class, fieldname)
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
@@ -191,12 +191,14 @@ class Reference(DataHandler):
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
+            #if not issubclass(back_reference[0], LeObject) or not isinstance(back_reference[1], str):
+            #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
     
     @property
     def back_reference(self):
-        return self.__back_reference
+        return copy.copy(self.__back_reference)
 
     ## @brief Set the back reference for this field.
     def _set_back_reference(self, back_reference):

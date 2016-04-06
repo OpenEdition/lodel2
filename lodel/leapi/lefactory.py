@@ -11,15 +11,6 @@ def dyncode_from_em(model):
     
     # Generation of LeObject child classes code
     cls_code, modules, bootstrap_instr = generate_classes(model)
-    # Completing bootstrap with back_reference bootstraping
-    for leoname in [ LeObject.name2objname(emcls.uid) for emcls in get_classes(model) ]:
-        bootstrap_instr += """
-{leobject}._backref_init()
-""".format(leobject = leoname)
-    bootstrap_instr += """
-del(LeObject._set__fields)
-del(LeObject._backref_init)
-"""
 
     # Header
     imports = """from lodel.leapi.leobject import LeObject
@@ -59,10 +50,20 @@ def data_handler_constructor(emfield):
     #dh_module_name = DataHandler.module_name(emfield.data_handler_name)+'.DataHandler'
     get_handler_class_instr = 'DataField.from_name(%s)' % repr(emfield.data_handler_name)
     options = []
+    for name, val in emfield.data_handler_options.items():
+        if name == 'back_reference' and isinstance(val, tuple):
+            options.append('{optname}: ({leo_name}, {fieldname})'.format(
+                optname = repr(name),
+                leo_name = LeObject.name2objname(val[0]),
+                fieldname = repr(val[1]),))
+        else:
+            options.append(repr(name)+': '+forge_optval(val))
 
-    return ('%s(**{' % get_handler_class_instr)+(', '.join([repr(name)+': '+forge_optval(val) for name, val in emfield.data_handler_options.items()])) + '})'
+    return '{handler_instr}(**{{ {options} }})'.format(
+                                                        handler_instr = get_handler_class_instr,
+                                                        options = ', '.join(options))
             
-
+## @brief Return a python repr of option values
 def forge_optval(optval):
     if isinstance(optval, dict):
         return '{' + (', '.join( [ '%s: %s' % (repr(name), forge_optval(val)) for name, val in optval.items()])) + '}'
@@ -119,7 +120,6 @@ class {clsname}({parents}):
         res += em_cls_code
         # Dyncode bootstrap instructions
         bootstrap += """{classname}._set__fields({fields})
-#del({classname}._set__fields)
 """.format(
     classname = LeObject.name2objname(em_class.uid),
     fields = '{' + (', '.join(['\n\t%s: %s' % (repr(emfield.uid),data_handler_constructor(emfield)) for emfield in em_class.fields()])) + '}',

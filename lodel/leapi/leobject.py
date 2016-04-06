@@ -157,23 +157,6 @@ class LeObject(object):
         except AttributeError:
             raise NameError("No LeObject named '%s'" % leobject_name)
     
-    ## @brief Method designed to "bootstrap" fields by settings their back references
-    # 
-    # @note called once at dyncode load
-    # @note doesn't do any consistency checks, it assume that checks has been done EM side
-    # @warning after dyncode load this method is deleted
-    @classmethod
-    def _backref_init(cls):
-        for fname,field in cls._fields.items():
-            #if field.is_reference():
-            #    print(fname, field.back_reference)
-            if field.is_reference() and field.back_reference is not None:
-                cls_name, field_name = field.back_reference
-                bref_leobject = cls.name2class(cls.name2objname(cls_name))
-                if field_name not in bref_leobject._fields:
-                    raise NameError("LeObject %s doesn't have a field named '%s'" % (cls_name, field_name))
-                field._set_back_reference(bref_leobject._fields[field_name])
-
     @classmethod
     def is_abstract(cls):
         return cls._abstract
