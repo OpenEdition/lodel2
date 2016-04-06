@@ -59,6 +59,7 @@ class LeInsertQuery(LeQuery):
 
         return query
 
+
 ## @brief Handles Le*Query with a query_filter argument
 # @see LeGetQuery, LeUpdateQuery, LeDeleteQuery
 class LeFilteredQuery(LeQuery):
@@ -81,16 +82,3 @@ class LeUpdateQuery(LeFilteredQuery):
 class LeDeleteQuery(LeFilteredQuery):
     # Name of the corresponding action
     action = 'delete'
-
-if __name__ == "__main__":
-    class MyObject(LeObject):
-        def __init__(self):
-            super().__init__()
-        @staticmethod
-        def is_abstract():
-            return False
-        def __str__(self):
-	    return 'MyObject'
-
-    my_insert_query = LeInsertQuery(MyObject)
-    print(my_insert_query.prepare_query({'test':'ok'}))
