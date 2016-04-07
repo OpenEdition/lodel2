@@ -85,6 +85,12 @@ class LeGetQuery(LeFilteredQuery):
             if isinstance(order, Exception):
                 raise order  # can be buffered and raised later, but _prepare_filters raise when fails
 
+        # Preparing group
+        if self.group:
+            group = self.__prepare_order()
+            if isinstance(group, Exception):
+                raise group  # can be buffered and raised later
+
         # checks the limit and offset values
         if self.limit is not None and self.limit <= 0:
             raise ValueError('Invalid limit given')
@@ -119,9 +125,6 @@ class LeGetQuery(LeFilteredQuery):
         if len(errors) > 0:
             return LeApiErrors("Errors when preparing ordering fields", errors)
         return result
-
-    def __prepare_groups(self):
-        pass
 
 
 class LeUpdateQuery(LeFilteredQuery):
