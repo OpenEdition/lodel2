@@ -41,23 +41,18 @@ class LeInsertQuery(LeQuery):
     # Name of the corresponding action
     action = 'insert'
 
-    def __init__(self, target_class):
-        super().__init__(target_class)
-        if target_class.is_abstract():
-            raise LeQueryError("Target EmClass cannot be abstract for an InsertQuery")
+    def __init__(self, datas=None):
+        self.datas = datas if datas is not None else locals()
+        del(self.datas['self'])
+
+    def execute(self):
+        pass
+
+    def insert(self):
+        pass
 
     def prepare_query(self, datas=None):
-        if datas is None or len(datas.keys()) == 0:
-            raise LeQueryError("No query datas found")
-
-        query = {}
-        query['action'] = self.__class__.action
-        query['target'] = self._target_class
-        for key, value in datas.items():
-            query[key] = value
-
-        return query
-
+        pass
 
 ## @brief Handles Le*Query with a query_filter argument
 # @see LeGetQuery, LeUpdateQuery, LeDeleteQuery
