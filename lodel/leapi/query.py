@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from leobject import LeObject
+from .leobject import LeObject
 
 
 class LeQueryError(Exception):
