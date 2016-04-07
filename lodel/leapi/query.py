@@ -20,6 +20,13 @@ class LeQuery(object):
             raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
 
+    @classmethod
+    def validate_query_filters(cls, query_filters):
+        for query_filter in query_filters:
+            if query_filter[1] not in cls._query_operators:
+                raise LeQueryError("The operator %s is not valid." % query_filter[1])
+        return True
+
 
 class LeInsertQuery(LeQuery):
     action = 'insert'
@@ -145,5 +152,7 @@ class LeDeleteQuery(LeFilteredQuery):
         return ret
 
     def __prepare(self):
-        # TODO add the checks on the query_filters if needed
-        pass
+        datas = dict()
+        if LeQuery.validate_query_filters(self.query_filters):
+            datas['query_filters'] = self.query_filters
+        return datas
