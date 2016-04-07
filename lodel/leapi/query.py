@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from .leobject import LeObject
-
+from .leobject import LeObject, LeApiErrors
 
 class LeQueryError(Exception):
     pass
@@ -80,6 +79,12 @@ class LeGetQuery(LeFilteredQuery):
     def __get(self, **kwargs):
         field_list = self.__prepare_field_list(self.field_list)  #TODO implement the prepare_field_list method
 
+        # Preparing order
+        if self.order:
+            order = self.__prepare_order()
+            if isinstance(order, Exception):
+                raise order  # can be buffered and raised later, but _prepare_filters raise when fails
+
         # checks the limit and offset values
         if self.limit is not None and self.limit <= 0:
             raise ValueError('Invalid limit given')
@@ -97,7 +102,23 @@ class LeGetQuery(LeFilteredQuery):
         pass
 
     def __prepare_order(self):
-        pass
+        errors = dict()
+        result = []
+        for order_field in self.order:
+            if not isinstance(order_field, tuple):
+                order_field = (order_field, 'ASC')
+            if len(order_field) != 2 or order_field[1].upper() not in ['ASC', 'DESC']:
+                errors[order_field] = ValueError("Expected a string or a tuple with (FIELDNAME, ['ASC'|'DESC']) but got : %s" % order_field)
+            else:
+                ret = self._target_class.check_field(order_field[0])
+                if isinstance(ret, Exception):
+                    errors[order_field] = ret
+            order_field = (order_field[0], order_field[1].upper())
+            result.append(order_field)
+
+        if len(errors) > 0:
+            return LeApiErrors("Errors when preparing ordering fields", errors)
+        return result
 
     def __prepare_groups(self):
         pass
@@ -130,7 +151,13 @@ class LeUpdateQuery(LeFilteredQuery):
 
     ## @brief prepares the query_filters to be used as argument for the datasource's update method
     def __prepare(self):
-        pass
+        datas = dict()
+        if super().validate_query_filters(self.query_filters):
+            datas['query_filters'] = self.query_filters
+
+        datas['target_uid'] = self.target_uid
+        datas['target_class'] = self._target_class
+        return datas
 
 
 class LeDeleteQuery(LeFilteredQuery):
@@ -153,6 +180,10 @@ class LeDeleteQuery(LeFilteredQuery):
 
     def __prepare(self):
         datas = dict()
-        if LeQuery.validate_query_filters(self.query_filters):
+        if super().validate_query_filters(self.query_filters):
             datas['query_filters'] = self.query_filters
+
+        datas['target_uid'] = self.target_uid
+        datas['target_class'] = self._target_class
+
         return datas
