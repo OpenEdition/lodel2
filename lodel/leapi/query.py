@@ -7,169 +7,143 @@ class LeQueryError(Exception):
     pass
 
 
-## @brief Handle CRUD operations on datasource
 class LeQuery(object):
 
-    ## @brief The datasource object used for this Query class
+    ## @brief The datasource object used for this query
     _datasource = None
 
-    ## @brief the operators used in query definitions
-    _query_operators_map = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
+    ## @brief The available operators used in query definitions
+    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
-    ## @brief Constructor
-    # @param target_class LeObject class or childs : The LeObject child class concerned by this query
     def __init__(self, target_class):
         if not issubclass(target_class, LeObject):
-            raise TypeError("target_class have to be a child class of LeObject")
+            raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
 
-    ## @brief Prepares the query by formatting it into a dictionary
-    # @param datas dict: query parameters
-    # @return dict : The formatted query
-    def prepare_query(self, datas=None):
-        return {}
 
-    ## @brief Executes the query
-    # @return dict : The results of the query
-    def execute(self):
-        return {}
-
-
-## @brief Handles insert queries
 class LeInsertQuery(LeQuery):
-
-    # Name of the corresponding action
     action = 'insert'
 
-    def __init__(self, datas=None):
-        self.datas = datas if datas is not None else locals()
-        del(self.datas['self'])
+    def __init__(self, target_class, datas, classname=None):
+        targeted_class = target_class if classname is None else LeObject.name2class(classname)
+        if not targeted_class:
+            raise LeQueryError('Error when inserting', {'error': ValueError("The class '%s' was not found" % classname)})
 
+        super().__init__(targeted_class)
+        self.datas = datas
+
+    # @todo Reactivate the LodelHooks call when this class is implemented
     def execute(self):
-        pass
-
-    def insert(self):
-        pass
-
-    def prepare_query(self, datas=None):
-        pass
-
-## @brief Handles Le*Query with a query_filter argument
-# @see LeGetQuery, LeUpdateQuery, LeDeleteQuery
-class LeFilteredQuery(LeQuery):
-    pass
-
-
-## @brief Handles Get queries
-class LeGetQuery(LeFilteredQuery):
-    # Name of the corresponding action
-    action = 'get'
-
-    def __init__(self, datas=None):
-        self.datas = datas if datas is not None else locals()
-        del(self.datas['self'])
-        self.field_list = []  # TODO Add the default field list definition method
-
-    def execute(self):
-        datas = self.datas  # TODO : replace with LodelHook.call_hook('leapi_get_pre', self, self.datas)
-        ret = self.get(**datas)
-        # ret = LodelHook.call_hook('leapi_get_post', self, ret)
+        datas = self.datas  # TODO : replace with LodelHooks.call_hook('leapi_insert_pre', self._target_class, self.datas)
+        ret = self.__insert(**datas)
+        # ret = LodelHook.call_hook('leapi_insert_post', self._target_class, ret)
         return ret
 
-    ## @brief performs the select action in the datasource
-    # @TODO add the management of filters, groups, order, and change the call to _datasource.select
-    def get(self, **kwargs):
-        field_list = kwargs['field_list'] if 'field_list' in kwargs else self.field_list
-        field_list = self.prepare_field_list(field_list)  # TODO Implement the prepare_field_list method
+    def __insert(self):
+        insert_datas = self._target_class.prepare_datas(self.datas, complete=True, allow_internal=True)
+        return self._datasource.insert(self._target_class, **insert_datas)
+
+
+class LeFilteredQuery(LeQuery):
+
+    def __init__(self, target_class):
+        super().__init__(target_class)
+
+
+class LeGetQuery(LeFilteredQuery):
+
+    def __init__(self, target_class, target_uid, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+        super().__init__(target_class)
+        self.query_filters = query_filters
+        self.default_field_list = []
+        self.field_list = field_list if field_list is not None else self._target_class.fieldnames()
+        self.order = order
+        self.group = group
+        self.limit = limit
+        self.offset = offset
+        self.instanciate = instanciate
+        self.target_object = None  # TODO get an instance of the target_class using a unique id
+
+    def execute(self):
+        datas = self.datas  # TODO : replace with LodelHook.call_hook('leapi_get_pre', self.target_object, self.datas)
+        ret = self.__get(**datas)
+        # ret = LodelHook.call_hook('leapi_get_post', self.target_object, ret)
+        return ret
+
+    def __get(self, **kwargs):
+        field_list = self.__prepare_field_list(self.field_list)  #TODO implement the prepare_field_list method
 
         # checks the limit and offset values
-        if 'limit' in self.datas:
-            if self.datas['limit'] is not None and self.datas['limit'] <= 0:
-                raise ValueError('Invalid limit given : %d' % self.datas['limit'])
+        if self.limit is not None and self.limit <= 0:
+            raise ValueError('Invalid limit given')
 
-        if 'offset' in self.datas:
-            if self.datas['offset'] is not None and self.datas['offset'] < 0:
-                raise ValueError("Invalid offset given : %d" % self.datas['offset'])
+        if self.offset is not None and self.offset < 0:
+            raise ValueError('Invalid offset given : %d' % self.offset)
 
-        results = self._datasource.select()
+        results = self._datasource.select()  # TODO add the correct arguments for the datasource's method call
         return results
 
-    def prepare_field_list(self):
+    def __prepare_field_list(self):
         pass
 
-    def prepare_filters(self):
+    def __prepare_filters(self):
         pass
 
-    def prepare_order(self):
+    def __prepare_order(self):
         pass
 
-    def prepare_groups(self):
+    def __prepare_groups(self):
         pass
 
-## @brief Handles Update queries
+
 class LeUpdateQuery(LeFilteredQuery):
-    # Name of the corresponding action
-    action = 'update'
 
-    def __init__(self, datas=None):
-        self.datas = datas if datas is not None else locals()
-        del(self.datas['self'])
+    def __init__(self, target_class, target_uid, query_filters):
+        super().__init__(target_class)
+        self.query_filters = query_filters
+        self.target_uid = target_uid
+        self.target_object = None # TODO get an instance of the target_class using a unique id
 
-    ## @brief executes the query, call the corresponding hooks
-    # @return dict
-    # @TODO reactivate the calls to the hooks when they are implemented
     def execute(self):
-        # LodelHook.call_hook('leapi_update_pre', self, None)
-        ret = self.update()
-        # ret = LodelHook.call_hook('leapi_update_post', self, ret)
+        # LodelHook.call_hook('leapi_update_pre', self.target_object, None)
+        ret = self._update()
+        # ret = LodelHook.call_hook('leapi_update_post', self.target_object, ret)
         return ret
 
-    ## @brief performs the update in the datasource
-    # @TODO change the call to _datasource.update() according to its implementation in the DataSource class
-    # @TODO Add a better behavior in case of error
-    def update(self):
-        if 'uid' not in self.datas:
-            raise LeQueryError("No object uid given to the query. The update can't be performed")
-        updated_datas = self.prepare_query()
-        ret = self._datasource.update(self.datas['uid'], **updated_datas)
+    ## @brief calls the datasource's update method and the corresponding hooks
+    # @return bool
+    # @TODO change the behavior in case of error in the update process
+    def __update(self):
+        updated_datas = self.__prepare()
+        ret = self._datasource.update(self.target_uid, **updated_datas)  # TODO add the correct arguments for the datasource's method call
         if ret == 1:
             return True
         else:
             return False
 
-    ## @brief prepares the datas for the query
-    # @return dict
-    def prepare_query(self):
-        ret_datas = self.check_datas_value()
-        if isinstance(ret_datas, Exception):
-            raise LeQueryError("One or more query datas' value(s) is(are) not valid")
-        ret_datas = self.construct_datas(ret_datas)
-        self.check_datas_consistency(ret_datas)
-        return ret_datas
-
-
-    def check_datas_value(self, datas):
-        pass
-
-    def construct_datas(self, datas):
-        pass
-
-    def check_datas_consistency(self, datas):
+    ## @brief prepares the query_filters to be used as argument for the datasource's update method
+    def __prepare(self):
         pass
 
 
-## @brief Handles Delete queries
 class LeDeleteQuery(LeFilteredQuery):
-    # Name of the corresponding action
-    action = 'delete'
 
-    def __init__(self, datas=None):
-        self.datas = datas
-        if 'uid' not in self.datas:
-            raise LeQueryError('No uid specified for deletion.')
+    def __init__(self, target_class, target_uid, query_filters):
+        super().__init__(self._target_class)
+        self.target_uid = target_uid
+        self.query_filters = query_filters
 
-    def delete(self):
-        # LodelHook.call_hook('leapi_delete_pre', self, None)
-        ret = self._datasource.delete(self.datas)
-        # ret = LodelHook.call_hook('leapi_delete_post', self, ret)
+    def execute(self):
+        # LodelHook.call_hook('leapi_delete_pre', self.target_uid, None)
+        ret = self._delete()
+        # ret = LodelHook.call('leapi_delete_post', self.target_object, ret)
         return ret
+
+    def _delete(self):
+        delete_datas = self.__prepare()
+        ret = self._datasource.delete(self.target_uid, **delete_datas)
+        return ret
+
+    def __prepare(self):
+        # TODO add the checks on the query_filters if needed
+        pass
