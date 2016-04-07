@@ -1,7 +1,6 @@
 #-*- coding:utf8 -*-
 ## @package settings Configuration file
 
-import pymysql
 import os
 import os.path
 
