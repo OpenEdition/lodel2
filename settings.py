@@ -13,7 +13,7 @@ plugins = ['dummy', 'dummy_auth']
 
 datasource = {
     'default': {
-        'module':pymysql,
+        'module':None,
         'host': None,
         'user': None,
         'passwd': None,
