@@ -228,9 +228,46 @@ class EmGroup(object):
                     to_scan.append(new_dep)
                     res[new_dep.uid] = new_dep
         return res
+    
+    ## @brief Returns EmGroup applicants
+    # @param recursive bool : if True return all dependencies and their dependencies
+    # @returns a dict of EmGroup identified by uid
+    def applicants(self, recursive = False):
+        res = copy.copy(self.required_by)
+        if not recursive:
+            return res
+        to_scan = list(res.values())
+        while len(to_scan) > 0:
+            cur_app = to_scan.pop()
+            for new_app in cur_app.required_by.values():
+                if new_app not in res:
+                    to_scan.append(new_app)
+                    res[new_app.uid] = new_app
+        return res
+    
+	## @brief Returns EmGroup components
+    # @returns a copy of the set of components
+    def components(self):
+        return (self.__components).copy()
 
+    ## @brief Returns EmGroup display_name
+    #  @param lang str | None : If None return default lang translation
+    #  @returns None if display_name is None, a str for display_name else
+    def get_display_name(self, lang=None):
+        name=self.display_name
+        if name is None : return None
+        return name.get(lang);
+
+    ## @brief Returns EmGroup help_text
+    #  @param lang str | None : If None return default lang translation
+    #  @returns None if display_name is None, a str for display_name else
+    def get_help_text(self, lang=None):
+        help=self.help_text
+        if help is None : return None
+        return help.get(lang);
+    
     ## @brief Add components in a group
-    # @param components list : EmComponent instance list
+    # @param components list : EmComponent instances list
     def add_components(self, components):
         for component in components:
             if isinstance(component, EmField):
@@ -255,11 +292,32 @@ class EmGroup(object):
             raise EditorialModelError("Circular dependencie detected, cannot add dependencie")
         self.require[grp.uid] = grp
         grp.required_by[self.uid] = self
+        
+    ## @brief Add a applicant
+    # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
+    def add_applicant(self, grp):
+        try:
+            for group in grp:
+                self.add_applicant(group)
+            return
+        except TypeError: pass
+                
+        if grp.uid in self.required_by:
+            return
+        if self.__circular_applicant(grp):
+            raise EditorialModelError("Circular applicant detected, cannot add applicant")
+        self.required_by[grp.uid] = grp
+        grp.require[self.uid] = self
     
     ## @brief Search for circular dependencie
     # @return True if circular dep found else False
     def __circular_dependencie(self, new_dep):
         return self.uid in new_dep.dependencies(True)
+    
+    ## @brief Search for circular applicant
+    # @return True if circular app found else False
+    def __circular_applicant(self, new_app):
+        return self.uid in new_app.applicants(True)
 
     ## @brief Fancy string representation of an EmGroup
     # @return a string

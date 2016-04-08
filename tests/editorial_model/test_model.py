@@ -159,6 +159,18 @@ class EmGroupTestCase(unittest.TestCase):
 
         grp3 = EmGroup('depends', depends = (grp, grp2))
         self.assertEqual(set(grp3.dependencies().values()), set((grp, grp2)))
+        
+    def test_add_comps(self):
+        """ Test components adding in groups"""
+        grp = EmGroup('grp')
+        cpn1 = EmField('test1','integer')
+        cpn2 = EmClass('testClass', 'test class')
+        grp.add_components([cpn1,cpn2])
+        
+        s1=grp.components()
+        s2=grp.components()
+        s1.add(EmField('test2','varchar'))
+        self.assertEqual(s2,set([cpn1,cpn2]));
 
     def test_deps(self):
         """ Test dependencies """
@@ -190,6 +202,60 @@ class EmGroupTestCase(unittest.TestCase):
                 self.assertEqual(uid, dep.uid)
             for uid, dep in grp.required_by.items():
                 self.assertEqual(uid, dep.uid)
+                
+    def test_apps(self):
+        """ Test applicants """
+        grp1 = EmGroup('grp1')
+        grp2 = EmGroup('grp2')
+        grp3 = EmGroup('grp3')
+        grp4 = EmGroup('grp4')
+
+        grp2.add_applicant(grp1)
+        grp3.add_applicant(grp2)
+        grp4.add_applicant(grp2)
+        grp4.add_applicant(grp1)
+
+        self.assertEqual(set(grp1.applicants().values()), set())
+        self.assertEqual(set(grp2.applicants().values()), set([grp1]))
+        self.assertEqual(set(grp3.applicants().values()), set([grp2]))
+        self.assertEqual(set(grp4.applicants().values()), set([grp2, grp1]))
+
+        self.assertEqual(set(grp3.applicants(True).values()), set([grp2, grp1]))
+        self.assertEqual(set(grp4.applicants(True).values()), set([grp2, grp1]))
+
+        self.assertEqual(set(grp1.required_by.values()), set())
+        self.assertEqual(set(grp2.required_by.values()), set([grp1]))
+        self.assertEqual(set(grp3.required_by.values()), set([grp2]))
+        self.assertEqual(set(grp4.required_by.values()), set([grp2,grp1]))
+
+        for grp in [grp1, grp2, grp3, grp4]:
+            for uid, dep in grp.applicants(recursive = True).items():
+                self.assertEqual(uid, dep.uid)
+            for uid, dep in grp.required_by.items():
+                self.assertEqual(uid, dep.uid)
+                
+    def test_display_name(self):
+        grp = EmGroup('grp',None,'Test affichage du nom')
+        a = grp.get_display_name()
+        b = a
+        b = 'Test de copie du nom'
+        self.assertEqual(a,'Test affichage du nom')
+        grp1 = EmGroup('grp')
+        c = grp1.get_display_name()
+        self.assertEqual(c, None)
+        with self.assertRaises(ValueError): grp.get_display_name('ita')
+        
+    def test_help_text(self):
+        grp = EmGroup('grp',None,None,'Test affichage du nom')
+        a = grp.get_help_text()
+        b = a
+        b = 'Test de copie du nom'
+        self.assertEqual(a,'Test affichage du nom')
+        grp1 = EmGroup('grp')
+        c = grp1.get_help_text()
+        self.assertEqual(c, None)
+        with self.assertRaises(ValueError): grp.get_help_text('ita')
+            
     def test_deps_complex(self):
         """ More complex dependencies handling test """
         grps = [ EmGroup('group%d' % i) for i in range(6) ]
@@ -235,3 +301,4 @@ class EmGroupTestCase(unittest.TestCase):
         e_hash = 0x74657374677270333130363537393137343730343438343139303233393838303936373730323936353536393032313839313536333632313037343435323138313735343936303237373532343436303639363137
         self.assertEqual(grp.d_hash(), e_hash)
 
+        

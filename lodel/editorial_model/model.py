@@ -24,7 +24,7 @@ class EditorialModel(object):
     
     ## @brief EmClass accessor
     # @param uid None | str : give this argument to get a specific EmClass
-    # @return if uid given return an EmClass else return an EmClass iterator
+    # @return if uid is given returns an EmClass else returns an EmClass iterator
     def classes(self, uid = None):
         try:
             return self.__elt_getter(self.__classes, uid)
@@ -33,7 +33,7 @@ class EditorialModel(object):
 
     ## @brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
-    # @return if uid given return an EmGroup else return an EmGroup iterator
+    # @return if uid is given returns an EmGroup else returns an EmGroup iterator
     def groups(self, uid = None):
         try:
             return self.__elt_getter(self.__groups, uid)
