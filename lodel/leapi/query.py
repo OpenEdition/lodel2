@@ -137,7 +137,7 @@ class LeUpdateQuery(LeFilteredQuery):
 
     def execute(self):
         # LodelHook.call_hook('leapi_update_pre', self.target_object, None)
-        ret = self._update()
+        ret = self.__update()
         # ret = LodelHook.call_hook('leapi_update_post', self.target_object, ret)
         return ret
 
