@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
-from .leobject import LeObject, LeApiErrors
+import re
+from .leobject import LeObject, LeApiErrors, LeApiDataCheckError
+
 
 class LeQueryError(Exception):
     pass
@@ -55,6 +57,9 @@ class LeFilteredQuery(LeQuery):
                 raise LeQueryError("The operator %s is not valid." % query_filter[1])
         return True
 
+    @classmethod
+    def is_relational_field(cls, field):
+        return field.startswith('superior.') or field.startswith('subordinate.')
 
 class LeGetQuery(LeFilteredQuery):
 
@@ -79,6 +84,8 @@ class LeGetQuery(LeFilteredQuery):
     def __get(self, **kwargs):
         field_list = self.__prepare_field_list(self.field_list)  #TODO implement the prepare_field_list method
 
+        query_filters, relational_filters = self.__prepare_filters()
+
         # Preparing order
         if self.order:
             order = self.__prepare_order()
@@ -102,10 +109,87 @@ class LeGetQuery(LeFilteredQuery):
         return results
 
     def __prepare_field_list(self):
-        pass
+        errors = dict()
+        ret_field_list = list()
+        for field in self.field_list:
+            if self.is_relational(field):
+                ret = self.__prepare_relational_fields(field)
+            else:
+                ret = self.__check_field(field)
+
+            if isinstance(ret, Exception):
+                errors[field] = ret
+            else:
+                ret_field_list.append(ret)
+
+        if len(errors) > 0:
+            raise LeApiDataCheckError(errors)
+
+        return ret_field_list
+
+    def __prepare_relational_fields(self, field):
+        # TODO Implement the method
+        return field
+
+    def __split_filter(self, filter):
+        if self.query_re is None:
+            self.__compile_query_re()
+
+        matches = self.query_re.match(filter)
+        if not matches:
+            raise ValueError("The query_filter '%s' seems to be invalid" % filter)
+
+        result = (matches.group('field'), re.sub(r'\s', ' ', matches.group('operator')), matches.group('value').strip())
+        for r in result:
+            if len(r) == 0:
+                raise ValueError("The query_filter '%s' seems to be invalid" % filter)
+
+        return result
+
+    def __compile_query_re(self):
+        op_re_piece = '(?P<operator>(%s)' % self._query_operators[0].replace(' ', '\s')
+        for operator in self._query_operators[1:]:
+            op_re_piece += '|(%s)' % operator.replace(' ', '\s')
+        op_re_piece += ')'
+        self.query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+
+    def __check_field(self, target_object, field):
+        if field not in self.target_object.fieldnames():
+            return ValueError("No such field '%s' in %s" % (field, self.target_object.__class__))
+        return field
 
     def __prepare_filters(self):
-        pass
+        filters = list()
+        errors = dict()
+        res_filters = list()
+        rel_filters = list()
+
+        # Splitting in tuple if necessary
+        for filter in self.query_filters:
+            if len(filter) == 3 and not isinstance(filter, str):
+                filters.append(tuple(filter))
+            else:
+                filters.append(self.__split_filter(filter))
+
+        for field, operator, value in filters:
+            # TODO check the relation filters
+            ret = self.__check_field(self.target_object, field)
+            if isinstance(ret, Exception):
+                errors[field] = ret
+            else:
+                res_filters.append((ret, operator, value))
+
+        if len(errors) > 0:
+            raise LeApiDataCheckError("Error while preparing filters : ", errors)
+
+        return (res_filters, rel_filters)
+
+
+        datas = dict()
+        if LeFilteredQuery.validate_query_filters(self.query_filters):
+            datas['query_filters'] = self.query_filters
+        datas['target_object'] = self.target_object
+        return datas
 
     def __prepare_order(self):
         errors = dict()
@@ -155,7 +239,7 @@ class LeUpdateQuery(LeFilteredQuery):
     ## @brief prepares the query_filters to be used as argument for the datasource's update method
     def __prepare(self):
         datas = dict()
-        if super().validate_query_filters(self.query_filters):
+        if LeFilteredQuery.validate_query_filters(self.query_filters):
             datas['query_filters'] = self.query_filters
 
         datas['target_uid'] = self.target_uid
@@ -176,6 +260,9 @@ class LeDeleteQuery(LeFilteredQuery):
         # ret = LodelHook.call('leapi_delete_post', self.target_object, ret)
         return ret
 
+    ## @brief calls the datasource's delete method
+    # @return bool
+    # @TODO change the behavior in case of error in the update process
     def __delete(self):
         delete_datas = self.__prepare()
         ret = self._datasource.delete(**delete_datas)
@@ -183,7 +270,7 @@ class LeDeleteQuery(LeFilteredQuery):
 
     def __prepare(self):
         datas = dict()
-        if super().validate_query_filters(self.query_filters):
+        if LeFilteredQuery.validate_query_filters(self.query_filters):
             datas['query_filters'] = self.query_filters
 
         datas['target_uid'] = self.target_uid
