@@ -74,4 +74,10 @@ class Hierarch(MultipleRef):
     # @param max_depth int | None :  limit of depth
     # @param max_childs int | Nine : maximum number of childs by nodes
     def __init__(self, back_reference, max_depth = None, max_childs = None, **kwargs):
-        super().__init__(back_reference = back_reference)
+        super().__init__(back_reference = back_reference, max_depth = max_depth, )
+
+    def _check_data_value(self, value):
+        value, expt = super()._check_data_value(value)
+        if isinstance(expt, Exception):
+            return None, expt
+        # determine depth with datasource
