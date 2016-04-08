@@ -22,4 +22,23 @@ class SettingsError(Exception):
 
         res += ": %s" % (self.__msg)
         return res
+
+## @brief Designed to handles mutliple SettingsError
+class SettingsErrors(Exception):
+    
+    ## @brief Instanciate an SettingsErrors
+    # @param exceptions list : list of SettingsError instance
+    def __init__(self, exceptions):
+        for expt in exceptions: 
+            if not isinstance(expt, SettingsError):
+                raise ValueError("The 'exceptions' argument has to be an array of <class SettingsError>, but a %s was found in the list" % type(expt))
+        self.__exceptions = exceptions
         
+
+    def __repr__(self): return str(self)
+
+    def __str__(self):
+        res = "Errors :\n"
+        for expt in self.__exceptions:
+            res += "\t%s\n" % str(expt)
+        return res
