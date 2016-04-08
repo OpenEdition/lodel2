@@ -133,7 +133,7 @@ class LeUpdateQuery(LeFilteredQuery):
         super().__init__(target_class)
         self.query_filters = query_filters
         self.target_uid = target_uid
-        self.target_object = None # TODO get an instance of the target_class using a unique id
+        self.target_object = None  # TODO get an instance of the target_class using a unique id
 
     def execute(self):
         # LodelHook.call_hook('leapi_update_pre', self.target_object, None)
@@ -172,13 +172,13 @@ class LeDeleteQuery(LeFilteredQuery):
 
     def execute(self):
         # LodelHook.call_hook('leapi_delete_pre', self.target_uid, None)
-        ret = self._delete()
+        ret = self.__delete()
         # ret = LodelHook.call('leapi_delete_post', self.target_object, ret)
         return ret
 
-    def _delete(self):
+    def __delete(self):
         delete_datas = self.__prepare()
-        ret = self._datasource.delete(self.target_uid, **delete_datas)
+        ret = self._datasource.delete(**delete_datas)
         return ret
 
     def __prepare(self):
