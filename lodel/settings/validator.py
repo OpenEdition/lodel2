@@ -134,6 +134,11 @@ def directory_val(value):
         raise SettingsValidationError("Folowing path don't exists or is not a directory : '%s'"%res)
     return res
 
+def loglevel_val(value):
+    valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
+    if value.upper() not in valids:
+        raise SettingsValidationError("The value '%s' is not a valid loglevel")
+
 #
 #   Default validators registration
 #
@@ -163,6 +168,11 @@ SettingValidator.register_validator(
                                         directory_val,
                                         'Directory path validator')
 
+SettingValidator.register_validator(
+                                        'loglevel',
+                                        loglevel_val,
+                                        'Loglevel validator')
+
 SettingValidator.create_list_validator(
                                             'list',
                                             SettingValidator('strip'),
@@ -179,3 +189,29 @@ SettingValidator.create_re_validator(
                                         r'^https?://[^\./]+.[^\./]+/?.*$',
                                         'http_url',
                                         'Url validator')
+
+#
+#   Lodel 2 configuration specification
+#
+
+## @brief Global specifications for lodel2 settings
+LODEL2_CONF_SPECS = {
+    'lodel2': {
+        'debug': (  True,
+                    SettingValidator('bool')),
+        'plugins': (    "",
+                        SettingValidator('list')),
+    },
+    'lodel2.logging.*' : {
+        'level': (  'ERROR',
+                    SettingValidator('loglevel')),
+        'context': (    False,
+                        SettingValidator('bool')),
+        'filename': (   None,
+                        SettingValidator('errfile', none_is_valid = True)),
+        'backupCount': (    None,
+                            SettingValidator('int', none_is_valid = True)),
+        'maxBytes': (   None,
+                        SettingValidator('int', none_is_valid = True)),
+    }
+}
