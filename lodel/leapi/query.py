@@ -7,92 +7,121 @@ from .leobject import LeObject, LeApiErrors, LeApiDataCheckError
 class LeQueryError(Exception):
     pass
 
-
 class LeQuery(object):
 
     ## @brief The datasource object used for this query
-    _datasource = None
+    datasource = None
 
     ## @brief The available operators used in query definitions
-    _query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
+    query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
+    ## @brief Constructor
+    # @param target_class EmClass : class of the object to query about
     def __init__(self, target_class):
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
-        self._target_class = target_class
+        self.target_class = target_class
 
 
+## @brief Class representing an Insert query
 class LeInsertQuery(LeQuery):
-    action = 'insert'
 
-    def __init__(self, target_class, datas, classname=None):
-        targeted_class = target_class if classname is None else LeObject.name2class(classname)
-        if not targeted_class:
-            raise LeQueryError('Error when inserting', {'error': ValueError("The class '%s' was not found" % classname)})
-
-        super().__init__(targeted_class)
+    ## @brief Constructor
+    # @param target_class EmClass: class corresponding to the inserted object
+    # @param datas dict : datas to insert
+    def __init__(self, target_class, datas):
+        super().__init__(target_class)
         self.datas = datas
 
-    # @todo Reactivate the LodelHooks call when this class is implemented
+    ## @brief executes the insert query
+    # @return bool
+    # @TODO reactivate the LodelHooks call when this class is implemented
     def execute(self):
-        datas = self.datas  # TODO : replace with LodelHooks.call_hook('leapi_insert_pre', self._target_class, self.datas)
+        datas = self.datas  # LodelHooks.call_hook('leapi_insert_pre', self.target_class, self.datas)
         ret = self.__insert(**datas)
-        # ret = LodelHook.call_hook('leapi_insert_post', self._target_class, ret)
+        # ret = LodelHook.call_hook('leapi_insert_post', self.target_class, ret)
         return ret
 
-    def __insert(self):
-        insert_datas = self._target_class.prepare_datas(self.datas, complete=True, allow_internal=True)
-        return self._datasource.insert(self._target_class, **insert_datas)
+    ## @brief calls the datasource to perform the insert command
+    # @param datas dict : formatted datas corresponding to the insert
+    # @return str : the uid of the inserted object
+    def __insert(self, **datas):
+        insert_datas = self.target_class.prepare_datas(datas, complete=True, allow_internal=True)
+        res = self.datasource.insert(self.target_class, **insert_datas)
+        return res
 
 
+## @brief Class representing an Abstract Filtered Query
 class LeFilteredQuery(LeQuery):
 
+    ## @brief Constructor
+    # @param target_class EmClass : Object of the query
     def __init__(self, target_class):
         super().__init__(target_class)
 
+    ## @brief Validates the query filters
+    # @param query_filters list
+    # @return bool
+    # @raise LeQueryError if one of the filter is not valid
     @classmethod
     def validate_query_filters(cls, query_filters):
         for query_filter in query_filters:
-            if query_filter[1] not in cls._query_operators:
+            if query_filter[1] not in cls.query_operators:
                 raise LeQueryError("The operator %s is not valid." % query_filter[1])
         return True
 
+    ## @brief Checks if a field is relational
+    # @param field str : Name of the field
+    # @return bool
     @classmethod
     def is_relational_field(cls, field):
         return field.startswith('superior.') or field.startswith('subordinate.')
 
+
+## @brief Class representing a Get Query
 class LeGetQuery(LeFilteredQuery):
 
-    def __init__(self, target_class, target_uid, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+    ## @brief Constructor
+    # @param target_class EmClass : main class
+    # @param query_filters
+    # @param field_list list
+    # @param order list : list of tuples corresponding to the fields used to sort the results
+    # @param group list : list of tuples corresponding to the fields used to group the results
+    # @param limit int : Maximum number of results to get
+    # @param offset int
+    # @param instanciate bool : if True, objects will be returned instead of dictionaries
+    def __init__(self, target_class, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, instanciate=True):
         super().__init__(target_class)
         self.query_filters = query_filters
         self.default_field_list = []
-        self.field_list = field_list if field_list is not None else self._target_class.fieldnames()
+        self.field_list = field_list if field_list is not None else self.target_class.fieldnames()
         self.order = order
         self.group = group
         self.limit = limit
         self.offset = offset
         self.instanciate = instanciate
-        self.target_object = None  # TODO get an instance of the target_class using a unique id
 
+    ## @brief executes the query
+    # @return list
+    # @TODO activate LodelHook calls
     def execute(self):
-        datas = self.datas  # TODO : replace with LodelHook.call_hook('leapi_get_pre', self.target_object, self.datas)
+        datas = self.datas  # LodelHook.call_hook('leapi_get_pre', self.target_object, self.datas)
         ret = self.__get(**datas)
         # ret = LodelHook.call_hook('leapi_get_post', self.target_object, ret)
         return ret
 
-    def __get(self, **kwargs):
-        field_list = self.__prepare_field_list(self.field_list)  #TODO implement the prepare_field_list method
+    def __get(self, **datas):
+        field_list = self.__prepare_field_list(self.field_list)
 
         query_filters, relational_filters = self.__prepare_filters()
 
-        # Preparing order
+        # Preparing the "order" parameters
         if self.order:
             order = self.__prepare_order()
             if isinstance(order, Exception):
-                raise order  # can be buffered and raised later, but _prepare_filters raise when fails
+                raise order  # can be buffered and raised later, but __prepare_filters raise when fails
 
-        # Preparing group
+        # Preparing the "group" parameters
         if self.group:
             group = self.__prepare_order()
             if isinstance(group, Exception):
@@ -108,12 +137,15 @@ class LeGetQuery(LeFilteredQuery):
         results = self._datasource.select()  # TODO add the correct arguments for the datasource's method call
         return results
 
+    ## @brief prepares the field list
+    # @return list
+    # @raise LeApiDataCheckError
     def __prepare_field_list(self):
         errors = dict()
         ret_field_list = list()
         for field in self.field_list:
             if self.is_relational(field):
-                ret = self.__prepare_relational_fields(field)
+                ret = self.__prepare_relational_field(field)
             else:
                 ret = self.__check_field(field)
 
@@ -127,10 +159,15 @@ class LeGetQuery(LeFilteredQuery):
 
         return ret_field_list
 
-    def __prepare_relational_fields(self, field):
+    ## @brief prepares a relational field
+    def __prepare_relational_field(self, field):
         # TODO Implement the method
         return field
 
+    ## @brief splits the filter string into a tuple (FIELD, OPERATOR, VALUE)
+    # @param filter str
+    # @return tuple
+    # @raise ValueError
     def __split_filter(self, filter):
         if self.query_re is None:
             self.__compile_query_re()
@@ -153,11 +190,17 @@ class LeGetQuery(LeFilteredQuery):
         op_re_piece += ')'
         self.query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
 
-    def __check_field(self, target_object, field):
-        if field not in self.target_object.fieldnames():
-            return ValueError("No such field '%s' in %s" % (field, self.target_object.__class__))
+    ## @brief checks if a field is in the target class of the query
+    # @param field str
+    # @return str
+    # @raise ValueError
+    def __check_field(self, field):
+        if field not in self.target_class.fieldnames():
+            return ValueError("No such field '%s' in %s" % (field, self.target_class))
         return field
 
+    ## @brief Prepares the filters (relational and others)
+    # @return tuple
     def __prepare_filters(self):
         filters = list()
         errors = dict()
@@ -173,7 +216,7 @@ class LeGetQuery(LeFilteredQuery):
 
         for field, operator, value in filters:
             # TODO check the relation filters
-            ret = self.__check_field(self.target_object, field)
+            ret = self.__check_field(field)
             if isinstance(ret, Exception):
                 errors[field] = ret
             else:
@@ -188,9 +231,11 @@ class LeGetQuery(LeFilteredQuery):
         datas = dict()
         if LeFilteredQuery.validate_query_filters(self.query_filters):
             datas['query_filters'] = self.query_filters
-        datas['target_object'] = self.target_object
+        datas['target_class'] = self.target_class
         return datas
 
+    ## @brief prepares the "order" parameters
+    # @return list
     def __prepare_order(self):
         errors = dict()
         result = []
@@ -200,14 +245,14 @@ class LeGetQuery(LeFilteredQuery):
             if len(order_field) != 2 or order_field[1].upper() not in ['ASC', 'DESC']:
                 errors[order_field] = ValueError("Expected a string or a tuple with (FIELDNAME, ['ASC'|'DESC']) but got : %s" % order_field)
             else:
-                ret = self._target_class.check_field(order_field[0])
+                ret = self.target_class.check_field(order_field[0])
                 if isinstance(ret, Exception):
                     errors[order_field] = ret
             order_field = (order_field[0], order_field[1].upper())
             result.append(order_field)
 
         if len(errors) > 0:
-            return LeApiErrors("Errors when preparing ordering fields", errors)
+            raise LeApiErrors("Errors when preparing ordering fields", errors)
         return result
 
 
@@ -217,7 +262,6 @@ class LeUpdateQuery(LeFilteredQuery):
         super().__init__(target_class)
         self.query_filters = query_filters
         self.target_uid = target_uid
-        self.target_object = None  # TODO get an instance of the target_class using a unique id
 
     def execute(self):
         # LodelHook.call_hook('leapi_update_pre', self.target_object, None)
@@ -230,7 +274,7 @@ class LeUpdateQuery(LeFilteredQuery):
     # @TODO change the behavior in case of error in the update process
     def __update(self):
         updated_datas = self.__prepare()
-        ret = self._datasource.update(self.target_uid, **updated_datas)  # TODO add the correct arguments for the datasource's method call
+        ret = self.datasource.update(self.target_uid, **updated_datas)  # TODO add the correct arguments for the datasource's method
         if ret == 1:
             return True
         else:
