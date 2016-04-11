@@ -15,6 +15,9 @@ from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins_pkg'
 CONFSPEC_NAME = 'confspec.py'
 
+class PluginError(Exception):
+    pass
+
 class Plugins(object):
     
     ## @brief Stores plugin directories paths
@@ -47,6 +50,7 @@ class Plugins(object):
     ## @brief Fetch a confspec given a plugin_name
     # @param plugin_name str : The plugin name
     # @return a dict of conf spec
+    # @throw PluginError if plugin_name is not valid
     @classmethod
     def get_confspec(cls, plugin_name):
         cls.started()
@@ -56,11 +60,14 @@ class Plugins(object):
         conf_spec_module = plugin_module + '.confspec'
         
         conf_spec_source = plugin_path + CONFSPEC_NAME
-
-        loader = SourceFileLoader(conf_spec_module, conf_spec_source)
-        confspec_module = loader.load_module()
+        try:
+            loader = SourceFileLoader(conf_spec_module, conf_spec_source)
+            confspec_module = loader.load_module()
+        except ImportError:
+            raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
         return getattr(confspec_module, 'CONFSPEC')
-
+    
+    ## @brief Bootstrap the Plugins class
     @classmethod
     def bootstrap(cls, plugins_directories):
         cls._plugin_directories = plugins_directories
