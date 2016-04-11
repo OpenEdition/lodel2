@@ -37,7 +37,7 @@ class SettingsLoader(object):
                         conf[s][vs] = config[s][vs]
                         if s != 'DEFAULT': self.__conf_sv.add(s + ':' + vs)
                     else:
-                        raise SettingsError("Key attribute already define : %s" % s + ' '+vs + ' ' + str(conf[s]))                        
+                        raise SettingsError("Key attribute already define : %s" % s + ' '+vs)                        
             else:
                 opts={}
                 for key in config[s]:
