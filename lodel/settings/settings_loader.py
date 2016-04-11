@@ -6,6 +6,7 @@ import copy
 
 from lodel.settings.utils import *
 
+   
 ## @brief Merges and loads configuration files
 class SettingsLoader(object):
     ## @brief Constructor
@@ -26,21 +27,24 @@ class SettingsLoader(object):
         dir_conf = os.open(self.__conf_path, os.O_RDONLY)
  
         l = glob.glob(self.__conf_path+'/*.ini')  
+
         for f in l:  
             config.read(f)
-            for s in config:
-                if s in conf:
-                    for vs in config[s]:
-                        if vs not in conf[s]: 
-                            conf[s].update({vs:config[s][vs]})
-                        else:
-                             print(vs) #raise SettingsError("Key attribute already define : %s" % s + ' '+vs + ' ' + str(conf[s]))                        
-                else:
-                    opts={}
-                    for key in config[s]:
-                        opts[key] = config[s].get(key)
-                    conf.update({s: opts})
-                self.__conf_sv.add(str({s: opts}))
+        for s in config:
+            if s in conf:
+                for vs in config[s]:
+                    if vs not in conf[s]: 
+                        conf[s][vs] = config[s][vs]
+                        if s != 'DEFAULT': self.__conf_sv.add(s + ':' + vs)
+                    else:
+                        raise SettingsError("Key attribute already define : %s" % s + ' '+vs + ' ' + str(conf[s]))                        
+            else:
+                opts={}
+                for key in config[s]:
+                    opts[key] = config[s].get(key)
+                    if s != 'DEFAULT': self.__conf_sv.add(s + ':' + key)
+                conf.update({s: opts})
+        print(self.__conf_sv)
         os.close(dir_conf)
         return conf
         
@@ -54,15 +58,17 @@ class SettingsLoader(object):
     # @param mandatory bool
     # @return the option
     def getoption(self,section,keyname,validator,default_value=None,mandatory=False):
-        if keyname in section:
-            option=validator(section[keyname].split(','))
-            self.conf_save.remove(section[keyname])
-            return section[keyname]
-        elif default_value is not None:
-            return section[default_value]
-        elif mandatory is True:
-            raise SettingsError("Default value mandatory for option %s" % keyname)
-        return None
+        conf=copy.copy(self.__conf)
+        sec=conf[section]
+        if keyname in sec:
+            optionstr=sec[keyname]
+            option=validator(sec[keyname])
+            self.__conf_sv.remove(section + ':' + keyname)
+            return option
+        elif mandatory:
+             raise SettingsError("Default value mandatory for option %s" % keyname)
+        else:
+             return default_value
                               
     
     ## @brief Returns the section to be configured
@@ -75,10 +81,10 @@ class SettingsLoader(object):
             return conf[section_prefix]
         elif default_section in conf: 
             return conf[default_section]
-        return None;
+        return [];
     
     ## @brief Returns the sections which have not been configured
     # @return list of missing options
     def getremains(self):
-        return list(self.conf_save)
+        return list(self.__conf_sv)
         
