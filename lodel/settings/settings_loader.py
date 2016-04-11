@@ -22,29 +22,28 @@ class SettingsLoader(object):
     # @return dict()
     # 
     def __merge(self):
-        config = configparser.ConfigParser()
         conf = dict()
         dir_conf = os.open(self.__conf_path, os.O_RDONLY)
  
         l = glob.glob(self.__conf_path+'/*.ini')  
 
         for f in l:  
+            config = configparser.ConfigParser(default_section = 'lodel2')
             config.read(f)
-        for s in config:
-            if s in conf:
-                for vs in config[s]:
-                    if vs not in conf[s]: 
-                        conf[s][vs] = config[s][vs]
-                        if s != 'DEFAULT': self.__conf_sv.add(s + ':' + vs)
-                    else:
-                        raise SettingsError("Key attribute already define : %s" % s + ' '+vs)                        
-            else:
-                opts={}
-                for key in config[s]:
-                    opts[key] = config[s].get(key)
-                    if s != 'DEFAULT': self.__conf_sv.add(s + ':' + key)
-                conf.update({s: opts})
-        print(self.__conf_sv)
+            for s in config:
+                if s in conf:
+                    for vs in config[s]:
+                        if vs not in conf[s]: 
+                            conf[s][vs] = config[s][vs]
+                            if s != 'DEFAULT': self.__conf_sv.add(s + ':' + vs)
+                        else:
+                            raise SettingsError("Key attribute already define : %s" % s + ' '+vs)                        
+                else:
+                    opts={}
+                    for key in config[s]:
+                        opts[key] = config[s].get(key)
+                        if s != 'DEFAULT': self.__conf_sv.add(s + ':' + key)
+                    conf.update({s: opts})
         os.close(dir_conf)
         return conf
         
