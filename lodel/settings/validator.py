@@ -9,6 +9,8 @@ import copy
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
 # Validator are registered in the SettingValidator class.
+# @note to get a list of registered default validators just run
+# <pre>$ python scripts/settings_validator.py</pre>
 
 class SettingsValidationError(Exception):
     pass
@@ -100,12 +102,13 @@ class SettingValidator(object):
 
     
     ## @return a list of registered validators
+    @classmethod
     def validators_list_str(cls):
         result = ''
-        for name in cls._validators:
-            result += "\t%s" % name
-            if name in self._description and self._description[name] is not None:
-                result += "\t: %s" % self._description[name]
+        for name in sorted(cls._validators.keys()):
+            result += "\t%016s" % name
+            if name in cls._description and cls._description[name] is not None:
+                result += ": %s" % cls._description[name]
             result += "\n"
         return result
 

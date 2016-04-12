@@ -14,20 +14,7 @@ from lodel.settings.settings_loader import SettingsLoader
 
 ## @package lodel.settings.settings Lodel2 settings module
 #
-# Handles configuration load/parse/check.
-#
-# @subsection Configuration load process
-#
-# The configuration load process is not trivial. In fact loaded plugins are 
-# able to add their own options. But the list of plugins to load and the 
-# plugins options are in the same file, the instance configuration file.
-#
-# @subsection Configuration specification
-#
-# Configuration specification is divided in 2 parts :
-# - default values
-# - value validation/cast (see @ref Lodel.settings.validator.ConfValidator )
-# 
+# Contains the class that handles the namedtuple tree of settings
 
 ##@brief A default python system lib path
 PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
@@ -82,6 +69,8 @@ class Settings(object):
     instance = None
     
     ##@brief Should be called only by the boostrap classmethod
+    # @param conf_file str : Path to the global lodel2 configuration file
+    # @param conf_dir str : Path to the conf directory
     def __init__(self, conf_file = '/etc/lodel2/lodel2.conf', conf_dir = 'conf.d'):
         self.__confs = dict()
         self.__conf_dir = conf_dir
