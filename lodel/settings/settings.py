@@ -6,7 +6,7 @@ import configparser
 import copy
 from collections import namedtuple
 
-from lodel.plugins import Plugins, PluginError
+from lodel.plugin.plugins import Plugins, PluginError
 from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS
 from lodel.settings.settings_loader import SettingsLoader
@@ -37,6 +37,32 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
                                                                         minor = sys.version_info.minor)
 ## @brief Handles configuration load etc.
 #
+# @par Basic usage
+# For example if a file defines confs like :
+# <pre>
+# [super_section]
+# super_conf = super_value
+# </pre>
+# You can access it with :
+# <pre> settings_instance.confs.super_section.super_conf </pre>
+#
+# @par Init sequence
+# The initialization sequence is a bit tricky. In fact, plugins adds allowed configuration 
+# sections/values, but the list of plugins to load in in... the settings.
+# Here is the conceptual presentation of Settings class initialization stages :
+#   -# Preloading (sets values like lodel2 library path or the plugins path)
+#   -# Ask a @ref lodel.settings.setting_loader.SettingsLoader to load all configurations files
+#   -# Fetch the list of plugins in the loaded settings
+#   -# Merge plugins settings specification with the global lodel settings specs ( see @ref lodel.plugin )
+#   -# Fetch all settings from the merged settings specs
+#
+# @par Init sequence in practical
+# In practice those steps are done by calling a succession of private methods :
+#   -# @ref Settings.__bootstrap() ( steps 1 to 3 )
+#   -# @ref Settings.__merge_specs() ( step 4 )
+#   -# @ref Settings.__populate_from_specs() (step 5)
+#   -# And finally @ref Settings.__confs_to_namedtuple()
+#
 # @todo handles default sections for variable sections (sections ending with '.*')
 class Settings(object):
     
@@ -52,10 +78,12 @@ class Settings(object):
         self.__confs = dict()
         self.__conf_dir = conf_dir
         self.__load_bootstrap_conf(conf_file)
-        # now we should have the self.__confs['lodel2']['plugins_paths'] and
-        # self.__confs['lodel2']['lib_path'] set
+        #   now we should have the self.__confs['lodel2']['plugins_paths']
+        #   and self.__confs['lodel2']['lib_path'] set
         self.__bootstrap()
     
+    ## @brief Configuration keys accessor
+    # @return All confs organised into named tuples
     @property
     def confs(self):
         return copy.copy(self.__confs)
@@ -112,9 +140,12 @@ class Settings(object):
         # Construct final specs dict replacing variable sections
         # by the actual existing sections
         variable_sections = [ section for section in specs if section.endswith('.*') ]
+        print("DEBUG VARIABLE SECTIONS : ")
         for vsec in variable_sections:
             preffix = vsec[:-2]
+            print("PREFFIX =  ", preffix)
             for section in loader.getsection(preffix, 'default'): #WARNING : hardcoded default section
+                print("SECTIONs = ", section)
                 specs[section] = copy.copy(specs[vsec])
             del(specs[vsec])
         # Fetching valuds for sections

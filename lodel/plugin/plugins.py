@@ -12,8 +12,11 @@ from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 # - main.py containing hooks registration etc
 # - confspec.py containing a configuration specification dictionary named CONFSPEC
 
+## @brief The package in wich we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins_pkg'
-CONFSPEC_NAME = 'confspec.py'
+CONFSPEC_FILENAME = 'confspec.py'
+MAIN_FILENAME = 'main.py'
+CONFSPEC_VARNAME = 'CONFSPEC'
 
 class PluginError(Exception):
     pass
@@ -25,7 +28,7 @@ class Plugins(object):
     ## @brief Optimisation cache storage for plugin paths
     _plugin_paths = dict()
 
-    def __init__(self):
+    def __init__(self): # may be useless
         self.started()
     
     ## @brief Given a plugin name returns the plugin path
@@ -59,14 +62,30 @@ class Plugins(object):
                                     plugin_name)
         conf_spec_module = plugin_module + '.confspec'
         
-        conf_spec_source = plugin_path + CONFSPEC_NAME
+        conf_spec_source = plugin_path + CONFSPEC_FILENAME
         try:
             loader = SourceFileLoader(conf_spec_module, conf_spec_source)
             confspec_module = loader.load_module()
         except ImportError:
             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
-        return getattr(confspec_module, 'CONFSPEC')
-    
+        return getattr(confspec_module, CONFSPEC_VARNAME)
+ 
+    ## @brief Load a module to register plugin's hooks
+    # @param plugin_name str : The plugin name
+    @classmethod
+    def load_plugin(cls, plugin_name):
+        cls.started()
+        plugin_path = cls.plugin_path(plugin_name)
+        plugin_module = '%s.%s' % ( VIRTUAL_PACKAGE_NAME,
+                                    plugin_name)
+        main_module = plugin_module + '.main'
+        main_source = plugin_path + MAIN_FILENAME
+        try:
+            loader = SourceFileLoader(main_module, main_source)
+            main_module = loader.load_module()
+        except ImportError:
+            raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
+        
     ## @brief Bootstrap the Plugins class
     @classmethod
     def bootstrap(cls, plugins_directories):
