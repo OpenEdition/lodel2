@@ -2,7 +2,7 @@
 
 import unittest
 
-#import tests.loader_utils
+from lodel.settings.utils import *
 from lodel.settings.settings_loader import SettingsLoader
 
 #A dummy validator that only returns the value
@@ -15,36 +15,36 @@ class SettingsLoaderTestCase(unittest.TestCase):
     def test_merge_getsection(self):
         """Tests merge and getSection functions """
         settings = SettingsLoader('tests/settings/conf.d')
-        a = settings.getsection('A')
-        self.assertEqual(a,dict({"a":"a1","b":"b1,b2,b3","c":"toto","fhui":"njl"}))
-        b = settings.getsection('B')
-        self.assertEqual(b,dict({"ab":"art","bb":"bj,kl,mn","cb":"tatat"}))
-        c = settings.getsection('C')
-        self.assertEqual(c,dict({"ca":"a2","cb":"b4,b2,b3","cc":"titi"}))
-        d = settings.getsection('D')
-        
-        for v in a:
-            assert ('A','{"a":"a1","b":"b1,b2,b3","c":"toto","fhui":"njl"}')
-        def maFonction(a):
-            return a
-        e=settings.getoption('A','a',maFonction)
+
+        e=settings.getoption('A','a',dummy_validator)
         self.assertEqual(e,'a1')
-        f=settings.getoption('B','bb',maFonction)
+        f=settings.getoption('B','bb',dummy_validator)
         self.assertEqual(f,"bj,kl,mn")
         g=settings.getremains()
         self.assertIsNotNone(g)
-        e=settings.getoption('A','b',maFonction)
-        e=settings.getoption('A','c',maFonction)
-        e=settings.getoption('A','fhui',maFonction)
-        f=settings.getoption('B','ab',maFonction)
-        f=settings.getoption('B','cb',maFonction)
-        f=settings.getoption('C','cb',maFonction)
-        f=settings.getoption('C','ca',maFonction)
-        f=settings.getoption('C','cc',maFonction)
+        e=settings.getoption('A','b',dummy_validator)
+        e=settings.getoption('A','c',dummy_validator)
+        e=settings.getoption('A','fhui',dummy_validator)
+        f=settings.getoption('B','ab',dummy_validator)
+        f=settings.getoption('B','cb',dummy_validator)
+        f=settings.getoption('C','cb',dummy_validator)
+        f=settings.getoption('C','ca',dummy_validator)
+        f=settings.getoption('C','cc',dummy_validator)
        
         g=settings.getremains()
         self.assertEqual(g,[])
-        
+    
+    def test_merge(self):
+        """ Test merge of multiple configuration files """
+        loader = SettingsLoader('tests/settings/settings_examples/merge.conf.d')
+        for value in ('a','b','c','d','e','f'):
+            self.assertEqual(loader.getoption('lodel2', value, dummy_validator), value)
+            self.assertEqual(loader.getoption('lodel2.othersection', value, dummy_validator), value)
+
+    def test_merge_conflict(self):
+        """ Test merge fails because of duplicated keys """
+        with self.assertRaises(SettingsError):
+            loader = SettingsLoader('tests/settings/settings_examples/bad_merge.conf.d')
      
     def test_getoption_simple(self):
         """ Testing behavior of getoption """
@@ -73,4 +73,9 @@ class SettingsLoaderTestCase(unittest.TestCase):
         loader = SettingsLoader('tests/settings/settings_examples/var_sections.conf.d')
         with self.assertRaises(NameError):
             sections = loader.getsection('lodel2.notexisting')
-
+    
+    @unittest.skip("Waiting implementation")
+    def test_remains(self):
+        """ Testing the remains method of SettingsLoader """
+        loader = SettingsLoader('tests/settings/settings_examples/remains.conf.d')
+        pass #TO BE DONE LATER
