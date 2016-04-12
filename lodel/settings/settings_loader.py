@@ -25,25 +25,25 @@ class SettingsLoader(object):
         conf = dict()
         dir_conf = os.open(self.__conf_path, os.O_RDONLY)
  
-        l = glob.glob(self.__conf_path+'/*.ini')  
+        l_dir = glob.glob(self.__conf_path+'/*.ini')  
 
-        for f in l:  
+        for f_ini in l_dir:  
             config = configparser.ConfigParser(default_section = 'lodel2')
-            config.read(f)
-            for s in config:
-                if s in conf:
-                    for vs in config[s]:
-                        if vs not in conf[s]: 
-                            conf[s][vs] = config[s][vs]
-                            if s != 'DEFAULT': self.__conf_sv.add(s + ':' + vs)
+            config.read(f_ini)
+            for sect in config:
+                if sect in conf:
+                    for param in config[sect]:
+                        if param not in conf[sect]: 
+                            conf[sect][param] = config[sect][param]
+                            if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + param)
                         else:
-                            raise SettingsError("Key attribute already define : %s" % s + ' '+vs)                        
+                            raise SettingsError("Key attribute already define : %s" % sect + ' '+param)                        
                 else:
                     opts={}
-                    for key in config[s]:
-                        opts[key] = config[s].get(key)
-                        if s != 'DEFAULT': self.__conf_sv.add(s + ':' + key)
-                    conf.update({s: opts})
+                    for key in config[sect]:
+                        opts[key] = config[sect].get(key)
+                        if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + key)
+                    conf.update({sect: opts})
         os.close(dir_conf)
         return conf
         
