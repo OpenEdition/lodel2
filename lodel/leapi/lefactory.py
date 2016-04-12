@@ -5,7 +5,7 @@ from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataHandler
 
-## @brief Generate python module code from a given model
+##@brief Generate python module code from a given model
 # @param model lodel.editorial_model.model.EditorialModel
 def dyncode_from_em(model):
     
@@ -31,7 +31,7 @@ from lodel.leapi.datahandlers.base_classes import DataField
     )
     return res_code
 
-## @brief return A list of EmClass sorted by dependencies
+##@brief return A list of EmClass sorted by dependencies
 #
 # The first elts in the list depends on nothing, etc.
 # @return a list of EmClass instances
@@ -41,11 +41,11 @@ def emclass_sorted_by_deps(emclass_list):
     ret = sorted(emclass_list, key = functools.cmp_to_key(emclass_deps_cmp))
     return ret
 
-## @brief Returns a list of EmClass that will be represented as LeObject child classes
+##@brief Returns a list of EmClass that will be represented as LeObject child classes
 def get_classes(model):
     return [ cls for cls in emclass_sorted_by_deps(model.classes()) if not cls.pure_abstract ]
 
-## @brief Given an EmField returns the data_handler constructor suitable for dynamic code
+##@brief Given an EmField returns the data_handler constructor suitable for dynamic code
 def data_handler_constructor(emfield):
     #dh_module_name = DataHandler.module_name(emfield.data_handler_name)+'.DataHandler'
     get_handler_class_instr = 'DataField.from_name(%s)' % repr(emfield.data_handler_name)
@@ -63,7 +63,7 @@ def data_handler_constructor(emfield):
                                                         handler_instr = get_handler_class_instr,
                                                         options = ', '.join(options))
             
-## @brief Return a python repr of option values
+##@brief Return a python repr of option values
 def forge_optval(optval):
     if isinstance(optval, dict):
         return '{' + (', '.join( [ '%s: %s' % (repr(name), forge_optval(val)) for name, val in optval.items()])) + '}'
@@ -81,7 +81,7 @@ def forge_optval(optval):
     else:
         return repr(optval)
 
-## @brief Generate dyncode from an EmClass
+##@brief Generate dyncode from an EmClass
 # @param model EditorialModel : 
 # @param emclass EmClass : EmClass instance
 # @return a tuple with emclass python code, a set containing modules name to import, and a list of python instruction to bootstrap dynamic code, in this order

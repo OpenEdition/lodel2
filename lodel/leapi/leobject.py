@@ -3,7 +3,7 @@
 import importlib
 
 class LeApiErrors(Exception):
-    ## @brief Instanciate a new exceptions handling multiple exceptions
+    ##@brief Instanciate a new exceptions handling multiple exceptions
     # @param msg str : Exception message
     # @param exceptions dict : A list of data check Exception with concerned field (or stuff) as key
     def __init__(self, msg = "Unknow error", exceptions = None):
@@ -25,37 +25,37 @@ class LeApiErrors(Exception):
         return msg
 
 
-## @brief When an error concern a query
+##@brief When an error concern a query
 class LeApiQueryError(LeApiErrors):
     pass
 
 
-## @brief When an error concerns a datas
+##@brief When an error concerns a datas
 class LeApiDataCheckError(LeApiErrors):
     pass
 
 
-## @brief Wrapper class for LeObject getter & setter
+##@brief Wrapper class for LeObject getter & setter
 #
 # This class intend to provide easy & friendly access to LeObject fields values 
 # without name collision problems
 # @note Wrapped methods are : LeObject.data() & LeObject.set_data()
 class LeObjectValues(object):
     
-    ## @brief Construct a new LeObjectValues
+    ##@brief Construct a new LeObjectValues
     # @param set_callback method : The LeObject.set_datas() method of corresponding LeObject class
     # @param get_callback method : The LeObject.get_datas() method of corresponding LeObject class
     def __init__(self, fieldnames_callback, set_callback, get_callback):
         self.__setter = set_callback
         self.__getter = get_callback
     
-    ## @brief Provide read access to datas values
+    ##@brief Provide read access to datas values
     # @note Read access should be provided for all fields
     # @param fname str : Field name
     def __getattribute__(self, fname):
         return self.__getter(fname)
     
-    ## @brief Provide write access to datas values
+    ##@brief Provide write access to datas values
     # @note Write acces shouldn't be provided for internal or immutable fields
     # @param fname str : Field name
     # @param fval * : the field value
@@ -65,23 +65,23 @@ class LeObjectValues(object):
 
 class LeObject(object):
  
-    ## @brief boolean that tells if an object is abtract or not
+    ##@brief boolean that tells if an object is abtract or not
     _abstract = None
-    ## @brief A dict that stores DataHandler instances indexed by field name
+    ##@brief A dict that stores DataHandler instances indexed by field name
     _fields = None
-    ## @brief A tuple of fieldname (or a uniq fieldname) representing uid
+    ##@brief A tuple of fieldname (or a uniq fieldname) representing uid
     _uid = None 
 
-    ## @brief Construct an object representing an Editorial component
+    ##@brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance
     def __init__(self, **kwargs):
         if self._abstract:
             raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
-        ## @brief A dict that stores fieldvalues indexed by fieldname
+        ##@brief A dict that stores fieldvalues indexed by fieldname
         self.__datas = { fname:None for fname in self._fields }
-        ## @brief Store a list of initianilized fields when instanciation not complete else store True
+        ##@brief Store a list of initianilized fields when instanciation not complete else store True
         self.__initialized = list()
-        ## @brief Datas accessor. Instance of @ref LeObjectValues
+        ##@brief Datas accessor. Instance of @ref LeObjectValues
         self.d = LeObjectValues(self.fieldnames, self.set_data, self.data)
 
         # Checks that uid is given
@@ -114,12 +114,12 @@ class LeObject(object):
     #   Fields datas handling methods   #
     #-----------------------------------#
 
-    ## @brief @property True if LeObject is initialized else False
+    ##@brief @property True if LeObject is initialized else False
     @property
     def initialized(self):
         return not isinstance(self.__initialized, list)
 
-    ## @brief Return a list of fieldnames
+    ##@brief Return a list of fieldnames
     # @param include_ro bool : if True include read only field names
     # @return a list of str
     @classmethod
@@ -133,7 +133,7 @@ class LeObject(object):
     def name2objname(cls, name):
         return name.title()
     
-    ## @brief Return the datahandler asssociated with a LeObject field
+    ##@brief Return the datahandler asssociated with a LeObject field
     # @param fieldname str : The fieldname
     # @return A data handler instance
     @classmethod
@@ -142,7 +142,7 @@ class LeObject(object):
             raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
         return cls._fields[fieldname]
  
-    ## @brief Return a LeObject child class from a name
+    ##@brief Return a LeObject child class from a name
     # @warning This method has to be called from dynamically generated LeObjects
     # @param leobject_name str : LeObject name
     # @return A LeObject child class
@@ -161,7 +161,7 @@ class LeObject(object):
     def is_abstract(cls):
         return cls._abstract
 
-    ## @brief Read only access to all datas
+    ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
     # @param name str : field name
     # @return the Value
@@ -174,7 +174,7 @@ class LeObject(object):
             raise RuntimeError("The field %s is not initialized yet (and have no value)" % name)
         return self.__datas[name]
     
-    ## @brief Datas setter
+    ##@brief Datas setter
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
     # @param fname str : field name
     # @param fval * : field value
@@ -211,7 +211,7 @@ class LeObject(object):
             else:
                 self.__datas[fname] = val
     
-    ## @brief Update the __initialized attribute according to LeObject internal state
+    ##@brief Update the __initialized attribute according to LeObject internal state
     #
     # Check the list of initialized fields and set __initialized to True if all fields initialized
     def __set_initialized(self):
@@ -220,7 +220,7 @@ class LeObject(object):
             if set(expected_fields) == set(self.__initialized):
                 self.__initialized = True
 
-    ## @brief Designed to be called when datas are modified
+    ##@brief Designed to be called when datas are modified
     #
     # Make different checks on the LeObject given it's state (fully initialized or not)
     # @return None if checks succeded else return an exception list
@@ -267,7 +267,7 @@ class LeObject(object):
     #   Other methods    #
     #--------------------#
     
-    ## @brief Temporary method to set private fields attribute at dynamic code generation
+    ##@brief Temporary method to set private fields attribute at dynamic code generation
     #
     # This method is used in the generated dynamic code to set the _fields attribute
     # at the end of the dyncode parse

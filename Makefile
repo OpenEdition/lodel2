@@ -3,8 +3,11 @@ dyncode_filename='lodel/leapi/dyncode.py'
 all: tests doc dyncode
 
 # generate doxygen documentation
-doc: cleandoc
+doc: cleandoc doc_graphviz
 	doxygen
+
+doc_graphviz:
+	cd doc/img/graphviz; make
 
 # Test em update ( examples/em_test.pickle )
 em_test:

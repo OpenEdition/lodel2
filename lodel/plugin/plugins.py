@@ -12,7 +12,7 @@ from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 # - main.py containing hooks registration etc
 # - confspec.py containing a configuration specification dictionary named CONFSPEC
 
-## @brief The package in wich we will load plugins modules
+##@brief The package in wich we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins_pkg'
 CONFSPEC_FILENAME = 'confspec.py'
 MAIN_FILENAME = 'main.py'
@@ -23,15 +23,15 @@ class PluginError(Exception):
 
 class Plugins(object):
     
-    ## @brief Stores plugin directories paths
+    ##@brief Stores plugin directories paths
     _plugin_directories = None
-    ## @brief Optimisation cache storage for plugin paths
+    ##@brief Optimisation cache storage for plugin paths
     _plugin_paths = dict()
 
     def __init__(self): # may be useless
         self.started()
     
-    ## @brief Given a plugin name returns the plugin path
+    ##@brief Given a plugin name returns the plugin path
     # @param plugin_name str : The plugin name
     # @return the plugin directory path
     @classmethod
@@ -50,7 +50,7 @@ class Plugins(object):
                 return plugin_path
         raise NameError("No plugin named '%s'" % plugin_name)
 
-    ## @brief Fetch a confspec given a plugin_name
+    ##@brief Fetch a confspec given a plugin_name
     # @param plugin_name str : The plugin name
     # @return a dict of conf spec
     # @throw PluginError if plugin_name is not valid
@@ -70,7 +70,7 @@ class Plugins(object):
             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
         return getattr(confspec_module, CONFSPEC_VARNAME)
  
-    ## @brief Load a module to register plugin's hooks
+    ##@brief Load a module to register plugin's hooks
     # @param plugin_name str : The plugin name
     @classmethod
     def load_plugin(cls, plugin_name):
@@ -86,7 +86,7 @@ class Plugins(object):
         except ImportError:
             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
         
-    ## @brief Bootstrap the Plugins class
+    ##@brief Bootstrap the Plugins class
     @classmethod
     def bootstrap(cls, plugins_directories):
         cls._plugin_directories = plugins_directories
