@@ -176,7 +176,15 @@ class EmField(EmComponent):
         ## @brief Stores the emclass that contains this field (set by EmClass.add_field() method)
         self._emclass = None
 
-    ## @warning Not complete !
+    ## @brief Returns data_handler_name attribute
+    def get_data_handler_name(self):
+        return copy.copy(self.data_handler_name)
+        
+    ## @brief Returns data_handler_cls attribute
+    def get_data_handler_cls(self):
+        return copy.copy(selfdata_handler_cls)
+    
+    # @warning Not complete !
     # @todo Complete the hash when data handlers becomes available
     def d_hash(self):
         return int.from_bytes(hashlib.md5(
