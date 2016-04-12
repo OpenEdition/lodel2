@@ -2,13 +2,13 @@
 
 from lodel.leapi.datahandlers.datas_base import *
 
-## @brief Data field designed to handle formated strings
+##@brief Data field designed to handle formated strings
 class FormatString(Varchar):
 
     help = 'Automatic string field, designed to use the str % operator to build its content'
     base_type = 'char'
 
-    ## @brief Build its content with a field list and a format string
+    ##@brief Build its content with a field list and a format string
     # @param format_string str
     # @param max_length int : the maximum length of the handled value
     # @param field_list list : List of field to use
@@ -26,13 +26,13 @@ class FormatString(Varchar):
             return False
         return True
 
-## @brief Varchar validated by a regex
+##@brief Varchar validated by a regex
 class Regex(Varchar):
 
     help = 'String field validated with a regex. Takes two options : max_length and regex'
     base_type = 'char'
 
-    ## @brief A string field validated by a regex
+    ##@brief A string field validated by a regex
     # @param regex str : a regex string (passed as argument to re.compile())
     # @param max_length int : the max length for this field (default : 10)
     # @param **kwargs
@@ -57,13 +57,13 @@ class Regex(Varchar):
             return False
         return True
 
-## @brief Handles uniq ID
+##@brief Handles uniq ID
 class UniqID(Integer):
 
     help = 'Fieldtype designed to handle editorial model UID'
     base_type = 'int'
 
-    ## @brief A uid field
+    ##@brief A uid field
     # @param **kwargs
     def __init__(self, **kwargs):
         kwargs['internal'] = 'automatic'

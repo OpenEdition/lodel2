@@ -7,16 +7,16 @@ import copy
 from lodel.settings.utils import *
 
    
-## @brief Merges and loads configuration files
+##@brief Merges and loads configuration files
 class SettingsLoader(object):
-    ## @brief Constructor
+    ##@brief Constructor
     # @param conf_path str : conf.d path
     def __init__(self,conf_path):
         self.__conf_path=conf_path
         self.__conf_sv=set()
         self.__conf=self.__merge()
     
-    ## @brief Lists and merges files in settings_loader.conf_path
+    ##@brief Lists and merges files in settings_loader.conf_path
     #
     # 
     # @return dict()
@@ -49,7 +49,7 @@ class SettingsLoader(object):
         
         
     
-    ## @brief Returns option if exists default_value else and validates
+    ##@brief Returns option if exists default_value else and validates
     # @param section str : name of the section
     # @param keyname str
     # @param validator callable : takes one argument value and raises validation fail
@@ -70,7 +70,7 @@ class SettingsLoader(object):
              return default_value
                               
     
-    ## @brief Returns the section to be configured
+    ##@brief Returns the section to be configured
     # @param section_prefix str
     # @param default_section str
     # @return the section as dict()
@@ -82,7 +82,7 @@ class SettingsLoader(object):
             return conf[default_section]
         return [];
     
-    ## @brief Returns the sections which have not been configured
+    ##@brief Returns the sections which have not been configured
     # @return list of missing options
     def getremains(self):
         return list(self.__conf_sv)

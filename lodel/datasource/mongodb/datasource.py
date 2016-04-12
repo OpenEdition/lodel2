@@ -24,7 +24,7 @@ class MongoDbDataSource(object):
         self.connection = MongoClient(connection_string)
         self.database = self.connection[connection_args['dbname']]
 
-    ## @brief Inserts a list of records in a given collection
+    ##@brief Inserts a list of records in a given collection
     #
     # @param collection_name str : name of the MongoDB collection in which we will insert the records
     # @param datas list : list of dictionaries corresponding to the records

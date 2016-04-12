@@ -12,18 +12,15 @@ from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS
 from lodel.settings.settings_loader import SettingsLoader
 
-## @package lodel.settings Lodel2 settings package
-#
-# Contains all module that help handling settings
-
 ## @package lodel.settings.settings Lodel2 settings module
 #
 # Handles configuration load/parse/check.
 #
 # @subsection Configuration load process
 #
-# The configuration load process is not trivial. In fact loaded plugins are able to add their own options.
-# But the list of plugins to load and the plugins options are in the same file, the instance configuration file.
+# The configuration load process is not trivial. In fact loaded plugins are 
+# able to add their own options. But the list of plugins to load and the 
+# plugins options are in the same file, the instance configuration file.
 #
 # @subsection Configuration specification
 #
@@ -32,14 +29,17 @@ from lodel.settings.settings_loader import SettingsLoader
 # - value validation/cast (see @ref Lodel.settings.validator.ConfValidator )
 # 
 
-## @brief A default python system lib path
+##@brief A default python system lib path
 PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 
-                                                                        major = sys.version_info.major,
-                                                                        minor = sys.version_info.minor)
-## @brief Handles configuration load etc.
+                                                major = sys.version_info.major,
+                                                minor = sys.version_info.minor)
+##@brief Handles configuration load etc.
 #
-# @par Basic usage
+# To see howto bootstrap Settings and use it in lodel instance see 
+# @ref lodel.settings
+# 
+# @par Basic instance usage
 # For example if a file defines confs like :
 # <pre>
 # [super_section]
@@ -49,13 +49,16 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 # <pre> settings_instance.confs.super_section.super_conf </pre>
 #
 # @par Init sequence
-# The initialization sequence is a bit tricky. In fact, plugins adds allowed configuration 
-# sections/values, but the list of plugins to load in in... the settings.
+# The initialization sequence is a bit tricky. In fact, plugins adds allowed
+# configuration sections/values, but the list of plugins to load in in... the 
+# settings.
 # Here is the conceptual presentation of Settings class initialization stages :
 #   -# Preloading (sets values like lodel2 library path or the plugins path)
-#   -# Ask a @ref lodel.settings.setting_loader.SettingsLoader to load all configurations files
+#   -# Ask a @ref lodel.settings.setting_loader.SettingsLoader to load all 
+#configurations files
 #   -# Fetch the list of plugins in the loaded settings
-#   -# Merge plugins settings specification with the global lodel settings specs ( see @ref lodel.plugin )
+#   -# Merge plugins settings specification with the global lodel settings 
+#specs ( see @ref lodel.plugin )
 #   -# Fetch all settings from the merged settings specs
 #
 # @par Init sequence in practical
@@ -65,10 +68,11 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 #   -# @ref Settings.__populate_from_specs() (step 5)
 #   -# And finally @ref Settings.__confs_to_namedtuple()
 #
-# @todo handles default sections for variable sections (sections ending with '.*')
+# @todo handles default sections for variable sections (sections ending with 
+# '.*')
 class Settings(object):
     
-    ## @brief global conf specsification (default_value + validator)
+    ##@brief global conf specsification (default_value + validator)
     _conf_preload = {
             'lib_path': (   PYTHON_SYS_LIB_PATH+'/lodel2/',
                             SettingValidator('directory')),
@@ -77,7 +81,7 @@ class Settings(object):
     }
     instance = None
     
-    ## @brief Should be called only by the boostrap classmethod
+    ##@brief Should be called only by the boostrap classmethod
     def __init__(self, conf_file = '/etc/lodel2/lodel2.conf', conf_dir = 'conf.d'):
         self.__confs = dict()
         self.__conf_dir = conf_dir
@@ -86,7 +90,7 @@ class Settings(object):
         #   and self.__confs['lodel2']['lib_path'] set
         self.__bootstrap()
     
-    ## @brief Stores as class attribute a Settings instance
+    ##@brief Stores as class attribute a Settings instance
     @classmethod
     def bootstrap(cls, conf_file = None, conf_dir = None):
         if cls.instance is None:
@@ -96,13 +100,13 @@ class Settings(object):
                 cls.instance = cls(conf_file, conf_dir)
         return cls.instance
 
-    ## @brief Configuration keys accessor
+    ##@brief Configuration keys accessor
     # @return All confs organised into named tuples
     @property
     def confs(self):
         return copy.copy(self.__confs)
 
-    ## @brief This method handlers Settings instance bootstraping
+    ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
         lodel2_specs = LODEL2_CONF_SPECS
         plugins_opt_specs = lodel2_specs['lodel2']['plugins']
@@ -126,7 +130,7 @@ class Settings(object):
         specs = self.__merge_specs(specs)
         self.__populate_from_specs(specs, loader)
     
-    ## @brief Produce a configuration specification dict by merging all specifications
+    ##@brief Produce a configuration specification dict by merging all specifications
     #
     # Merges global lodel2 conf spec from @ref lodel.settings.validator.LODEL2_CONF_SPECS
     # and configuration specifications from loaded plugins
@@ -144,7 +148,7 @@ class Settings(object):
                     res[section][kname] = copy.copy(spec[section][kname])
         return res
     
-    ## @brief Populate the Settings instance with options values fecthed with the loader from merged specs
+    ##@brief Populate the Settings instance with options values fecthed with the loader from merged specs
     #
     # Populate the __confs attribute
     # @param specs dict : Settings specification dictionnary as returned by __merge_specs
@@ -170,7 +174,7 @@ class Settings(object):
         self.__confs_to_namedtuple()
         pass
     
-    ## @brief Transform the __confs attribute into imbricated namedtuple
+    ##@brief Transform the __confs attribute into imbricated namedtuple
     #
     # For example an option named "foo" in a section named "hello.world" will
     # be acessible with self.__confs.hello.world.foo
@@ -225,14 +229,14 @@ class Settings(object):
                 path.append( (curname, cur) )
                 nodename += '.'+curname.title()
     
-    ## @brief Forge a named tuple given a conftree node
+    ##@brief Forge a named tuple given a conftree node
     # @param conftree dict : A conftree node
     # @return a named tuple with fieldnames corresponding to conftree keys
     def __tree2namedtuple(self, conftree, name):
         ResNamedTuple = namedtuple(name, conftree.keys())
         return ResNamedTuple(**conftree)
 
-    ## @brief Load base global configurations keys
+    ##@brief Load base global configurations keys
     #
     # Base configurations keys are :
     # - lodel2 lib path

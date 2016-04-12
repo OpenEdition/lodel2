@@ -142,7 +142,7 @@ text.new_field(    'title',
                     display_name = {'eng': 'Title', 'fre': 'Titre'},
                     group = editorial_group,
                     data_handler = 'varchar',
-)
+                    nullable = True,)
 text.new_field(    'subtitle',
                     display_name = {
                         'eng': 'Subtitle',
@@ -150,21 +150,65 @@ text.new_field(    'subtitle',
                     },
                     group = editorial_group,
                     data_handler = 'varchar',
-)
+                    nullable = True)
 
 # Classe collection
 collection = em.new_class(  'collection',
                             display_name = 'Collection',
                             group = editorial_group,
-                            abstract = True,
-                            parents = entitie,
-)
+                            abstract = False,
+                            parents = entitie)
 collection.new_field(   'title',
                         display_name = 'Title',
                         group = editorial_group,
-                        abstract = True,
                         data_handler = 'varchar'
 )
+collection.new_field(   'publications',
+                        display_name = 'Publications',
+                        group = editorial_group,
+                        data_handler = 'list',
+                        back_reference = ('publication', 'collection'))
+
+# Classe publication
+pulication = em.new_class(  'publication',
+                            display_name = 'Publication',
+                            group = editorial_group,
+                            abstract = False,
+                            parents = entitie,)
+publication.new_field(  'collection',
+                        display_name = 'Collection',
+                        group = editorial_group,
+                        data_handler = 'link',
+                        back_reference = ('collection', 'publications'))
+
+#########################
+#   Texte definition    #
+#########################
+
+section = em.new_class(    'section',
+                            display_name = 'Section',
+                            group = editorial_group,
+                            abstract = False,
+                            parents = text)
+
+subsection = em.new_class(  'subsection',
+                            display_name = 'Subsection',
+                            group = editorial_group,
+                            abstract = False,
+                            parents = section)
+
+section.new_field(  'childs',
+                    display_name = 'Next section',
+                    group = editorial_group,
+                    data_hander = 'hierarch',
+                    allowed_class = [subsection],
+                    back_reference = ('subsection', 'parent'))
+
+subsection.new_field(   'parent',
+                        display_name = 'Parent',
+                        group = editorial_group,
+                        data_handler = 'link',
+                        allowed_class = [section])
 
 #####################
 # Persons & authors #

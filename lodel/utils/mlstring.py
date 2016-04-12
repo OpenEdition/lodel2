@@ -5,7 +5,7 @@ import hashlib
 import json
 
 
-## @brief Stores multilangage string
+##@brief Stores multilangage string
 class MlString(object):
     
     __default_lang = 'eng'
@@ -17,7 +17,7 @@ class MlString(object):
         'esp',
     ]
 
-    ## @brief Create a new MlString instance
+    ##@brief Create a new MlString instance
     # @param arg str | dict : Can be a json string, a string or a dict
     def __init__(self, arg):
         self.values = dict()
@@ -33,7 +33,7 @@ class MlString(object):
         else:
             raise ValueError('<class str>, <class dict> or <class MlString> expected, but %s found' % type(arg))
     
-    ## @brief Return a translation given a lang
+    ##@brief Return a translation given a lang
     # @param lang str | None : If None return default lang translation
     def get(self, lang = None):
         lang = self.__default_lang if lang is None else lang
@@ -44,7 +44,7 @@ class MlString(object):
         else:
             return str(self)
 
-    ## @brief Set a translation
+    ##@brief Set a translation
     # @param lang str : the lang
     # @param val str | None:  the translation if None delete the translation
     def set(self, lang, val):
@@ -57,7 +57,7 @@ class MlString(object):
         else:
             self.values[lang] = val
 
-    ## @brief Checks that given lang is valid
+    ##@brief Checks that given lang is valid
     # @param lang str : the lang
     @classmethod
     def lang_is_valid(cls, lang):
@@ -65,7 +65,7 @@ class MlString(object):
             raise ValueError('Invalid value for lang. Str expected but %s found' % type(lang))
         return lang in cls.langs
 
-    ## @brief Get or set the default lang
+    ##@brief Get or set the default lang
     @classmethod
     def default_lang(cls, lang = None):
         if lang is None:
@@ -74,7 +74,7 @@ class MlString(object):
             raise ValueError('lang "%s" is not valid"' % lang)
         cls.__default_lang = lang
     
-    ## @brief Return a mlstring loaded from a json string
+    ##@brief Return a mlstring loaded from a json string
     # @param json_str str : Json string
     @classmethod
     def from_json(cls, json_str):

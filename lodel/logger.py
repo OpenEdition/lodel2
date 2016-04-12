@@ -23,7 +23,7 @@ def __init_from_settings():
     for name, logging_opt in Settings.logging.items():
         add_handler(name, logging_opt)
 
-## @brief Add an handler, identified by a name, to a given logger 
+##@brief Add an handler, identified by a name, to a given logger 
 #
 # logging_opt is a dict with logger option. Allowed keys are : 
 # - filename : take a filepath as value and cause the use of a logging.handlers.RotatingFileHandler
@@ -67,14 +67,14 @@ def add_handler(name, logging_opt):
     logger.addHandler(handler)
     
 
-## @brief Remove an handler generated from configuration (runtime logger configuration)
+##@brief Remove an handler generated from configuration (runtime logger configuration)
 # @param name str : handler name
 def remove_handler(name):
     if name in handlers:
         logger.removeHandler(handlers[name])
     # else: can we do anything ?
 
-## @brief Utility function that disable unconditionnaly handlers that implies console output
+##@brief Utility function that disable unconditionnaly handlers that implies console output
 # @note In fact, this function disables handlers generated from settings wich are instances of logging.StreamHandler
 def remove_console_handlers():
     for name, handler in handlers.items():
@@ -84,7 +84,7 @@ def remove_console_handlers():
 
 # Utility functions
 
-## @brief Generic logging function
+##@brief Generic logging function
 # @param lvl int : Log severity
 # @param msg str : log message
 # @param *args : additional positionnal arguments

@@ -13,7 +13,7 @@ import copy
 class SettingsValidationError(Exception):
     pass
 
-## @brief Handles settings validators
+##@brief Handles settings validators
 #
 # Class instance are callable objects that takes a value argument (the value to validate). It raises
 # a SettingsValidationError if validation fails, else it returns a properly
@@ -23,13 +23,13 @@ class SettingValidator(object):
     _validators = dict()
     _description = dict()
     
-    ## @brief Instanciate a validator
+    ##@brief Instanciate a validator
     def __init__(self, name, none_is_valid = False):
         if name is not None and name not in self._validators:
             raise NameError("No validator named '%s'" % name)
         self.__name = name
 
-    ## @brief Call the validator
+    ##@brief Call the validator
     # @param value *
     # @return properly casted value
     # @throw SettingsValidationError
@@ -41,7 +41,7 @@ class SettingValidator(object):
         except Exception as e:
             raise SettingsValidationError(e)
     
-    ## @brief Register a new validator
+    ##@brief Register a new validator
     # @param name str : validator name
     # @param callback callable : the function that will validate a value
     @classmethod
@@ -54,12 +54,12 @@ class SettingValidator(object):
         cls._validators[name] = callback
         cls._description[name] = description
     
-    ## @brief Get the validator list associated with description
+    ##@brief Get the validator list associated with description
     @classmethod
     def validators_list(cls):
         return copy.copy(cls._description)
 
-    ## @brief Create and register a list validator
+    ##@brief Create and register a list validator
     # @param elt_validator callable : The validator that will be used for validate each elt value
     # @param validator_name str
     # @param description None | str
@@ -80,7 +80,7 @@ class SettingValidator(object):
                                 description)
         return cls(validator_name)
                 
-    ## @brief Create and register a regular expression validator
+    ##@brief Create and register a regular expression validator
     # @param pattern str : regex pattern
     # @param validator_name str : The validator name
     # @param description str : Validator description
@@ -109,11 +109,11 @@ class SettingValidator(object):
             result += "\n"
         return result
 
-## @brief Integer value validator callback
+##@brief Integer value validator callback
 def int_val(value):
     return int(value)
 
-## @brief Output file validator callback
+##@brief Output file validator callback
 # @return A file object (if filename is '-' return sys.stderr)
 def file_err_output(value):
     if not isinstance(value, str):
@@ -122,7 +122,7 @@ def file_err_output(value):
         return sys.stderr
     return value
 
-## @brief Boolean value validator callback
+##@brief Boolean value validator callback
 def boolean_val(value):
     if not (value is True) and not (value is False):
         raise SettingsValidationError("A boolean was expected but got '%s' " % value)
@@ -194,7 +194,7 @@ SettingValidator.create_re_validator(
 #   Lodel 2 configuration specification
 #
 
-## @brief Global specifications for lodel2 settings
+##@brief Global specifications for lodel2 settings
 LODEL2_CONF_SPECS = {
     'lodel2': {
         'debug': (  True,

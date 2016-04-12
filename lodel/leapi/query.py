@@ -9,13 +9,13 @@ class LeQueryError(Exception):
 
 class LeQuery(object):
 
-    ## @brief The datasource object used for this query
+    ##@brief The datasource object used for this query
     datasource = None
 
-    ## @brief The available operators used in query definitions
+    ##@brief The available operators used in query definitions
     query_operators = ['=', '<=', '>=', '!=', '<', '>', ' in ', ' not in ', ' like ', ' not like ']
 
-    ## @brief Constructor
+    ##@brief Constructor
     # @param target_class EmClass : class of the object to query about
     def __init__(self, target_class):
         if not issubclass(target_class, LeObject):
@@ -23,17 +23,17 @@ class LeQuery(object):
         self.target_class = target_class
 
 
-## @brief Class representing an Insert query
+##@brief Class representing an Insert query
 class LeInsertQuery(LeQuery):
 
-    ## @brief Constructor
+    ##@brief Constructor
     # @param target_class EmClass: class corresponding to the inserted object
     # @param datas dict : datas to insert
     def __init__(self, target_class, datas):
         super().__init__(target_class)
         self.datas = datas
 
-    ## @brief executes the insert query
+    ##@brief executes the insert query
     # @return bool
     # @TODO reactivate the LodelHooks call when this class is implemented
     def execute(self):
@@ -42,7 +42,7 @@ class LeInsertQuery(LeQuery):
         # ret = LodelHook.call_hook('leapi_insert_post', self.target_class, ret)
         return ret
 
-    ## @brief calls the datasource to perform the insert command
+    ##@brief calls the datasource to perform the insert command
     # @param datas dict : formatted datas corresponding to the insert
     # @return str : the uid of the inserted object
     def __insert(self, **datas):
@@ -51,15 +51,15 @@ class LeInsertQuery(LeQuery):
         return res
 
 
-## @brief Class representing an Abstract Filtered Query
+##@brief Class representing an Abstract Filtered Query
 class LeFilteredQuery(LeQuery):
 
-    ## @brief Constructor
+    ##@brief Constructor
     # @param target_class EmClass : Object of the query
     def __init__(self, target_class):
         super().__init__(target_class)
 
-    ## @brief Validates the query filters
+    ##@brief Validates the query filters
     # @param query_filters list
     # @return bool
     # @raise LeQueryError if one of the filter is not valid
@@ -70,7 +70,7 @@ class LeFilteredQuery(LeQuery):
                 raise LeQueryError("The operator %s is not valid." % query_filter[1])
         return True
 
-    ## @brief Checks if a field is relational
+    ##@brief Checks if a field is relational
     # @param field str : Name of the field
     # @return bool
     @classmethod
@@ -78,10 +78,10 @@ class LeFilteredQuery(LeQuery):
         return field.startswith('superior.') or field.startswith('subordinate.')
 
 
-## @brief Class representing a Get Query
+##@brief Class representing a Get Query
 class LeGetQuery(LeFilteredQuery):
 
-    ## @brief Constructor
+    ##@brief Constructor
     # @param target_class EmClass : main class
     # @param query_filters
     # @param field_list list
@@ -101,7 +101,7 @@ class LeGetQuery(LeFilteredQuery):
         self.offset = offset
         self.instanciate = instanciate
 
-    ## @brief executes the query
+    ##@brief executes the query
     # @return list
     # @TODO activate LodelHook calls
     def execute(self):
@@ -137,7 +137,7 @@ class LeGetQuery(LeFilteredQuery):
         results = self._datasource.select()  # TODO add the correct arguments for the datasource's method call
         return results
 
-    ## @brief prepares the field list
+    ##@brief prepares the field list
     # @return list
     # @raise LeApiDataCheckError
     def __prepare_field_list(self):
@@ -159,12 +159,12 @@ class LeGetQuery(LeFilteredQuery):
 
         return ret_field_list
 
-    ## @brief prepares a relational field
+    ##@brief prepares a relational field
     def __prepare_relational_field(self, field):
         # TODO Implement the method
         return field
 
-    ## @brief splits the filter string into a tuple (FIELD, OPERATOR, VALUE)
+    ##@brief splits the filter string into a tuple (FIELD, OPERATOR, VALUE)
     # @param filter str
     # @return tuple
     # @raise ValueError
@@ -190,7 +190,7 @@ class LeGetQuery(LeFilteredQuery):
         op_re_piece += ')'
         self.query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
 
-    ## @brief checks if a field is in the target class of the query
+    ##@brief checks if a field is in the target class of the query
     # @param field str
     # @return str
     # @raise ValueError
@@ -199,7 +199,7 @@ class LeGetQuery(LeFilteredQuery):
             return ValueError("No such field '%s' in %s" % (field, self.target_class))
         return field
 
-    ## @brief Prepares the filters (relational and others)
+    ##@brief Prepares the filters (relational and others)
     # @return tuple
     def __prepare_filters(self):
         filters = list()
@@ -234,7 +234,7 @@ class LeGetQuery(LeFilteredQuery):
         datas['target_class'] = self.target_class
         return datas
 
-    ## @brief prepares the "order" parameters
+    ##@brief prepares the "order" parameters
     # @return list
     def __prepare_order(self):
         errors = dict()
@@ -269,7 +269,7 @@ class LeUpdateQuery(LeFilteredQuery):
         # ret = LodelHook.call_hook('leapi_update_post', self.target_object, ret)
         return ret
 
-    ## @brief calls the datasource's update method and the corresponding hooks
+    ##@brief calls the datasource's update method and the corresponding hooks
     # @return bool
     # @TODO change the behavior in case of error in the update process
     def __update(self):
@@ -280,7 +280,7 @@ class LeUpdateQuery(LeFilteredQuery):
         else:
             return False
 
-    ## @brief prepares the query_filters to be used as argument for the datasource's update method
+    ##@brief prepares the query_filters to be used as argument for the datasource's update method
     def __prepare(self):
         datas = dict()
         if LeFilteredQuery.validate_query_filters(self.query_filters):
@@ -304,7 +304,7 @@ class LeDeleteQuery(LeFilteredQuery):
         # ret = LodelHook.call('leapi_delete_post', self.target_object, ret)
         return ret
 
-    ## @brief calls the datasource's delete method
+    ##@brief calls the datasource's delete method
     # @return bool
     # @TODO change the behavior in case of error in the update process
     def __delete(self):

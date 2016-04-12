@@ -8,21 +8,21 @@ from lodel.utils.mlstring import MlString
 from lodel.editorial_model.exceptions import *
 from lodel.editorial_model.components import EmClass, EmField, EmGroup
 
-## @brief Describe an editorial model
+##@brief Describe an editorial model
 class EditorialModel(object):
     
-    ## @brief Create a new editorial model
+    ##@brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
     # @param description MlString|str|dict : the editorial model description
     def __init__(self, name, description = None):
         self.name = MlString(name)
         self.description = MlString(description)
-        ## @brief Stores all groups indexed by id
+        ##@brief Stores all groups indexed by id
         self.__groups = dict()
-        ## @brief Stores all classes indexed by id
+        ##@brief Stores all classes indexed by id
         self.__classes = dict()
     
-    ## @brief EmClass accessor
+    ##@brief EmClass accessor
     # @param uid None | str : give this argument to get a specific EmClass
     # @return if uid is given returns an EmClass else returns an EmClass iterator
     def classes(self, uid = None):
@@ -31,7 +31,7 @@ class EditorialModel(object):
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
 
-    ## @brief EmGroup getter
+    ##@brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator
     def groups(self, uid = None):
@@ -40,7 +40,7 @@ class EditorialModel(object):
         except KeyError:
             raise EditorialModelException("EmGroup not found : '%s'" % uid)
     
-    ## @brief EmField getter
+    ##@brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
     # @return Fals or an EmField instance
     #
@@ -61,7 +61,7 @@ class EditorialModel(object):
             pass
         return False
 
-    ## @brief Add a class to the editorial model
+    ##@brief Add a class to the editorial model
     # @param emclass EmClass : the EmClass instance to add
     # @return emclass
     def add_class(self, emclass):
@@ -72,7 +72,7 @@ class EditorialModel(object):
         self.__classes[emclass.uid] = emclass
         return emclass
 
-    ## @brief Add a group to the editorial model
+    ##@brief Add a group to the editorial model
     # @param emgroup EmGroup : the EmGroup instance to add
     # @return emgroup
     def add_group(self, emgroup):
@@ -83,13 +83,13 @@ class EditorialModel(object):
         self.__groups[emgroup.uid] = emgroup
         return emgroup
 
-    ## @brief Add a new EmClass to the editorial model
+    ##@brief Add a new EmClass to the editorial model
     # @param uid str : EmClass uid
     # @param **kwargs : EmClass constructor options ( see @ref lodel.editorial_model.component.EmClass.__init__() )
     def new_class(self, uid, **kwargs):
         return self.add_class(EmClass(uid, **kwargs))
     
-    ## @brief Add a new EmGroup to the editorial model
+    ##@brief Add a new EmGroup to the editorial model
     # @param uid str : EmGroup uid
     # @param *kwargs : EmGroup constructor keywords arguments (see @ref lodel.editorial_model.component.EmGroup.__init__() )
     def new_group(self, uid, **kwargs):
@@ -103,7 +103,7 @@ class EditorialModel(object):
             translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
     
-    ## @brief Load a model
+    ##@brief Load a model
     # @param translator module : The translator module to use
     # @param **translator_args
     @classmethod
@@ -112,7 +112,7 @@ class EditorialModel(object):
             translator = cls.translator_from_name(translator)
         return translator.load(**translator_kwargs)
 
-    ## @brief Return a translator module given a translator name
+    ##@brief Return a translator module given a translator name
     # @param translator_name str : The translator name
     # @return the translator python module
     # @throw NameError if the translator does not exists
@@ -126,12 +126,12 @@ class EditorialModel(object):
         return mod
         
     
-    ## @brief Private getter for __groups or __classes
+    ##@brief Private getter for __groups or __classes
     # @see classes() groups()
     def __elt_getter(self, elts, uid):
         return list(elts.values()) if uid is None else elts[uid]
     
-    ## @brief Lodel hash
+    ##@brief Lodel hash
     def d_hash(self):
         payload = "%s%s" % (
                             self.name,

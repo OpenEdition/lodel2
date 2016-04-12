@@ -13,22 +13,22 @@ from lodel import logger
 class FieldValidationError(Exception):
     pass
 
-## @brief Base class for all data handlers
+##@brief Base class for all data handlers
 class DataHandler(object):
     
     __HANDLERS_MODULES = ('datas_base', 'datas', 'references')
-    ## @brief Stores the DataHandler childs classes indexed by name
+    ##@brief Stores the DataHandler childs classes indexed by name
     __base_handlers = None
-    ## @brief Stores custom datahandlers classes indexed by name
+    ##@brief Stores custom datahandlers classes indexed by name
     # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
     help_text = 'Generic Field Data Handler'
 
-    ## @brief List fields that will be exposed to the construct_data_method
+    ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
 
-    ## @brief constructor
+    ##@brief constructor
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
     #                         designed globally and immutable
@@ -65,12 +65,12 @@ class DataHandler(object):
     def is_primary_key(self):
         return self.primary_key
 
-    ## @brief checks if a fieldtype is internal
+    ##@brief checks if a fieldtype is internal
     # @return bool
     def is_internal(self):
         return self.internal is not False
 
-    ## @brief calls the data_field defined _check_data_value() method
+    ##@brief calls the data_field defined _check_data_value() method
     # @return tuple (value, error|None)
     def check_data_value(self, value):
         if value is None:
@@ -80,7 +80,7 @@ class DataHandler(object):
             return None, None
         return self._check_data_value(value)
 
-    ## @brief checks if this class can override the given data handler
+    ##@brief checks if this class can override the given data handler
     # @param data_handler DataHandler
     # @return bool
     def can_override(self, data_handler):
@@ -88,7 +88,7 @@ class DataHandler(object):
             return False
         return True
 
-    ## @brief Build field value
+    ##@brief Build field value
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname str : The field name
     # @param datas dict : dict storing fields values (from the component)
@@ -110,7 +110,7 @@ class DataHandler(object):
 
         return RuntimeError("Unable to construct data for field %s", fname)
 
-    ## @brief Check datas consistency
+    ##@brief Check datas consistency
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
@@ -119,7 +119,7 @@ class DataHandler(object):
     def check_data_consistency(self, emcomponent, fname, datas):
         return True
 
-    ## @brief This method is use by plugins to register new data handlers
+    ##@brief This method is use by plugins to register new data handlers
     @classmethod
     def register_new_handler(cls, name, data_handler):
         if not inspect.isclass(data_handler):
@@ -140,7 +140,7 @@ class DataHandler(object):
                         cls.__base_handlers[name.lower()] = obj
         return copy.copy(cls.__base_handlers)
 
-    ## @brief given a field type name, returns the associated python class
+    ##@brief given a field type name, returns the associated python class
     # @param fieldtype_name str : A field type name (not case sensitive)
     # @return DataField child class
     # @todo implements custom handlers fetch
@@ -152,7 +152,7 @@ class DataHandler(object):
             raise NameError("No data handlers named '%s'" % (name,))
         return cls.__base_handlers[name]
  
-    ## @brief Return the module name to import in order to use the datahandler
+    ##@brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name
     # @return a str
     @classmethod
@@ -164,24 +164,24 @@ class DataHandler(object):
                                                     class_name = handler_class.__name__
         )
             
-    ## @brief __hash__ implementation for fieldtypes
+    ##@brief __hash__ implementation for fieldtypes
     def __hash__(self):
         hash_dats = [self.__class__.__module__]
         for kdic in sorted([k for k in self.__dict__.keys() if not k.startswith('_')]):
             hash_dats.append((kdic, getattr(self, kdic)))
         return hash(tuple(hash_dats))
 
-## @brief Base class for datas data handler (by opposition with references)
+##@brief Base class for datas data handler (by opposition with references)
 class DataField(DataHandler):
     pass
 
-## @brief Abstract class for all references
+##@brief Abstract class for all references
 #
 # References are fields that stores a reference to another
 # editorial object
 class Reference(DataHandler):
 
-    ## @brief Instanciation
+    ##@brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param back_reference tuple | None : tuple containing (LeObject child class, fieldname)
     # @param internal bool : if False, the field is not internal
@@ -200,12 +200,12 @@ class Reference(DataHandler):
     def back_reference(self):
         return copy.copy(self.__back_reference)
 
-    ## @brief Set the back reference for this field.
+    ##@brief Set the back reference for this field.
     def _set_back_reference(self, back_reference):
         self.__back_reference = back_reference
         
 
-    ## @brief Check value
+    ##@brief Check value
     # @param value *
     # @return tuple(value, exception)
     # @todo implement the check when we have LeObject to check value
@@ -222,7 +222,7 @@ class Reference(DataHandler):
         return value
 
 
-## @brief This class represent a data_handler for single reference to another object
+##@brief This class represent a data_handler for single reference to another object
 #
 # The fields using this data handlers are like "foreign key" on another object
 class SingleRef(Reference):
@@ -238,7 +238,7 @@ class SingleRef(Reference):
         return val, expt
 
 
-## @brief This class represent a data_handler for multiple references to another object
+##@brief This class represent a data_handler for multiple references to another object
 #
 # The fields using this data handlers are like SingleRef but can store multiple references in one field
 # @note SQL implementation could be tricky

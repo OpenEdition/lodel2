@@ -1,9 +1,13 @@
 #-*- coding: utf-8 -*-
 
-## @brief Error class for settings errors
+## @package lodel.settings.utils Lodel 2 settings utility
+#
+# For the moment defines exception classes
+
+##@brief Error class for settings errors
 class SettingsError(Exception):
     
-    ## @brief Instanciate a new SettingsError
+    ##@brief Instanciate a new SettingsError
     # @param msg str : Error message
     # @param key_id str : The key concerned by the error
     def __init__(self, msg = "Unknown error", key_id = None, filename = None):
@@ -23,10 +27,10 @@ class SettingsError(Exception):
         res += ": %s" % (self.__msg)
         return res
 
-## @brief Designed to handles mutliple SettingsError
+##@brief Designed to handles mutliple SettingsError
 class SettingsErrors(Exception):
     
-    ## @brief Instanciate an SettingsErrors
+    ##@brief Instanciate an SettingsErrors
     # @param exceptions list : list of SettingsError instance
     def __init__(self, exceptions):
         for expt in exceptions: 

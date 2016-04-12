@@ -2,7 +2,7 @@
 
 from lodel.plugin import LodelHook
 
-## @brief Hook's callback example
+##@brief Hook's callback example
 @LodelHook('leapi_get_pre')
 @LodelHook('leapi_get_post')
 @LodelHook('leapi_update_pre')

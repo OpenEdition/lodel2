@@ -4,16 +4,16 @@ import os
 import copy
 from importlib.machinery import SourceFileLoader
 
-## @brief Class designed to handle a hook's callback with a priority
+##@brief Class designed to handle a hook's callback with a priority
 class DecoratedWrapper(object):
-    ## @brief Constructor
+    ##@brief Constructor
     # @param hook function : the function to wrap
     # @param priority int : the callbacl priority
     def __init__(self, hook, priority):
         self._priority = priority
         self._hook = hook
     
-    ## @brief Call the callback
+    ##@brief Call the callback
     # @param hook_name str : The name of the called hook
     # @param caller * : The caller (depends on the hook)
     # @param payload * : Datas that depends on the hook
@@ -21,7 +21,7 @@ class DecoratedWrapper(object):
     def __call__(self, hook_name, caller, payload):
         return self._hook(hook_name, caller, payload)
 
-## @brief Decorator designed to register hook's callbacks
+##@brief Decorator designed to register hook's callbacks
 #
 # @note Decorated functions are expected to take 3 arguments :
 #  - hook_name : the called hook name
@@ -29,17 +29,17 @@ class DecoratedWrapper(object):
 #  - payload : datas depending on the hook
 class LodelHook(object):
     
-    ## @brief Stores all hooks (DecoratedWrapper instances)
+    ##@brief Stores all hooks (DecoratedWrapper instances)
     _hooks = dict()
     
-    ## @brief Decorator constructor
+    ##@brief Decorator constructor
     # @param hook_name str : the name of the hook to register to
     # @param priority int : the hook priority
     def __init__(self, hook_name, priority = None):
         self._hook_name = hook_name
         self._priority = 0xFFFF if priority is None else priority
     
-    ## @brief called just after __init__
+    ##@brief called just after __init__
     # @param hook function : the decorated function
     # @return the hook argument
     def __call__(self, hook):
@@ -50,7 +50,7 @@ class LodelHook(object):
         self._hooks[self._hook_name] = sorted(self._hooks[self._hook_name], key = lambda h: h._priority)
         return hook
 
-    ## @brief Call hooks
+    ##@brief Call hooks
     # @param hook_name str : the hook's name
     # @param caller * : the hook caller (depends on the hook)
     # @param payload * : datas for the hook
@@ -63,7 +63,7 @@ class LodelHook(object):
                 payload = hook(hook_name, caller, payload)
         return payload
     
-    ## @brief Fetch registered hooks
+    ##@brief Fetch registered hooks
     # @param names list | None : optionnal filter on name
     # @param cls
     # @return a list of functions
@@ -76,7 +76,7 @@ class LodelHook(object):
             res = copy.copy(cls._hooks)
         return { name: [(hook._hook, hook._priority) for hook in hooks] for name, hooks in res.items() }
     
-    ## @brief Unregister all hooks
+    ##@brief Unregister all hooks
     # @param cls
     # @warning REALLY NOT a good idea !
     # @note implemented for testing purpose
