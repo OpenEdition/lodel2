@@ -4,6 +4,7 @@ import sys
 import os
 import configparser
 import copy
+import warnings
 from collections import namedtuple
 
 from lodel.plugin.plugins import Plugins, PluginError
@@ -89,7 +90,10 @@ class Settings(object):
     @classmethod
     def bootstrap(cls, conf_file = None, conf_dir = None):
         if cls.instance is None:
-            cls.instance = cls(conf_file, conf_dir)
+            if conf_file is None and conf_dir is None:
+                warnings.warn("Lodel instance without settings !!!")
+            else:
+                cls.instance = cls(conf_file, conf_dir)
         return cls.instance
 
     ## @brief Configuration keys accessor
