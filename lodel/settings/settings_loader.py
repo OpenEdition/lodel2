@@ -37,7 +37,7 @@ class SettingsLoader(object):
                             conf[sect][param] = config[sect][param]
                             if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + param)
                         else:
-                            raise SettingsError("Key attribute already define : %s" % sect + ' '+param)                        
+                            raise SettingsError("Key attribute already define : %s " % sect + ' dans '+f_ini)                        
                 else:
                     opts={}
                     for key in config[sect]:
@@ -45,6 +45,7 @@ class SettingsLoader(object):
                         if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + key)
                     conf.update({sect: opts})
         os.close(dir_conf)
+        print(conf)
         return conf
         
         
@@ -76,11 +77,21 @@ class SettingsLoader(object):
     # @return the section as dict()
     def getsection(self,section_prefix,default_section=None):
         conf=copy.copy(self.__conf)
+       
+        sections=[]
         if section_prefix in conf:
-            return conf[section_prefix]
-        elif default_section in conf: 
-            return conf[default_section]
-        return [];
+            sections.append(section_prefix)
+        for sect_names in conf:
+            if sect_names in sections:
+                pass
+            elif sect_names.startswith(section_prefix + '.'):
+                sections.append(sect_names)
+        if sections == [] and default_section: 
+             sections.append(section_prefix + '.' + default_section)
+        elif sections == []:
+            raise NameError("Not existing settings section : %s" % section__prefix)
+            
+        return sections;
     
     ## @brief Returns the sections which have not been configured
     # @return list of missing options
