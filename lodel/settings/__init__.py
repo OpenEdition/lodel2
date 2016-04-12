@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
 
-#from .settings import Settings as SettingsHandler
-
-#Settings = SettingsHandler(conf_file = './settings.ini')
+from lodel.settings.settings import Settings as SettingsHandler
+settings = SettingsHandler.bootstrap()
+Settings = settings.confs

@@ -3,6 +3,7 @@
 import unittest
 from unittest import mock
 
+import tests.loader_utils
 from lodel.settings.settings import Settings
 
 class SettingsTestCase(unittest.TestCase):

@@ -2,6 +2,7 @@
 
 import unittest
 
+import tests.loader_utils
 from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import EmComponent, EmClass, EmField, EmGroup
 from lodel.utils.mlstring import MlString

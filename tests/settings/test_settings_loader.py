@@ -1,13 +1,15 @@
 #-*- coding: utf-8 -*-
 
 import unittest
+
+import tests.loader_utils
 from lodel.settings.settings_loader import SettingsLoader
 
 class SettingsLoaderTestCase(unittest.TestCase):
 
     def test_merge_getsection(self):
         """Tests merge and getSection functions """
-        settings = SettingsLoader('/home/helene/lodel2/tests/settings/conf.d')
+        settings = SettingsLoader('tests/settings/conf.d')
         a = settings.getsection('A')
         self.assertEqual(a,dict({"a":"a1","b":"b1,b2,b3","c":"toto","fhui":"njl"}))
         b = settings.getsection('B')

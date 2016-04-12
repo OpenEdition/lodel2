@@ -4,6 +4,7 @@ import unittest
 import tempfile
 import os
 
+import tests.loader_utils
 from lodel.editorial_model.translator import picklefile
 from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import *

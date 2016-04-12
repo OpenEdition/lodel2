@@ -31,6 +31,7 @@ from lodel.settings.settings_loader import SettingsLoader
 # - value validation/cast (see @ref Lodel.settings.validator.ConfValidator )
 # 
 
+## @brief A default python system lib path
 PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 
                                                                         major = sys.version_info.major,
@@ -73,7 +74,9 @@ class Settings(object):
             'plugins_path': (   PYTHON_SYS_LIB_PATH+'lodel2/plugins/',
                                 SettingValidator('directory_list')),
     }
+    instance = None
     
+    ## @brief Should be called only by the boostrap classmethod
     def __init__(self, conf_file = '/etc/lodel2/lodel2.conf', conf_dir = 'conf.d'):
         self.__confs = dict()
         self.__conf_dir = conf_dir
@@ -82,6 +85,13 @@ class Settings(object):
         #   and self.__confs['lodel2']['lib_path'] set
         self.__bootstrap()
     
+    ## @brief Stores as class attribute a Settings instance
+    @classmethod
+    def bootstrap(cls, conf_file = None, conf_dir = None):
+        if cls.instance is None:
+            cls.instance = cls(conf_file, conf_dir)
+        return cls.instance
+
     ## @brief Configuration keys accessor
     # @return All confs organised into named tuples
     @property
@@ -140,12 +150,9 @@ class Settings(object):
         # Construct final specs dict replacing variable sections
         # by the actual existing sections
         variable_sections = [ section for section in specs if section.endswith('.*') ]
-        print("DEBUG VARIABLE SECTIONS : ")
         for vsec in variable_sections:
             preffix = vsec[:-2]
-            print("PREFFIX =  ", preffix)
             for section in loader.getsection(preffix, 'default'): #WARNING : hardcoded default section
-                print("SECTIONs = ", section)
                 specs[section] = copy.copy(specs[vsec])
             del(specs[vsec])
         # Fetching valuds for sections

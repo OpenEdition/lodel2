@@ -3,6 +3,7 @@
 import unittest
 import random
 
+import tests.loader_utils
 from lodel.editorial_model.model import EditorialModel
 from lodel.leapi import lefactory
 

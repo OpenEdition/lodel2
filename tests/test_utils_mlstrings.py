@@ -3,6 +3,8 @@
 import unittest
 import copy
 
+
+import tests.loader_utils
 from lodel.utils.mlstring import MlString
 
 class MlStringTestCase(unittest.TestCase):
