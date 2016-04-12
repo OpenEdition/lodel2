@@ -13,7 +13,7 @@ class SettingsLoader(object):
     # @param conf_path str : conf.d path
     def __init__(self,conf_path):
         self.__conf_path=conf_path
-        self.__conf_sv=set()
+        self.__conf_sv=dict()
         self.__conf=self.__merge()
     
     ##@brief Lists and merges files in settings_loader.conf_path
@@ -35,17 +35,17 @@ class SettingsLoader(object):
                     for param in config[sect]:
                         if param not in conf[sect]: 
                             conf[sect][param] = config[sect][param]
-                            if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + param)
+                            if sect != 'DEFAULT': self.__conf_sv[sect + ':' + param]=f_ini
                         else:
-                            raise SettingsError("Key attribute already define : %s " % sect + ' dans '+f_ini)                        
+                            print(conf)
+                            raise SettingsError("Key attribute already defined : %s " % sect + '.' + param + ' dans ' + f_ini + ' et ' + self.__conf_sv[sect + ':' + param])                        
                 else:
                     opts={}
                     for key in config[sect]:
                         opts[key] = config[sect].get(key)
-                        if sect != 'DEFAULT': self.__conf_sv.add(sect + ':' + key)
+                        if sect != 'DEFAULT': self.__conf_sv[sect + ':' + key]=f_ini
                     conf.update({sect: opts})
         os.close(dir_conf)
-        print(conf)
         return conf
         
         
@@ -63,7 +63,7 @@ class SettingsLoader(object):
         if keyname in sec:
             optionstr=sec[keyname]
             option=validator(sec[keyname])
-            self.__conf_sv.remove(section + ':' + keyname)
+            del self.__conf_sv[section + ':' + keyname]
             return option
         elif mandatory:
              raise SettingsError("Default value mandatory for option %s" % keyname)
