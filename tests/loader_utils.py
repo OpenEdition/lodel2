@@ -5,4 +5,4 @@
 #
 
 from lodel.settings.settings import Settings
-Settings.bootstrap(conf_file = 'settings.ini', conf_dir = 'globconf.d')
+Settings.bootstrap(conf_file = 'settings_local.ini', conf_dir = 'globconf.d')
