@@ -31,9 +31,11 @@ class SettingsLoaderTestCase(unittest.TestCase):
         f=settings.getoption('C','cb',maFonction)
         f=settings.getoption('C','ca',maFonction)
         f=settings.getoption('C','cc',maFonction)
-       
+        f=settings.getoption('C','a',maFonction)
         g=settings.getremains()
         self.assertEqual(g,[])
+        with self.assertRaises(SettingsError):
+            loader = SettingsLoader('tests/settings/conf_raise.d')
     
     def test_merge(self):
         """ Test merge of multiple configuration files """
