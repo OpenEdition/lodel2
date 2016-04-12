@@ -15,21 +15,22 @@ class SettingsLoaderTestCase(unittest.TestCase):
     def test_merge_getsection(self):
         """Tests merge and getSection functions """
         settings = SettingsLoader('tests/settings/conf.d')
-
-        e=settings.getoption('A','a',dummy_validator)
+        def maFonction(a):
+            return a
+        e=settings.getoption('A','a',maFonction)
         self.assertEqual(e,'a1')
-        f=settings.getoption('B','bb',dummy_validator)
+        f=settings.getoption('B','bb',maFonction)
         self.assertEqual(f,"bj,kl,mn")
         g=settings.getremains()
         self.assertIsNotNone(g)
-        e=settings.getoption('A','b',dummy_validator)
-        e=settings.getoption('A','c',dummy_validator)
-        e=settings.getoption('A','fhui',dummy_validator)
-        f=settings.getoption('B','ab',dummy_validator)
-        f=settings.getoption('B','cb',dummy_validator)
-        f=settings.getoption('C','cb',dummy_validator)
-        f=settings.getoption('C','ca',dummy_validator)
-        f=settings.getoption('C','cc',dummy_validator)
+        e=settings.getoption('A','b',maFonction)
+        e=settings.getoption('A','c',maFonction)
+        e=settings.getoption('A','fhui',maFonction)
+        f=settings.getoption('B','ab',maFonction)
+        f=settings.getoption('B','cb',maFonction)
+        f=settings.getoption('C','cb',maFonction)
+        f=settings.getoption('C','ca',maFonction)
+        f=settings.getoption('C','cc',maFonction)
        
         g=settings.getremains()
         self.assertEqual(g,[])
@@ -66,7 +67,7 @@ class SettingsLoaderTestCase(unittest.TestCase):
         """ Testing variable section default value handling """
         loader = SettingsLoader('tests/settings/settings_examples/var_sections.conf.d')
         sections = loader.getsection('lodel2.notexisting', 'foobar')
-        self.assertEqual(set(sections), set(('lodel2.foobar',)))
+        self.assertEqual(set(sections), set(('lodel2.notexisting.foobar',)))
         
     def test_variable_sections_fails(self):
         """ Testing behavior when no default section given for a non existing variable section """
