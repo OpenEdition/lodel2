@@ -16,12 +16,15 @@ logger = logging.getLogger()
 
 # Setting options from Lodel.settings.Settings.logging
 def __init_from_settings():
-    # Disabled, because the custom format raises error (enable to give the _ preffixed arguments to logger resulting into a KeyError exception )
+    # capture warning disabled, because the custom format raises error (unable
+    # to give the _ preffixed arguments to logger resulting into a KeyError
+    # exception )
     #logging.captureWarnings(True) # Log warnings
 
     logger.setLevel(logging.DEBUG)
-    for name, logging_opt in Settings.logging.items():
-        add_handler(name, logging_opt)
+    for name in Settings.logging._fields:
+        add_handler(name, getattr(Settings.logging, name))
+    
 
 ##@brief Add an handler, identified by a name, to a given logger 
 #
@@ -38,10 +41,11 @@ def add_handler(name, logging_opt):
     logger = logging.getLogger()
     if name in handlers:
         raise KeyError("A handler named '%s' allready exists")
-
-    if 'filename' in logging_opt:
-        maxBytes = (1024 * 10) if 'maxBytes' not in logging_opt else logging_opt['maxBytes']
-        backupCount = 10 if 'backupCount' not in logging_opt else logging_opt['backupCount']
+    
+    logging_opt = logging_opt._asdict()
+    if 'filename' in logging_opt and logging_opt['filename'] is not None:
+        maxBytes = (1024 * 10) if 'maxbytes' not in logging_opt else logging_opt['maxbytes']
+        backupCount = 10 if 'backupcount' not in logging_opt else logging_opt['backupcount']
 
         handler = logging.handlers.RotatingFileHandler(
                                         logging_opt['filename'],
@@ -94,7 +98,7 @@ def log(lvl, msg, *args, **kwargs):
     extra = {
         '_pathname': os.path.relpath(
                                         caller[0],
-                                        start=Settings.lodel2_lib_path
+                                        start=Settings.lib_path
         ), # os.path.relpath add another small overhead
         '_lineno': caller[1],
         '_funcName': caller[2],

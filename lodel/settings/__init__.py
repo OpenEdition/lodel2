@@ -34,11 +34,14 @@
 # </pre>
 #
 
+
+import warnings
 from lodel.settings.settings import Settings as SettingsHandler
 
-##@brief Bootstraped instance
-settings = SettingsHandler.bootstrap()
-if settings is not None:
-    ##@brief Exposed variable that represents configurations values in a
-    # namedtuple tree
-    Settings = settings.confs
+settings = SettingsHandler.instance
+
+if settings is None:
+    Settings = None
+else:
+    Settings = settings.confs.lodel2
+

@@ -5,6 +5,7 @@ import os
 import configparser
 import copy
 import warnings
+import types # for dynamic bindings
 from collections import namedtuple
 
 from lodel.plugin.plugins import Plugins, PluginError
@@ -21,6 +22,7 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 
                                                 major = sys.version_info.major,
                                                 minor = sys.version_info.minor)
+
 ##@brief Handles configuration load etc.
 #
 # To see howto bootstrap Settings and use it in lodel instance see 
@@ -71,7 +73,7 @@ class Settings(object):
     ##@brief Should be called only by the boostrap classmethod
     # @param conf_file str : Path to the global lodel2 configuration file
     # @param conf_dir str : Path to the conf directory
-    def __init__(self, conf_file = '/etc/lodel2/lodel2.conf', conf_dir = 'conf.d'):
+    def __init__(self, conf_file, conf_dir):
         self.__confs = dict()
         self.__conf_dir = conf_dir
         self.__load_bootstrap_conf(conf_file)
@@ -98,6 +100,14 @@ class Settings(object):
     ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
         lodel2_specs = LODEL2_CONF_SPECS
+        for section in lodel2_specs:
+            if section.lower() != section:
+                raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
+            for kname in lodel2_specs[section]:
+                if kname.lower() != kname:
+                    raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
+                
+                
         plugins_opt_specs = lodel2_specs['lodel2']['plugins']
 
         # Init the settings loader
@@ -129,12 +139,16 @@ class Settings(object):
         res = copy.copy(specs.pop())
         for spec in specs:
             for section in spec:
+                if section.lower() != section:
+                    raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
                 if section not in res:
                     res[section] = dict()
                 for kname in spec[section]:
+                    if kname.lower() != kname:
+                        raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
                     if kname in res[section]:
                         raise SettingsError("Duplicated key '%s' in section '%s'" % (kname, section))
-                    res[section][kname] = copy.copy(spec[section][kname])
+                    res[section.lower()][kname] = copy.copy(spec[section][kname])
         return res
     
     ##@brief Populate the Settings instance with options values fecthed with the loader from merged specs
@@ -152,11 +166,11 @@ class Settings(object):
             for section in loader.getsection(preffix, 'default'): #WARNING : hardcoded default section
                 specs[section] = copy.copy(specs[vsec])
             del(specs[vsec])
-        # Fetching valuds for sections
+        # Fetching values for sections
         for section in specs:
             for kname in specs[section]:
-                validator = specs[section][kname][0]
-                default = specs[section][kname][1]
+                validator = specs[section][kname][1]
+                default = specs[section][kname][0]
                 if section not in self.__confs:
                     self.__confs[section] = dict()
                 self.__confs[section][kname] = loader.getoption(section, kname, validator, default)
@@ -191,17 +205,17 @@ class Settings(object):
                     raise SettingsError("Duplicated key for '%s.%s'" % (section_name, kname))
                 cur[kname] = kval
 
-        path = [ ('root', self.__confs) ]
-        visited = list()
+        path = [ ('root', section_tree) ]
+        visited = set()
         
         curname = 'root'
-        nodename = 'Root'
-        cur = self.__confs
+        nodename = 'Lodel2Settings'
+        cur = section_tree
         while True:
-            visited.append(cur)
+            visited.add(nodename)
             left = [    (kname, cur[kname])
                         for kname in cur
-                        if cur[kname] not in visited and isinstance(cur[kname], dict)
+                        if nodename+'.'+kname.title() not in visited and isinstance(cur[kname], dict)
                     ]
             if len(left) == 0:
                 name, leaf = path.pop()
@@ -213,6 +227,7 @@ class Settings(object):
                 else:
                     path[-1][1][name] = self.__tree2namedtuple(leaf,typename)
                 nodename = '.'.join(nodename.split('.')[:-1])
+                cur = path[-1][1]
             else:
                 curname, cur = left[0]
                 path.append( (curname, cur) )

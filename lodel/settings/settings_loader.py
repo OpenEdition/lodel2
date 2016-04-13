@@ -37,7 +37,6 @@ class SettingsLoader(object):
                             conf[sect][param] = config[sect][param]
                             if sect != 'DEFAULT': self.__conf_sv[sect + ':' + param]=f_ini
                         else:
-                            print(conf)
                             raise SettingsError("Key attribute already defined : %s " % sect + '.' + param + ' dans ' + f_ini + ' et ' + self.__conf_sv[sect + ':' + param])                        
                 else:
                     opts={}

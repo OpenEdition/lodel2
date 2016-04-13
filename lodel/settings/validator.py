@@ -12,6 +12,7 @@ import copy
 # @note to get a list of registered default validators just run
 # <pre>$ python scripts/settings_validator.py</pre>
 
+##@brief Exception class that should be raised when a validation fails
 class SettingsValidationError(Exception):
     pass
 
@@ -122,12 +123,16 @@ def file_err_output(value):
     if not isinstance(value, str):
         raise SettingsValidationError("A string was expected but got '%s' " % value)
     if value == '-':
-        return sys.stderr
+        return None
     return value
 
 ##@brief Boolean value validator callback
 def boolean_val(value):
-    if not (value is True) and not (value is False):
+    if value.strip().lower() == 'true' or value.strip() == '1':
+        value = True
+    elif value.strip().lower() == 'false' or value.strip() == '0':
+        value = False
+    else:
         raise SettingsValidationError("A boolean was expected but got '%s' " % value)
     return bool(value)
 
@@ -141,6 +146,7 @@ def loglevel_val(value):
     valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
         raise SettingsValidationError("The value '%s' is not a valid loglevel")
+    return value.upper()
 
 #
 #   Default validators registration
@@ -212,9 +218,9 @@ LODEL2_CONF_SPECS = {
                         SettingValidator('bool')),
         'filename': (   None,
                         SettingValidator('errfile', none_is_valid = True)),
-        'backupCount': (    None,
+        'backupcount': (    None,
                             SettingValidator('int', none_is_valid = True)),
-        'maxBytes': (   None,
+        'maxbytes': (   None,
                         SettingValidator('int', none_is_valid = True)),
     }
 }

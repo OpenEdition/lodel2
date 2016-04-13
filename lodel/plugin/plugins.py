@@ -45,7 +45,6 @@ class Plugins(object):
         path = None
         for cur_path in cls._plugin_directories:
             plugin_path = os.path.join(cur_path, plugin_name)+'/'
-            print(plugin_path)
             if os.path.isdir(plugin_path):
                 return plugin_path
         raise NameError("No plugin named '%s'" % plugin_name)
