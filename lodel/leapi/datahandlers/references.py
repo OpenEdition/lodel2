@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef, FieldValidationError
 
-class Link(SingleRef): pass
+
+class Link(SingleRef):
+    pass
+
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python list
 class List(MultipleRef):

@@ -273,10 +273,107 @@ class LeObject(object):
     # at the end of the dyncode parse
     # @warning This method is deleted once the dynamic code loaded
     # @param field_list list : list of EmField instance
+    # @param cls
     @classmethod
     def _set__fields(cls, field_list):
         cls._fields = field_list
         
+    ## @brief Check that datas are valid for this type
+    # @param datas dict : key == field name value are field values
+    # @param complete bool : if True expect that datas provide values for all non internal fields
+    # @param allow_internal bool : if True don't raise an error if a field is internal
+    # @param cls
+    # @return Checked datas
+    # @throw LeApiDataCheckError if errors reported during check
+    @classmethod
+    def check_datas_value(cls, datas, complete = False, allow_internal = True):
+        err_l = dict() #Error storing
+        correct = set() #valid fields name
+        mandatory = set() #mandatory fields name
+        for fname, datahandler in cls._fields.items():
+            if allow_internal or not datahandler.is_internal():
+                correct.add(fname)
+                if complete and not hasattr(datahandler, 'default'):
+                    mandatory.add(fname)
+        provided = set(datas.keys())
+        # searching for unknow fields
+        for u_f in provided - correct:
+            #Here we can check if the field is invalid or rejected because
+            # it is internel
+            err_l[u_f] = AttributeError("Unknown or unauthorized field '%s'" % u_f)
+        # searching for missing mandatory fieldsa
+        for missing in mandatory - provided:
+            err_l[miss_field] = AttributeError("The data for field '%s' is missing" % missing)
+        #Checks datas
+        checked_datas = dict()
+        for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
+            dh = cls._fields[name]
+            res = dh.check_data_value(value)
+            checked_datas[name], err = res
+            if err:
+                err_l[name] = err
 
+        if len(err_l) > 0:
+            raise LeApiDataCheckError("Error while checking datas", err_l)
+        return checked_datas
 
-    
+    ##@brief Check and prepare datas
+    # 
+    # @warning when complete = False we are not able to make construct_datas() and _check_data_consistency()
+    # 
+    # @param datas dict : {fieldname : fieldvalue, ...}
+    # @param complete bool : If True you MUST give all the datas
+    # @param allow_internal : Wether or not interal fields are expected in datas
+    # @param cls
+    # @return Datas ready for use
+    # @todo: complete is very unsafe, find a way to get rid of it
+    @classmethod
+    def prepare_datas(cls, datas, complete=False, allow_internal=True):
+        if not complete:
+            warnings.warn("\nActual implementation can make datas construction and consitency unsafe when datas are not complete\n")
+        ret_datas = cls.check_datas_value(datas, complete, allow_internal)
+        if isinstance(ret_datas, Exception):
+            raise ret_datas
+
+        if complete:
+            ret_datas = cls._construct_datas(ret_datas)
+            cls._check_datas_consistency(ret_datas)
+        return ret_datas
+
+    ## @brief Construct datas values
+    #
+    # @param cls
+    # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
+    # @return A new dict of datas
+    # @todo IMPLEMENTATION
+    @classmethod
+    def _construct_datas(cls, datas):
+        """
+        constructor = DatasConstructor(cls, datas, cls.fieldtypes())
+        ret = {
+                fname:constructor[fname]
+                for fname, ftype in cls.fieldtypes().items()
+                if not ftype.is_internal() or ftype.internal != 'autosql'
+        }
+        return ret
+        """
+        pass
+
+    ## @brief Check datas consistency
+    # 
+    # @warning assert that datas is complete
+    # @param cls
+    # @param datas dict : Datas that have been returned by LeCrud._construct_datas() method
+    # @throw LeApiDataCheckError if fails
+    @classmethod
+    def _check_datas_consistency(cls, datas):
+        err_l = []
+        err_l = dict()
+        for fname, dh in cls._fields.items():
+            ret = dh.check_data_consistency(cls, fname, datas)
+            if isinstance(ret, Exception):
+                err_l[fname] = ret
+
+        if len(err_l) > 0:
+            raise LeApiDataCheckError("Datas consistency checks fails", err_l)
+

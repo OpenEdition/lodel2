@@ -10,6 +10,7 @@ import inspect
 
 from lodel import logger
 
+
 class FieldValidationError(Exception):
     pass
 
