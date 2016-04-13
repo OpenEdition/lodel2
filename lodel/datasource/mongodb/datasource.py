@@ -5,7 +5,7 @@ from pymongo.errors import BulkWriteError
 import urllib
 
 import lodel.datasource.mongodb.utils as utils
-from lodel.settings.settings import Settings
+
 
 class MongoDbDataSourceError(Exception):
     pass
