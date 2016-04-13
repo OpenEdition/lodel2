@@ -4,6 +4,7 @@ import sys
 import os, os.path
 
 sys.path.append(os.path.dirname(os.getcwd()+'/..'))
+import loader
 
 def generate_dyncode(model_file, translator):
     from lodel.editorial_model.model import EditorialModel

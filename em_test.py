@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import loader
 from lodel.editorial_model.components import *
 from lodel.editorial_model.exceptions import *
 from lodel.editorial_model.model import EditorialModel
@@ -170,7 +171,7 @@ collection.new_field(   'publications',
                         back_reference = ('publication', 'collection'))
 
 # Classe publication
-pulication = em.new_class(  'publication',
+publication = em.new_class(  'publication',
                             display_name = 'Publication',
                             group = editorial_group,
                             abstract = False,
@@ -200,7 +201,7 @@ subsection = em.new_class(  'subsection',
 section.new_field(  'childs',
                     display_name = 'Next section',
                     group = editorial_group,
-                    data_hander = 'hierarch',
+                    data_handler = 'hierarch',
                     allowed_class = [subsection],
                     back_reference = ('subsection', 'parent'))
 
