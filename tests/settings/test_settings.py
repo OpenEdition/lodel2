@@ -10,5 +10,4 @@ class SettingsTestCase(unittest.TestCase):
     
     def test_init(self):
         settings = Settings('tests/settings/settings_tests.ini', 'tests/settings/settings_tests_conf.d')
-        print(settings.confs)
         pass
