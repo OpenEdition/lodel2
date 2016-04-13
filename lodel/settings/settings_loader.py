@@ -28,8 +28,10 @@ class SettingsLoader(object):
         l_dir = glob.glob(self.__conf_path+'/*.ini')  
 
         for f_ini in l_dir:  
-            config = configparser.ConfigParser(default_section = 'lodel2')
+            #To avoid the DEFAULT section whose values are found in all sections, we have to give it an unsual name
+            config = configparser.ConfigParser(default_section = 'lodel2_default_passaway_tip',interpolation=None)
             config.read(f_ini)
+
             for sect in config:
                 if sect in conf:
                     for param in config[sect]:
@@ -37,13 +39,12 @@ class SettingsLoader(object):
                             conf[sect][param] = config[sect][param]
                             if sect != 'DEFAULT': self.__conf_sv[sect + ':' + param]=f_ini
                         else:
-                            print(conf)
                             raise SettingsError("Key attribute already defined : %s " % sect + '.' + param + ' dans ' + f_ini + ' et ' + self.__conf_sv[sect + ':' + param])                        
                 else:
                     opts={}
                     for key in config[sect]:
                         opts[key] = config[sect].get(key)
-                        if sect != 'DEFAULT': self.__conf_sv[sect + ':' + key]=f_ini
+                        if sect != 'lodel2_default_passaway_tip': self.__conf_sv[sect + ':' + key]=f_ini
                     conf.update({sect: opts})
         os.close(dir_conf)
         return conf

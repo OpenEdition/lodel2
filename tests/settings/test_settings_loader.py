@@ -8,34 +8,36 @@ from lodel.settings.settings_loader import SettingsLoader
 #A dummy validator that only returns the value
 def dummy_validator(value): return value
 #A dummy validator that always fails
-def dummy_validator_fails(value):  raise ValueError("Fake validaion error") 
+def dummy_validator_fails(value):  raise ValueError("Fake validation error") 
 
 class SettingsLoaderTestCase(unittest.TestCase):
 
     def test_merge_getsection(self):
         """Tests merge and getSection functions """
-        settings = SettingsLoader('tests/settings/conf.d')
+        settings = SettingsLoader('tests/settings/settings_examples/conf.d')
         def maFonction(a):
             return a
-        e=settings.getoption('A','a',maFonction)
+        e=settings.getoption('lodel2.A','a',maFonction)
         self.assertEqual(e,'a1')
-        f=settings.getoption('B','bb',maFonction)
+        f=settings.getoption('lodel2.B','bb',maFonction)
         self.assertEqual(f,"bj,kl,mn")
         g=settings.getremains()
         self.assertIsNotNone(g)
-        e=settings.getoption('A','b',maFonction)
-        e=settings.getoption('A','c',maFonction)
-        e=settings.getoption('A','fhui',maFonction)
-        f=settings.getoption('B','ab',maFonction)
-        f=settings.getoption('B','cb',maFonction)
-        f=settings.getoption('C','cb',maFonction)
-        f=settings.getoption('C','ca',maFonction)
-        f=settings.getoption('C','cc',maFonction)
-        f=settings.getoption('C','a',maFonction)
+        e=settings.getoption('lodel2.A','b',maFonction)
+        e=settings.getoption('lodel2.A','c',maFonction)
+        e=settings.getoption('lodel2.A','fhui',maFonction)
+        f=settings.getoption('lodel2.B','ab',maFonction)
+        f=settings.getoption('lodel2.B','cb',maFonction)
+        f=settings.getoption('lodel2.C','cb',maFonction)
+        f=settings.getoption('lodel2.C','ca',maFonction)
+        f=settings.getoption('lodel2.C','cc',maFonction)
+        f=settings.getoption('lodel2.C','a',maFonction)
+        f=settings.getoption('lodel2.A.e','a',maFonction)
+        f=settings.getoption('lodel2.A.e','titi',maFonction)
         g=settings.getremains()
         self.assertEqual(g,[])
         with self.assertRaises(SettingsError):
-            loader = SettingsLoader('tests/settings/conf_raise.d')
+            loader = SettingsLoader('tests/settings/settings_examples/conf_raise.d')
     
     def test_merge(self):
         """ Test merge of multiple configuration files """
