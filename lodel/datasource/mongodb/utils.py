@@ -84,6 +84,7 @@ def convert_filter(filter):
 ## @brief Returns a list of sorting options
 # @param query_filters_order list
 # @return list
+# @todo To be implemented
 def parse_query_order(query_filters_order):
     ordering = list()
     return ordering
