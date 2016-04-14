@@ -56,39 +56,67 @@ class MongoDbDataSource(object):
         return (connection_args['login'], urllib.quote_plus(connection_args['password']), connection_args['host'],
                 connection_args['port'], connection_args['dbname'])
 
+
+    ## @brief returns a selection of documents from the datasource
+    # @param target_cls Emclass
+    # @param field_list list
     def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0,
                instanciate=True):
-        pass
+        collection_name = utils.object_collection_name(target_cls.__class__)
+        collection = self.database[collection_name]
+        query_filters = utils.parse_query_filters(filters)
+        query_result_ordering = utils.parse_query_order(order) if order is not None else None
+        results_field_list = None if len(field_list) == 0 else field_list  # TODO On peut peut-être utiliser None dans les arguments au lieu d'une liste vide
+        limit = limit if limit is not None else 0
+        cursor = collection.find(
+            filter=query_filters,
+            projection=results_field_list,
+            skip=offset,
+            limit=limit,
+            sort=query_result_ordering
+        )
+        results = list()
+        for document in cursor:
+            results.append(document)
 
+        return results
+
+    ## @brief Deletes one record defined by its uid
+    # @param target_cls Emclass : class of the record to delete
+    # @param uid dict|list : a dictionary of fields and values composing the unique identifier of the record or a list of several dictionaries
+    # @return int : number of deleted records
+    # @TODO check the content of the result.raw_result property depending on the informations to return
+    # @TODO Implement the error management
     def delete(self, target_cls, uid):
-        pass
+        if isinstance(uid, dict):
+            uid = [uid]
+        collection_name = utils.object_collection_name(target_cls.__class__)
+        collection = self.database[collection_name]
+        result = collection.delete_many(uid)
+        return result.deleted_count
 
     def update(self, target_cls, uid, **datas):
+
         pass
 
     ## @brief Inserts a record in a given collection
     # @param target_cls Emclass : class of the object to insert
     # @param datas dict : datas to insert
-    # @return ObjectId : the uid of the inserted record
+    # @return bool
+    # @TODO Implement the error management
     def insert(self, target_cls, **datas):
         collection_name = utils.object_collection_name(target_cls.__class__)
         collection = self.database[collection_name]
         result = collection.insert_one(datas)
-        return result.inserted_id
+        return len(result.inserted_id)
 
     ## @brief Inserts a list of records in a given collection
     # @param target_cls Emclass : class of the objects inserted
     # @param datas_list
-    # @return int : Number of inserted records in the collection
+    # @return list : list of the inserted records' ids
+    # @TODO Implement the error management
     def insert_multi(self, target_cls, datas_list):
         collection_name = utils.object_collection_name(target_cls.__class__)
         collection = self.database[collection_name]
-        bulk = collection.initialize_ordered_bulk_op()
-        for datas_list_item in datas_list:
-            bulk.insert(datas_list_item)
-        try:
-            result = bulk.execute()
-        except BulkWriteError as bwe:
-            pass  # TODO add the behavior in case of an exception => bwe.details['writeErrors'], is a list of error info dicts
-
-        return result['nInserted']
+        result = collection.insert_many(datas_list)
+        return len(result.inserted_ids)
