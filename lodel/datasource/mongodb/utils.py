@@ -71,12 +71,12 @@ def convert_filter_list(filters_list):
 
 
 ## @brief converts a Lodel query filter into a MongoDB filter
-# @param filter tuple : (FIELD, OPERATOR, VALUE) representing the query filter to convert
+# @param filter_params tuple : (FIELD, OPERATOR, VALUE) representing the query filter to convert
 # @return dict : {KEY: {OPERATOR:VALUE}}
 # @todo Add an error management for the operator mismatch
 # @todo Add the checks for the type of values authorized in certain mongodb operators, such "$in" for example which takes a list
-def convert_filter(filter):
-    key, operator, value = filter
+def convert_filter(filter_params):
+    key, operator, value = filter_params
     converted_operator = LODEL_OPERATORS_MAP[operator]['name']
     converted_filter = {key: {converted_operator: value}}
     return converted_filter
