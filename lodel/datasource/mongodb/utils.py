@@ -36,38 +36,29 @@ def object_collection_name(class_name):
 
 
 ## @brief converts the query filters into MongoDB filters
-# @param query_filters list
-# @return dict
+# @param query_filters list : list of query_filters as tuples or dicts
+# @param as_list bool : defines if the output will be a list (default: False)
+# @return dict|list
 # @todo refactor this function by adding a return_type argument (default= dict) which can be a dict or a list, then delete the convert_filter_list function
-def parse_query_filters(query_filters):
-    filters_dict = dict()
+def parse_query_filters(query_filters, as_list=False):
+    parsed_filters = dict() if not as_list else list()
     for query_filter in query_filters:
         if isinstance(query_filter, tuple):
-            filters_dict.update(convert_filter(query_filter))
+            if as_list:
+                parsed_filters.append(convert_filter(query_filter))
+            else:
+                parsed_filters.update(convert_filter(query_filter))
         elif isinstance(query_filter, dict):
             query_item = list(query_filter.items())[0]
             key = LODEL_OPERATORS_MAP[query_item[0]]
-            filters_dict.update({key: convert_filter_list(query_item[1])})
+            if as_list:
+                parsed_filters.append({key: parse_query_filters(query_item[1], as_list=True)})
+            else:
+                parsed_filters.update({key: parse_query_filters(query_item[1], as_list=True)})
         else:
             # TODO Add an exception management here in case the filter is neither a tuple nor a dict
             pass
-    return filters_dict
-
-
-## @brief converts a query filters list into MongoDB filters list
-#   It is used mainly in case of an "AND" or an "OR"
-# @param filters_list list
-# @return list
-def convert_filter_list(filters_list):
-    converted_filters_list = list()
-    for filter_list_item in filters_list:
-        if isinstance(filter_list_item, tuple):
-            converted_filters_list.append(convert_filter(filter_list_item))
-        elif isinstance(filter_list_item, dict):
-            query_item = list(filter_list_item.items())[0]
-            key = LODEL_OPERATORS_MAP[query_item[0]]['name']
-            converted_filters_list.append({key: convert_filter_list(query_item[1])})
-    return converted_filters_list
+    return parsed_filters
 
 
 ## @brief converts a Lodel query filter into a MongoDB filter
