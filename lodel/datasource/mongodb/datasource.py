@@ -56,17 +56,26 @@ class MongoDbDataSource(object):
         return (connection_args['login'], urllib.quote_plus(connection_args['password']), connection_args['host'],
                 connection_args['port'], connection_args['dbname'])
 
-
     ## @brief returns a selection of documents from the datasource
     # @param target_cls Emclass
     # @param field_list list
+    # @param filters list : List of filters
+    # @param rel_filters list : List of relational filters
+    # @param order list : List of column to order. ex: order = [('title', 'ASC'),]
+    # @param group list : List of tupple representing the column to group together. ex: group = [('title', 'ASC'),]
+    # @param limit int : Number of records to be returned
+    # @param offset int: used with limit to choose the start record
+    # @param instanciate bool : If true, the records are returned as instances, else they are returned as dict
+    # @return list
+    # @todo Implement the grouping
+    # @todo Implement the relations
     def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0,
                instanciate=True):
         collection_name = utils.object_collection_name(target_cls.__class__)
         collection = self.database[collection_name]
         query_filters = utils.parse_query_filters(filters)
         query_result_ordering = utils.parse_query_order(order) if order is not None else None
-        results_field_list = None if len(field_list) == 0 else field_list  # TODO On peut peut-être utiliser None dans les arguments au lieu d'une liste vide
+        results_field_list = None if len(field_list) == 0 else field_list
         limit = limit if limit is not None else 0
         cursor = collection.find(
             filter=query_filters,
@@ -95,8 +104,9 @@ class MongoDbDataSource(object):
         result = collection.delete_many(uid)
         return result.deleted_count
 
+    ## @brief updates one or a list of records
+    # @todo to be implemented
     def update(self, target_cls, uid, **datas):
-
         pass
 
     ## @brief Inserts a record in a given collection

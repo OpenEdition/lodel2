@@ -7,7 +7,6 @@ collection_prefix = {
     'collection': 'class_'
 }
 
-# TODO Ajouter ici les conversions vers les opérateurs MongoDB correspondants
 LODEL_OPERATORS_MAP = {
     '=': {'name': '$eq', 'value_type': None},
     '<=': {'name': '$lte', 'value_type': None},
@@ -70,6 +69,7 @@ def convert_filter_list(filters_list):
             converted_filters_list.append({key: convert_filter_list(query_item[1])})
     return converted_filters_list
 
+
 ## @brief converts a Lodel query filter into a MongoDB filter
 # @param filter tuple : (FIELD, OPERATOR, VALUE) representing the query filter to convert
 # @return dict : {KEY: {OPERATOR:VALUE}}
@@ -81,10 +81,13 @@ def convert_filter(filter):
     converted_filter = {key: {converted_operator: value}}
     return converted_filter
 
+
 ## @brief Returns a list of sorting options
 # @param query_filters_order list
 # @return list
-# @todo To be implemented
 def parse_query_order(query_filters_order):
     ordering = list()
+    for query_filter_order in query_filters_order:
+        field, direction = query_filter_order
+        ordering.append((field, LODEL_SORT_OPERATORS_MAP[direction]))
     return ordering
