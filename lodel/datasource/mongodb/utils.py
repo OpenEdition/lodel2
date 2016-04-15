@@ -14,10 +14,10 @@ LODEL_OPERATORS_MAP = {
     '!=': {'name': '$ne', 'value_type': None},
     '<': {'name': '$lt', 'value_type': None},
     '>': {'name': '$gt', 'value_type': None},
-    ' in ': {'name': '$in', 'value_type': list},
-    ' not in ': {'name': '$nin', 'value_type': list},
-    ' like ': {'name': '$text', 'value_type': str},
-    ' not like ': {'name': '', 'value_type': str},  # TODO Add the operator
+    'in': {'name': '$in', 'value_type': list},
+    'not in': {'name': '$nin', 'value_type': list},
+    #' like ': {'name': '$text', 'value_type': str},
+    #' not like ': {'name': '', 'value_type': str},  # TODO Add the operator
     'OR': {'name': '$or', 'value_type': list},
     'AND': {'name': '$and', 'value_type': list}
 }
@@ -77,8 +77,11 @@ def convert_filter_list(filters_list):
 # @todo Add the checks for the type of values authorized in certain mongodb operators, such "$in" for example which takes a list
 def convert_filter(filter_params):
     key, operator, value = filter_params
-    converted_operator = LODEL_OPERATORS_MAP[operator]['name']
-    converted_filter = {key: {converted_operator: value}}
+    if operator not in ('like', 'not like'):
+        converted_operator = LODEL_OPERATORS_MAP[operator]['name']
+        converted_filter = {key: {converted_operator: value}}
+    else:
+        converted_filter = convert_like_filter(filter_params)
     return converted_filter
 
 
@@ -91,3 +94,29 @@ def parse_query_order(query_filters_order):
         field, direction = query_filter_order
         ordering.append((field, LODEL_SORT_OPERATORS_MAP[direction]))
     return ordering
+
+
+## @brief Converts "like" and "not like" filters into MongotDb filters
+# @param like_filter tuple
+# @return dict
+def convert_like_filter(like_filter):
+    key, operator, value = like_filter
+
+    is_starting_with = value.endswith('*')
+    is_ending_with = value.startswith('*')
+
+    if is_starting_with and not is_ending_with:
+        regex_pattern = value.replace('*', '^')
+    elif is_ending_with and not is_starting_with:
+        regex_pattern = value.replace('*', '$')
+    elif is_starting_with and is_ending_with:
+        regex_pattern = '%s' % value
+    else:
+        regex_pattern = '^%s$' % value
+
+    regex_condition = {'$regex': regex_pattern, '$options': 'i'}
+    converted_filter = {key: regex_condition}
+    if operator.startswith('not'):
+        converted_filter = {key: {'$not': regex_condition}}
+
+    return converted_filter
