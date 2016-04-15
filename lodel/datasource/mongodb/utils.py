@@ -16,7 +16,7 @@ LODEL_OPERATORS_MAP = {
     '>': {'name': '$gt', 'value_type': None},
     ' in ': {'name': '$in', 'value_type': list},
     ' not in ': {'name': '$nin', 'value_type': list},
-    ' like ': {'name': '$eq', 'value_type': str},
+    ' like ': {'name': '$text', 'value_type': str},
     ' not like ': {'name': '', 'value_type': str},  # TODO Add the operator
     'OR': {'name': '$or', 'value_type': list},
     'AND': {'name': '$and', 'value_type': list}

@@ -105,9 +105,18 @@ class MongoDbDataSource(object):
         return result.deleted_count
 
     ## @brief updates one or a list of records
-    # @todo to be implemented
-    def update(self, target_cls, uid, **datas):
-        pass
+    # @param target_cls Emclass : class of the object to insert
+    # @param uids list : list of uids to update
+    # @param datas dict : datas to update (new values)
+    # @return int : Number of updated records
+    # @todo check if the values need to be parsed
+    def update(self, target_cls, uids, **datas):
+        if not isinstance(uids, list):
+            uids = [uids]
+        collection_name = utils.object_collection_name(target_cls.__class__)
+        collection = self.database[collection_name]
+        results = collection.update_many({'uid': {'$in': uids}}, datas)
+        return results.modified_count()
 
     ## @brief Inserts a record in a given collection
     # @param target_cls Emclass : class of the object to insert
