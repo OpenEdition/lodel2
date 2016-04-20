@@ -130,30 +130,7 @@ class LeFilteredQuery(LeQuery):
         if check_ok:            
             self.__query_filter = query_filter
             
-        # try to check if a query string is a simple condition like 'fieldname operator value'
-    def simple_cond(cond, target_class):
-            # cond is the where clause
 
-        if 'AND' in cond.upper():
-            return False
-        if 'OR' in cond.upper():
-            return False
-        
-        n_ops = 0
-        for op in target_class.query_operators:
-            if op in cond:
-                q_op=op
-                n_ops+=1
-        if n_ops > 1 or n_ops==0:
-            raise TypeError("%s isn't a valid sql condition" % cond)
-        tupl=cond.partition(q_op)
-
-        if tupl[0].strip() not in target_class.fieldnames:
-            raise TypeError("%s isn't a valid fieldname" % tupl[0].strip())
-        if not isinstance(tupl[2].strip(), target_class.datahandler(tupl[0].strip())):
-            raise TypeError("%s is not of a valid type for fieldname % s" % tupl[0],tupl[2])
-        return True
-    
 
 ##@brief A query to insert a new object
 class LeInsertQuery(LeQuery):
