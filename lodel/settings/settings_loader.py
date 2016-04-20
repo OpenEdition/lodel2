@@ -9,6 +9,11 @@ from lodel.settings.utils import *
    
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
+    
+    ## To avoid the DEFAULT section whose values are found in all sections, we
+    # have to give it an unsual name
+    DEFAULT_SECTION = 'lodel2_default_passaway_tip'
+
     ##@brief Constructor
     # @param conf_path str : conf.d path
     def __init__(self,conf_path):
@@ -17,39 +22,28 @@ class SettingsLoader(object):
         self.__conf=self.__merge()
     
     ##@brief Lists and merges files in settings_loader.conf_path
-    #
-    # 
     # @return dict()
-    # 
     def __merge(self):
         conf = dict()
-        dir_conf = os.open(self.__conf_path, os.O_RDONLY)
- 
         l_dir = glob.glob(self.__conf_path+'/*.ini')  
 
         for f_ini in l_dir:  
-            #To avoid the DEFAULT section whose values are found in all sections, we have to give it an unsual name
-            config = configparser.ConfigParser(default_section = 'lodel2_default_passaway_tip',interpolation=None)
+            config = configparser.ConfigParser(default_section = self.DEFAULT_SECTION ,interpolation=None)
             config.read(f_ini)
-
-            for sect in config:
-                if sect in conf:
-                    for param in config[sect]:
-                        if param not in conf[sect]: 
-                            conf[sect][param] = config[sect][param]
-                            if sect != 'DEFAULT': self.__conf_sv[sect + ':' + param]=f_ini
-                        else:
-                            raise SettingsError("Key attribute already defined : %s " % sect + '.' + param + ' dans ' + f_ini + ' et ' + self.__conf_sv[sect + ':' + param])                        
-                else:
-                    opts={}
-                    for key in config[sect]:
-                        opts[key] = config[sect].get(key)
-                        if sect != 'lodel2_default_passaway_tip': self.__conf_sv[sect + ':' + key]=f_ini
-                    conf.update({sect: opts})
-        os.close(dir_conf)
+            for section in [ s for s in config if s != self.DEFAULT_SECTION ]:
+                if section not in conf:
+                    conf[section] = dict()
+                for param in config[section]:
+                    if param not in conf[section]: 
+                        conf[section][param] = config[section][param]
+                        self.__conf_sv[section + ':' + param]=f_ini
+                    else:
+                        raise SettingsError("Error redeclaration of key %s in section %s. Found in %s and %s" % (
+            section,
+            param,
+            f_ini,
+            self.__conf_sv[section + ':' + param]))
         return conf
-        
-        
     
     ##@brief Returns option if exists default_value else and validates
     # @param section str : name of the section
@@ -70,7 +64,6 @@ class SettingsLoader(object):
              raise SettingsError("Default value mandatory for option %s" % keyname)
         else:
              return default_value
-                              
     
     ##@brief Returns the section to be configured
     # @param section_prefix str
@@ -94,8 +87,13 @@ class SettingsLoader(object):
             
         return sections;
     
-    ##@brief Returns the sections which have not been configured
-    # @return list of missing options
+    ## @brief Returns invalid settings
+    #
+    # This method returns all the settings that was not fecthed by 
+    # getsection() method. For the Settings object it allows to know
+    # the list of invalids settings keys
+    # @return a dict with SECTION_NAME+":"+KEY_NAME as key and the filename
+    # where the settings was found as value
     def getremains(self):
-        return list(self.__conf_sv)
-        
+        return self.__conf_sv
+    
