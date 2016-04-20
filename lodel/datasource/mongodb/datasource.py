@@ -6,12 +6,14 @@ import urllib
 
 import lodel.datasource.mongodb.utils as utils
 
+from lodel.datasource.generic.datasource import GenericDataSource
+
 
 class MongoDbDataSourceError(Exception):
     pass
 
 
-class MongoDbDataSource(object):
+class MongoDbDataSource(GenericDataSource):
 
     MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
 
