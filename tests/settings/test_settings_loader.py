@@ -59,6 +59,45 @@ class SettingsLoaderTestCase(unittest.TestCase):
         value = loader.getoption('lodel2.foo.bar', 'foobar', dummy_validator)
         self.assertEqual(value, "hello world")
 
+    def test_getoption_complex(self):
+        """ Testing behavior of getoption with less simple files & confs """
+
+        expected = {
+            'lodel2.editorialmodel': {
+                'lib_path': '/tmp',
+                'foo_bar': '42',
+                'foo.bar': '1337',
+                'example': 'foobar',
+            },
+            'lodel2.conf1': {
+                'conf_key': 'woot',
+                'conf_value': '42',
+            },
+            'lodel2.conf2': {
+                'conf_foo': 'bar',
+            },
+            'lodel2.foo.foo': {
+                'foobar': 'barfoo',
+            },
+            'lodel2.bar.foo': {
+                'foobar': 'barfoo',
+                'barfoo': '42',
+            },
+            'lodel2.bar.bar': {
+                'toto': 'tata',
+            }
+        }
+
+        loader = SettingsLoader('tests/settings/settings_examples/complex.conf.d')
+        for section in expected:
+            for key, expected_value in expected[section].items():
+                value = loader.getoption(   section,
+                                            key,
+                                            dummy_validator)
+                self.assertEqual(value, expected_value)
+
+                
+
     def test_variable_sections(self):
         """ Testing variable section recognition """
         loader = SettingsLoader('tests/settings/settings_examples/var_sections.conf.d')
