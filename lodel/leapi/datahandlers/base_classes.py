@@ -256,3 +256,48 @@ class MultipleRef(Reference):
             if self.max_item < len(value):
                 return None, FieldValidationError("To many items")
 
+## @brief Class designed to handle datas access will fieldtypes are constructing datas
+#
+# This class is designed to allow automatic scheduling of construct_data calls. 
+#
+# In theory it's able to detect circular dependencies
+# @todo test circular deps detection
+# @todo test circulat deps false positiv
+class DatasConstructor(object):
+    
+    ## @brief Init a DatasConstructor
+    # @param lec LeCrud : @ref LeObject child class 
+    # @param datas dict : dict with field name as key and field values as value
+    # @param fields_handler dict : dict with field name as key and data handler instance as value
+    def __init__(self, leobject, datas, fields_handler):
+        ## Stores concerned class
+        self._leobject = leobject
+        ## Stores datas and constructed datas
+        self._datas = copy.copy(datas)
+        ## Stores fieldtypes
+        self._fields_handler = fields_handler
+        ## Stores list of fieldname for constructed datas
+        self._constructed = []
+        ## Stores construct calls list
+        self._construct_calls = []
+    
+    ## @brief Implements the dict.keys() method on instance
+    def keys(self):
+        return self._datas.keys()
+    
+    ## @brief Allows to access the instance like a dict
+    def __getitem__(self, fname):
+        if fname not in self._constructed:
+            if fname in self._construct_calls:
+                raise RuntimeError('Probably circular dependencies in fieldtypes')
+            cur_value = self._datas[fname] if fname in self._datas else None
+            self._datas[fname] = self._fields_handler[fname].construct_data(self._leobject, fname, self, cur_value)
+            self._constructed.append(fname)
+        return self._datas[fname]
+    
+    ## @brief Allows to set instance values like a dict
+    # @warning Should not append in theory
+    def __setitem__(self, fname, value):
+        self._datas[fname] = value
+        warnings.warn("Setting value of an DatasConstructor instance")
+ 

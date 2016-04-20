@@ -72,6 +72,7 @@ class EmClass(EmComponent):
         self.__fields = dict() 
     
     ##@brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
+    # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     @property
     def __all_fields(self):
         res = dict()
@@ -97,6 +98,7 @@ class EmClass(EmComponent):
     # @param uid None | str : If None returns an iterator on EmField instances else return an EmField instance
     # @param no_parents bool : If True returns only fields defined is this class and not the one defined in parents classes
     # @return A list on EmFields instances (if uid is None) else return an EmField instance
+    # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     def fields(self, uid = None, no_parents = False):
         fields = self.__fields if no_parents else self.__all_fields
         try:
@@ -253,7 +255,7 @@ class EmGroup(object):
                     res[new_app.uid] = new_app
         return res
     
-	##@brief Returns EmGroup components
+    ##@brief Returns EmGroup components
     # @returns a copy of the set of components
     def components(self):
         return (self.__components).copy()

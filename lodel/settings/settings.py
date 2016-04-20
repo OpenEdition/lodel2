@@ -59,6 +59,8 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 #
 # @todo handles default sections for variable sections (sections ending with 
 # '.*')
+# @todo delete the first stage, the lib path HAVE TO BE HARDCODED. In fact
+#when we will run lodel in production the lodel2 lib will be in the python path
 class Settings(object):
     
     ##@brief global conf specsification (default_value + validator)

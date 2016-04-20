@@ -210,6 +210,8 @@ LODEL2_CONF_SPECS = {
                     SettingValidator('bool')),
         'plugins': (    "",
                         SettingValidator('list')),
+        'sitename': (   'noname',
+                        SettingValidator('strip')),
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
@@ -222,5 +224,17 @@ LODEL2_CONF_SPECS = {
                             SettingValidator('int', none_is_valid = True)),
         'maxbytes': (   None,
                         SettingValidator('int', none_is_valid = True)),
+    },
+    'lodel2.editorialmodel': {
+        'emfile': ( 'em.pickle',
+                    SettingValidator('strip')),
+        'emtranslator': (   'picklefile',
+                            SettingValidator('strip')),
+        'dyncode': (    'leapi_dyncode.py',
+                        SettingValidator('strip')),
+        'groups': ( '',
+                    SettingValidator('list')),
+        'editormode': ( False,
+                        SettingValidator('bool')),
     }
 }
