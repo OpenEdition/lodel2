@@ -49,7 +49,7 @@ class LeQuery(object):
     #
     # @note maybe the datasource in not an argument but should be determined
     #elsewhere
-    def execute(self, datasource, **datas):
+    def execute(self, datasource, **datas = None):
         if len(datas) > 0:
             self.__target_class.check_datas_value(datas, **self._data_check_args)
             self.__target_class.prepare_datas() #not yet implemented
@@ -130,7 +130,8 @@ class LeFilteredQuery(LeQuery):
         if check_ok:            
             self.__query_filter = query_filter
             
-
+		def execute(self, datasource, **datas = None):
+			super().execute(datasource, **datas)
 
 ##@brief A query to insert a new object
 class LeInsertQuery(LeQuery):
@@ -150,8 +151,8 @@ class LeInsertQuery(LeQuery):
         return nb_inserted
 
     ## @brief Execute the insert query
-    def execute(self, datasource):
-        super().execute()
+    def execute(self, datasource, **datas):
+        super().execute(datasource, **datas)
         
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
@@ -176,8 +177,8 @@ class LeUpdateQuery(LeFilteredQuery):
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, datasource):
-        super().execute()
+    def execute(self, datasource, **datas):
+        super().execute(datasource, **datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
