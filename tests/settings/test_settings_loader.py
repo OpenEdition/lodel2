@@ -35,7 +35,7 @@ class SettingsLoaderTestCase(unittest.TestCase):
         f=settings.getoption('lodel2.A.e','a',maFonction)
         f=settings.getoption('lodel2.A.e','titi',maFonction)
         g=settings.getremains()
-        self.assertEqual(g,[])
+        self.assertEqual(len(g),0)
         with self.assertRaises(SettingsError):
             loader = SettingsLoader('tests/settings/settings_examples/conf_raise.d')
     
@@ -118,8 +118,25 @@ class SettingsLoaderTestCase(unittest.TestCase):
         with self.assertRaises(NameError):
             sections = loader.getsection('lodel2.notexisting')
     
-    @unittest.skip("Waiting implementation")
     def test_remains(self):
         """ Testing the remains method of SettingsLoader """
         loader = SettingsLoader('tests/settings/settings_examples/remains.conf.d')
-        pass #TO BE DONE LATER
+        values = {
+            'lodel2.section': [ chr(i) for i in range(ord('a'), ord('f')) ],
+            'lodel2.othersection': [ chr(i) for i in range(ord('a'), ord('f')) ],
+        }
+        
+        expt_rem = []
+        for section in values:
+            for val in values[section]:
+                expt_rem.append('%s:%s' % (section, val))
+
+        self.assertEqual(sorted(expt_rem), sorted(loader.getremains().keys()))
+
+        for section in values:
+            for val in values[section]:
+                loader.getoption(section, val, dummy_validator)
+                expt_rem.remove('%s:%s' % (section, val))
+                self.assertEqual(   sorted(expt_rem),
+                                    sorted(loader.getremains().keys()))
+
