@@ -142,14 +142,20 @@ class LeInsertQuery(LeQuery):
     def __init__(self, target_class):
         super().__init__(target_class)
     
-    ## @brief Implements an insert query operation
+    ## @brief Implements an insert query operation, with only one insertion
     # @param **datas : datas to be inserted
     def __query(self, datasource, **datas):
         nb_inserted = datasource.insert(self.__target_class,**datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
-
+    ## @brief Implements an insert query operation, with multiple insertions
+    # @param datas : list of **datas to be inserted
+    def __query(self, datasource, datas):
+        nb_inserted = datasource.insert_multi(self.__target_class,datas_list)
+        if nb_inserted < 0:
+            raise LeQueryError("Multiple insertions error")
+        return nb_inserted
     ## @brief Execute the insert query
     def execute(self, datasource, **datas):
         super().execute(datasource, **datas)
@@ -271,7 +277,7 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
 
     def __query(self, datasource):
-        # select _uid corresponding to query_filter
+        # select datas corresponding to query_filter
         l_datas=datasource.select(self.__target_class,list(self.field_list),self.query_filter,None, self.__order, self.__group, self.__limit, self.offset, False)
         return l_datas
         
