@@ -25,6 +25,10 @@ LODEL_SORT_OPERATORS_MAP = {
     'DESC': pymongo.DESCENDING
 }
 
+MONGODB_SORT_OPERATORS_MAP = {
+    'ASC': 1,
+    'DESC': -1
+}
 
 ## @brief Returns a collection name given a Emclass name
 # @param class_name str : The class name
