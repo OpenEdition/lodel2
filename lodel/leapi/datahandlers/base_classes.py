@@ -45,6 +45,7 @@ class DataHandler(object):
         self.uniq = False
         self.immutable = False
         self.primary_key = False
+        self.internal = False
         if 'defaults' in kwargs:
             self.default, error = self.check_data_value(kwargs['default'])
             if error:
