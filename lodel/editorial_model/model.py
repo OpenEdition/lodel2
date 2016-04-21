@@ -4,6 +4,9 @@ import hashlib
 import importlib
 
 from lodel.utils.mlstring import MlString
+from lodel.logger import logger
+from lodel.settings import Settings
+from lodel.settings.utils import SettingsError
 
 from lodel.editorial_model.exceptions import *
 from lodel.editorial_model.components import EmClass, EmField, EmGroup
@@ -21,13 +24,21 @@ class EditorialModel(object):
         self.__groups = dict()
         ##@brief Stores all classes indexed by id
         self.__classes = dict()
+        ## @brief Stores all activated groups indexed by id
+        self.__active_groups = dict()
+        ## @brief Stores all activated classes indexed by id
+        self.__active_classes = dict()
     
     ##@brief EmClass accessor
-    # @param uid None | str : give this argument to get a specific EmClass
-    # @return if uid is given returns an EmClass else returns an EmClass iterator
+    #@param uid None | str : give this argument to get a specific EmClass
+    #@return if uid is given returns an EmClass else returns an EmClass
+    # iterator
+    #@todo use Settings.editorialmodel.groups to determine wich classes should
+    # be returned
     def classes(self, uid = None):
         try:
-            return self.__elt_getter(self.__classes, uid)
+            return self.__elt_getter(   self.__active_classes,
+                                        uid)
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
 
@@ -36,9 +47,33 @@ class EditorialModel(object):
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator
     def groups(self, uid = None):
         try:
-            return self.__elt_getter(self.__groups, uid)
+            return self.__elt_getter(   self.__active_groups,
+                                        uid)
         except KeyError:
             raise EditorialModelException("EmGroup not found : '%s'" % uid)
+    
+    ##@brief Private getter for __groups or __classes
+    # @see classes() groups()
+    def __elt_getter(self, elts, uid):
+        return list(elts.values()) if uid is None else elts[uid]
+    
+    ##@brief Update the EditorialModel.__active_groups and
+    #EditorialModel.__active_classes attibutes
+    def __set_actives(self):
+        if Settings.editorialmodel.editormode:
+            # all groups & classes actives because we are in editor mode
+            self.__active_groups = self.__groups
+            self.__active_classes = self.__classes
+        else:
+            #determine groups first
+            self.__active_groups = dict()
+            for agrp in Settings.editorialmodel.groups:
+                if agrp not in self.__groups:
+                    raise SettingsError('Invalid group found in settings : %s' % agrp)
+                grp = self.__groups[agrp]
+                self.__active_groups[grp.uid] = grp
+                for acls in grp.components():
+                    self.__active_classes[acls.uid] = acls
     
     ##@brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
@@ -65,6 +100,7 @@ class EditorialModel(object):
     # @param emclass EmClass : the EmClass instance to add
     # @return emclass
     def add_class(self, emclass):
+        self.raise_if_ro()
         if not isinstance(emclass, EmClass):
             raise ValueError("<class EmClass> expected but got %s " % type(emclass))
         if emclass.uid in self.classes():
@@ -76,6 +112,7 @@ class EditorialModel(object):
     # @param emgroup EmGroup : the EmGroup instance to add
     # @return emgroup
     def add_group(self, emgroup):
+        self.raise_if_ro()
         if not isinstance(emgroup, EmGroup):
             raise ValueError("<class EmGroup> expected but got %s" % type(emgroup))
         if emgroup.uid in self.groups():
@@ -84,25 +121,36 @@ class EditorialModel(object):
         return emgroup
 
     ##@brief Add a new EmClass to the editorial model
-    # @param uid str : EmClass uid
-    # @param **kwargs : EmClass constructor options ( see @ref lodel.editorial_model.component.EmClass.__init__() )
+    #@param uid str : EmClass uid
+    #@param **kwargs : EmClass constructor options ( 
+    # see @ref lodel.editorial_model.component.EmClass.__init__() )
     def new_class(self, uid, **kwargs):
+        self.raise_if_ro()
         return self.add_class(EmClass(uid, **kwargs))
     
     ##@brief Add a new EmGroup to the editorial model
-    # @param uid str : EmGroup uid
-    # @param *kwargs : EmGroup constructor keywords arguments (see @ref lodel.editorial_model.component.EmGroup.__init__() )
+    #@param uid str : EmGroup uid
+    #@param *kwargs : EmGroup constructor keywords arguments (
+    # see @ref lodel.editorial_model.component.EmGroup.__init__() )
     def new_group(self, uid, **kwargs):
+        self.raise_if_ro()
         return self.add_group(EmGroup(uid, **kwargs))
 
-    # @brief Save a model
+    ##@brief Save a model
     # @param translator module : The translator module to use
     # @param **translator_args
     def save(self, translator, **translator_kwargs):
+        self.raise_if_ro()
         if isinstance(translator, str):
             translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
     
+    ##@brief Raise an error if lodel is not in EM edition mode
+    @staticmethod
+    def raise_if_ro():
+        if not Settings.editorialmodel.editormode:
+            raise EditorialModelError("Lodel in not in EM editor mode. The EM is in read only state")
+
     ##@brief Load a model
     # @param translator module : The translator module to use
     # @param **translator_args
@@ -125,12 +173,6 @@ class EditorialModel(object):
             raise NameError("No translator named %s")
         return mod
         
-    
-    ##@brief Private getter for __groups or __classes
-    # @see classes() groups()
-    def __elt_getter(self, elts, uid):
-        return list(elts.values()) if uid is None else elts[uid]
-    
     ##@brief Lodel hash
     def d_hash(self):
         payload = "%s%s" % (
