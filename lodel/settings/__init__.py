@@ -34,14 +34,5 @@
 # </pre>
 #
 
-
-import warnings
-from lodel.settings.settings import Settings as SettingsHandler
-
-settings = SettingsHandler.instance
-
-if settings is None:
-    Settings = None
-else:
-    Settings = settings.confs.lodel2
+from lodel.settings.settings import SettingsRO as Settings
 

@@ -17,9 +17,9 @@ class FieldValidationError(Exception):
 ##@brief Base class for all data handlers
 class DataHandler(object):
     
-    __HANDLERS_MODULES = ('datas_base', 'datas', 'references')
+    _HANDLERS_MODULES = ('datas_base', 'datas', 'references')
     ##@brief Stores the DataHandler childs classes indexed by name
-    __base_handlers = None
+    _base_handlers = None
     ##@brief Stores custom datahandlers classes indexed by name
     # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
@@ -132,15 +132,15 @@ class DataHandler(object):
 
     @classmethod
     def load_base_handlers(cls):
-        if cls.__base_handlers is None:
-            cls.__base_handlers = dict()
-            for module_name in cls.__HANDLERS_MODULES:
+        if cls._base_handlers is None:
+            cls._base_handlers = dict()
+            for module_name in cls._HANDLERS_MODULES:
                 module = importlib.import_module('lodel.leapi.datahandlers.%s' % module_name)
                 for name, obj in inspect.getmembers(module):
                     if inspect.isclass(obj):
                         logger.debug("Load data handler %s.%s" % (obj.__module__, obj.__name__))
-                        cls.__base_handlers[name.lower()] = obj
-        return copy.copy(cls.__base_handlers)
+                        cls._base_handlers[name.lower()] = obj
+        return copy.copy(cls._base_handlers)
 
     ##@brief given a field type name, returns the associated python class
     # @param fieldtype_name str : A field type name (not case sensitive)
@@ -149,10 +149,11 @@ class DataHandler(object):
     # @note To access custom data handlers it can be cool to preffix the handler name by plugin name for example ? (to ensure name unicity)
     @classmethod
     def from_name(cls, name):
+        cls.load_base_handlers()
         name = name.lower()
-        if name not in cls.__base_handlers:
+        if name not in cls._base_handlers:
             raise NameError("No data handlers named '%s'" % (name,))
-        return cls.__base_handlers[name]
+        return cls._base_handlers[name]
  
     ##@brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name

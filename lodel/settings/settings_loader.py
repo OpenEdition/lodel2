@@ -58,7 +58,10 @@ class SettingsLoader(object):
         if keyname in sec:
             optionstr=sec[keyname]
             option=validator(sec[keyname])
-            del self.__conf_sv[section + ':' + keyname]
+            try:
+                del self.__conf_sv[section + ':' + keyname]
+            except KeyError: #allready fetched
+                pass
             return option
         elif mandatory:
              raise SettingsError("Default value mandatory for option %s" % keyname)
