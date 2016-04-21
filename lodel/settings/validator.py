@@ -148,6 +148,11 @@ def loglevel_val(value):
         raise SettingsValidationError("The value '%s' is not a valid loglevel")
     return value.upper()
 
+def path_val(value):
+    if not os.path.exists(value):
+        raise SettingsValidationError("The value '%s' is not a valid path")
+    return value
+
 #
 #   Default validators registration
 #
@@ -182,6 +187,11 @@ SettingValidator.register_validator(
                                         loglevel_val,
                                         'Loglevel validator')
 
+SettingValidator.register_validator(
+                                        'path',
+                                        path_val,
+                                        'path validator')
+
 SettingValidator.create_list_validator(
                                             'list',
                                             SettingValidator('strip'),
@@ -208,10 +218,14 @@ LODEL2_CONF_SPECS = {
     'lodel2': {
         'debug': (  True,
                     SettingValidator('bool')),
+        'plugins_path': (   None,
+                            SettingValidator('list')),
         'plugins': (    "",
                         SettingValidator('list')),
         'sitename': (   'noname',
                         SettingValidator('strip')),
+        'lib_path': (   None,
+                        SettingValidator('path')),
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',

@@ -23,6 +23,12 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
                                                 major = sys.version_info.major,
                                                 minor = sys.version_info.minor)
 
+class MetaSettings(type):
+    @property
+    def s(self):
+        self.singleton_assert(True)
+        return self.instance.settings
+
 ##@brief Handles configuration load etc.
 #
 # To see howto bootstrap Settings and use it in lodel instance see 
@@ -61,43 +67,57 @@ PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 # '.*')
 # @todo delete the first stage, the lib path HAVE TO BE HARDCODED. In fact
 #when we will run lodel in production the lodel2 lib will be in the python path
-class Settings(object):
-    
-    ##@brief global conf specsification (default_value + validator)
-    _conf_preload = {
-            'lib_path': (   PYTHON_SYS_LIB_PATH+'/lodel2/',
-                            SettingValidator('directory')),
-            'plugins_path': (   PYTHON_SYS_LIB_PATH+'lodel2/plugins/',
-                                SettingValidator('directory_list')),
-    }
+class Settings(object, metaclass=MetaSettings):
+
+    ## @brief Stores the singleton instance
     instance = None
     
-    ##@brief Should be called only by the boostrap classmethod
-    # @param conf_file str : Path to the global lodel2 configuration file
-    # @param conf_dir str : Path to the conf directory
-    def __init__(self, conf_file, conf_dir):
-        self.__confs = dict()
+    ## @brief Instanciate the Settings singleton
+    # @param conf_dir str : The configuration directory
+    def __init__(self, conf_dir):
+        self.singleton_assert() # check that it is the only instance
+        Settings.instance = self
+        ## @brief Configuration specification
+        #
+        # Initialized by Settings.__bootstrap() method
+        self.__conf_specs = None
+        ## @brief Stores the configurations in namedtuple tree
+        self.__confs = None
         self.__conf_dir = conf_dir
-        self.__load_bootstrap_conf(conf_file)
-        #   now we should have the self.__confs['lodel2']['plugins_paths']
-        #   and self.__confs['lodel2']['lib_path'] set
         self.__bootstrap()
     
-    ##@brief Stores as class attribute a Settings instance
-    @classmethod
-    def bootstrap(cls, conf_file = None, conf_dir = None):
-        if cls.instance is None:
-            if conf_file is None and conf_dir is None:
-                warnings.warn("Lodel instance without settings !!!")
-            else:
-                cls.instance = cls(conf_file, conf_dir)
-        return cls.instance
-
-    ##@brief Configuration keys accessor
-    # @return All confs organised into named tuples
+    ## @brief Get the named tuple representing configuration
     @property
-    def confs(self):
-        return copy.copy(self.__confs)
+    def settings(self):
+        return self.__confs.lodel2
+    
+    ## @brief Delete the singleton instance
+    @classmethod
+    def stop(cls):
+        del(cls.instance)
+        cls.instance = None
+
+    @classmethod
+    def started(cls):
+        return cls.instance is not None
+
+    ##@brief An utility method that raises if the singleton is not in a good
+    # state
+    #@param expect_instanciated bool : if True we expect that the class is
+    # allready instanciated, else not
+    # @throw RuntimeError
+    @classmethod
+    def singleton_assert(cls, expect_instanciated = False):
+        if expect_instanciated:
+            if not cls.started():
+                raise RuntimeError("The Settings class is not started yet")
+        else:
+            if cls.started():
+                raise RuntimeError("The Settings class is allready started")
+
+    @classmethod
+    def set(cls, confname, confvalue):
+        pass
 
     ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
@@ -108,16 +128,25 @@ class Settings(object):
             for kname in lodel2_specs[section]:
                 if kname.lower() != kname:
                     raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
-                
-                
+         
+        # Load specs for the plugins list and plugins_path list conf keys
         plugins_opt_specs = lodel2_specs['lodel2']['plugins']
-
+        plugins_path_opt_specs = lodel2_specs['lodel2']['plugins_path']
         # Init the settings loader
         loader = SettingsLoader(self.__conf_dir)
         # fetching list of plugins to load
-        plugins_list = loader.getoption('lodel2', 'plugins', plugins_opt_specs[1], plugins_opt_specs[0], False)
+        plugins_list = loader.getoption(    'lodel2',
+                                            'plugins',
+                                            plugins_opt_specs[1],
+                                            plugins_opt_specs[0],
+                                            False)
+        plugins_path = loader.getoption(    'lodel2',
+                                            'plugins_path',
+                                            plugins_path_opt_specs[1],
+                                            plugins_path_opt_specs[0],
+                                            False)
         # Starting the Plugins class
-        Plugins.bootstrap(self.__confs['lodel2']['plugins_path'])
+        Plugins.bootstrap(plugins_path)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
         errors = list()
@@ -128,8 +157,8 @@ class Settings(object):
                 errors.append(e)
         if len(errors) > 0: #Raise all plugins import errors
             raise SettingsErrors(errors)
-        specs = self.__merge_specs(specs)
-        self.__populate_from_specs(specs, loader)
+        self.__conf_specs = self.__merge_specs(specs)
+        self.__populate_from_specs(self.__conf_specs, loader)
     
     ##@brief Produce a configuration specification dict by merging all specifications
     #
@@ -159,6 +188,7 @@ class Settings(object):
     # @param specs dict : Settings specification dictionnary as returned by __merge_specs
     # @param loader SettingsLoader : A SettingsLoader instance
     def __populate_from_specs(self, specs, loader):
+        self.__confs = dict()
         specs = copy.copy(specs) #Avoid destroying original specs dict (may be useless)
         # Construct final specs dict replacing variable sections
         # by the actual existing sections
@@ -242,39 +272,11 @@ class Settings(object):
         ResNamedTuple = namedtuple(name, conftree.keys())
         return ResNamedTuple(**conftree)
 
-    ##@brief Load base global configurations keys
-    #
-    # Base configurations keys are :
-    # - lodel2 lib path
-    # - lodel2 plugins path
-    #
-    # @note return nothing but set the __confs attribute
-    # @see Settings._conf_preload
-    def __load_bootstrap_conf(self, conf_file):
-        config = configparser.ConfigParser()
-        config.read(conf_file)
-        sections = config.sections()
-        if len(sections) != 1 or sections[0].lower() != 'lodel2':
-            raise SettingsError("Global conf error, expected lodel2 section not found")
+class MetaSettingsRO(type):
+    def __getattr__(self, name):
+        return getattr(Settings.s, name)
         
-        #Load default values in result
-        res = dict()
-        for keyname, (default, _) in self._conf_preload.items():
-            res[keyname] = default
 
-        confs = config[sections[0]]
-        errors = []
-        for name in confs:
-            if name not in res:
-                errors.append(  SettingsError(
-                                    "Unknow field",
-                                    "lodel2.%s" % name,
-                                    conf_file))
-            try:
-                res[name] = self._conf_preload[name][1](confs[name])
-            except Exception as e:
-                errors.append(SettingsError(str(e), name, conf_file))
-        if len(errors) > 0:
-            raise SettingsErrors(errors)
-        self.__confs['lodel2'] = res
-
+## @brief A class that provide . notation read only access to configurations
+class SettingsRO(object, metaclass=MetaSettingsRO):
+    pass

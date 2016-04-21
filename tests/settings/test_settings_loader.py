@@ -58,6 +58,29 @@ class SettingsLoaderTestCase(unittest.TestCase):
         self.assertEqual(value, "42")
         value = loader.getoption('lodel2.foo.bar', 'foobar', dummy_validator)
         self.assertEqual(value, "hello world")
+        value = loader.getoption('lodel2.foo.bar', 'foo_bar', dummy_validator)
+        self.assertEqual(value, "foobar")
+        value = loader.getoption('lodel2.foo.bar', 'foo.bar', dummy_validator)
+        self.assertEqual(value, "barfoo")
+
+    def test_getoption_multiple_time(self):
+        """ Testing the behavior when doing 2 time the same call to getoption """
+        loader = SettingsLoader('tests/settings/settings_examples/simple.conf.d')
+        value = loader.getoption('lodel2.foo.bar', 'foo', dummy_validator)
+        value = loader.getoption('lodel2.foo.bar', 'foo', dummy_validator)
+        value = loader.getoption('lodel2.foo.bar', 'foo', dummy_validator)
+        value = loader.getoption('lodel2.foo.bar', 'foo', dummy_validator)
+
+
+    def test_geoption_default_value(self):
+        """ Testing behavior of default value in getoption """
+        loader = SettingsLoader('tests/settings/settings_examples/simple.conf.d')
+        # for non existing keys in file
+        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42', False)
+        self.assertEqual(value, 'hello 42')
+        # for non existing section in file
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
+        self.assertEqual(value, 'hello 42')
 
     def test_getoption_complex(self):
         """ Testing behavior of getoption with less simple files & confs """
