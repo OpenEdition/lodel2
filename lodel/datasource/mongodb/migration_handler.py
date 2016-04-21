@@ -34,16 +34,6 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
     # @param new_state dict|None : dict with field name as key and field value as value. Represents the new state. None means it's a component deletion.
     # @throw MigrationHandlerChangeError if the change was refused
     def register_change(self, em, uid, initial_state, new_state):
-        if isinstance(em.classes(uid), EmClass):
-            if initial_state is None:
-                # EmClass creation
-                self.create_emclass_collection(em, uid)
-            elif new_state is None:
-                # EmClass deletion
-                self.delete_emclass_collection(em, uid)
-        elif isinstance(em.classes(uid), EmField):
-            emfield = em.
-
         pass
 
 
