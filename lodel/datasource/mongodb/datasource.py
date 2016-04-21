@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+import bson
+from bson.son import SON
+from collections import OrderedDict
 import pymongo
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
@@ -64,12 +68,11 @@ class MongoDbDataSource(GenericDataSource):
     # @param filters list : List of filters
     # @param rel_filters list : List of relational filters
     # @param order list : List of column to order. ex: order = [('title', 'ASC'),]
-    # @param group list : List of tupple representing the column to group together. ex: group = [('title', 'ASC'),]
+    # @param group list : List of tupple representing the column used as "group by" fields. ex: group = [('title', 'ASC'),]
     # @param limit int : Number of records to be returned
     # @param offset int: used with limit to choose the start record
     # @param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     # @return list
-    # @todo Implement the grouping
     # @todo Implement the relations
     def select(self, target_cls, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0,
                instanciate=True):
@@ -79,13 +82,41 @@ class MongoDbDataSource(GenericDataSource):
         query_result_ordering = utils.parse_query_order(order) if order is not None else None
         results_field_list = None if len(field_list) == 0 else field_list
         limit = limit if limit is not None else 0
-        cursor = collection.find(
-            filter=query_filters,
-            projection=results_field_list,
-            skip=offset,
-            limit=limit,
-            sort=query_result_ordering
-        )
+
+        if group is None:
+            cursor = collection.find(
+                filter=query_filters,
+                projection=results_field_list,
+                skip=offset,
+                limit=limit,
+                sort=query_result_ordering
+            )
+        else:
+            pipeline = list()
+            unwinding_list = list()
+            grouping_dict = OrderedDict()
+            sorting_list = list()
+            for group_param in group:
+                field_name = group_param[0]
+                field_sort_option = group_param[1]
+                sort_option = utils.MONGODB_SORT_OPERATORS_MAP[field_sort_option]
+                unwinding_list.append({'$unwind': '$%s' % field_name})
+                grouping_dict[field_name] = '$%s' % field_name
+                sorting_list.append((field_name, sort_option))
+
+            sorting_list.extends(query_result_ordering)
+
+            pipeline.append({'$match': query_filters})
+            if results_field_list is not None:
+                pipeline.append({'$project': SON([{field_name: 1} for field_name in field_list])})
+            pipeline.extend(unwinding_list)
+            pipeline.append({'$group': grouping_dict})
+            pipeline.extend({'$sort': SON(sorting_list)})
+            if offset > 0:
+                pipeline.append({'$skip': offset})
+            if limit is not None:
+                pipeline.append({'$limit': limit})
+
         results = list()
         for document in cursor:
             results.append(document)
