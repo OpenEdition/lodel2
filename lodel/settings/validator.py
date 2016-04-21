@@ -74,7 +74,9 @@ class SettingValidator(object):
             res = list()
             errors = list()
             for elt in value.split(separator):
-                res.append(elt_validator(elt))
+                elt = elt_validator(elt)
+                if len(elt) > 0:
+                    res.append(elt)
             return res
         description = "Convert value to an array" if description is None else description
         cls.register_validator(
@@ -153,9 +155,16 @@ def path_val(value):
         raise SettingsValidationError("The value '%s' is not a valid path")
     return value
 
+def dummy_val(value): return value
+
 #
 #   Default validators registration
 #
+
+SettingValidator.register_validator(
+                                        'dummy',
+                                        dummy_val,
+                                        'Validate anything')
 
 SettingValidator.register_validator(
                                         'strip',

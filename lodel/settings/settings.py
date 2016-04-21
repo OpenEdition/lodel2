@@ -146,7 +146,7 @@ class Settings(object, metaclass=MetaSettings):
                                             plugins_path_opt_specs[0],
                                             False)
         # Starting the Plugins class
-        Plugins.bootstrap(plugins_path)
+        Plugins.start(plugins_path)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
         errors = list()

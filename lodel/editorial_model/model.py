@@ -28,6 +28,7 @@ class EditorialModel(object):
         self.__active_groups = dict()
         ## @brief Stores all activated classes indexed by id
         self.__active_classes = dict()
+        self.__set_actives()
     
     ##@brief EmClass accessor
     #@param uid None | str : give this argument to get a specific EmClass
@@ -158,7 +159,9 @@ class EditorialModel(object):
     def load(cls, translator, **translator_kwargs):
         if isinstance(translator, str):
             translator = cls.translator_from_name(translator)
-        return translator.load(**translator_kwargs)
+        res = translator.load(**translator_kwargs)
+        res.__set_actives()
+        return res
 
     ##@brief Return a translator module given a translator name
     # @param translator_name str : The translator name

@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
-import loader
+from lodel.settings.settings import Settings as SettingsHandler
+SettingsHandler('globconf.d')
+
 from lodel.editorial_model.components import *
 from lodel.editorial_model.exceptions import *
 from lodel.editorial_model.model import EditorialModel

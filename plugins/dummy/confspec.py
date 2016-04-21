@@ -1,7 +1,10 @@
 #-*- coding: utf-8 -*-
 
+from lodel.settings.validator import SettingValidator
+
 CONFSPEC = {
-    'section1': {
-        'key1': None
+    'lodel2.section1': {
+        'key1': (   None,
+                    SettingValidator('dummy'))
     }
 }
