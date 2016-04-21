@@ -35,14 +35,16 @@ class SettingsLoader(object):
                     conf[section] = dict()
                 for param in config[section]:
                     if param not in conf[section]: 
-                        conf[section][param] = config[section][param]
+                        conf[section][param]=dict()
+                        conf[section][param]['value'] = config[section][param]
+                        conf[section][param]['file'] = f_ini
                         self.__conf_sv[section + ':' + param]=f_ini
                     else:
                         raise SettingsError("Error redeclaration of key %s in section %s. Found in %s and %s" % (
             section,
             param,
             f_ini,
-            self.__conf_sv[section + ':' + param]))
+            conf[section][param]['file']))
         return conf
     
     ##@brief Returns option if exists default_value else and validates
@@ -56,8 +58,8 @@ class SettingsLoader(object):
         conf=copy.copy(self.__conf)
         sec=conf[section]
         if keyname in sec:
-            optionstr=sec[keyname]
-            option=validator(sec[keyname])
+            optionstr=sec[keyname]['value']
+            option=validator(sec[keyname])['value']
             try:
                 del self.__conf_sv[section + ':' + keyname]
             except KeyError: #allready fetched
@@ -67,6 +69,27 @@ class SettingsLoader(object):
              raise SettingsError("Default value mandatory for option %s" % keyname)
         else:
              return default_value
+    ##@brief Sets option in a config section. Writes in the conf file
+    # @param section str : name of the section
+    # @param keyname str
+    # @param value str
+    # @param validator callable : takes one argument value and raises validation fail
+    # @return the option
+    def setoption(self,section,keyname,value,validator):
+        f_conf=copy.copy(self.__conf[section][keyname]['file'])
+        config = configparser.ConfigParser()
+        config.read(f_conf)
+        config[section][keyname] = validator(value)
+ 
+        with open(f_conf, 'w') as configfile:
+            config.write(configfile)
+    ##@brief Saves new partial configuration. Writes in the conf files corresponding
+    # @param sections dict
+    # @param validators dict of callable : takes one argument value and raises validation fail
+    def saveconf(self, sections, validators):
+        for sec in sections:
+            for kname in sections[sec]:
+                self.setoption(sec,kname,sections[sec][kname],validators[sec][kname])
     
     ##@brief Returns the section to be configured
     # @param section_prefix str

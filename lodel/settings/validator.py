@@ -82,7 +82,28 @@ class SettingValidator(object):
                                 list_validator,
                                 description)
         return cls(validator_name)
-                
+ 
+    ##@brief Create and register a list validator which reads an array and returns a string
+    # @param elt_validator callable : The validator that will be used for validate each elt value
+    # @param validator_name str
+    # @param description None | str
+    # @param separator str : The element separator
+    # @return A SettingValidator instance
+    @classmethod
+    def create_write_list_validator(cls, validator_name, elt_validator, description = None, separator = ','):
+        def write_list_validator(value):
+            res = ''
+            errors = list()
+            for elt in value:
+                res += elt_validator(elt) + ','
+            return res[:len(res)-1]
+        description = "Convert value to a string" if description is None else description
+        cls.register_validator(
+                                validator_name,
+                                write_list_validator,
+                                description)
+        return cls(validator_name)
+    
     ##@brief Create and register a regular expression validator
     # @param pattern str : regex pattern
     # @param validator_name str : The validator name
@@ -203,7 +224,11 @@ SettingValidator.create_list_validator(
                                             SettingValidator('directory'),
                                             description = "Validator for a list of directory path separated with ','",
                                             separator = ',')
-
+SettingValidator.create_write_list_validator(
+                                            'write_list',
+                                            SettingValidator('directory'),
+                                            description = "Validator for an array of values which will be set in a string, separated by ','",
+                                            separator = ',')
 SettingValidator.create_re_validator(
                                         r'^https?://[^\./]+.[^\./]+/?.*$',
                                         'http_url',
