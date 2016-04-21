@@ -88,7 +88,21 @@ class Plugins(object):
     ##@brief Bootstrap the Plugins class
     @classmethod
     def bootstrap(cls, plugins_directories):
-        cls._plugin_directories = plugins_directories
+        from lodel.settings import Settings
+        cls.start(Settings.plugins_path)
+    
+    ##@brief Start the Plugins class by explicitly giving a plugin directory path
+    # @param plugins_directories list : List of path
+    @classmethod
+    def start(cls, plugins_directories):
+        import inspect
+        self_path = inspect.getsourcefile(Plugins)
+        default_plugin_path = os.path.abspath(self_path + '../../../../plugins')
+        if plugins_directories is None:
+            plugins_directories = list()
+        plugins_directories += [ default_plugin_path ]
+        cls._plugin_directories = list(set(plugins_directories))
+        
 
     @classmethod
     def started(cls, raise_if_not = True):

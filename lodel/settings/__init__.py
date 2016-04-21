@@ -33,6 +33,5 @@
 #   print("DEBUG MODE !")
 # </pre>
 #
-
 from lodel.settings.settings import SettingsRO as Settings
 

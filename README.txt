@@ -6,3 +6,8 @@ Doxygen documentation generation :
 
 Dynamic code generation :
 	python3 scripts/refreshdyn.py examples/em_test.pickle OUTPUTFILE.py
+
+Instance creation :
+	Use the script in scripts/create_instance.sh
+
+	Usage : scripts/create_instance.sh instance_name instance_dir [lodel_libdir]
