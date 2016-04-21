@@ -55,7 +55,7 @@ class SettingsLoader(object):
     # @param mandatory bool
     # @return the option
     def getoption(self,section,keyname,validator,default_value=None,mandatory=False):
-        conf=copy.copy(self.__conf)
+        conf=self.__conf
         if section in conf:
             sec=conf[section]
             if keyname in sec:
@@ -68,11 +68,15 @@ class SettingsLoader(object):
                 return option
             elif default_value is None and mandatory:
                  raise SettingsError("Default value mandatory for option %s" % keyname)
-            sec['keyname']=dict()
-            sec['keyname']['value'] = default_value
-            sec['keyname']['file'] = 'default_value'
+            sec[keyname]=dict()
+            sec[keyname]['value'] = default_value
+            sec[keyname]['file'] = 'default_value'
             return default_value
         else:
+            conf[section]=dict()
+            conf[section][keyname]=dict()
+            conf[section][keyname]['value'] = default_value
+            conf[section][keyname]['file'] = 'default_value'
             return default_value
     ##@brief Sets option in a config section. Writes in the conf file
     # @param section str : name of the section
@@ -82,16 +86,19 @@ class SettingsLoader(object):
     # @return the option
     def setoption(self,section,keyname,value,validator):
         f_conf=copy.copy(self.__conf[section][keyname]['file'])
+        if f_conf == 'default_value':
+            f_conf = self.__conf_path + '/generated.ini'
+
         conf=self.__conf
         conf[section][keyname] = value
-        if f_conf == 'default_value':
-            f_conf = self.conf_path + '/generated.ini'
         config = configparser.ConfigParser()
         config.read(f_conf)
+        config[section]={}
         config[section][keyname] = validator(value)
- 
+        
         with open(f_conf, 'w') as configfile:
             config.write(configfile)
+            
     ##@brief Saves new partial configuration. Writes in the conf files corresponding
     # @param sections dict
     # @param validators dict of callable : takes one argument value and raises validation fail

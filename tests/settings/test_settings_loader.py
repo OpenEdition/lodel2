@@ -1,9 +1,12 @@
 #-*- coding: utf-8 -*-
 
 import unittest
+import os.path
 
 from lodel.settings.utils import *
 from lodel.settings.settings_loader import SettingsLoader
+
+
 
 #A dummy validator that only returns the value
 def dummy_validator(value): return value
@@ -86,8 +89,8 @@ class SettingsLoaderTestCase(unittest.TestCase):
         value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42', False)
         self.assertEqual(value, 'hello 42')
         # for non existing section in file
-        # value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
-        # self.assertEqual(value, 'hello 42')
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
+        self.assertEqual(value, 'hello 42')
 
     def test_getoption_complex(self):
         """ Testing behavior of getoption with less simple files & confs """
@@ -226,3 +229,26 @@ class SettingsLoaderTestCase(unittest.TestCase):
         self.assertEqual(option,'toto')
         option=loader.getoption('lodel2.A.e','a',dummy_validator)
         self.assertEqual(option,'ft')
+
+    def test_setoption_default_value(self):
+        loader = SettingsLoader('tests/settings/settings_examples/conf_setdef.d')
+            
+        # for non existing keys in file
+        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42', False)
+        self.assertEqual(value, 'hello 42')
+        # for non existing section in file
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
+        self.assertEqual(value, 'hello 42')
+        
+        loader.setoption('lodel2.foo.bar', 'foofoofoo', 'test ok', dummy_validator)
+        loader.setoption('lodel2.foofoo', 'foofoofoo', 'test ok', dummy_validator)
+        self.assertTrue(os.path.isfile('tests/settings/settings_examples/conf_setdef.d/generated.ini'))
+        
+        loader = SettingsLoader('tests/settings/settings_examples/conf_setdef.d')
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator)
+        self.assertEqual(value, 'test ok')
+        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator)
+        self.assertEqual(value, 'test ok')
+        
+        os.remove('tests/settings/settings_examples/conf_setdef.d/generated.ini')
+        
