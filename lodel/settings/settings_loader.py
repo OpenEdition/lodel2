@@ -56,19 +56,24 @@ class SettingsLoader(object):
     # @return the option
     def getoption(self,section,keyname,validator,default_value=None,mandatory=False):
         conf=copy.copy(self.__conf)
-        sec=conf[section]
-        if keyname in sec:
-            optionstr=sec[keyname]['value']
-            option=validator(sec[keyname])['value']
-            try:
-                del self.__conf_sv[section + ':' + keyname]
-            except KeyError: #allready fetched
-                pass
-            return option
-        elif mandatory:
-             raise SettingsError("Default value mandatory for option %s" % keyname)
+        if section in conf:
+            sec=conf[section]
+            if keyname in sec:
+                optionstr=sec[keyname]['value']
+                option=validator(sec[keyname])['value']
+                try:
+                    del self.__conf_sv[section + ':' + keyname]
+                except KeyError: #allready fetched
+                    pass
+                return option
+            elif default_value is None and mandatory:
+                 raise SettingsError("Default value mandatory for option %s" % keyname)
+            sec['keyname']=dict()
+            sec['keyname']['value'] = default_value
+            sec['keyname']['file'] = 'default_value'
+            return default_value
         else:
-             return default_value
+            return default_value
     ##@brief Sets option in a config section. Writes in the conf file
     # @param section str : name of the section
     # @param keyname str
@@ -77,6 +82,10 @@ class SettingsLoader(object):
     # @return the option
     def setoption(self,section,keyname,value,validator):
         f_conf=copy.copy(self.__conf[section][keyname]['file'])
+        conf=self.__conf
+        conf[section][keyname] = value
+        if f_conf == 'default_value':
+            f_conf = self.conf_path + '/generated.ini'
         config = configparser.ConfigParser()
         config.read(f_conf)
         config[section][keyname] = validator(value)
