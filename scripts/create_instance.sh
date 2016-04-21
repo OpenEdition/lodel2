@@ -39,4 +39,4 @@ sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 
 echo -e "\nInstance successfully created in $instdir"
 echo -e "============================\n"
-echo "Now you should edit '$settings' and then run : cd $instdir && make dbinit"
+echo "Now you should edit files in '${instdir}/conf.d/' and then run : cd $instdir && make dyncode"
