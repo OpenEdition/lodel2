@@ -45,7 +45,7 @@ class MetaSettings(type):
 #
 # @par Init sequence
 # The initialization sequence is a bit tricky. In fact, plugins adds allowed
-# configuration sections/values, but the list of plugins to load in in... the 
+# configuration sections/values, but the list of plugins to load are in... the 
 # settings.
 # Here is the conceptual presentation of Settings class initialization stages :
 #   -# Preloading (sets values like lodel2 library path or the plugins path)
@@ -120,7 +120,7 @@ class Settings(object, metaclass=MetaSettings):
     #@param confvalue is a dict with variables to save
     #@param validators is a dict with adapted validator
     @classmethod
-    def set(cls, confname, confvalue,loader):
+    def set(cls, confname, confvalue,validators,loader):
         for key in confvalue:
             loader.setoption(confname, key, confvalue[key], validators[key])
 

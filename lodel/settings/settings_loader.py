@@ -60,7 +60,7 @@ class SettingsLoader(object):
             sec=conf[section]
             if keyname in sec:
                 optionstr=sec[keyname]['value']
-                option=validator(sec[keyname])['value']
+                option= validator(sec[keyname]['value'])
                 try:
                     del self.__conf_sv[section + ':' + keyname]
                 except KeyError: #allready fetched
