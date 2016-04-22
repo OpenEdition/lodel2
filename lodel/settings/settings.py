@@ -115,9 +115,14 @@ class Settings(object, metaclass=MetaSettings):
             if cls.started():
                 raise RuntimeError("The Settings class is allready started")
 
+    ##@brief Saves a new configutration for section confname
+    #@param confname is the name of the modified section
+    #@param confvalue is a dict with variables to save
+    #@param validators is a dict with adapted validator
     @classmethod
-    def set(cls, confname, confvalue):
-        pass
+    def set(cls, confname, confvalue,loader):
+        for key in confvalue:
+            loader.setoption(confname, key, confvalue[key], validators[key])
 
     ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
@@ -182,7 +187,7 @@ class Settings(object, metaclass=MetaSettings):
                     res[section.lower()][kname] = copy.copy(spec[section][kname])
         return res
     
-    ##@brief Populate the Settings instance with options values fecthed with the loader from merged specs
+    ##@brief Populate the Settings instance with options values fetched with the loader from merged specs
     #
     # Populate the __confs attribute
     # @param specs dict : Settings specification dictionnary as returned by __merge_specs
