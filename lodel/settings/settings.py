@@ -113,16 +113,16 @@ class Settings(object, metaclass=MetaSettings):
                 raise RuntimeError("The Settings class is not started yet")
         else:
             if cls.started():
-                raise RuntimeError("The Settings class is allready started")
+                raise RuntimeError("The Settings class is already started")
 
-    ##@brief Saves a new configutration for section confname
+    ##@brief Saves a new configuration for section confname
     #@param confname is the name of the modified section
     #@param confvalue is a dict with variables to save
     #@param validators is a dict with adapted validator
     @classmethod
-    def set(cls, confname, confvalue,validators,loader):
-        for key in confvalue:
-            loader.setoption(confname, key, confvalue[key], validators[key])
+    def set(cls, confname, confvalue,validator, loader):
+        confkey=confname.rpartition('.')
+        loader.setoption(confkey[0], confkey[2], confvalue, validator)
 
     ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
@@ -268,7 +268,7 @@ class Settings(object, metaclass=MetaSettings):
             else:
                 curname, cur = left[0]
                 path.append( (curname, cur) )
-                nodename += '.'+curname.title()
+                nodename += '.' + curname.title()
     
     ##@brief Forge a named tuple given a conftree node
     # @param conftree dict : A conftree node

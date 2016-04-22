@@ -93,7 +93,8 @@ class SettingsLoader(object):
         conf[section][keyname] = value
         config = configparser.ConfigParser()
         config.read(f_conf)
-        config[section]={}
+        if section not in config:
+            config[section]={}
         config[section][keyname] = validator(value)
         
         with open(f_conf, 'w') as configfile:
