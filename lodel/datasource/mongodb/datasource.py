@@ -38,13 +38,7 @@ class MongoDbDataSource(GenericDataSource):
     # @return dict
     # @TODO Change the return value using the Lodel 2 settings module
     def _get_connection_args(self, connection_name):
-        return {
-            'host': 'localhost',
-            'port': 27017,
-            'login': 'login',  # TODO modifier la valeur
-            'password': 'password',  # TODO modifier la valeur
-            'dbname': 'lodel'
-        }
+        return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
 
     ## @brief checks if the connection args are valid and complete
     # @param connection_args dict
@@ -59,7 +53,7 @@ class MongoDbDataSource(GenericDataSource):
         if len(errors) > 0 :
             raise MongoDbDataSourceError("\r\n-".join(errors))
 
-        return (connection_args['login'], urllib.quote_plus(connection_args['password']), connection_args['host'],
+        return (connection_args['login'], connection_args['password'], connection_args['host'],
                 connection_args['port'], connection_args['dbname'])
 
     ## @brief returns a selection of documents from the datasource

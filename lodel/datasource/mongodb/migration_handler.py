@@ -2,9 +2,13 @@
 
 from lodel.datasource.generic.migrationhandler import GenericMigrationHandler
 from lodel.datasource.mongodb.datasource import MongoDbDataSource
+import lodel.datasource.mongodb.utils as utils
 from lodel.editorial_model.components import EmClass, EmField
+
+
 class MigrationHandlerChangeError(Exception):
     pass
+
 
 ## @brief Modifies a MongoDb database given editorial model changes
 class MongoDbMigrationHandler(GenericMigrationHandler):
@@ -19,6 +23,7 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
             # del conn_args['module']
 
         self.db_conn = MongoDbDataSource(self.connection_name)
+        self.database = self.db_conn.database
         # TODO Réimplémenter la partie sur les settings
         mh_settings = {}
         self.dryrun = kwargs['dryrun'] if 'dryrun' in kwargs else mh_settings['dryrun']
@@ -34,8 +39,35 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
     # @param new_state dict|None : dict with field name as key and field value as value. Represents the new state. None means it's a component deletion.
     # @throw MigrationHandlerChangeError if the change was refused
     def register_change(self, em, uid, initial_state, new_state):
-        pass
-
+        if isinstance(em.classes(uid), EmClass):
+            collection_name = utils.object_collection_name(em.classes(uid).display_name)
+            if initial_state is None:
+                self._create_collection(collection_name)
+            elif new_state is None:
+                self._delete_collection(collection_name)
 
     def _create_default_collections(self, drop_if_exist=False):
-        pass
+        if_exists = 'drop' if drop_if_exist else 'nothing'
+        # Object collection
+        collection_name = utils.common_collections['object']
+        self._create_collection(collection_name, if_exists=if_exists)
+        # TODO triggers ?
+        object_collection_name = collection_name
+
+        # TODO collections de relations
+        # TODO clés étrangères
+
+    def _create_collection(self, collection_name, if_exists='nothing'):
+        if if_exists == 'drop':
+            if collection_name in self.database.collection_names():
+                self.database[collection_name].drop()
+        else:
+            if collection_name not in self.database.collection_names():
+                self.database.create_collection(collection_name)
+
+        # TODO Relational fields
+
+    def _delete_collection(self, collection_name):
+        # TODO : delete the triggers ?
+        if collection_name in self.database.collection_names():
+            self.database[collection_name].drop()

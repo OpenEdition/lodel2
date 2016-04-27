@@ -2,6 +2,10 @@
 
 import pymongo
 
+common_collections = {
+    'object': 'object'
+}
+
 collection_prefix = {
     'relation': 'rel_',
     'collection': 'class_'
@@ -29,6 +33,7 @@ MONGODB_SORT_OPERATORS_MAP = {
     'ASC': 1,
     'DESC': -1
 }
+
 
 ## @brief Returns a collection name given a Emclass name
 # @param class_name str : The class name
