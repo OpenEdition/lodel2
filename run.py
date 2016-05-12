@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
-import datetime
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
 from lodel.interface.web.router import get_controller
 from lodel.interface.web.lodelrequest import LodelRequest
+from lodel.utils.datetime import get_utc_timestamp
 
 # TODO Déplacer ces trois paramètres dans les settings
 SESSION_FILES_TEMPLATE = 'lodel_%s.sess'
@@ -12,13 +12,6 @@ SESSION_FILES_BASE_DIR = 'tmp/sessions'
 SESSION_EXPIRATION_LIMIT = 900 # 15 min
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
-
-# TODO Déplacer cette méthode dans un module Lodel/utils/datetime.py
-def get_utc_timestamp():
-    d = datetime.datetime.utcnow()
-    epoch = datetime.datetime(1970, 1, 1)
-    t = (d - epoch).total_seconds()
-    return t
 
 # TODO déplacer dans un module "sessions.py"
 def delete_old_session_files(timestamp_now):
