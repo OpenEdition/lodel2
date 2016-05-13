@@ -13,25 +13,27 @@ SESSION_EXPIRATION_LIMIT = 900 # 15 min
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
 
+
 # TODO déplacer dans un module "sessions.py"
 def delete_old_session_files(timestamp_now):
     session_files_path = os.path.abspath(session_store.path)
-    session_files = [file_object for file_object in os.listdir(session_files_path)
+    session_files = [os.path.join(session_files_path, file_object) for file_object in os.listdir(session_files_path)
                      if os.path.isfile(os.path.join(session_files_path, file_object))]
+
     for session_file in session_files:
-        expiration_timestamp = os.path.join(session_files_path, session_file).st_mtime + \
-                                                                                      SESSION_EXPIRATION_LIMIT
+        last_modified = os.stat(session_file).st_mtime
+        expiration_timestamp = last_modified + SESSION_EXPIRATION_LIMIT
         if timestamp_now > expiration_timestamp:
-            os.unlink(os.path.join(session_files_path, session_file))
+            os.unlink(session_file)
 
 
-# TODO Déplacer dans une module "sessions.py"
 def is_session_file_expired(timestamp_now, sid):
     session_file = session_store.get_session_filename(sid)
     expiration_timestamp = os.stat(session_file).st_mtime + SESSION_EXPIRATION_LIMIT
     if timestamp_now < expiration_timestamp:
         return False
     return True
+
 
 # WSGI Application
 def application(env, start_response):
