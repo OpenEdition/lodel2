@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
+import loader # Lodel2 loader
+
 import os
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
+from lodel.settings import Settings
 from lodel.interface.web.router import get_controller
 from lodel.interface.web.lodelrequest import LodelRequest
 from lodel.utils.datetime import get_utc_timestamp
 
-# TODO Déplacer ces trois paramètres dans les settings
-SESSION_FILES_TEMPLATE = 'lodel_%s.sess'
-SESSION_FILES_BASE_DIR = 'tmp/sessions'
-SESSION_EXPIRATION_LIMIT = 900 # 15 min
+SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
+SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
+SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
 
