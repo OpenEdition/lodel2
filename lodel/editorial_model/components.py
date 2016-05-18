@@ -132,7 +132,8 @@ class EmClass(EmComponent):
 
     def d_hash(self):
         m = hashlib.md5()
-        payload = str(super().d_hash()) + ("1" if self.abstract else "0")
+        payload = str(super().d_hash())  + ("1" if self.abstract else "0") 
+
         for p in sorted(self.parents):
             payload += str(p.d_hash())
         for fuid in sorted(self.__fields.keys()):
@@ -185,6 +186,10 @@ class EmField(EmComponent):
     ##@brief Returns data_handler_cls attribute
     def get_data_handler_cls(self):
         return copy.copy(selfdata_handler_cls)
+    
+    ##@brief Returne the uid of the emclass which contains this field
+    def get_emclass_uid(self):
+        return self._emclass.uid
     
     # @warning Not complete !
     # @todo Complete the hash when data handlers becomes available
@@ -305,6 +310,7 @@ class EmGroup(object):
         
     ##@brief Add a applicant
     # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
+    # Useless ???
     def add_applicant(self, grp):
         try:
             for group in grp:
