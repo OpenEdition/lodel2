@@ -9,7 +9,7 @@ from lodel.settings import Settings
 def uwsgi_fork(hook_name, caller, payload):
     if Settings.webui.standalone:
         cmd='uwsgi_python3 --http-socket {addr}:{port} --module run'
-        cmd.format(
+        cmd = cmd.format(
                     addr = Settings.webui.listen_address,
                     port = Settings.webui.listen_port)
         exit(os.system(cmd))
