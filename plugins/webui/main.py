@@ -1,17 +1,15 @@
 #-*- coding: utf-8 -*-
 
+import os
 from lodel.plugin import LodelHook
+from lodel.settings import Settings
 
-##@brief Hook's callback example
-@LodelHook('leapi_get_pre')
-@LodelHook('leapi_get_post')
-@LodelHook('leapi_update_pre')
-@LodelHook('leapi_update_post')
-@LodelHook('leapi_delete_pre')
-@LodelHook('leapi_delete_post')
-@LodelHook('leapi_insert_pre')
-@LodelHook('leapi_insert_post')
-def dummy_callback(hook_name, caller, payload):
-    if Lodel.settings.Settings.debug:
-        print("\tHook %s\tcaller %s with %s" % (hook_name, caller, payload))
-    return payload   
+##@brief uwsgi startup demo
+@LodelHook('lodel2_loader_main')
+def uwsgi_fork(hook_name, caller, payload):
+    if Settings.webui.standalone:
+        cmd='uwsgi_python3 --http-socket {addr}:{port} --module run'
+        cmd.format(
+                    addr = Settings.webui.listen_address,
+                    port = Settings.webui.listen_port)
+        exit(os.system(cmd))

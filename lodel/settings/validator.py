@@ -173,7 +173,6 @@ def loglevel_val(value):
     return value.upper()
 
 def path_val(value):
-    print("DEBUG",os.getcwd())
     if not os.path.exists(value):
         raise SettingsValidationError(
                 "path '%s' doesn't exists" % value)
