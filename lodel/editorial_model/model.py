@@ -2,6 +2,7 @@
 
 import hashlib
 import importlib
+import copy
 
 from lodel.utils.mlstring import MlString
 from lodel.logger import logger
@@ -30,6 +31,59 @@ class EditorialModel(object):
         self.__active_classes = dict()
         self.__set_actives()
     
+    ##@brief EmClass uids accessor
+    #@return a dict of emclasses
+    def all_classes(self, uid = None):
+        if uid is None:
+            return copy.copy(self.__classes)
+        else:
+            try:
+                return copy.copy(self.__classes[uid])
+            except KeyError:
+                raise EditorialModelException("EmClass not found : '%s'" % uid)
+                
+    def all_classes_ref(self, uid = None):
+        if uid is None:
+            return self.__classes
+        else:
+            try:
+                return self.__classes[uid]
+            except KeyError:
+                raise EditorialModelException("EmGroup not found : '%s'" % uid)
+                                
+    ##@brief active EmClass uids accessor
+    #@return a list of class uids
+    def active_classes_uids(self):
+            return list(self.__active_classes.keys())
+        
+    
+    ##@brief EmGroups accessor
+    #@return a dict of groups
+    def all_groups(self, uid = None):
+        if uid is None:
+            return copy.copy(self.__groups)
+        else:
+            try:
+                return copy.copy(self.__groups[uid])
+            except KeyError:
+                raise EditorialModelException("EmGroup not found : '%s'" % uid)
+    
+    ##@brief EmGroups accessor
+    #@return a dict of groups
+    def all_groups_ref(self, uid = None):
+        if uid is None:
+            return self.__groups
+        else:
+            try:
+                return self.__groups[uid]
+            except KeyError:
+                raise EditorialModelException("EmGroup not found : '%s'" % uid)
+                
+    ##@brief active EmClass uids accessor
+    #@return a list of class uids
+    def active_groups_uids(self):
+            return list(self.__active_groups.keys())
+
     ##@brief EmClass accessor
     #@param uid None | str : give this argument to get a specific EmClass
     #@return if uid is given returns an EmClass else returns an EmClass
@@ -42,7 +96,7 @@ class EditorialModel(object):
                                         uid)
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
-
+             
     ##@brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator
@@ -184,8 +238,10 @@ class EditorialModel(object):
         )
         for guid in sorted(self.__groups):
             payload += str(self.__groups[guid].d_hash())
+
         for cuid in sorted(self.__classes):
             payload += str(self.__classes[cuid].d_hash())
+
         return int.from_bytes(
                                 hashlib.md5(bytes(payload, 'utf-8')).digest(),
                                 byteorder='big'
