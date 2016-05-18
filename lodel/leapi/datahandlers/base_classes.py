@@ -203,6 +203,10 @@ class Reference(DataHandler):
     def back_reference(self):
         return copy.copy(self.__back_reference)
 
+    @property
+    def linked_classes(self):
+        return copy.copy(self.__allowed_classes)
+
     ##@brief Set the back reference for this field.
     def _set_back_reference(self, back_reference):
         self.__back_reference = back_reference
