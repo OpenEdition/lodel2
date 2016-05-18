@@ -120,7 +120,8 @@ class Settings(object, metaclass=MetaSettings):
     #@param confvalue is a dict with variables to save
     #@param validators is a dict with adapted validator
     @classmethod
-    def set(cls, confname, confvalue,validator, loader):
+    def set(cls, confname, confvalue,validator):
+        loader = SettingsLoader(cls.instance.__conf_dir)
         confkey=confname.rpartition('.')
         loader.setoption(confkey[0], confkey[2], confvalue, validator)
 
@@ -140,6 +141,7 @@ class Settings(object, metaclass=MetaSettings):
         # Init the settings loader
         loader = SettingsLoader(self.__conf_dir)
         # fetching list of plugins to load
+
         plugins_list = loader.getoption(    'lodel2',
                                             'plugins',
                                             plugins_opt_specs[1],
