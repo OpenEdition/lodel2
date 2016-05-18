@@ -41,7 +41,7 @@ class LeQuery(object):
     ##@brief Abstract constructor
     # @param target_class LeObject : class of object the query is about
     def __init__(self, target_class):
-        if hook_prefix is None:
+        if self._hook_prefix is None:
             raise NotImplementedError("Abstract class")
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
