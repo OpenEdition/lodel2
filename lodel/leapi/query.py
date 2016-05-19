@@ -3,11 +3,13 @@
 import re
 from .leobject import LeObject, LeApiErrors, LeApiDataCheckError
 from lodel.plugin.hooks import LodelHook
+from lodel import logger
 
 class LeQueryError(Exception):
     ##@brief Instanciate a new exceptions handling multiple exceptions
-    # @param msg str : Exception message
-    # @param exceptions dict : A list of data check Exception with concerned field (or stuff) as key
+    #@param msg str : Exception message
+    #@param exceptions dict : A list of data check Exception with concerned
+    # field (or stuff) as key
     def __init__(self, msg = "Unknow error", exceptions = None):
         self._msg = msg
         self._exceptions = dict() if exceptions is None else exceptions
@@ -17,7 +19,10 @@ class LeQueryError(Exception):
 
     def __str__(self):
         msg = self._msg
-        for_iter = self._exceptions.items() if isinstance(self._exceptions, dict) else enumerate(self.__exceptions)
+        if isinstance(self._exceptions, dict):
+            for_iter = self._exceptions.items()
+        else:
+            for_iter = enumerate(self.__exceptions)
         for obj, expt in for_iter:
             msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
                     expt_obj = obj,
@@ -36,7 +41,7 @@ class LeQuery(object):
     ##@brief Abstract constructor
     # @param target_class LeObject : class of object the query is about
     def __init__(self, target_class):
-        if hook_prefix is None:
+        if self._hook_prefix is None:
             raise NotImplementedError("Abstract class")
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
@@ -49,9 +54,11 @@ class LeQuery(object):
     #
     # @note maybe the datasource in not an argument but should be determined
     #elsewhere
-    def execute(self, datasource, **datas = None):
+    def execute(self, datasource, datas = None):
         if len(datas) > 0:
-            self.__target_class.check_datas_value(datas, **self._data_check_args)
+            self.__target_class.check_datas_value(
+                                                    datas,
+                                                    **self._data_check_args)
             self.__target_class.prepare_datas() #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
@@ -90,48 +97,196 @@ class LeFilteredQuery(LeQuery):
     # @param query_filters list : with a tuple (only one filter) or a list of tuple
     #   or a dict: {OP,list(filters)} with OP = 'OR' or 'AND
     #   For tuple (FIELD,OPERATOR,VALUE)
-    def __init__(self, target_class, query_filter):
+    def __init__(self, target_class, query_filters = None):
         super().__init__(target_class)
         ##@brief The query filter
         self.__query_filter = None
         self.set_query_filter(query_filter)
     
-    ##@brief Set the query filter for a query
-    def set_query_filter(self, query_filter):
-        #
-        #   Query filter check & prepare 
-        #   query_filters can be a tuple (only one filter), a list of tuple
-        #   or a dict: {OP,list(filters)} with OP = 'OR' or 'AND
-        #   For tuple (FIELD,OPERATOR,VALUE)
-        #   FIELD has to be in the field_names list of target class
-        #   OPERATOR in query_operator attribute
-        #   VALUE has to be a correct value for FIELD
+    ##@brief Add filter(s) to the query
+    #@param query_filter list|tuple|str : A single filter or a list of filters
+    #@see LeFilteredQuery._prepare_filters()
+    def filter(self, query_filter):
+        pass
 
-        fieldnames = self.__target_class.fieldnames()
-        # Recursive method which checks filters
-        def check_tuple(tupl, fieldnames, target_class):
-            if isinstance(tupl, tuple):
-                if tupl[0] not in fieldnames:
-                    return False
-                if tupl[1] not in self.query_operators:
-                    return False
-                if not isinstance(tupl[2], target_class.datahandler(tupl[0])):
-                    return False
-                return True
-            elif isinstance(tupl,dict):
-                return check_tuple(tupl[1])
-            elif isinstance(tupl,list):
-                for tup in tupl:
-                    return check_tuple(tup)
-            else: 
-                raise TypeError("Wrong filters for query")
+    ## @brief Prepare filters for datasource
+    # 
+    #A filter can be a string or a tuple with len = 3.
+    #
+    #This method divide filters in two categories :
+    #
+    #@par Simple filters
+    #
+    #Those filters concerns fields that represent object values (a title,
+    #the content, etc.) They are composed of three elements : FIELDNAME OP
+    # VALUE . Where :
+    #- FIELDNAME is the name of the field
+    #- OP is one of the authorized comparison operands ( see 
+    #@ref LeFilteredQuery.query_operators )
+    #- VALUE is... a value
+    #
+    #@par Relational filters
+    #
+    #Those filters concerns on reference fields ( see the corresponding
+    #abstract datahandler @ref lodel.leapi.datahandlers.base_classes.Reference)
+    #The filter as quite the same composition than simple filters :
+    # FIELDNAME[.REF_FIELD] OP VALUE . Where :
+    #- FIELDNAME is the name of the reference field
+    #- REF_FIELD is an optionnal addon to the base field. It indicate on wich
+    #field of the referenced object the comparison as to be done. If no
+    #REF_FIELD is indicated the comparison will be done on identifier.
+    #
+    #@param cls
+    #@param filters_l list : This list of str or tuple (or both)
+    #@return a tuple(FILTERS, RELATIONNAL_FILTERS
+    #@todo move this doc in another place (a dedicated page ?)
+    @classmethod
+    def _prepare_filters(cls, filters_l):
+        filters = list()
+        res_filters = list()
+        rel_filters = list()
+        err_l = dict()
+        #Splitting in tuple if necessary
+        for fil in filters_l:
+            if len(fil) == 3 and not isinstance(fil, str):
+                filters.append(tuple(fil))
+            else:
+                filters.append(cls.split_filter(fil))
 
-        check_ok=check_tuple(query_filter, fieldnames, self.__target_class)
-        if check_ok:            
-            self.__query_filter = query_filter
-            
-		def execute(self, datasource, **datas = None):
-			super().execute(datasource, **datas)
+        for field, operator, value in filters:
+            # Spliting field name to be able to detect a relational field
+            field_spl = field.split('.')
+            if len(field_spl) == 2:
+                field, ref_field = field_spl
+            elif len(field_spl) == 1:
+                ref_field = None
+            else:
+                err_l[field] = NameError(   "'%s' is not a valid relational \
+field name" % fieldname)
+                continue   
+            # Checking field against target_class
+            ret = self.__check_field(self.__target_class, field)
+            if isinstance(ret, Exception):
+                err_l[field] = ret
+                continue
+            # Check that the field is relational if ref_field given
+            if ref_field is not None and not cls.field(field).is_reference():
+                # inconsistency
+                err_l[field] = NameError(   "The field '%s' in %s is not\
+a relational field, but %s.%s was present in the filter"
+                                            % ( field,
+                                                field,
+                                                ref_field))
+            # Prepare relational field
+            if cls.field(field).is_reference():
+                ret = cls._prepare_relational_fields(field, ref_field)
+                if isinstance(ret, Exception):
+                    err_l[field] = ret
+                else:
+                    rel_filters.append((ret, operator, value))
+            else:
+                res_filters.append((field,operator, value))
+        
+        if len(err_l) > 0:
+            raise LeApiDataCheckError(
+                                        "Error while preparing filters : ",
+                                        err_l)
+        return (res_filters, rel_filters)
+
+    ## @brief Check and split a query filter
+    # @note The query_filter format is "FIELD OPERATOR VALUE"
+    # @param query_filter str : A query_filter string
+    # @param cls
+    # @return a tuple (FIELD, OPERATOR, VALUE)
+    @classmethod
+    def split_filter(cls, query_filter):
+        if cls._query_re is None:
+            cls.__compile_query_re()
+        matches = cls._query_re.match(query_filter)
+        if not matches:
+            raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
+        result = (matches.group('field'), re.sub(r'\s', ' ', matches.group('operator'), count=0), matches.group('value').strip())
+        for r in result:
+            if len(r) == 0:
+                raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
+        return result
+
+    ## @brief Compile the regex for query_filter processing
+    # @note Set _LeObject._query_re
+    @classmethod
+    def __compile_query_re(cls):
+        op_re_piece = '(?P<operator>(%s)'%cls._query_operators[0].replace(' ', '\s')
+        for operator in cls._query_operators[1:]:
+            op_re_piece += '|(%s)'%operator.replace(' ', '\s')
+        op_re_piece += ')'
+        cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+        pass
+
+    @classmethod
+    def __check_field(cls, target_class, fieldname):
+        try:
+            target_class.field(fieldname)
+        except NameError:
+            tc_name = target_class.__name__
+            return ValueError("No such field '%s' in %s" % (    fieldname,
+                                                                tc_name))
+
+    ##@brief Prepare a relational filter
+    #
+    #Relational filters are composed of a tuple like the simple filters
+    #but the first element of this tuple is a tuple to :
+    #
+    #<code>( (FIELDNAME, {REF_CLASS: REF_FIELD}), OP, VALUE)</code>
+    # Where :
+    #- FIELDNAME is the field name is the target class
+    #- the second element is a dict with :
+    # - REF_CLASS as key. It's a LeObject child class
+    # - REF_FIELD as value. The name of the referenced field in the REF_CLASS
+    #
+    #Visibly the REF_FIELD value of the dict will vary only when
+    #no REF_FIELD is explicitly given in the filter string notation
+    #and REF_CLASSES has differents uid
+    #
+    #@par String notation examples
+    #<pre>contributeur IN (1,2,3,5)</pre> will be transformed into :
+    #<pre>(
+    #       (
+    #           contributeur, 
+    #           {
+    #               auteur: 'lodel_id',
+    #               traducteur: 'lodel_id'
+    #           } 
+    #       ),
+    #       ' IN ',
+    #       [ 1,2,3,5 ])</pre>
+    #@todo move the documentation to another place
+    #
+    #@param fieldname str : The relational field name
+    #@param ref_field str|None : The referenced field name (if None use
+    #uniq identifiers as referenced field
+    #@return a well formed relational filter tuple or an Exception instance
+    @classmethod
+    def __prepare_relational_fields(cls, fieldname, ref_field = None):
+        datahandler = self.__target_class.field(fieldname)
+        # now we are going to fetch the referenced class to see if the
+        # reference field is valid
+        ref_classes = datahandler.linked_classes
+        ref_dict = dict()
+        if ref_field is None:
+            for ref_class in ref_classes:
+                ref_dict[ref_class] = ref_class.uid_fieldname
+        else:
+            for ref_class in ref_classes:
+                if ref_field in ref_class.fieldnames(True):
+                    ref_dict[ref_class] = ref_field
+                else:
+                    logger.debug("Warning the class %s is not considered in \
+the relational filter %s" % ref_class.__name__)
+        if len(ref_dict) == 0:
+            return NameError(   "No field named '%s' in referenced objects"
+                                % ref_field)
+        return ( (fieldname, ref_dict), op, value)
+ 
 
 ##@brief A query to insert a new object
 class LeInsertQuery(LeQuery):
@@ -178,7 +333,7 @@ class LeUpdateQuery(LeFilteredQuery):
         l_uids=datasource.select(self.__target_class,list(self.__target_class.getuid()),query_filter,None, None, None, None, 0, False)
         # list of dict l_uids : _uid(s) of the objects to be updated, corresponding datas
         nb_updated = datasource.update(self.__target_class,l_uids, **datas)
-        if (nb_updated != len(l_uids):
+        if nb_updated != len(l_uids):
             raise LeQueryError("Number of updated items: %d is not as expected: %d " % (nb_updated, len(l_uids)))
         return nb_updated
     
@@ -206,7 +361,7 @@ class LeDeleteQuery(LeFilteredQuery):
         l_uids=datasource.select(self.__target_class,list(self.__target_class.getuid()),query_filter,None, None, None, None, 0, False)
         # list of dict l_uids : _uid(s) of the objects to be deleted
         nb_deleted = datasource.update(self.__target_class,l_uids, **datas)
-        if (nb_deleted != len(l_uids):
+        if nb_deleted != len(l_uids):
             raise LeQueryError("Number of deleted items %d is not as expected %d " % (nb_deleted, len(l_uids)))
         return nb_deleted
 

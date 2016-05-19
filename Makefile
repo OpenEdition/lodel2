@@ -1,3 +1,4 @@
+python=python3
 dyncode_filename='lodel/leapi/dyncode.py'
 
 all: tests doc dyncode
@@ -11,11 +12,11 @@ doc_graphviz:
 
 # Test em update ( examples/em_test.pickle )
 em_test:
-	python3 em_test.py
+	$(python) em_test.py
 
 # generate leapi dynamic code
 dyncode: clean_dyn em_test
-	python3 scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
+	$(python) scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
 # run tests
 tests:

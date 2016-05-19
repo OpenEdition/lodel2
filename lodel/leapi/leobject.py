@@ -118,6 +118,11 @@ class LeObject(object):
     @property
     def initialized(self):
         return not isinstance(self.__initialized, list)
+    
+    ##@return The uid field name
+    @classmethod
+    def uid_fieldname(cls):
+        return cls._uid
 
     ##@brief Return a list of fieldnames
     # @param include_ro bool : if True include read only field names
@@ -160,6 +165,18 @@ class LeObject(object):
     @classmethod
     def is_abstract(cls):
         return cls._abstract
+    
+    ##@brief Field data handler gettet
+    #@param fieldname str : The field name
+    #@return A datahandler instance
+    #@throw NameError if the field doesn't exist
+    @classmethod
+    def field(cls, fieldname):
+        try:
+            return cls._fields[field_uid]
+        except KeyError:
+            raise NameError("No field named '%s' in %s" % ( field_uid,
+                                                            cls.__name__))
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance

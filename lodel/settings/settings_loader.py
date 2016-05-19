@@ -5,6 +5,7 @@ import glob
 import copy
 
 from lodel.settings.utils import *
+from lodel.settings.validator import SettingsValidationError
 
    
 ##@brief Merges and loads configuration files
@@ -60,7 +61,14 @@ class SettingsLoader(object):
             sec=conf[section]
             if keyname in sec:
                 optionstr=sec[keyname]['value']
-                option= validator(sec[keyname]['value'])
+                try:
+                    option= validator(sec[keyname]['value'])
+                except Exception as e:
+                    raise SettingsValidationError(
+                                                    "For %s.%s : %s" % 
+                                                    (section, keyname,e)
+                    )
+
                 try:
                     del self.__conf_sv[section + ':' + keyname]
                 except KeyError: #allready fetched

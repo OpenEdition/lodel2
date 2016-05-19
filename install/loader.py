@@ -22,8 +22,14 @@ from lodel.settings.settings import Settings as settings
 settings('conf.d')
 from lodel.settings import Settings
 
+#Load plugins
+from lodel.plugin import Plugins
+Plugins.bootstrap()
 
-if __name__ == '__main__': # To allow running interactive python
+if __name__ == '__main__':
+    from lodel.plugin import LodelHook
+    LodelHook.call_hook('lodel2_loader_main', '__main__', None)
+    #Run interative python
     import code
     print("""
      Running interactive python in Lodel2 %s instance environment

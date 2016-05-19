@@ -29,7 +29,7 @@ class TemplateLoader(object):
     #
     # @return str. String containing the HTML output of the processed templated
     def render_to_html(self, template_file, template_vars={}, template_extra=None):
-        loader = jinja2.FileSystemLoader(searchpath=self.search_path, followlinks=self.follow_links)
+        loader = jinja2.FileSystemLoader(searchpath=self.search_path)
         environment = jinja2.Environment(loader=loader) if self.is_cache_active else jinja2.Environment(loader=loader,
                                                                                                         cache_size=0)
         template = environment.get_template(template_file)

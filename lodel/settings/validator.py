@@ -168,15 +168,20 @@ def directory_val(value):
 def loglevel_val(value):
     valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
-        raise SettingsValidationError("The value '%s' is not a valid loglevel")
+        raise SettingsValidationError(
+                "The value '%s' is not a valid loglevel" % value)
     return value.upper()
 
 def path_val(value):
     if not os.path.exists(value):
-        raise SettingsValidationError("The value '%s' is not a valid path")
+        raise SettingsValidationError(
+                "path '%s' doesn't exists" % value)
     return value
 
-def dummy_val(value): return value
+def none_val(value):
+    if value is None:
+        return None
+    raise SettingsValidationError("This settings cannot be set in configuration file")
 
 #
 #   Default validators registration
@@ -184,8 +189,13 @@ def dummy_val(value): return value
 
 SettingValidator.register_validator(
                                         'dummy',
-                                        dummy_val,
+                                        lambda value:value,
                                         'Validate anything')
+
+SettingValidator.register_validator(
+                                        'none',
+                                        none_val,
+                                        'Validate None')
 
 SettingValidator.register_validator(
                                         'strip',
