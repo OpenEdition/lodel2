@@ -43,23 +43,8 @@ class XmlFileTestCase(unittest.TestCase):
         os.unlink(fname)           
 
         self.assertNotEqual(id(new_model), id(emmodel))
-
-        new_cls2 = new_model.all_classes('testclass2')
-        em_cls2 = emmodel.all_classes('testclass2')
         
-        new_cls1 = new_model.all_classes('testclass1')
-        em_cls1 = emmodel.all_classes('testclass1')
-
-        self.assertEqual(new_cls2.d_hash(),em_cls2.d_hash())
-        self.assertEqual(new_model.all_classes('testclass1').d_hash(), cls1.d_hash())
-        self.assertEqual(new_model.all_groups('testgroup2').d_hash(), grp2.d_hash())
-        
-        # Pb de d_hash required
-        emmgrp1 = new_model.all_groups('testgroup1')
-        self.assertEqual(emmgrp1.d_hash(), grp1.d_hash())
-        
-        #self.assertEqual(new_model.all_groups('testgroup1').d_hash(), emmodel.all_groups('testgroup1').d_hash())
-        #self.assertEqual(new_model.d_hash(), emmodel.d_hash())
+        self.assertEqual(new_model.d_hash(), emmodel.d_hash())
 
 
 
