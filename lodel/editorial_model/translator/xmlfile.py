@@ -9,8 +9,7 @@ from lodel.utils.mlstring import MlString
 
 ##@brief Saves a model in a xml file
 # @param model EditorialModel : the model to save
-# @param filename str|None : if None display on stdout
-
+# @param filename str|None : if None display on stdout else writes in the file filename
 def save(model, **kwargs):
     Em = etree.Element("editorial_model")
     em_name = etree.SubElement(Em, 'name')
@@ -99,7 +98,6 @@ def write_emfield_xml(etree, elem, uid, name, help_text, group, datahandler_name
 # @param name  : the name of the group
 # @param help_text : explanations of the EmGroup
 # @param requires : a list of the group's uids whose this group depends
-
 def write_emgroup_xml(etree, elem, uid, name, help_text, requires, components):
     emgroup = etree.SubElement(elem, 'group')
     emgroup_uid = etree.SubElement(emgroup, 'uid')
@@ -144,7 +142,6 @@ def write_emgroup_xml(etree, elem, uid, name, help_text, requires, components):
 # @param parents : a list of EmClass uids
 # @param abstract : a boolean
 # @param pure_abstract : a boolean
-
 def write_emclass_xml(etree, elem, uid, name, help_text, group, fields, parents, abstract = False, pure_abstract = False):
     emclass = etree.SubElement(elem, 'class')
     emclass_uid  = etree.SubElement(emclass, 'uid')
@@ -178,7 +175,7 @@ def write_emclass_xml(etree, elem, uid, name, help_text, group, fields, parents,
 
 ##@brief Loads a model from a xml file
 # @param model EditorialModel : the model to load
-
+# @return a new EditorialModel object
 def load(**kwargs):
 
     Em = etree.parse(kwargs['filename'])
@@ -198,8 +195,12 @@ def load(**kwargs):
         if grp.uid not in model.all_groups():
             grp = model.add_group(grp)
 
-    return model;
+    return model
 
+##@brief Creates a EmClass from a xml description
+# @param elem : the element which represents the EmClass
+# @param model  : the model which will contain the new class
+# @return a new EmClass object
 def load_class_xml(model, elem):
     uid = elem.find('uid').text
     if elem.find('display_name').text is None:
@@ -251,7 +252,10 @@ def load_class_xml(model, elem):
             
     return emclass
     
-
+##@brief Creates a EmField from a xml description
+# @param elem : the element which represents the EmField
+# @param model  : the model which will contain the new field
+# @return a new EmField object
 def load_field_xml(model, elem):
     uid = elem.find('uid').text
     if elem.find('display_name').text is None:
@@ -276,7 +280,11 @@ def load_field_xml(model, elem):
         emfield = EmField(uid, dhdl.text, name, help_text, group)
     
     return emfield
-    
+
+##@brief Creates a EmGroup from a xml description
+# @param elem : the element which represents the EmGroup
+# @param model  : the model which will contain the new group
+# @return a new EmGroup object
 def load_group_xml(model, elem):
     uid = elem.find('uid')
     
@@ -325,6 +333,10 @@ def load_group_xml(model, elem):
         
     return group
 
+##@brief Constructs a MlString from a xml description
+# @param elem : the element which represents the MlString
+# @param model  : the model which will contain the new group
+# @return a new MlString object
 def load_mlstring_xml(elem):
     mlstr = dict()
     for lang in elem:
