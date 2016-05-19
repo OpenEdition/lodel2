@@ -195,14 +195,22 @@ def load(**kwargs):
     groups = emodel.find('groups')
     for group in groups:
         grp = load_group_xml(model, group)
-        grp = model.add_group(grp)
+        if grp.uid not in model.all_groups():
+            grp = model.add_group(grp)
 
     return model;
 
 def load_class_xml(model, elem):
     uid = elem.find('uid').text
-    name = load_mlstring_xml(elem.find('display_name'))
-    help_text = load_mlstring_xml(elem.find('help_text'))
+    if elem.find('display_name').text is None:
+        name = None
+    else:
+        name = load_mlstring_xml(elem.find('display_name'))
+    if elem.find('help_text').text is None:
+        help_text = None
+    else:
+        help_text = load_mlstring_xml(elem.find('help_text'))
+        
     abstract = True if elem.find('abstract').text == 'True' else False
     pure_abstract = True if elem.find('pure_abstract').text == 'True' else False
     requires = list()
@@ -285,6 +293,7 @@ def load_group_xml(model, elem):
     requires = list()
     groups = model.all_groups()
     req = elem.find('requires')
+
     if req.text is not None:
         l_req = req.text.split(',')
         for r in l_req:
@@ -293,6 +302,7 @@ def load_group_xml(model, elem):
             else:
                 grp = model.new_group(r)
                 requires.append(grp)
+                
     if uid in groups:
         group = model.all_groups_ref(uid)
         group.display_name = name
@@ -300,7 +310,6 @@ def load_group_xml(model, elem):
         group.add_dependencie(requires)
     else:
         group = EmGroup(uid.text, requires, name, help_text)
-    
     comp= list()
     components = elem.find('components')
     fields = components.find('emfields')
