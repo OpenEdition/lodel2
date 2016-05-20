@@ -37,7 +37,6 @@ cp -Rv $libdir/install/conf.d $instdir/
 cp -Rv $libdir/install/loader.py $instdir/
 cp -Rv $libdir/install/editorial_model.pickle $instdir/
 ln -sv $libdir/install/Makefile $instdir/Makefile
-ln -sv $libdir/install/run.py $instdir/run.py
 ln -sv $libdir/install/lodel_admin.py $instdir/lodel_admin.py
 ln -sv $libdir/plugins $instdir/plugins
 

@@ -3,9 +3,11 @@ import jinja2
 import os
 
 import settings
-from lodel.template.api import api_lodel_templates
-from lodel.template.exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
+from .api import api_lodel_templates
+from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
 
+from ...main import PLUGIN_PATH
+TEMPLATE_PATH = os.path.realpath(os.path.join(PLUGIN_PATH, 'templates/'))
 
 class TemplateLoader(object):
 
@@ -18,7 +20,7 @@ class TemplateLoader(object):
     # @param follow_links bool : indicates whether or not to follow the symbolic links (default: True)
     # @param is_cache_active bool : indicates whether or not the cache should be activated or not (default: True)
     # @todo connect this to the new settings system
-    def __init__(self, search_path=settings.base_path, follow_links=True, is_cache_active=True):
+    def __init__(self, search_path=TEMPLATE_PATH, follow_links=True, is_cache_active=True):
         self.search_path = search_path
         self.follow_links = follow_links
         self.is_cache_active = is_cache_active

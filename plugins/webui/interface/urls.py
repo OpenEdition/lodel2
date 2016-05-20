@@ -1,4 +1,4 @@
-from lodel.interface.web.controllers import *
+from .controllers import *
 
 urls = (
     (r'^$', index),

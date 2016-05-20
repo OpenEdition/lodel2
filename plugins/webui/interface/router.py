@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import re
 
-from lodel.interface.web.controllers import *
-import lodel.interface.web.urls as main_urls
+from .controllers import *
+from .urls import urls
 
 
 def get_controller(request):
     url_rules = []
-    for url in main_urls.urls:
+    for url in urls:
         url_rules.append((url[0], url[1]))
 
     # Returning the right controller to call

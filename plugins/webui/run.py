@@ -5,8 +5,8 @@ import os
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
 from lodel.settings import Settings
-from lodel.interface.web.router import get_controller
-from lodel.interface.web.lodelrequest import LodelRequest
+from .interface.router import get_controller
+from .interface.lodelrequest import LodelRequest
 from lodel.utils.datetime import get_utc_timestamp
 
 SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
