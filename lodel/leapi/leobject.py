@@ -130,9 +130,9 @@ class LeObject(object):
     @classmethod
     def fieldnames(cls, include_ro = False):
         if not include_ro:
-            return [ fname for fname in self._fields if not self._fields[fname].is_internal() ]
+            return [ fname for fname in cls._fields if not cls._fields[fname].is_internal() ]
         else:
-            return list(self._fields.keys())
+            return list(cls._fields.keys())
  
     @classmethod
     def name2objname(cls, name):
@@ -166,14 +166,14 @@ class LeObject(object):
     def is_abstract(cls):
         return cls._abstract
     
-    ##@brief Field data handler gettet
+    ##@brief Field data handler getter
     #@param fieldname str : The field name
     #@return A datahandler instance
     #@throw NameError if the field doesn't exist
     @classmethod
     def field(cls, fieldname):
         try:
-            return cls._fields[field_uid]
+            return cls._fields[fieldname]
         except KeyError:
             raise NameError("No field named '%s' in %s" % ( field_uid,
                                                             cls.__name__))
