@@ -98,10 +98,10 @@ class LeFilteredQuery(LeQuery):
                         '!=',
                         '<',
                         '>',
-                        'in',
-                        'not in',
-                        'like',
-                        'not like']
+                        ' in ',
+                        ' not in ',
+                        ' like ',
+                        ' not like ']
     
     ##@brief Regular expression to process filters
     _query_re = None
@@ -235,6 +235,7 @@ a relational field, but %s.%s was present in the filter"
         if not matches:
             raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
         result = (matches.group('field'), re.sub(r'\s', ' ', matches.group('operator'), count=0), matches.group('value').strip())
+        result = [r.strip() for r in result]
         for r in result:
             if len(r) == 0:
                 raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
@@ -248,7 +249,7 @@ a relational field, but %s.%s was present in the filter"
         for operator in cls._query_operators[1:]:
             op_re_piece += '|(%s)'%operator.replace(' ', '\s')
         op_re_piece += ')'
-        cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>[^<>=!].*)\s*$', flags=re.IGNORECASE)
+        cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>.*)\s*$', flags=re.IGNORECASE)
         pass
 
     @classmethod
