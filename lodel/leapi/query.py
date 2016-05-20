@@ -92,12 +92,12 @@ class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
     _query_operators = [
-                        '=',
-                        '<=',
-                        '>=',
-                        '!=',
-                        '<',
-                        '>',
+                        ' = ',
+                        ' <= ',
+                        ' >= ',
+                        ' != ',
+                        ' < ',
+                        ' > ',
                         ' in ',
                         ' not in ',
                         ' like ',
