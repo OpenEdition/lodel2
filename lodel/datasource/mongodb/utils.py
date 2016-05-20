@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pymongo
+from pymongo import MongoClient
 
 common_collections = {
     'object': 'object'
@@ -33,6 +34,54 @@ MONGODB_SORT_OPERATORS_MAP = {
     'ASC': 1,
     'DESC': -1
 }
+
+
+MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
+
+
+class MongoDbConnectionError(Exception):
+    pass
+
+
+## @brief Creates a connection to a MongoDb database
+def mongodbconnect(connection_name):
+    connection_args = get_connection_args(connection_name)
+    checked_connection_args = check_connection_args(connection_args)
+    if len(checked_connection_args['errors']) > 0:
+        raise MongoDbConnectionError("\r\n-".join(checked_connection_args['errors']))
+
+    # connection arguments are parsed after the check
+    login, password, host, port, dbname = checked_connection_args['params']
+
+    # Connection creation
+    connection_string = 'mongodb://%s:%s@%s:%s' % (login, password, host, port)
+    connection = MongoClient(connection_string)
+
+    # Setting the database
+    database = connection[dbname]
+
+    return database
+
+
+## @brief gets the settings given a connection name
+# @param connection_name str
+# @return dict
+# @todo connect this method to the settings
+def get_connection_args(connnection_name):
+    return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
+
+
+## @brief Checks the settings given a connection name
+# @param connection_args dict
+# @return dict
+# @throw MongoDbDataSourceError with the list of all the found errors
+# @todo optimize the error management
+def check_connection_args(connection_args):
+    check_result = {'params': connection_args, 'errors': []}
+    for connection_arg in MANDATORY_CONNECTION_ARGS:
+        if connection_arg not in connection_args:
+            check_result['errors'].append('Datasource connection error: %s parameter is missing.' % connection_arg)
+    return check_result
 
 
 ## @brief Returns a collection name given a Emclass name
