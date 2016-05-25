@@ -195,7 +195,7 @@ class LeFilteredQuery(LeQuery):
 field name" % fieldname)
                 continue   
             # Checking field against target_class
-            ret = self.__check_field(self._target_class, field)
+            ret = self._check_field(self._target_class, field)
             if isinstance(ret, Exception):
                 err_l[field] = ret
                 continue
@@ -292,7 +292,7 @@ a relational field, but %s.%s was present in the filter"
         pass
 
     @classmethod
-    def __check_field(cls, target_class, fieldname):
+    def _check_field(cls, target_class, fieldname):
         try:
             target_class.field(fieldname)
         except NameError:
@@ -463,15 +463,14 @@ class LeGetQuery(LeFilteredQuery):
         
         # Checking kwargs and assigning default values if there is some
         for argname in kwargs:
-            if argname not in ('order', 'group', 'limit', 'offset'):
+            if argname not in ('field_list', 'order', 'group', 'limit', 'offset'):
                 raise TypeError("Unexpected argument '%s'" % argname)
 
         if 'field_list' not in kwargs:
-            #field_list = target_class.get_field_list
-            self.__field_list = target_class.fieldnames(include_ro = True)
+            self.set_field_list(target_class.fieldnames(include_ro = True))
         else:
-            #target_class.check_fields(kwargs['field_list'])
-            self.__field_list = kwargs['field_list']
+            self.set_field_list(kwargs['field_list'])
+
         if 'order' in kwargs:
             #check kwargs['order']
             self.__order = kwargs['order']
@@ -492,6 +491,23 @@ class LeGetQuery(LeFilteredQuery):
                     raise ValueError()
             except ValueError:
                 raise ValueError("offset argument expected to be an integer >= 0")
+    
+    ##@brief Set the field list
+    # @param field_list list | None : If None use all fields
+    # @return None
+    # @throw LeQueryError if unknown field given
+    def set_field_list(self, field_list):
+        err_l = dict()
+        for fieldname in field_list:
+            ret = self._check_field(self._target_class, fieldname)
+            if isinstance(ret, Exception):
+                expt = NameError(   "No field named '%s' in %s" % ( fieldname,
+                                                                    self._target_class.__name__))
+                err_l[fieldname] =  expt
+        if len(err_l) > 0:
+            raise LeQueryError( msg = "Error while setting field_list in a get query",
+                                exceptions = err_l)
+        self.__field_list = list(set(field_list))
     
     ##@brief Execute the get query
     def execute(self, datasource):

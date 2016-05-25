@@ -6,36 +6,6 @@ from tests.leapi.query.utils import dyncode_module as dyncode
 from lodel.leapi.leobject import LeApiDataCheckError
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
 
-class LeGetQueryTestCase(unittest.TestCase):
-    
-    def test_init_default(self):
-        """ Testing GetQuery instanciation default values"""
-        tclass_list = [ dyncode.Object,
-                        dyncode.Entry,
-                        dyncode.Person,
-                        dyncode.Text,
-                        dyncode.Section,
-                        dyncode.Publication,
-                        dyncode.Text_Person,
-        ]
-        for tclass in tclass_list:
-            get_q = LeGetQuery(tclass, [])
-            qinfos = get_q.dump_infos()
-            self.assertEqual(   set(qinfos['field_list']),
-                                set(tclass.fieldnames(True)))
-            self.assertEqual(   qinfos['limit'],
-                                None)
-            self.assertEqual(   qinfos['offset'],
-                                0)
-            self.assertEqual(   qinfos['group'],
-                                None)
-            self.assertEqual(   qinfos['order'],
-                                None)
-            self.assertEqual(   qinfos['query_filter'],
-                                ([],[]))
-            self.assertEqual(   qinfos['target_class'],
-                                tclass)
-
 class LeFilteredQueryTestCase(unittest.TestCase):
 
     q_classes = [ LeDeleteQuery, LeUpdateQuery, LeGetQuery ]
