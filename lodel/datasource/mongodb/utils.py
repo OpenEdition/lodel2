@@ -167,3 +167,12 @@ def convert_like_filter(like_filter):
         converted_filter = {key: {'$not': regex_condition}}
 
     return converted_filter
+
+
+## @brief identifier escaping
+# @param idname str: An identifier
+# @return str
+def escape_idname(idname):
+    if '`' in idname:
+        raise ValueError("Invalid name : '%s'" % idname)
+    return '`%s`' % idname
