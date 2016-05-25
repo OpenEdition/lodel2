@@ -1,7 +1,9 @@
+#!/usr/bin/python3
 #-*- coding: utf-8 -*-
 
-from lodel.settings.settings import Settings as SettingsHandler
-SettingsHandler('globconf.d')
+from lodel.settings.settings import Settings as settings
+settings('globconf.d')
+from lodel.settings import Settings
 
 from lodel.editorial_model.components import *
 from lodel.editorial_model.exceptions import *
@@ -204,14 +206,14 @@ section.new_field(  'childs',
                     display_name = 'Next section',
                     group = editorial_group,
                     data_handler = 'hierarch',
-                    allowed_class = [subsection],
+                    allowed_classes = [subsection],
                     back_reference = ('subsection', 'parent'))
 
 subsection.new_field(   'parent',
                         display_name = 'Parent',
                         group = editorial_group,
                         data_handler = 'link',
-                        allowed_class = [section])
+                        allowed_classes = [section])
 
 #####################
 # Persons & authors #
@@ -286,4 +288,5 @@ text.new_field( 'linked_persons',
                 group = editorial_person_group,
 )
 
+#em.save('xmlfile', filename = 'examples/em_test.xml')
 em.save('picklefile', filename = 'examples/em_test.pickle')
