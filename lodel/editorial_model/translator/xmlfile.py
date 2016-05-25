@@ -176,9 +176,9 @@ def write_emclass_xml(etree, elem, uid, name, help_text, group, fields, parents,
 ##@brief Loads a model from a xml file
 # @param model EditorialModel : the model to load
 # @return a new EditorialModel object
-def load(**kwargs):
+def load(filename):
 
-    Em = etree.parse(kwargs['filename'])
+    Em = etree.parse(filename)
     emodel = Em.getroot()
     name = emodel.find('name')
     description = emodel.find('description')
