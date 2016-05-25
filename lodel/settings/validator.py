@@ -185,7 +185,7 @@ def none_val(value):
 
 def str_val(value):
     try:
-        str(value)
+        return str(value)
     except Exception as e:
         raise SettingsValidationError("Not able to convert value to string : " + str(e))
 
@@ -306,8 +306,4 @@ LODEL2_CONF_SPECS = {
         'editormode': ( False,
                         SettingValidator('bool')),
     },
-    'lodel2.datasources.*': {
-            'identifier': ( None,
-                            SettingValidator('string'))
-    }
 }

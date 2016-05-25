@@ -2,7 +2,11 @@
 
 from lodel.settings.validator import SettingValidator
 
-CONFSPEC = {}
+CONFSPEC = {
+    'lodel2.datasource.dummy.*' : {
+        'dummy': (  None,
+                    SettingValidator('dummy'))}
+}
 
 ##@page lodel2_datasources Lodel2 datasources
 #
