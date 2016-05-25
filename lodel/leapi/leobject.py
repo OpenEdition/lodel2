@@ -175,7 +175,7 @@ class LeObject(object):
         try:
             return cls._fields[fieldname]
         except KeyError:
-            raise NameError("No field named '%s' in %s" % ( field_uid,
+            raise NameError("No field named '%s' in %s" % ( fieldname,
                                                             cls.__name__))
 
     ##@brief Read only access to all datas
