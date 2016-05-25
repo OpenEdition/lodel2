@@ -6,6 +6,7 @@ from unittest import mock
 import tests.loader_utils
 from lodel.settings.settings import Settings
 from lodel.settings.settings import SettingsLoader
+from lodel.settings.utils import SettingsError, SettingsErrors
 
 def dummy_validator(value): return value
 
@@ -26,7 +27,3 @@ class SettingsTestCase(unittest.TestCase):
         Settings.set('lodel2.editorialmodel.emfile','examples/em_test.pickle', dummy_validator)
         Settings.set('lodel2.editorialmodel.editormode','True', dummy_validator)
         
-    def test_conf(self):
-        pass
-        
-

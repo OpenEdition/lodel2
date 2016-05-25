@@ -252,3 +252,8 @@ class SettingsLoaderTestCase(unittest.TestCase):
         
         os.remove('tests/settings/settings_examples/conf_setdef.d/generated.ini')
         
+    def test_invalid_conf(self):
+        from lodel.settings.settings import Settings
+        Settings.stop()
+        with self.assertRaises(SettingsErrors):
+            Settings('tests/settings/settings_examples/bad_conf.d')
