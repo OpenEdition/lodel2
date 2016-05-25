@@ -183,6 +183,12 @@ def none_val(value):
         return None
     raise SettingsValidationError("This settings cannot be set in configuration file")
 
+def str_val(value):
+    try:
+        str(value)
+    except Exception as e:
+        raise SettingsValidationError("Not able to convert value to string : " + str(e))
+
 #
 #   Default validators registration
 #
@@ -196,6 +202,11 @@ SettingValidator.register_validator(
                                         'none',
                                         none_val,
                                         'Validate None')
+
+SettingValidator.register_validator(
+                                        'string',
+                                        str_val,
+                                        'Validate string values')
 
 SettingValidator.register_validator(
                                         'strip',
@@ -294,5 +305,9 @@ LODEL2_CONF_SPECS = {
                     SettingValidator('list')),
         'editormode': ( False,
                         SettingValidator('bool')),
+    },
+    'lodel2.datasources.*': {
+            'identifier': ( None,
+                            SettingValidator('string'))
     }
 }
