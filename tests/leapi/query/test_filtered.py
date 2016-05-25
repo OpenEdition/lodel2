@@ -115,3 +115,21 @@ class LeFilteredQueryTestCase(unittest.TestCase):
                                         'lodel_id %s %s' % (op,v))
                     self.assertEqual(   get_q.dump_infos()['query_filter'],
                                         ([('lodel_id',op,v)],[]))
+    
+    def test_rel_filters(self):
+        """ Testing relational filters recognition """
+        test_datas = [  (   dyncode.Subsection,
+                            'parent.lodel_id = 42',
+                            (   [],
+                                [(('parent', 'lodel_id', [dyncode.Section]),'=','42')])),
+                        (   dyncode.Section,
+                            'childs.lodel_id = 42',
+                            (   [],
+                                [(('childs', 'lodel_id', [dyncode.Subsection]),'=','42')]))
+                        ]
+
+        for le_class, q_filter_arg, e_qfilter in test_datas:
+            get_q = LeGetQuery(le_class, q_filter_arg)
+            qinfos = get_q.dump_infos()
+            self.assertEqual(   qinfos['query_filter'],
+                                e_qfilter)
