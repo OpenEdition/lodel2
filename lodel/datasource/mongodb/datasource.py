@@ -4,7 +4,7 @@ import bson
 from bson.son import SON
 from collections import OrderedDict
 import pymongo
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 import urllib
 
@@ -19,42 +19,10 @@ class MongoDbDataSourceError(Exception):
 
 class MongoDbDataSource(GenericDataSource):
 
-    MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
-
     ## @brief Instanciates a Database object given a connection name
     # @param connection_name str
     def __init__(self, connection_name='default'):
-        connection_args = self._get_connection_args(connection_name)
-        login, password, host, port, dbname = MongoDbDataSource._check_connection_args(connection_args)
-
-        # Creating of the connection
-        connection_string = 'mongodb://%s:%s@%s:%s' % (login, password, host, port)
-        self.connection = MongoClient(connection_string)
-        # Getting the database
-        self.database = self.connection[dbname]
-
-    ## @brief Gets the settings given a connection name
-    # @param connection_name str
-    # @return dict
-    # @TODO Change the return value using the Lodel 2 settings module
-    def _get_connection_args(self, connection_name):
-        return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
-
-    ## @brief checks if the connection args are valid and complete
-    # @param connection_args dict
-    # @return bool
-    # @todo checks on the argument types can be added here
-    @classmethod
-    def _check_connection_args(cls, connection_args):
-        errors = []
-        for connection_arg in cls.MANDATORY_CONNECTION_ARGS:
-            if connection_arg not in connection_args:
-                errors.append("Datasource connection error : %s parameter is missing." % connection_arg)
-        if len(errors) > 0 :
-            raise MongoDbDataSourceError("\r\n-".join(errors))
-
-        return (connection_args['login'], connection_args['password'], connection_args['host'],
-                connection_args['port'], connection_args['dbname'])
+        self.database = utils.mongodbconnect(connection_name)
 
     ## @brief returns a selection of documents from the datasource
     # @param target_cls Emclass
