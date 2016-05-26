@@ -4,7 +4,8 @@ import pymongo
 from pymongo import MongoClient
 
 common_collections = {
-    'object': 'object'
+    'object': 'object',
+    'relation': 'relation'
 }
 
 collection_prefix = {
@@ -176,3 +177,11 @@ def escape_idname(idname):
     if '`' in idname:
         raise ValueError("Invalid name : '%s'" % idname)
     return '`%s`' % idname
+
+
+## @brief gets the fk name between two collections
+# @param src_collection_name str
+# @param dst_collection_name str
+# @return str
+def get_fk_name(src_collection_name, dst_collection_name):
+    return ("fk_%s_%s" % (src_collection_name, dst_collection_name)).lower()
