@@ -247,10 +247,10 @@ class LeObject(object):
     # @throw NameError if name is not an existing field name
     def data(self, field_name):
         if field_name not in self._fields.keys():
-            raise NameError("No such field in %s : %s" % (self.__class__.__name__, name))
-        if not self.initialized and name not in self.__initialized:
-            raise RuntimeError("The field %s is not initialized yet (and have no value)" % name)
-        return self.__datas[name]
+            raise NameError("No such field in %s : %s" % (self.__class__.__name__, field_name))
+        if not self.initialized and field_name not in self.__initialized:
+            raise RuntimeError("The field %s is not initialized yet (and have no value)" % field_name)
+        return self.__datas[field_name]
     
     ##@brief Datas setter
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
@@ -260,9 +260,9 @@ class LeObject(object):
     # @throw NameError if fname is not valid
     # @throw AttributeError if the field is not writtable
     def set_data(self, fname, fval):
-        if field_name not in self.fieldnames(include_ro = False):
-            if field_name not in self._fields.keys():
-                raise NameError("No such field in %s : %s" % (self.__class__.__name__, name))
+        if fname not in self.fieldnames(include_ro = False):
+            if fname not in self._fields.keys():
+                raise NameError("No such field in %s : %s" % (self.__class__.__name__, fname))
             else:
                 raise AttributeError("The field %s is read only" % fname)
         self.__datas[fname] = fval
