@@ -10,6 +10,8 @@ from importlib.machinery import SourceFileLoader
 from lodel.leapi.lefactory import dyncode_from_em
 from lodel.editorial_model.translator import picklefile
 
+from tests import loader_utils
+
 def init_dyncode():
     f_handler, dyncode_file = tempfile.mkstemp( prefix="lodel2_tests",
                                             suffix="_dyncode")

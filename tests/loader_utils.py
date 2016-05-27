@@ -7,4 +7,4 @@
 from lodel.settings.settings import Settings
 
 if not Settings.started():
-    Settings('globconf.d')
+    Settings('tests/tests_conf.d')
