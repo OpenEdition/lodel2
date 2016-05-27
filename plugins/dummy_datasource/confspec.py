@@ -3,7 +3,7 @@
 from lodel.settings.validator import SettingValidator
 
 CONFSPEC = {
-    'lodel2.datasource.dummy.*' : {
+    'lodel2.datasource.dummy_datasource.*' : {
         'dummy': (  None,
                     SettingValidator('dummy'))}
 }
