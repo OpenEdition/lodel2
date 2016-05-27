@@ -113,7 +113,7 @@ class LeObject(object):
                         AttributeError("Unknown fieldname : '%s'" % fieldname)
                     )
             else:
-                self.__datas[fieldame] = fieldval
+                self.__datas[fieldname] = fieldval
                 self.__initialized = list()
         self.set_initialized()
     
@@ -454,4 +454,8 @@ class LeObject(object):
 
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
+    
+    ## @brief Add a new instance
+    def new():
+        pass
 
