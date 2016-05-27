@@ -91,10 +91,7 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
             self._create_field_in_collection(class_name, uid, new_state)
             return True
 
-        if new_state['internal']:
-            # TODO ?
-        else:
-            collection_name = self._class_collection_name_from_field(model, new_state)
+        collection_name = self._class_collection_name_from_field(model, new_state)
 
         field_definition = self._field_definition(new_state['data_handler'], new_state)
         self._create_field_in_collection(collection_name, uid, field_definition)
