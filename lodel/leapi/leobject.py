@@ -192,11 +192,12 @@ class LeObject(object):
     @classmethod
     def _init_datasource(cls):
         expt_msg = "In LeAPI class '%s' " % cls.__name__
+        datasource_orig_name = cls._datasource
         if cls._datasource not in Settings.datasources._fields:
             expt_msg += "Unknow or unconfigured datasource %s"
             expt_msg %= (cls._datasource, cls.__name__)
             raise SettingsError(expt_msg)
-
+        
         ds_identifier = getattr(Settings.datasources, cls._datasource)
         try:
             ds_identifier = getattr(ds_identifier, 'identifier')
@@ -228,7 +229,9 @@ class LeObject(object):
             expt_msg += "The datasource plugin %s seems to be invalid. Error raised when trying to import Datasource"
             expt_msg %= ds_identifier
             raise SettingsError(expt_msg)
-        logger.debug("Datasource initialized for LeObject %s" % cls.__name__)
+        log_msg = "Datasource %s initialized for LeObject %s"
+        log_msg %= (datasource_orig_name, cls.__name__)
+        logger.debug(log_msg)
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance

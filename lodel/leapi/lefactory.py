@@ -125,11 +125,17 @@ class {clsname}({parents}):
     datasource_name = repr(datasource_name),
 )
         res += em_cls_code
-        # Dyncode bootstrap instructions
+        # Dyncode fields bootstrap instructions
         bootstrap += """{classname}._set__fields({fields})
 """.format(
     classname = LeObject.name2objname(em_class.uid),
     fields = '{' + (', '.join(['\n\t%s: %s' % (repr(emfield.uid),data_handler_constructor(emfield)) for emfield in em_class.fields()])) + '}',
 )
+    bootstrap += "\n"
+    for em_class in get_classes(model):
+        # Dyncode datasource bootstrap instructions
+        bootstrap += """{classname}._init_datasource()
+""".format(
+            classname = LeObject.name2objname(em_class.uid))
     return res, set(imports), bootstrap
     
