@@ -125,7 +125,7 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
         class_collection_name = utils.object_collection_name(class_name)
         return class_collection_name
 
-    def _create_collection(self, collection_name, charset='utf8', if_exists=self.__class__.COMMANDS_IFEXISTS_NOTHING):
+    def _create_collection(self, collection_name, charset='utf8', if_exists=MongoDbMigrationHandler.COMMANDS_IFEXISTS_NOTHING):
         if if_exists == self.__class__.COMMANDS_IFEXISTS_DROP:
             if collection_name in self.database.collection_names(include_system_collections = False):
                 self._delete_collection(collection_name)
