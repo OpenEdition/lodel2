@@ -47,7 +47,6 @@ class XmlFileTestCase(unittest.TestCase):
         
         f_tmp, file_name = tempfile.mkstemp()
         os.close(f_tmp)
-        
         emmodel.save(xmlfile, filename=file_name)
         new_model = EditorialModel.load(xmlfile, filename=file_name)
         
@@ -108,12 +107,9 @@ class XmlFileTestCase(unittest.TestCase):
         grp1.add_components([cls1,cls2])
         grp2.add_components([cls1f1,cls2f1, cls2f2])
         emmodel.save(xmlfile, filename=self.tmpfile)
-        
         emmodel_loaded = xmlfile.load(self.tmpfile)
         self.assertEqual(   emmodel.d_hash(),
                             emmodel_loaded.d_hash())
-
-    @unittest.skip("Waiting for bugfix")
     def test_groups_dependencies(self):
         """ Testing xmlfile groups population dependencies """
         emmodel = EditorialModel("em_test", description = "test model")
@@ -121,16 +117,14 @@ class XmlFileTestCase(unittest.TestCase):
                                     display_name = "Test group")
         grp2 = emmodel.new_group(  'test_grp2',
                                    display_name = "Test group2")
-        grp3 = emmodel.new_group(  'test_grp2',
-                                   display_name = "Test group2",
+        grp3 = emmodel.new_group(  'test_grp3',
+                                   display_name = "Test group3",
                                    depends = [grp1, grp2])
-        emmodel.save(xmlfile, filename=self.tmpfile)
         
+        emmodel.save(xmlfile, filename=self.tmpfile)
         emmodel_loaded = xmlfile.load(self.tmpfile)
         self.assertEqual(   emmodel.d_hash(),
                             emmodel_loaded.d_hash())
-
-    @unittest.skip("Waiting for bugfix")
     def test_emfield_with_prop_bool(self):
         """ Testing xmlfile with bool as property for datahandler """
         emmodel = EditorialModel("em_test", description = "test model")
@@ -138,15 +132,14 @@ class XmlFileTestCase(unittest.TestCase):
                                     display_name = "test class 1")
         cls1f1 = cls1.new_field(    'testfield1',
                                     data_handler = 'varchar',
-                                    nullalble = True)
+                                    nullable = True)
         emmodel.save(xmlfile, filename=self.tmpfile)
         
         emmodel_loaded = xmlfile.load(self.tmpfile)
         self.assertEqual(   emmodel.d_hash(),
                             emmodel_loaded.d_hash())
 
-    @unittest.skip("Waiting for bugfix")
-    def test_emfield_with_prop_iterable(self):
+    def test_emfield_with_prop_tuple(self):
         """ Testing xmlfile with iterable as property for datahandler """
         emmodel = EditorialModel("em_test", description = "test model")
         cls1 = emmodel.new_class(   'testclass1',
@@ -208,13 +201,14 @@ class XmlFileTestCase(unittest.TestCase):
         self.assertEqual(   emmodel.d_hash(),
                             emmodel_loaded.d_hash())
 
-    @unittest.skip("Waiting for bugfix")
     def test_em_test(self):
         """ Testing xmlfile with the test editorial model """
-        emmodel = picklefile.load('tests/editorial_model.pickle')
+        #emmodel = picklefile.load('tests/editorial_model.pickle')
+        emmodel = picklefile.load('tests/em_test.pickle')
 
         emmodel.save(xmlfile, filename=self.tmpfile)
-
+        emmodel.save(xmlfile, filename = 'empick.xml')
         emmodel_loaded = xmlfile.load(self.tmpfile)
-        self.assertEqual(   emmodel.d_hash(),
+        emmodel_loaded.save(xmlfile, filename = 'empick2.xml')
+        #self.assertEqual(   emmodel.d_hash(),
                             emmodel_loaded.d_hash())
