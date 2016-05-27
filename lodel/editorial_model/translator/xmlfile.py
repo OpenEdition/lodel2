@@ -205,11 +205,11 @@ def load(filename):
             model.add_class(em_class)
     
     groups = emodel.find('groups')
+    i = 0
     for group in groups:
         grp = load_group_xml(model, group)
         if grp.uid not in model.all_groups():
             grp = model.add_group(grp)
-
     return model
 
 ##@brief Creates a EmClass from a xml description
@@ -241,7 +241,10 @@ def load_class_xml(model, elem):
                 requires.append(model.add_class(EmClass(r)))
     group = elem.find('group')
     if group.text is not None:
-        grp = model.add_group(EmGroup(group.text))
+        if group.text in model.all_groups():
+            grp = model.all_groups_ref(group.text)
+        else:
+            grp = model.add_group(EmGroup(group.text))
     else:
         grp = None
 
@@ -289,7 +292,10 @@ def load_field_xml(model, elem):
         
     emgroup = elem.find('group')
     if emgroup.text is not None:
-        group = model.add_group(EmGroup(emgroup.text))
+        if emgroup.text in model.all_groups():
+            group = model.all_groups_ref(emgroup.text)
+        else:
+            group = model.add_group(EmGroup(emgroup.text))
     else:
         group = None
         
