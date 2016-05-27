@@ -71,6 +71,8 @@ class LeObject(object):
     _fields = None
     ##@brief A tuple of fieldname (or a uniq fieldname) representing uid
     _uid = None 
+    ##@brief The datasource name ( see @ref lodel2_datasources )
+    _datasource = None
 
     ##@brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance

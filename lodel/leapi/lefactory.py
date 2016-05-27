@@ -19,15 +19,19 @@ from lodel.leapi.datahandlers.base_classes import DataField
     for module in modules:
         imports += "import %s\n" % module
     
+    class_list = [ LeObject.name2objname(cls.uid) for cls in get_classes(model) ]
+
     # formating all components of output
     res_code = """#-*- coding: utf-8 -*-
 {imports}
 {classes}
 {bootstrap_instr}
+dynclasses = {class_list}
 """.format(
             imports = imports,
             classes = cls_code,
             bootstrap_instr = bootstrap_instr,
+            class_list = '[' + (', '.join([cls for cls in class_list]))+']',
     )
     return res_code
 
@@ -103,6 +107,7 @@ def generate_classes(model):
                parents.append(LeObject.name2objname(parent.uid))
         else:
             parents.append('LeObject')
+        datasource_name = em_class.datasource
         
         # Dynamic code generation for LeObject childs classes
         em_cls_code = """
@@ -110,12 +115,14 @@ class {clsname}({parents}):
     _abstract = {abstract}
     _fields = None
     _uid = {uid_list}
+    _datasource = {datasource_name}
 
 """.format(
     clsname = LeObject.name2objname(em_class.uid),
     parents = ', '.join(parents),
     abstract = 'True' if em_class.abstract else 'False',
     uid_list = repr(uid),
+    datasource_name = repr(datasource_name),
 )
         res += em_cls_code
         # Dyncode bootstrap instructions
