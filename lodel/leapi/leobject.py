@@ -223,12 +223,18 @@ class LeObject(object):
         #Checks that the datasource plugin exists
         ds_plugin_module = Plugins.plugin_module(ds_plugin)
         try:
-            cls._datasource = getattr(ds_plugin_module, "Datasource")
+            datasource_class = getattr(ds_plugin_module, "Datasource")
         except AttributeError as e:
             raise e
             expt_msg += "The datasource plugin %s seems to be invalid. Error raised when trying to import Datasource"
             expt_msg %= ds_identifier
             raise SettingsError(expt_msg)
+        ds_conf_old = ds_conf
+        ds_conf = dict()
+        for k in ds_conf_old._fields:
+            ds_conf[k] = getattr(ds_conf_old, k)
+
+        cls._datasource = datasource_class(**ds_conf)
         log_msg = "Datasource %s initialized for LeObject %s"
         log_msg %= (datasource_orig_name, cls.__name__)
         logger.debug(log_msg)
