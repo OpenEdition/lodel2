@@ -92,11 +92,7 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
             return True
 
         if new_state['internal']:
-            collection_name = ''
             # TODO ?
-        elif new_state['rel_field_id']:
-            class_name = self._class_collection_name_from_field(model, new_state)
-            # TODO deal this case
         else:
             collection_name = self._class_collection_name_from_field(model, new_state)
 
@@ -104,8 +100,9 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
         self._create_field_in_collection(collection_name, uid, field_definition)
 
     def emfield_del(self, model, uid, initial_state, new_state):
-        # TODO
-        pass
+        if uid != '_id':
+            collection_name = self._class_collection_name_from_field(model, initial_state)
+            self.database[collection_name].update_many({field:{'$exists':True}}, {'$unset':{field:1}}, False)
 
     def _field_definition(self, fieldtype, options):
         basic_type = DataHandler.from_name(fieldtype).ftype
