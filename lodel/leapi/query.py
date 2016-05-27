@@ -46,15 +46,14 @@ class LeQuery(object):
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
+        self._datasource = target_class._datasource
     
     ##@brief Execute a query and return the result
     # @param **datas
     # @return the query result
     # @see LeQuery.__query()
     #
-    # @note maybe the datasource in not an argument but should be determined
-    #elsewhere
-    def execute(self, datasource, datas = None):
+    def execute(self, datas = None):
         if len(datas) > 0:
             self._target_class.check_datas_value(
                                                     datas,
@@ -65,7 +64,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(datasource, **datas)
+        ret = self.__query(self._datasource, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -88,6 +87,9 @@ class LeQuery(object):
                             target_class = self._target_class)
         
 
+##@brief Abstract class handling query with filters
+#
+#@todo add handling of inter-datasource queries
 class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
@@ -368,21 +370,22 @@ class LeInsertQuery(LeQuery):
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param **datas : datas to be inserted
-    def __query(self, datasource, **datas):
-        nb_inserted = datasource.insert(self._target_class,**datas)
+    def __query(self, **datas):
+        nb_inserted = self._datasource.insert(self._target_class,**datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
-    def __query(self, datasource, datas):
-        nb_inserted = datasource.insert_multi(self._target_class,datas_list)
+    def __query(self, datas):
+        nb_inserted = self._datasource.insert_multi(self._target_class,datas_list)
         if nb_inserted < 0:
             raise LeQueryError("Multiple insertions error")
         return nb_inserted
+
     ## @brief Execute the insert query
-    def execute(self, datasource, **datas):
-        super().execute(datasource, **datas)
+    def execute(self, **datas):
+        super().execute(self._datasource, **datas)
         
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
@@ -397,18 +400,30 @@ class LeUpdateQuery(LeFilteredQuery):
     # @param **datas : datas to update
     # @returns the number of updated items
     # @exception when the number of updated items is not as expected
-    def __query(self, datasource, **datas):
+    def __query(self, **datas):
         # select _uid corresponding to query_filter
-        l_uids=datasource.select(self._target_class,list(self._target_class.getuid()),query_filter,None, None, None, None, 0, False)
+        l_uids=self._datasource.select( self._target_class,
+                                        list(self._target_class.getuid()),
+                                        query_filter,
+                                        None,
+                                        None,
+                                        None,
+                                        None,
+                                        0,
+                                        False)
         # list of dict l_uids : _uid(s) of the objects to be updated, corresponding datas
-        nb_updated = datasource.update(self._target_class,l_uids, **datas)
+        nb_updated = self._datasource.update(   self._target_class,
+                                                l_uids,
+                                                **datas)
         if nb_updated != len(l_uids):
-            raise LeQueryError("Number of updated items: %d is not as expected: %d " % (nb_updated, len(l_uids)))
+            msg = "Number of updated items: %d is not as expected: %d "
+            msg %= (nb_updated, len(l_uids))
+            raise LeQueryError(msg)
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, datasource, **datas):
-        super().execute(datasource, **datas)
+    def execute(self, **datas):
+        super().execute(self._datasource, **datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
@@ -419,19 +434,29 @@ class LeDeleteQuery(LeFilteredQuery):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
-    def execute(self, datasource):
+    def execute(self):
         super().execute()
     
     ##@brief Implements delete query operations
     # @returns the number of deleted items
     # @exception when the number of deleted items is not as expected
-    def __query(self, datasource):
+    def __query(self):
         # select _uid corresponding to query_filter
-        l_uids=datasource.select(self._target_class,list(self._target_class.getuid()),query_filter,None, None, None, None, 0, False)
+        l_uids = self._datasource.select(   self._target_class,
+                                            list(self._target_class.getuid()),
+                                            query_filter,
+                                            None,
+                                            None,
+                                            None,
+                                            None,
+                                            0,
+                                            False)
         # list of dict l_uids : _uid(s) of the objects to be deleted
         nb_deleted = datasource.update(self._target_class,l_uids, **datas)
         if nb_deleted != len(l_uids):
-            raise LeQueryError("Number of deleted items %d is not as expected %d " % (nb_deleted, len(l_uids)))
+            msg = "Number of deleted items %d is not as expected %d "
+            msg %= (nb_deleted, len(l_uids))
+            raise LeQueryError(msg)
         return nb_deleted
 
 class LeGetQuery(LeFilteredQuery):
@@ -517,7 +542,15 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
     def __query(self, datasource):
         # select datas corresponding to query_filter
-        l_datas=datasource.select(self._target_class,list(self.field_list),self.query_filter,None, self.__order, self.__group, self.__limit, self.offset, False)
+        l_datas=datasource.select(  self._target_class,
+                                    list(self.field_list),
+                                    self.query_filter,
+                                    None,
+                                    self.__order,
+                                    self.__group,
+                                    self.__limit,
+                                    self.offset,
+                                    False)
         return l_datas
     
     ##@return a dict with query infos

@@ -58,7 +58,7 @@ class EmClass(EmComponent):
         super().__init__(uid, display_name, help_text, group)
         self.abstract = bool(abstract)
         self.pure_abstract = bool(pure_abstract)
-        self.datasource = datasource
+        self.__datasource = datasource
         if self.pure_abstract:
             self.abtract = True
         if parents is not None:
@@ -82,6 +82,11 @@ class EmClass(EmComponent):
             res.update(pfields)
         res.update(self.__fields)
         return res
+    
+    ##@brief RO access to datasource attribute
+    @property
+    def datasource(self):
+        return self.__datasource
 
     ##@brief Return the list of all dependencies
     #
