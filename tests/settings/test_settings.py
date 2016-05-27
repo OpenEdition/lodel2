@@ -14,14 +14,16 @@ class SettingsTestCase(unittest.TestCase):
     
     def test_init(self):
         with self.assertRaises(RuntimeError):
-            Settings('tests/settings/settings_tests_conf.d')
+            Settings('tests/tests_conf.d')
     
-    @unittest.skip("This tests doesn't pass anymore, but I do not understand why it should pass")
+    #@unittest.skip("This tests doesn't pass anymore, but I do not understand why it should pass")
     def test_set(self):
+
         Settings.set('lodel2.editorialmodel.emfile','test ok', dummy_validator)
         Settings.set('lodel2.editorialmodel.editormode','test ok', dummy_validator)
-        loader = SettingsLoader('globconf.d')
+        loader = SettingsLoader('tests/tests_conf.d')
         option = loader.getoption('lodel2.editorialmodel','emfile', dummy_validator)
+        option = loader.getoption('lodel2.editorialmodel','editormode', dummy_validator)
         self.assertEqual(option , 'test ok')
         option = loader.getoption('lodel2.editorialmodel','editormode', dummy_validator)
         self.assertEqual(option, 'test ok')
