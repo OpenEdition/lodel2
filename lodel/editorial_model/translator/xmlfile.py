@@ -23,7 +23,7 @@ def save(model, **kwargs):
     for emclass in classes:
         write_emclass_xml(etree, em_classes, classes[emclass].uid, classes[emclass].display_name, 
                           classes[emclass].help_text, classes[emclass].group, 
-                          classes[emclass].fields(), classes[emclass].parents, 
+                          classes[emclass].fields(no_parents=True), classes[emclass].parents, 
                           classes[emclass].abstract, classes[emclass].pure_abstract)
 
     em_groups = etree.SubElement(Em, 'groups')
@@ -60,9 +60,25 @@ def write_datahandler_xml(etree, elem, dhdl_name, **kwargs):
     dhdl = etree.SubElement(elem,'datahandler_name')
     dhdl.text = dhdl_name
     dhdl_opt = etree.SubElement(elem, 'datahandler_options')
+
     for argname, argval in kwargs.items():
         arg = etree.SubElement(dhdl_opt, argname)
-        arg.text = argval
+        opt_val=''
+        if (isinstance(argval, str)):
+            opt_val=argval
+        elif (isinstance(argval, bool)):
+            opt_val = str(argval)
+        elif (isinstance(argval, list) | isinstance(argval, tuple) | isinstance(argval, dict)):
+            for argu in argval:
+                if len(opt_val) > 0:
+                    opt_val = opt_val + ','
+                if isinstance(argu, EmComponent):
+                    opt_val = opt_val + argu.uid
+                elif isinstance(argu, str):
+                    opt_val = opt_val + argu
+                else:
+                    opt_val = str(argu)
+        arg.text = opt_val
         
 ##@brief Writes a representation in xml of a EmField
 # @param etree : the xml object
@@ -88,6 +104,7 @@ def write_emfield_xml(etree, elem, uid, name, help_text, group, datahandler_name
     else:
         write_mlstring_xml(etree, emfield_help, help_text)
     emfield_group = etree.SubElement(emfield, 'group')
+
     if group is not None:
         emfield_group.text = group.uid #write_emgroup_xml(etree, emfield_group, group.uid, group.display_name, group.help_text, group.requires)
     write_datahandler_xml(etree,emfield,datahandler_name, **kwargs)
@@ -125,13 +142,9 @@ def write_emgroup_xml(etree, elem, uid, name, help_text, requires, components):
             em_group_comp_fld_ins_uid.text = component.uid
             em_group_comp_fld_ins_cls = etree.SubElement(emgroup_comp_fld_ins,'class')
             em_group_comp_fld_ins_cls.text = component.get_emclass_uid()
-            #write_emfield_xml(etree, emgroup_comp_fld, component.uid, component.display_name, 
-            #                   component.help_text, component.group, component.data_handler_name, **(component.data_handler_options))
         elif isinstance(component, EmClass):
             em_group_comp_cls_ins = etree.SubElement(emgroup_comp_cls, 'emclass')
             em_group_comp_cls_ins.text = component.uid
-            #write_emclass_xml(etree, emgroup_comp_cls, component.uid, component.display_name, component.help_text, component.group, 
-            #                  component.fields(), component.parents, component.abstract, component.pure_abstract)
 
 ##@brief Writes a representation of a EmClass in xml
 # @param etree : the xml object
@@ -162,14 +175,14 @@ def write_emclass_xml(etree, elem, uid, name, help_text, group, fields, parents,
     emclass_pure_abstract.text = "True" if pure_abstract else "False"
     emclass_group = etree.SubElement(emclass, 'group')
     if group is not None:
-        emclass_group.text = group.uid #write_emgroup_xml(etree, emclass_group, group.uid, group.name, group.help_text, group.require, group.components)
+        emclass_group.text = group.uid
     emclass_fields = etree.SubElement(emclass, 'fields')
     for field in fields:
         write_emfield_xml(etree, emclass_fields, field.uid, field.display_name, field.help_text, 
                           field.group,field.data_handler_name, **field.data_handler_options)
     parents_list=list()
     for parent in parents:
-        parents_list.append(parent['uid'])
+        parents_list.append(parent.uid)
     emclass_parents = etree.SubElement(emclass, 'parents')
     emclass_parents.text = ",".join(parents_list)
 
@@ -187,7 +200,9 @@ def load(filename):
         
     classes = emodel.find('classes')
     for emclass in classes:
-        model.add_class(load_class_xml(model, emclass))
+        em_class = load_class_xml(model, emclass)
+        if em_class.uid not in model.all_classes():
+            model.add_class(em_class)
     
     groups = emodel.find('groups')
     for group in groups:
@@ -212,8 +227,8 @@ def load_class_xml(model, elem):
     else:
         help_text = load_mlstring_xml(elem.find('help_text'))
         
-    abstract = True if elem.find('abstract').text == 'True' else False
-    pure_abstract = True if elem.find('pure_abstract').text == 'True' else False
+    abstract = (elem.find('abstract').text == 'True')
+    pure_abstract = (elem.find('pure_abstract').text == 'True')
     requires = list()
     classes = model.all_classes()
     req = elem.find('parents')
@@ -225,19 +240,22 @@ def load_class_xml(model, elem):
             else:
                 requires.append(model.add_class(EmClass(r)))
     group = elem.find('group')
-    if group:
+    if group.text is not None:
         grp = model.add_group(EmGroup(group.text))
     else:
         grp = None
-        
+
     if uid in classes:
         emclass = model.all_classes_ref(uid)
         emclass.display_name = name
         emclass.help_text = help_text
         emclass.parents=requires
         emclass.group = grp
+        emclass.abstract = abstract
+        emclass.pure_abstract = pure_abstract
     else:
         emclass = EmClass(uid, name, help_text, abstract,requires, grp, pure_abstract)
+        model.add_class(emclass)
         
     fields = elem.find('fields')
     for field in fields:
@@ -247,6 +265,7 @@ def load_class_xml(model, elem):
         for emf in l_emfields:
             if emfield.uid == emf.uid:
                 incls = True
+                break
         if not incls:
             emclass.add_field(emfield)
             
@@ -267,20 +286,53 @@ def load_field_xml(model, elem):
         help_text = None
     else:
         help_text = load_mlstring_xml(elem.find('help_text'))
+        
     emgroup = elem.find('group')
-    if emgroup:
+    if emgroup.text is not None:
         group = model.add_group(EmGroup(emgroup.text))
     else:
         group = None
+        
     dhdl = elem.find('datahandler_name')
-    if elem.find('datahandler_options').text is not None:
-        dhdl_options = elem.find('datahandler_options').text.split()
-        emfield = EmField(uid, dhdl, name, help_text, group, **dhdl_options)
+    if dhdl.text is not None:
+        dhdl_opts = elem.find('datahandler_options')
+
+        if dhdl_opts is not None:
+            dhdl_options = load_dhdl_options_xml(model, dhdl_opts) 
+            emfield = EmField(uid, dhdl.text, name, help_text, group, **dhdl_options)
+        else:
+            emfield = EmField(uid, dhdl.text, name, help_text, group)
     else:
         emfield = EmField(uid, dhdl.text, name, help_text, group)
     
     return emfield
 
+##@brief Returns datahandler options from a xml description
+# @param elem : the element which represents the datahandler
+# @param model  : the model which will contain the new field
+# @return datahandler options
+def load_dhdl_options_xml(model, elem):
+    dhdl_options=dict()
+    for opt in elem:
+        if (opt.tag == 'allowed_classes'):
+            classes = list()
+            clss = opt.text.split(',')
+            for classe in clss:
+                if classe in model.all_classes():
+                    classes.append(model.all_classes_ref(classe))
+                else:
+                    new_cls = model.add_class(EmClass(classe))
+                    classes.append(new_cls)
+            dhdl_options['allowed_classes'] = classes
+        elif (opt.tag == 'back_reference'):
+            dhdl_options['back_reference'] = tuple(opt.text.split(','))
+        elif ((opt.text == 'True') | (opt.text == 'False')):
+            dhdl_options[opt.tag] = (opt.text == 'True')
+        else:
+            dhdl_options[opt.tag] = opt.text
+    return dhdl_options
+             
+    
 ##@brief Creates a EmGroup from a xml description
 # @param elem : the element which represents the EmGroup
 # @param model  : the model which will contain the new group
@@ -311,13 +363,6 @@ def load_group_xml(model, elem):
                 grp = model.new_group(r)
                 requires.append(grp)
                 
-    if uid in groups:
-        group = model.all_groups_ref(uid)
-        group.display_name = name
-        group.help_text = help_text
-        group.add_dependencie(requires)
-    else:
-        group = EmGroup(uid.text, requires, name, help_text)
     comp= list()
     components = elem.find('components')
     fields = components.find('emfields')
@@ -329,8 +374,17 @@ def load_group_xml(model, elem):
     classes = components.find('emclasses')
     for classe in classes:
         comp.append(model.all_classes_ref(classe.text))
-    group.add_components(comp)
         
+    groups = model.all_groups()
+    if uid.text in groups:
+        group = model.all_groups_ref(uid.text)
+        group.display_name = name
+        group.help_text = help_text
+        group.add_dependencie(requires)
+    else:
+        group = EmGroup(uid.text, requires, name, help_text)
+
+    group.add_components(comp)     
     return group
 
 ##@brief Constructs a MlString from a xml description
