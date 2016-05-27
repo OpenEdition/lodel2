@@ -113,7 +113,7 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
 
         if basic_type == 'datetime':
             if 'now_on_create' in options and options['now_on_create']:
-                return {'default': datetime.datetime.utcnow()}  # TODO format the datetime to a MongoDB friendly format
+                return {'default': datetime.datetime.utcnow()}
         if basic_type == 'relation':
             return {'default' : []}
 
