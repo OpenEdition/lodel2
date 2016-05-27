@@ -211,4 +211,4 @@ class XmlFileTestCase(unittest.TestCase):
         emmodel_loaded = xmlfile.load(self.tmpfile)
         emmodel_loaded.save(xmlfile, filename = 'empick2.xml')
         #self.assertEqual(   emmodel.d_hash(),
-                            emmodel_loaded.d_hash())
+                           # emmodel_loaded.d_hash())
