@@ -104,7 +104,8 @@ class MongoDbMigrationHandler(GenericMigrationHandler):
         self._create_field_in_collection(collection_name, uid, field_definition)
 
     def emfield_del(self, model, uid, initial_state, new_state):
-
+        # TODO
+        pass
 
     def _field_definition(self, fieldtype, options):
         basic_type = DataHandler.from_name(fieldtype).ftype
