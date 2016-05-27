@@ -213,6 +213,9 @@ class Settings(object, metaclass=MetaSettings):
                 if section not in self.__confs:
                     self.__confs[section] = dict()
                 self.__confs[section][kname] = loader.getoption(section, kname, validator, default)
+        # Checking unfectched values
+        loader.raise_errors()
+
         self.__confs_to_namedtuple()
         pass
     

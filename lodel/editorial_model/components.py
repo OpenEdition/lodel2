@@ -53,10 +53,12 @@ class EmClass(EmComponent):
     # @param pure_abstract bool : if True the EmClass will not be represented in leapi dyncode
     # @param parents list: parent EmClass list or uid list
     # @param help_text MlString|str|dict : help_text
-    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None, pure_abstract = False):
+    # @param datasource str : The datasource name ( see @ref lodel2_datasources )
+    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None, pure_abstract = False, datasource = 'default'):
         super().__init__(uid, display_name, help_text, group)
         self.abstract = bool(abstract)
         self.pure_abstract = bool(pure_abstract)
+        self.__datasource = datasource
         if self.pure_abstract:
             self.abtract = True
         if parents is not None:
@@ -80,6 +82,11 @@ class EmClass(EmComponent):
             res.update(pfields)
         res.update(self.__fields)
         return res
+    
+    ##@brief RO access to datasource attribute
+    @property
+    def datasource(self):
+        return self.__datasource
 
     ##@brief Return the list of all dependencies
     #

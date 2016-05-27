@@ -6,36 +6,6 @@ from tests.leapi.query.utils import dyncode_module as dyncode
 from lodel.leapi.leobject import LeApiDataCheckError
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
 
-class LeGetQueryTestCase(unittest.TestCase):
-    
-    def test_init_default(self):
-        """ Testing GetQuery instanciation default values"""
-        tclass_list = [ dyncode.Object,
-                        dyncode.Entry,
-                        dyncode.Person,
-                        dyncode.Text,
-                        dyncode.Section,
-                        dyncode.Publication,
-                        dyncode.Text_Person,
-        ]
-        for tclass in tclass_list:
-            get_q = LeGetQuery(tclass, [])
-            qinfos = get_q.dump_infos()
-            self.assertEqual(   set(qinfos['field_list']),
-                                set(tclass.fieldnames(True)))
-            self.assertEqual(   qinfos['limit'],
-                                None)
-            self.assertEqual(   qinfos['offset'],
-                                0)
-            self.assertEqual(   qinfos['group'],
-                                None)
-            self.assertEqual(   qinfos['order'],
-                                None)
-            self.assertEqual(   qinfos['query_filter'],
-                                ([],[]))
-            self.assertEqual(   qinfos['target_class'],
-                                tclass)
-
 class LeFilteredQueryTestCase(unittest.TestCase):
 
     q_classes = [ LeDeleteQuery, LeUpdateQuery, LeGetQuery ]
@@ -115,3 +85,21 @@ class LeFilteredQueryTestCase(unittest.TestCase):
                                         'lodel_id %s %s' % (op,v))
                     self.assertEqual(   get_q.dump_infos()['query_filter'],
                                         ([('lodel_id',op,v)],[]))
+    
+    def test_rel_filters(self):
+        """ Testing relational filters recognition """
+        test_datas = [  (   dyncode.Subsection,
+                            'parent.lodel_id = 42',
+                            (   [],
+                                [(('parent', 'lodel_id', [dyncode.Section]),'=','42')])),
+                        (   dyncode.Section,
+                            'childs.lodel_id = 42',
+                            (   [],
+                                [(('childs', 'lodel_id', [dyncode.Subsection]),'=','42')]))
+                        ]
+
+        for le_class, q_filter_arg, e_qfilter in test_datas:
+            get_q = LeGetQuery(le_class, q_filter_arg)
+            qinfos = get_q.dump_infos()
+            self.assertEqual(   qinfos['query_filter'],
+                                e_qfilter)

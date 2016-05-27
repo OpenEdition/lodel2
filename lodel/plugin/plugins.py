@@ -2,7 +2,9 @@
 
 import os.path
 
+import importlib
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
+import plugins
 
 ## @package lodel.plugins Lodel2 plugins management
 #
@@ -15,7 +17,7 @@ from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 ##@brief The package in wich we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins_pkg'
 CONFSPEC_FILENAME = 'confspec.py'
-MAIN_FILENAME = 'main.py'
+MAIN_FILENAME = '__init__.py'
 CONFSPEC_VARNAME = 'CONFSPEC'
 
 class PluginError(Exception):
@@ -73,18 +75,27 @@ class Plugins(object):
     # @param plugin_name str : The plugin name
     @classmethod
     def load_plugin(cls, plugin_name):
+        cls.plugin_module(plugin_name)
+    
+    ##@brief Load a plugin module and return it
+    #@return the plugin module
+    @classmethod
+    def plugin_module(cls, plugin_name):
         cls.started()
         plugin_path = cls.plugin_path(plugin_name)
         plugin_module = '%s.%s' % ( VIRTUAL_PACKAGE_NAME,
                                     plugin_name)
-        main_module = plugin_module + '.main'
+        main_module = plugin_module
         main_source = plugin_path + MAIN_FILENAME
         try:
             loader = SourceFileLoader(main_module, main_source)
-            main_module = loader.load_module()
-        except ImportError:
+            module = loader.load_module()
+            return module
+        except ImportError as e:
+            raise e
             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
-        
+
+
     ##@brief Bootstrap the Plugins class
     @classmethod
     def bootstrap(cls):

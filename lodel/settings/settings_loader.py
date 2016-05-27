@@ -6,6 +6,7 @@ import copy
 
 from lodel.settings.utils import *
 from lodel.settings.validator import SettingsValidationError
+from lodel.settings.utils import SettingsError, SettingsErrors
 
    
 ##@brief Merges and loads configuration files
@@ -14,6 +15,9 @@ class SettingsLoader(object):
     ## To avoid the DEFAULT section whose values are found in all sections, we
     # have to give it an unsual name
     DEFAULT_SECTION = 'lodel2_default_passaway_tip'
+    
+    ## @brief Virtual filename when default value is used
+    DEFAULT_FILENAME = 'default_value'
 
     ##@brief Constructor
     # @param conf_path str : conf.d path
@@ -21,6 +25,8 @@ class SettingsLoader(object):
         self.__conf_path=conf_path
         self.__conf_sv=dict()
         self.__conf=self.__merge()
+        # Stores errors
+        self.__errors_list = []
     
     ##@brief Lists and merges files in settings_loader.conf_path
     # @return dict()
@@ -64,10 +70,21 @@ class SettingsLoader(object):
                 try:
                     option= validator(sec[keyname]['value'])
                 except Exception as e:
-                    raise SettingsValidationError(
-                                                    "For %s.%s : %s" % 
-                                                    (section, keyname,e)
-                    )
+                    # Generating nice exceptions
+                    if sec[keyname]['file'] == SettingsLoader.DEFAULT_FILENAME:
+                        expt = SettingsError(   msg = 'Mandatory settings not found',
+                                                key_id = section+'.'+keyname)
+                        self.__errors_list.append(expt)
+                    else:
+                        expt = SettingsValidationError(
+                                                        "For %s.%s : %s" % 
+                                                        (section, keyname,e)
+                        )
+                        expt2 = SettingsError(  msg = str(expt),
+                                                key_id = section+'.'+keyname,
+                                                filename = sec[keyname]['file'])
+                        self.__errors_list.append(expt2)
+                    return
 
                 try:
                     del self.__conf_sv[section + ':' + keyname]
@@ -75,16 +92,21 @@ class SettingsLoader(object):
                     pass
                 return option
             elif default_value is None and mandatory:
-                 raise SettingsError("Default value mandatory for option %s" % keyname)
+                msg = "Default value mandatory for option %s" % keyname
+                expt = SettingsError(   msg = msg,
+                                        key_id = section+'.'+keyname,
+                                        filename = sec[keyname]['file'])
+                self.__errors_list.append(expt)
+                return
             sec[keyname]=dict()
             sec[keyname]['value'] = default_value
-            sec[keyname]['file'] = 'default_value'
+            sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
             return default_value
         else:
             conf[section]=dict()
             conf[section][keyname]=dict()
             conf[section][keyname]['value'] = default_value
-            conf[section][keyname]['file'] = 'default_value'
+            conf[section][keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
             return default_value
     ##@brief Sets option in a config section. Writes in the conf file
     # @param section str : name of the section
@@ -94,7 +116,7 @@ class SettingsLoader(object):
     # @return the option
     def setoption(self,section,keyname,value,validator):
         f_conf=copy.copy(self.__conf[section][keyname]['file'])
-        if f_conf == 'default_value':
+        if f_conf == SettingsLoader.DEFAULT_FILENAME:
             f_conf = self.__conf_path + '/generated.ini'
 
         conf=self.__conf
@@ -138,7 +160,7 @@ class SettingsLoader(object):
             
         return sections;
     
-    ## @brief Returns invalid settings
+    ##@brief Returns invalid settings
     #
     # This method returns all the settings that was not fecthed by 
     # getsection() method. For the Settings object it allows to know
@@ -148,3 +170,17 @@ class SettingsLoader(object):
     def getremains(self):
         return self.__conf_sv
     
+    ##@brief Raise a SettingsErrors exception if some confs remains
+    #@note typically used at the end of Settings bootstrap
+    def raise_errors(self):
+        remains = self.getremains()
+        err_l = self.__errors_list
+        for key_id, filename in remains.items():
+            err_l.append(SettingsError( msg = "Invalid configuration",
+                                        key_id = key_id,
+                                        filename = filename))
+        if len(err_l) > 0:
+            raise SettingsErrors(err_l)
+        else:
+            return
+

@@ -46,15 +46,14 @@ class LeQuery(object):
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
+        self._datasource = target_class._datasource
     
     ##@brief Execute a query and return the result
     # @param **datas
     # @return the query result
     # @see LeQuery.__query()
     #
-    # @note maybe the datasource in not an argument but should be determined
-    #elsewhere
-    def execute(self, datasource, datas = None):
+    def execute(self, datas = None):
         if len(datas) > 0:
             self._target_class.check_datas_value(
                                                     datas,
@@ -65,7 +64,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(datasource, **datas)
+        ret = self.__query(self._datasource, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -88,6 +87,9 @@ class LeQuery(object):
                             target_class = self._target_class)
         
 
+##@brief Abstract class handling query with filters
+#
+#@todo add handling of inter-datasource queries
 class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
@@ -183,6 +185,7 @@ class LeFilteredQuery(LeQuery):
                     err_l["filter %d" % i] = e
 
         for field, operator, value in filters:
+            err_key = "%s %s %s" % (field, operator, value) #to push in err_l
             # Spliting field name to be able to detect a relational field
             field_spl = field.split('.')
             if len(field_spl) == 2:
@@ -194,23 +197,37 @@ class LeFilteredQuery(LeQuery):
 field name" % fieldname)
                 continue   
             # Checking field against target_class
-            ret = self.__check_field(self._target_class, field)
+            ret = self._check_field(self._target_class, field)
             if isinstance(ret, Exception):
                 err_l[field] = ret
                 continue
-            # Check that the field is relational if ref_field given
-            if ref_field is not None and not cls.field(field).is_reference():
+            field_datahandler = self._target_class.field(field)
+            if ref_field is not None and not field_datahandler.is_reference():
                 # inconsistency
-                err_l[field] = NameError(   "The field '%s' in %s is not\
+                err_l[field] = NameError(   "The field '%s' in %s is not \
 a relational field, but %s.%s was present in the filter"
                                             % ( field,
+                                                self._target_class.__name__,
                                                 field,
                                                 ref_field))
-            # Prepare relational field
-            if self._target_class.field(field).is_reference():
+            if field_datahandler.is_reference():
+                #Relationnal field
+                if ref_field is None:
+                    # ref_field default value
+                    ref_uid = set([ lc._uid for lc in field_datahandler.linked_classes])
+                    if len(ref_uid) == 1:
+                        ref_field = ref_uid[0]
+                    else:
+                        if len(ref_uid) > 1:
+                            err_l[err_key] = RuntimeError("The referenced classes are identified by fields with different name. Unable to determine wich field to use for the reference")
+                        else:
+                            err_l[err_key] = RuntimeError("Unknow error when trying to determine wich field to use for the relational filter")
+                        continue
+                # Prepare relational field
                 ret = self._prepare_relational_fields(field, ref_field)
                 if isinstance(ret, Exception):
-                    err_l[field] = ret
+                    err_l[err_key] = ret
+                    continue
                 else:
                     rel_filters.append((ret, operator, value))
             else:
@@ -221,6 +238,30 @@ a relational field, but %s.%s was present in the filter"
                                         "Error while preparing filters : ",
                                         err_l)
         return (res_filters, rel_filters)
+    
+    ## @brief Prepare & check relational field
+    #
+    # The result is a tuple with (field, ref_field, concerned_classes), with :
+    # - field the target_class field name
+    # - ref_field the concerned_classes field names
+    # - concerned_classes a set of concerned LeObject classes
+    # @param field str : The target_class field name
+    # @param ref_field str : The referenced class field name
+    # @return a tuple(field, concerned_classes, ref_field) or an Exception class instance
+    def _prepare_relational_fields(self,field, ref_field):
+        field_dh = self._target_class.field(field)
+        concerned_classes = []
+        linked_classes = [] if field_dh.linked_classes is None else field_dh.linked_classes
+        for l_class in linked_classes:
+            try:
+                l_class.field(ref_field)
+                concerned_classes.append(l_class)
+            except KeyError:
+                pass
+        if len(concerned_classes) > 0:
+            return (field, ref_field, concerned_classes)
+        else:
+            return ValueError("None of the linked class of field %s has a field named '%s'" % (field, ref_field))
 
     ## @brief Check and split a query filter
     # @note The query_filter format is "FIELD OPERATOR VALUE"
@@ -249,11 +290,11 @@ a relational field, but %s.%s was present in the filter"
         for operator in cls._query_operators[1:]:
             op_re_piece += '|(%s)'%operator.replace(' ', '\s')
         op_re_piece += ')'
-        cls._query_re = re.compile('^\s*(?P<field>(((superior)|(subordinate))\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>.*)\s*$', flags=re.IGNORECASE)
+        cls._query_re = re.compile('^\s*(?P<field>([a-z_][a-z0-9\-_]*\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>.*)\s*$', flags=re.IGNORECASE)
         pass
 
     @classmethod
-    def __check_field(cls, target_class, fieldname):
+    def _check_field(cls, target_class, fieldname):
         try:
             target_class.field(fieldname)
         except NameError:
@@ -329,21 +370,22 @@ class LeInsertQuery(LeQuery):
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param **datas : datas to be inserted
-    def __query(self, datasource, **datas):
-        nb_inserted = datasource.insert(self._target_class,**datas)
+    def __query(self, **datas):
+        nb_inserted = self._datasource.insert(self._target_class,**datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
-    def __query(self, datasource, datas):
-        nb_inserted = datasource.insert_multi(self._target_class,datas_list)
+    def __query(self, datas):
+        nb_inserted = self._datasource.insert_multi(self._target_class,datas_list)
         if nb_inserted < 0:
             raise LeQueryError("Multiple insertions error")
         return nb_inserted
+
     ## @brief Execute the insert query
-    def execute(self, datasource, **datas):
-        super().execute(datasource, **datas)
+    def execute(self, **datas):
+        super().execute(self._datasource, **datas)
         
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
@@ -358,18 +400,30 @@ class LeUpdateQuery(LeFilteredQuery):
     # @param **datas : datas to update
     # @returns the number of updated items
     # @exception when the number of updated items is not as expected
-    def __query(self, datasource, **datas):
+    def __query(self, **datas):
         # select _uid corresponding to query_filter
-        l_uids=datasource.select(self._target_class,list(self._target_class.getuid()),query_filter,None, None, None, None, 0, False)
+        l_uids=self._datasource.select( self._target_class,
+                                        list(self._target_class.getuid()),
+                                        query_filter,
+                                        None,
+                                        None,
+                                        None,
+                                        None,
+                                        0,
+                                        False)
         # list of dict l_uids : _uid(s) of the objects to be updated, corresponding datas
-        nb_updated = datasource.update(self._target_class,l_uids, **datas)
+        nb_updated = self._datasource.update(   self._target_class,
+                                                l_uids,
+                                                **datas)
         if nb_updated != len(l_uids):
-            raise LeQueryError("Number of updated items: %d is not as expected: %d " % (nb_updated, len(l_uids)))
+            msg = "Number of updated items: %d is not as expected: %d "
+            msg %= (nb_updated, len(l_uids))
+            raise LeQueryError(msg)
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, datasource, **datas):
-        super().execute(datasource, **datas)
+    def execute(self, **datas):
+        super().execute(self._datasource, **datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
@@ -380,19 +434,29 @@ class LeDeleteQuery(LeFilteredQuery):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
-    def execute(self, datasource):
+    def execute(self):
         super().execute()
     
     ##@brief Implements delete query operations
     # @returns the number of deleted items
     # @exception when the number of deleted items is not as expected
-    def __query(self, datasource):
+    def __query(self):
         # select _uid corresponding to query_filter
-        l_uids=datasource.select(self._target_class,list(self._target_class.getuid()),query_filter,None, None, None, None, 0, False)
+        l_uids = self._datasource.select(   self._target_class,
+                                            list(self._target_class.getuid()),
+                                            query_filter,
+                                            None,
+                                            None,
+                                            None,
+                                            None,
+                                            0,
+                                            False)
         # list of dict l_uids : _uid(s) of the objects to be deleted
         nb_deleted = datasource.update(self._target_class,l_uids, **datas)
         if nb_deleted != len(l_uids):
-            raise LeQueryError("Number of deleted items %d is not as expected %d " % (nb_deleted, len(l_uids)))
+            msg = "Number of deleted items %d is not as expected %d "
+            msg %= (nb_deleted, len(l_uids))
+            raise LeQueryError(msg)
         return nb_deleted
 
 class LeGetQuery(LeFilteredQuery):
@@ -424,15 +488,14 @@ class LeGetQuery(LeFilteredQuery):
         
         # Checking kwargs and assigning default values if there is some
         for argname in kwargs:
-            if argname not in ('order', 'group', 'limit', 'offset'):
+            if argname not in ('field_list', 'order', 'group', 'limit', 'offset'):
                 raise TypeError("Unexpected argument '%s'" % argname)
 
         if 'field_list' not in kwargs:
-            #field_list = target_class.get_field_list
-            self.__field_list = target_class.fieldnames(include_ro = True)
+            self.set_field_list(target_class.fieldnames(include_ro = True))
         else:
-            #target_class.check_fields(kwargs['field_list'])
-            self.__field_list = kwargs['field_list']
+            self.set_field_list(kwargs['field_list'])
+
         if 'order' in kwargs:
             #check kwargs['order']
             self.__order = kwargs['order']
@@ -454,6 +517,23 @@ class LeGetQuery(LeFilteredQuery):
             except ValueError:
                 raise ValueError("offset argument expected to be an integer >= 0")
     
+    ##@brief Set the field list
+    # @param field_list list | None : If None use all fields
+    # @return None
+    # @throw LeQueryError if unknown field given
+    def set_field_list(self, field_list):
+        err_l = dict()
+        for fieldname in field_list:
+            ret = self._check_field(self._target_class, fieldname)
+            if isinstance(ret, Exception):
+                expt = NameError(   "No field named '%s' in %s" % ( fieldname,
+                                                                    self._target_class.__name__))
+                err_l[fieldname] =  expt
+        if len(err_l) > 0:
+            raise LeQueryError( msg = "Error while setting field_list in a get query",
+                                exceptions = err_l)
+        self.__field_list = list(set(field_list))
+    
     ##@brief Execute the get query
     def execute(self, datasource):
         super().execute(datasource)
@@ -462,7 +542,15 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
     def __query(self, datasource):
         # select datas corresponding to query_filter
-        l_datas=datasource.select(self._target_class,list(self.field_list),self.query_filter,None, self.__order, self.__group, self.__limit, self.offset, False)
+        l_datas=datasource.select(  self._target_class,
+                                    list(self.field_list),
+                                    self.query_filter,
+                                    None,
+                                    self.__order,
+                                    self.__group,
+                                    self.__limit,
+                                    self.offset,
+                                    False)
         return l_datas
     
     ##@return a dict with query infos

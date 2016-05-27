@@ -2,6 +2,11 @@
 
 import importlib
 
+from lodel.plugin import Plugins
+from lodel import logger
+from lodel.settings import Settings
+from lodel.settings.utils import SettingsError
+
 class LeApiErrors(Exception):
     ##@brief Instanciate a new exceptions handling multiple exceptions
     # @param msg str : Exception message
@@ -71,6 +76,8 @@ class LeObject(object):
     _fields = None
     ##@brief A tuple of fieldname (or a uniq fieldname) representing uid
     _uid = None 
+    ##@brief The datasource name ( see @ref lodel2_datasources )
+    _datasource = None
 
     ##@brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance
@@ -177,6 +184,60 @@ class LeObject(object):
         except KeyError:
             raise NameError("No field named '%s' in %s" % ( fieldname,
                                                             cls.__name__))
+    
+    ##@brief Replace the _datasource attribute value by a datasource instance
+    #
+    # This method is used once at dyncode load to replace the datasource string
+    # by a datasource instance to avoid doing this operation for each query
+    @classmethod
+    def _init_datasource(cls):
+        expt_msg = "In LeAPI class '%s' " % cls.__name__
+        datasource_orig_name = cls._datasource
+        if cls._datasource not in Settings.datasources._fields:
+            expt_msg += "Unknow or unconfigured datasource %s"
+            expt_msg %= (cls._datasource, cls.__name__)
+            raise SettingsError(expt_msg)
+        
+        ds_identifier = getattr(Settings.datasources, cls._datasource)
+        try:
+            ds_identifier = getattr(ds_identifier, 'identifier')
+        except NameError:
+            expt_msg += "Datasource %s is missconfigured, missing identifier."
+            expt_msg %= cls._datasource
+            raise SettingsError(expt_msg)
+
+        ds_plugin, ds_name = ds_identifier.split('.')
+        #Checks that the datasource is configured
+        if ds_plugin not in Settings.datasource._fields:
+            expt_msg += "Unknown or unconfigured datasource plugin %s"
+            expt_msg %= ds_plugin
+            raise SettingsError(expt_msg)
+
+        ds_conf = getattr(Settings.datasource, ds_plugin)
+        if ds_name not in ds_conf._fields:
+            expt_msg += "Unknown or unconfigured datasource instance %s"
+            expt_msg %= ds_identifier
+            raise SettingsError(expt_msg)
+
+        ds_conf = getattr(ds_conf, ds_name)
+        #Checks that the datasource plugin exists
+        ds_plugin_module = Plugins.plugin_module(ds_plugin)
+        try:
+            datasource_class = getattr(ds_plugin_module, "Datasource")
+        except AttributeError as e:
+            raise e
+            expt_msg += "The datasource plugin %s seems to be invalid. Error raised when trying to import Datasource"
+            expt_msg %= ds_identifier
+            raise SettingsError(expt_msg)
+        ds_conf_old = ds_conf
+        ds_conf = dict()
+        for k in ds_conf_old._fields:
+            ds_conf[k] = getattr(ds_conf_old, k)
+
+        cls._datasource = datasource_class(**ds_conf)
+        log_msg = "Datasource %s initialized for LeObject %s"
+        log_msg %= (datasource_orig_name, cls.__name__)
+        logger.debug(log_msg)
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
