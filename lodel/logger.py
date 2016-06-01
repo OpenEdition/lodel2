@@ -96,10 +96,7 @@ def remove_console_handlers():
 def log(lvl, msg, *args, **kwargs):
     caller = logger.findCaller() # Opti warning : small overhead
     extra = {
-        '_pathname': os.path.relpath(
-                                        caller[0],
-                                        start=Settings.lib_path
-        ), # os.path.relpath add another small overhead
+        '_pathname': os.path.abspath(caller[0]),
         '_lineno': caller[1],
         '_funcName': caller[2],
     }
