@@ -11,7 +11,7 @@ if LODEL2_LIB_ABS_PATH is not None:
 try:
     import lodel
 except ImportError:
-    print("Unable to load lodel module. exiting...", file = sys.stderr)
+    print("Unable to load lodel module. exiting...")
     exit(1)
 
 
@@ -27,10 +27,21 @@ from lodel.settings import Settings
 from lodel.plugin import Plugin
 Plugin.load_all()
 
+
 from lodel.plugin import LodelHook
-LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+
+def start():
+    #Importing dynamic code classes in lodel.leapi
+    import leapi_dyncode
+    import lodel.leapi
+    for cls in leapi_dyncode.dynclasses:
+        setattr(lodel.leapi, cls.__name__, cls)
+
+    LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+
 
 if __name__ == '__main__':
+    start()
     LodelHook.call_hook('lodel2_loader_main', '__main__', None)
     #Run interative python
     import code
