@@ -3,6 +3,8 @@
 import pymongo
 from pymongo import MongoClient
 
+from lodel.settings.settings import Settings as settings
+
 common_collections = {
     'object': 'object',
     'relation': 'relation'
@@ -10,7 +12,7 @@ common_collections = {
 
 collection_prefix = {
     'relation': 'rel_',
-    'collection': 'class_'
+    'object': 'class_'
 }
 
 LODEL_OPERATORS_MAP = {
@@ -67,8 +69,8 @@ def mongodbconnect(connection_name):
 ## @brief gets the settings given a connection name
 # @param connection_name str
 # @return dict
-# @todo connect this method to the settings
-def get_connection_args(connnection_name):
+# @todo Use the settings module to store the connections parameters
+def get_connection_args(connnection_name='default'):
     return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
 
 
@@ -85,11 +87,17 @@ def check_connection_args(connection_args):
     return check_result
 
 
-## @brief Returns a collection name given a Emclass name
-# @param class_name str : The class name
+## @brief Returns a collection name given a Emclass
+# @param class_object EmClass
 # @return str
-def object_collection_name(class_name):
-    return ("%s%s" % (collection_prefix['object'], class_name)).lower()
+def object_collection_name(class_object):
+    if class_object.pure_abstract == False:
+        class_parent = class_object.parents[0].uid
+        collection_name = ("%s%s" % (collection_prefix['object'], class_parent)).lower()
+    else:
+        collection_name = ("%s%s" % (collection_prefix['object'], class_object.name)).lower()
+
+    return collection_name
 
 
 ## @brief converts the query filters into MongoDB filters
@@ -122,10 +130,12 @@ def parse_query_filters(query_filters, as_list=False):
 # @param filter_params tuple : (FIELD, OPERATOR, VALUE) representing the query filter to convert
 # @return dict : {KEY: {OPERATOR:VALUE}}
 # @todo Add an error management for the operator mismatch
-# @todo Add the checks for the type of values authorized in certain mongodb operators, such "$in" for example which takes a list
 def convert_filter(filter_params):
     key, operator, value = filter_params
     if operator not in ('like', 'not like'):
+        if operator == 'in' and not isinstance(value, list):
+            raise ValueError('A list should be used as value for an IN operator, %s given' % value.__class__)
+
         converted_operator = LODEL_OPERATORS_MAP[operator]['name']
         converted_filter = {key: {converted_operator: value}}
     else:
@@ -178,10 +188,3 @@ def escape_idname(idname):
         raise ValueError("Invalid name : '%s'" % idname)
     return '`%s`' % idname
 
-
-## @brief gets the fk name between two collections
-# @param src_collection_name str
-# @param dst_collection_name str
-# @return str
-def get_fk_name(src_collection_name, dst_collection_name):
-    return ("fk_%s_%s" % (src_collection_name, dst_collection_name)).lower()
