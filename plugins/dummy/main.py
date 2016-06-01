@@ -2,12 +2,6 @@
 
 from lodel.plugin import LodelHook
 
-def _activate():
-    return True
-    
-
-##@brief Hook's callback example
-@LodelHook('leapi_get_pre')
 @LodelHook('leapi_get_post')
 @LodelHook('leapi_update_pre')
 @LodelHook('leapi_update_post')

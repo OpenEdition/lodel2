@@ -23,19 +23,14 @@ settings('conf.d')
 from lodel.settings import Settings
 
 
-#Load plugins
-from lodel.plugin import Plugin
-Plugin.load_all()
 
 
 from lodel.plugin import LodelHook
 
 def start():
-    #Importing dynamic code classes in lodel.leapi
-    import leapi_dyncode
-    import lodel.leapi
-    for cls in leapi_dyncode.dynclasses:
-        setattr(lodel.leapi, cls.__name__, cls)
+    #Load plugins
+    from lodel.plugin import Plugin
+    Plugin.load_all()
 
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
 

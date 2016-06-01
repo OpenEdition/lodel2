@@ -10,4 +10,9 @@ __fullname__ = "Dummy plugin"
 #
 #@return True if checks are OK else return a string with a reason
 def _activate():
+    import leapi_dyncode
+    print("Testing dynamic objects : ")
+    print("Object : ", leapi_dyncode.Object)
+    print("Publication : ", leapi_dyncode.Publication)
+    print("Publication fields : ", leapi_dyncode.Publication.fieldnames())
     return True

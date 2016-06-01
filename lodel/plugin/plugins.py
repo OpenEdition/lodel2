@@ -125,11 +125,11 @@ class Plugin(object):
     def load(self):
         from lodel import logger
         try:
-            res = self.module._activate()
+            test_fun = self.module._activate
         except AttributeError:
-            logger.debug("No _activate method found for plugin %s. Assuming plugin is ready to be loaded")
-            res = True
-
+            logger.debug("No _activate method found for plugin %s. Assuming plugin is ready to be loaded" % self.name)
+            test_fun = lambda:True
+        res = test_fun()
         if not(res is True):
             raise PluginError(res)
 
