@@ -125,6 +125,15 @@ class Plugin(object):
     def load(self):
         from lodel import logger
         try:
+            res = self.module._activate()
+        except AttributeError:
+            logger.debug("No _activate method found for plugin %s. Assuming plugin is ready to be loaded")
+            res = True
+
+        if not(res is True):
+            raise PluginError(res)
+
+        try:
             return self._import_from_init_var(LOADER_FILENAME_VARNAME)
         except AttributeError:
             msg = "Malformed plugin {plugin}. No {varname} found in __init__.py"
