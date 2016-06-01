@@ -24,8 +24,8 @@ from lodel.settings import Settings
 
 
 #Load plugins
-from lodel.plugin import Plugins
-Plugins.bootstrap()
+from lodel.plugin import Plugin
+Plugin.load_all()
 
 from lodel.plugin import LodelHook
 LodelHook.call_hook('lodel2_bootstraped', '__main__', None)

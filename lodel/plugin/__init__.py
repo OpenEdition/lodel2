@@ -40,4 +40,4 @@
 # 
 
 from .hooks import LodelHook
-from .plugins import Plugins
+from .plugins import Plugin

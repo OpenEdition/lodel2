@@ -8,7 +8,7 @@ import warnings
 import types # for dynamic bindings
 from collections import namedtuple
 
-from lodel.plugin.plugins import Plugins, PluginError
+from lodel.plugin.plugins import Plugin, PluginError
 from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS
 from lodel.settings.settings_loader import SettingsLoader
@@ -153,15 +153,15 @@ class Settings(object, metaclass=MetaSettings):
                                             plugins_path_opt_specs[0],
                                             False)
         # Starting the Plugins class
-        Plugins.start(plugins_path)
+        Plugin.start(plugins_path, plugins_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
         errors = list()
         for plugin_name in plugins_list:
             try:
-                specs.append(Plugins.get_confspec(plugin_name))
+                specs.append(Plugin.get(plugin_name).confspecs)
             except PluginError as e:
-                errors.append(e)
+                errors.append(SettingsError(msg=str(e)))
         if len(errors) > 0: #Raise all plugins import errors
             raise SettingsErrors(errors)
         self.__conf_specs = self.__merge_specs(specs)
