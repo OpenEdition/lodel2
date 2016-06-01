@@ -89,7 +89,6 @@ class MongoDbDataSource(GenericDataSource):
     # @param target_cls Emclass : class of the record to delete
     # @param uid dict|list : a dictionary of fields and values composing the unique identifier of the record or a list of several dictionaries
     # @return int : number of deleted records
-    # @TODO check the content of the result.raw_result property depending on the informations to return
     # @TODO Implement the error management
     def delete(self, target_cls, uid):
         if isinstance(uid, dict):
