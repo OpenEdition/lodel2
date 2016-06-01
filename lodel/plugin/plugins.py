@@ -26,6 +26,15 @@ LOADER_FILENAME_VARNAME = '__loader__'
 class PluginError(Exception):
     pass
 
+##@brief Handle plugins
+#
+# An instance represent a loaded plugin. Class methods allow to load/preload
+# plugins.
+#
+# Typicall Plugins load sequence is :
+# 1. Settings call start method to instanciate all plugins found in confs
+# 2. Settings fetch all confspecs
+# 3. the loader call load_all to register hooks etc
 class Plugin(object):
     
     ##@brief Stores plugin directories paths
