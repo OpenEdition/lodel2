@@ -10,6 +10,7 @@ from lodel.editorial_model.translator import xmlfile
 from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import *
 from lodel.editorial_model.exceptions import *
+from lodel.settings import Settings
 
 class XmlFileTestCase(unittest.TestCase):
     
@@ -203,8 +204,7 @@ class XmlFileTestCase(unittest.TestCase):
 
     def test_em_test(self):
         """ Testing xmlfile with the test editorial model """
-        #emmodel = picklefile.load('tests/editorial_model.pickle')
-        emmodel = picklefile.load('tests/em_test.pickle')
+        emmodel = picklefile.load(Settings.editorialmodel.emfile)
 
         emmodel.save(xmlfile, filename=self.tmpfile)
         emmodel.save(xmlfile, filename = 'empick.xml')
