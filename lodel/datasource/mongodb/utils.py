@@ -39,7 +39,7 @@ MONGODB_SORT_OPERATORS_MAP = {
 }
 
 
-MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
+MANDATORY_CONNECTION_ARGS = ('host', 'port', 'username', 'password', 'db_name')
 
 
 class MongoDbConnectionError(Exception):
@@ -71,7 +71,7 @@ def mongodbconnect(connection_name):
 # @return dict
 # @todo Use the settings module to store the connections parameters
 def get_connection_args(connnection_name='default'):
-    return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
+    return {'host': 'localhost', 'port': 28015, 'username': 'lodel_admin', 'password': 'lapwd', 'db_name': 'lodel'}
 
 
 ## @brief Checks the settings given a connection name
