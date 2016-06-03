@@ -64,7 +64,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(self._datasource, **datas)
+        ret = self.__query(self._target_class._datasource, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -461,6 +461,7 @@ class LeInsertQuery(LeQuery):
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
+    """
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
     def __query(self, datas):
@@ -469,6 +470,7 @@ class LeInsertQuery(LeQuery):
         if nb_inserted < 0:
             raise LeQueryError("Multiple insertions error")
         return nb_inserted
+    """
 
     ## @brief Execute the insert query
     def execute(self, **datas):
