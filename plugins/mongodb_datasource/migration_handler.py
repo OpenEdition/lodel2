@@ -122,9 +122,17 @@ class MongoDbMigrationHandler(object):
 
     ## @brief upgrades a field
     # @todo to be implemented
-    def _emfield_upgrade(self):
-        # TODO check to see if the field's values in the collection corresponds to the new field type
-        pass
+    def _emfield_upgrade(self, model, uid, initial_state, new_state):
+        collection_name = self._class_collection_name_from_field(model, initial_state)
+        field_name = model.field(uid).name
+        self._check_field_in_collection(collection_name, field_name, , initial_state, new_state)
+
+    def _check_field_in_collection(self,collection_name, field_name, initial_sate, new_state):
+        collection = self.database[collection_name]
+        cursor = collection.find({field_name: {'$exists': True}}, {field_name: 1})
+        for document in cursor:
+            # TODO vérifier que le champ contient une donnée compatible (document[field_name])
+            pass
 
         ## @brief Defines the default value when a new field is added to a collection's items
     # @param fieldtype str : name of the field's type
