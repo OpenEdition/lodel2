@@ -33,7 +33,7 @@ class MongoDbDatasource(object):
     # @return list
     # @todo Implement the relations
     def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0, instanciate=True):
-        collection_name = object_collection_name(target.__class__)
+        collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         query_filters = parse_query_filters(filters)
         query_result_ordering = parse_query_order(order) if order is not None else None
@@ -82,7 +82,7 @@ class MongoDbDatasource(object):
     def delete(self, target, uid):
         if isinstance(uid, dict):
             uid = [uid]
-        collection_name = object_collection_name(target.__class__)
+        collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         result = collection.delete_many(uid)
         return result.deleted_count
@@ -96,7 +96,7 @@ class MongoDbDatasource(object):
     def update(self, target, uids, **datas):
         if not isinstance(uids, list):
             uids = [uids]
-        collection_name = object_collection_name(target.__class__)
+        collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         results = collection.update_many({'uid': {'$in': uids}}, datas)
         return results.modified_count()
@@ -107,7 +107,7 @@ class MongoDbDatasource(object):
     # @return bool
     # @TODO Implement the error management
     def insert(self, target, **datas):
-        collection_name = object_collection_name(target.__class__)
+        collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         result = collection.insert_one(datas)
         return len(result.inserted_id)
@@ -118,7 +118,7 @@ class MongoDbDatasource(object):
     # @return list : list of the inserted records' ids
     # @TODO Implement the error management
     def insert_multi(self, target, datas_list):
-        collection_name = object_collection_name(target.__class__)
+        collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         result = collection.insert_many(datas_list)
         return len(result.inserted_ids)
