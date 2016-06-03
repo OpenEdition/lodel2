@@ -127,6 +127,29 @@ class LeFilteredQuery(LeQuery):
         self.subqueries = None
         self.set_query_filter(query_filters)
     
+    ##@brief Abstract FilteredQuery execution method
+    #
+    # This method takes care to execute subqueries before calling super execute
+    def execute(self, datas = None):
+        #copy originals filters
+        orig_filters = copy.copy(self.__query_filter)
+        std_filters, rel_filters = self.__query_filter
+
+        for rfield, subq in self.subqueries:
+            subq_res = subq.execute()
+            std_filters.append(
+                (rfield, ' in ', subq_res))
+        self.__query_filter = (std_filters, rel_filters)
+        try:
+            res = super().execute()
+        except Exception as e:
+            #restoring filters even if an exception is raised
+            self.__query_filter = orig_filter
+            raise e #reraise
+        #restoring filters
+        self.__query_filter = orig_filters
+        return res
+
     ##@brief Add filter(s) to the query
     #
     # This method is also able to slice query if different datasources are
@@ -449,7 +472,7 @@ class LeInsertQuery(LeQuery):
 
     ## @brief Execute the insert query
     def execute(self, **datas):
-        super().execute(self._datasource, **datas)
+        return super().execute(**datas)
         
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
@@ -488,7 +511,7 @@ class LeUpdateQuery(LeFilteredQuery):
     
     ## @brief Execute the update query
     def execute(self, **datas):
-        super().execute(self._datasource, **datas)
+        return super().execute(**datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
@@ -500,7 +523,7 @@ class LeDeleteQuery(LeFilteredQuery):
 
     ## @brief Execute the delete query
     def execute(self):
-        super().execute()
+        return super().execute()
     
     ##@brief Implements delete query operations
     # @returns the number of deleted items
@@ -605,8 +628,8 @@ class LeGetQuery(LeFilteredQuery):
         self.__field_list = list(set(field_list))
     
     ##@brief Execute the get query
-    def execute(self, datasource):
-        super().execute(datasource)
+    def execute(self):
+        return super().execute()
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
