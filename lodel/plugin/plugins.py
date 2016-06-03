@@ -22,6 +22,8 @@ INIT_FILENAME = '__init__.py' # Loaded with settings
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
 CONFSPEC_VARNAME = 'CONFSPEC'
 LOADER_FILENAME_VARNAME = '__loader__'
+PLUGIN_DEPS_VARNAME = '__plugin_deps__'
+ACTIVATE_METHOD_NAME = '_activate'
 
 class PluginError(Exception):
     pass
@@ -39,8 +41,13 @@ class Plugin(object):
     
     ##@brief Stores plugin directories paths
     _plugin_directories = None
-
+    
+    ##@brief Stores Plugin instances indexed by name
     _plugin_instances = dict()
+    
+    ##@brief Attribute used by load_all and load methods to detect circular
+    #dependencies
+    _load_called = []
 
     ##@brief Plugin class constructor
     #
@@ -56,6 +63,7 @@ class Plugin(object):
         self.path = self.plugin_path(plugin_name)
         self.module = None
         self.__confspecs = dict()
+        self.loaded = False
         
         # Importing __init__.py
         plugin_module = '%s.%s' % ( VIRTUAL_PACKAGE_NAME,
@@ -120,21 +128,86 @@ class Plugin(object):
         filename = self.path + filename
         loader = SourceFileLoader(module_name, filename)
         return loader.load_module()
-
-    ##@brief Register hooks etc
-    def load(self):
+    
+    ##@brief Check dependencies of plugin
+    #@return A list of plugin name to be loaded before
+    def check_deps(self):
+        try:
+            res = getattr(self.module, PLUGIN_DEPS_VARNAME)
+        except AttributeError:
+            return list()
+        result = list()
+        errors = list()
+        for plugin_name in res:
+            try:
+                result.append(self.get(plugin_name))
+            except PluginError:
+                errors.append(plugin_name)
+        if len(errors) > 0:
+            raise PluginError(  "Bad dependencie for '%s' :"%self.name,
+                                ', '.join(errors))
+        return result
+    
+    ##@brief Check if the plugin should be activated
+    #
+    #Try to fetch a function called @ref ACTIVATE_METHOD_NAME in __init__.py
+    #of a plugin. If none found assert that the plugin can be loaded, else
+    #the method is called. If it returns anything else that True, the plugin
+    #is noted as not activable
+    #
+    # @note Maybe we have to exit everything if a plugin cannot be loaded...
+    def activable(self):
         from lodel import logger
         try:
-            test_fun = self.module._activate
+            test_fun = getattr(self.module, ACTIVATE_METHOD_NAME)
         except AttributeError:
-            logger.debug("No _activate method found for plugin %s. Assuming plugin is ready to be loaded" % self.name)
+            msg = "No %s method found for plugin %s. Assuming plugin is ready to be loaded"
+            msg %= (ACTIVATE_METHOD_NAME, self.name)
+            logger.debug(msg)
             test_fun = lambda:True
-        res = test_fun()
-        if not(res is True):
-            raise PluginError(res)
+        return test_fun()
+        
+    ##@brief Load a plugin
+    #
+    #Loading a plugin mean importing a file. The filename is defined in the 
+    #plugin's __init__.py file in a LOADER_FILENAME_VARNAME variable.
+    #
+    #The loading process has to take care of other things :
+    #- loading dependencies (other plugins)
+    #- check that the plugin can be activated using Plugin.activate() method
+    #- avoid circular dependencies infinite loop
+    def _load(self):
+        if self.loaded:
+            return
+        from lodel import logger
+        #Test that plugin "wants" to be activated
+        activable = self.activable()
+        if not(activable is True):
+            msg = "Plugin %s is not activable : %s"
+            msg %= (self.name, activable)
+            raise PluginError(activable)
 
+        #Circular dependencie detection
+        if self.name in self._load_called:
+            raise PluginError("Circular dependencie in Plugin detected. Abording")
+        else:
+            self._load_called.append(self.name)
+        
+        #Dependencie load
+        for dependencie in self.check_deps():
+            activable = dependencie.activable()
+            if activable is True:
+                dependencie._load()
+            else:
+                msg = "Plugin {plugin_name} not activable because it depends on plugin {dep_name} that is not activable : {reason}"
+                msg = msg.format(
+                    plugin_name = self.name,
+                    dep_name = dependencie.name,
+                    reason = activable)
+        
+        #Loading the plugin
         try:
-            return self._import_from_init_var(LOADER_FILENAME_VARNAME)
+            self._import_from_init_var(LOADER_FILENAME_VARNAME)
         except AttributeError:
             msg = "Malformed plugin {plugin}. No {varname} found in __init__.py"
             msg = msg.format(
@@ -148,13 +221,21 @@ class Plugin(object):
                 expt = str(e))
             raise PluginError(msg)
         logger.debug("Plugin '%s' loaded" % self.name)
-                
+        self.loaded = True
+             
+    ##@brief Call load method on every pre-loaded plugins
+    #
+    # Called by loader to trigger hooks registration.
+    # This method have to avoid circular dependencies infinite loops. For this
+    # purpose a class attribute _load_called exists.
+    # @throw PluginError
     @classmethod
     def load_all(cls):
         errors = dict()
+        cls._load_called = []
         for name, plugin in cls._plugin_instances.items():
             try:
-                plugin.load()
+                plugin._load()
             except PluginError as e:
                 errors[name] = e
         if len(errors) > 0:
@@ -163,14 +244,17 @@ class Plugin(object):
                 msg += "\n\t%20s : %s" % (name,e)
             msg += "\n"
             raise PluginError(msg)
-
+    
+    ##@return a copy of __confspecs attr
     @property
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
     ##@brief Register a new plugin
     # 
-    # preload
+    #@param plugin_name str : The plugin name
+    #@return a Plugin instance
+    #@throw PluginError
     @classmethod
     def register(cls, plugin_name):
         if plugin_name in cls._plugin_instances:
@@ -181,6 +265,11 @@ class Plugin(object):
         cls._plugin_instances[plugin_name] = plugin
         return plugin
 
+    ##@brief Plugins instances accessor
+    #
+    #@param plugin_name str: The plugin name
+    #@return a Plugin instance
+    #@throw PluginError if plugin not found
     @classmethod
     def get(cls, plugin_name):
         try:

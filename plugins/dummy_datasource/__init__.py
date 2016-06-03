@@ -2,6 +2,7 @@ from lodel.settings.validator import SettingValidator
 from .main import DummyDatasource as Datasource
 
 __loader__ = 'main.py'
+__plugin_deps__ = ['datasources']
 
 CONFSPEC = {
     'lodel2.datasource.dummy_datasource.*' : {
