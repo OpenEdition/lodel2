@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 from lodel.editorial_model.components import EmClass, EmField
 
 from .utils import get_connection_args, mongodbconnect, collection_prefix, object_collection_name
-
+from lodel.leapi.datahandlers.base_classes import DataHandler
 
 class MigrationHandlerChangeError(Exception):
     pass
@@ -151,7 +153,7 @@ class MongoDbMigrationHandler(object):
     def _class_collection_name_from_field(self, model, field):
         class_id = field['class_id']
         component_class = model.classes(class_id)
-        component_collection = utils.object_collection_name(component_class)
+        component_collection = object_collection_name(component_class)
         return component_collection
 
 
