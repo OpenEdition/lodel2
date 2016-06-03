@@ -109,10 +109,10 @@ class LeFilteredQuery(LeQuery):
     _query_re = None
 
     ##@brief Abtract constructor for queries with filter
-    # @param target_class LeObject : class of object the query is about
-    # @param query_filters list : with a tuple (only one filter) or a list of tuple
-    #   or a dict: {OP,list(filters)} with OP = 'OR' or 'AND
-    #   For tuple (FIELD,OPERATOR,VALUE)
+    #@param target_class LeObject : class of object the query is about
+    #@param query_filters list : with a tuple (only one filter) or a list of 
+    # tuple or a dict: {OP,list(filters)} with OP = 'OR' or 'AND for tuple
+    # (FIELD,OPERATOR,VALUE)
     def __init__(self, target_class, query_filters = None):
         super().__init__(target_class)
         ##@brief The query filter tuple(std_filter, relational_filters)
@@ -214,14 +214,19 @@ a relational field, but %s.%s was present in the filter"
                 #Relationnal field
                 if ref_field is None:
                     # ref_field default value
-                    ref_uid = set([ lc._uid for lc in field_datahandler.linked_classes])
+                    ref_uid = set(
+                        [lc._uid for lc in field_datahandler.linked_classes])
                     if len(ref_uid) == 1:
                         ref_field = ref_uid[0]
                     else:
                         if len(ref_uid) > 1:
-                            err_l[err_key] = RuntimeError("The referenced classes are identified by fields with different name. Unable to determine wich field to use for the reference")
+                            msg = "The referenced classes are identified by \
+fields with different name. Unable to determine wich field to use for the \
+reference"
                         else:
-                            err_l[err_key] = RuntimeError("Unknow error when trying to determine wich field to use for the relational filter")
+                            msg = "Unknow error when trying to determine wich \
+field to use for the relational filter"
+                        err_l[err_key] = RuntimeError(msg)
                         continue
                 # Prepare relational field
                 ret = self._prepare_relational_fields(field, ref_field)
@@ -239,19 +244,22 @@ a relational field, but %s.%s was present in the filter"
                                         err_l)
         return (res_filters, rel_filters)
     
-    ## @brief Prepare & check relational field
+    ##@brief Prepare & check relational field
     #
     # The result is a tuple with (field, ref_field, concerned_classes), with :
     # - field the target_class field name
     # - ref_field the concerned_classes field names
     # - concerned_classes a set of concerned LeObject classes
-    # @param field str : The target_class field name
-    # @param ref_field str : The referenced class field name
-    # @return a tuple(field, concerned_classes, ref_field) or an Exception class instance
+    #@param field str : The target_class field name
+    #@param ref_field str : The referenced class field name
+    #@return a tuple(field, concerned_classes, ref_field) or an Exception
+    # class instance
     def _prepare_relational_fields(self,field, ref_field):
         field_dh = self._target_class.field(field)
         concerned_classes = []
-        linked_classes = [] if field_dh.linked_classes is None else field_dh.linked_classes
+        linked_classes = field_dh.linked_classes
+        if linked_classes is None:
+            linked_classes = []
         for l_class in linked_classes:
             try:
                 l_class.field(ref_field)
@@ -261,7 +269,8 @@ a relational field, but %s.%s was present in the filter"
         if len(concerned_classes) > 0:
             return (field, ref_field, concerned_classes)
         else:
-            return ValueError("None of the linked class of field %s has a field named '%s'" % (field, ref_field))
+            msg = "None of the linked class of field %s has a field named '%s'"
+            return ValueError(msg % (field, ref_field))
 
     ## @brief Check and split a query filter
     # @note The query_filter format is "FIELD OPERATOR VALUE"
@@ -274,23 +283,34 @@ a relational field, but %s.%s was present in the filter"
             cls.__compile_query_re()
         matches = cls._query_re.match(query_filter)
         if not matches:
-            raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
-        result = (matches.group('field'), re.sub(r'\s', ' ', matches.group('operator'), count=0), matches.group('value').strip())
+            msg = "The query_filter '%s' seems to be invalid"
+            raise ValueError(msg % query_filter)
+        result = (
+            matches.group('field'),
+            re.sub(r'\s', ' ', matches.group('operator'), count=0),
+            matches.group('value').strip())
+
         result = [r.strip() for r in result]
         for r in result:
             if len(r) == 0:
-                raise ValueError("The query_filter '%s' seems to be invalid"%query_filter)
+                msg = "The query_filter '%s' seems to be invalid"
+                raise ValueError(msg % query_filter)
         return result
 
     ## @brief Compile the regex for query_filter processing
     # @note Set _LeObject._query_re
     @classmethod
     def __compile_query_re(cls):
-        op_re_piece = '(?P<operator>(%s)'%cls._query_operators[0].replace(' ', '\s')
+        op_re_piece = '(?P<operator>(%s)'
+        op_re_piece %= cls._query_operators[0].replace(' ', '\s')
         for operator in cls._query_operators[1:]:
             op_re_piece += '|(%s)'%operator.replace(' ', '\s')
         op_re_piece += ')'
-        cls._query_re = re.compile('^\s*(?P<field>([a-z_][a-z0-9\-_]*\.)?[a-z_][a-z0-9\-_]*)\s*'+op_re_piece+'\s*(?P<value>.*)\s*$', flags=re.IGNORECASE)
+
+        re_full = '^\s*(?P<field>([a-z_][a-z0-9\-_]*\.)?[a-z_][a-z0-9\-_]*)\s*'
+        re_full += op_re_piece+'\s*(?P<value>.*)\s*$'
+
+        cls._query_re = re.compile(re_full, flags=re.IGNORECASE)
         pass
 
     @classmethod
@@ -378,7 +398,8 @@ class LeInsertQuery(LeQuery):
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
     def __query(self, datas):
-        nb_inserted = self._datasource.insert_multi(self._target_class,datas_list)
+        nb_inserted = self._datasource.insert_multi(
+            self._target_class,datas_list)
         if nb_inserted < 0:
             raise LeQueryError("Multiple insertions error")
         return nb_inserted
@@ -411,7 +432,8 @@ class LeUpdateQuery(LeFilteredQuery):
                                         None,
                                         0,
                                         False)
-        # list of dict l_uids : _uid(s) of the objects to be updated, corresponding datas
+        # list of dict l_uids : _uid(s) of the objects to be updated,
+        # corresponding datas
         nb_updated = self._datasource.update(   self._target_class,
                                                 l_uids,
                                                 **datas)
@@ -464,14 +486,15 @@ class LeGetQuery(LeFilteredQuery):
     _hook_prefix = 'leapi_get_'
 
     ##@brief Instanciate a new get query
-    # @param target_class LeObject : class of object the query is about
-    # @param query_filters dict : {OP, list of query filters }
-    #        or tuple (FIELD, OPERATOR, VALUE) )
-    # @param field_list list|None : list of string representing fields see @ref leobject_filters
-    # @param order list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
-    # @param group list : A list of field names or tuple (FIELDNAME, [ASC | DESC])
-    # @param limit int : The maximum number of returned results
-    # @param offset int : offset
+    #@param target_class LeObject : class of object the query is about
+    #@param query_filters dict : {OP, list of query filters }
+    # or tuple (FIELD, OPERATOR, VALUE) )
+    #@param field_list list|None : list of string representing fields see 
+    # @ref leobject_filters
+    #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #@param limit int : The maximum number of returned results
+    #@param offset int : offset
     def __init__(self, target_class, query_filter, **kwargs):
         super().__init__(target_class, query_filter)
         
@@ -488,7 +511,8 @@ class LeGetQuery(LeFilteredQuery):
         
         # Checking kwargs and assigning default values if there is some
         for argname in kwargs:
-            if argname not in ('field_list', 'order', 'group', 'limit', 'offset'):
+            if argname not in (
+                'field_list', 'order', 'group', 'limit', 'offset'):
                 raise TypeError("Unexpected argument '%s'" % argname)
 
         if 'field_list' not in kwargs:
@@ -508,14 +532,16 @@ class LeGetQuery(LeFilteredQuery):
                 if self.__limit <= 0:
                     raise ValueError()
             except ValueError:
-                raise ValueError("limit argument expected to be an interger > 0")
+                msg = "limit argument expected to be an interger > 0"
+                raise ValueError(msg)
         if 'offset' in kwargs:
             try:
                 self.__offset = int(kwargs['offset'])
                 if self.__offset < 0:
                     raise ValueError()
             except ValueError:
-                raise ValueError("offset argument expected to be an integer >= 0")
+                msg = "offset argument expected to be an integer >= 0"
+                raise ValueError(msg)
     
     ##@brief Set the field list
     # @param field_list list | None : If None use all fields
@@ -526,12 +552,13 @@ class LeGetQuery(LeFilteredQuery):
         for fieldname in field_list:
             ret = self._check_field(self._target_class, fieldname)
             if isinstance(ret, Exception):
-                expt = NameError(   "No field named '%s' in %s" % ( fieldname,
-                                                                    self._target_class.__name__))
+                msg = "No field named '%s' in %s"
+                msg %= (fieldname, self._target_class.__name__)
+                expt = NameError(msg)
                 err_l[fieldname] =  expt
         if len(err_l) > 0:
-            raise LeQueryError( msg = "Error while setting field_list in a get query",
-                                exceptions = err_l)
+            msg = "Error while setting field_list in a get query"
+            raise LeQueryError(msg = msg, exceptions = err_l)
         self.__field_list = list(set(field_list))
     
     ##@brief Execute the get query
@@ -565,6 +592,8 @@ class LeGetQuery(LeFilteredQuery):
         return ret
 
     def __repr__(self):
-        ret = "<LeGetQuery target={target_class} filter={query_filter} field_list={field_list} order={order} group={group} limit={limit} offset={offset}>"
+        ret = "<LeGetQuery target={target_class} filter={query_filter} \
+field_list={field_list} order={order} group={group} limit={limit} \
+offset={offset}>"
         return ret.format(**self.dump_infos())
 
