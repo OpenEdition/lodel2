@@ -26,26 +26,7 @@ PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ACTIVATE_METHOD_NAME = '_activate'
 
 class PluginError(Exception):
-    def __init__(self, msg = "Unknow error", exceptions = None):
-        self._msg = msg
-        self._exceptions = dict() if exceptions is None else exceptions
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        msg = self._msg
-        if isinstance(self._exceptions, dict):
-            for_iter = self._exceptions.items()
-        else:
-            for_iter = enumerate(self.__exceptions)
-        for obj, expt in for_iter:
-            msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
-                    expt_obj = obj,
-                    expt_name=expt.__class__.__name__,
-                    expt_msg=str(expt)
-            )
-        return msg
+    pass
 
 ##@brief Handle plugins
 #
