@@ -115,7 +115,8 @@ class {clsname}({parents}):
     _abstract = {abstract}
     _fields = None
     _uid = {uid_list}
-    _datasource = {datasource_name}
+    _datasource = None
+    _datasource_name = {datasource_name}
 
 """.format(
     clsname = LeObject.name2objname(em_class.uid),
