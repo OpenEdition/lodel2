@@ -90,6 +90,9 @@ class LeQuery(object):
 ##@brief Abstract class handling query with filters
 #
 #@todo add handling of inter-datasource queries
+#
+#@warning relationnal filters on multiple classes from different datasource
+# will generate a lot of subqueries
 class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
@@ -117,16 +120,80 @@ class LeFilteredQuery(LeQuery):
         super().__init__(target_class)
         ##@brief The query filter tuple(std_filter, relational_filters)
         self.__query_filter = None
+        ##@brief Stores potential subqueries (used when a query implies
+        # more than one datasource.
+        #
+        # Subqueries are tuple(target_class_ref_field, LeGetQuery)
+        self.subqueries = None
         self.set_query_filter(query_filters)
     
     ##@brief Add filter(s) to the query
+    #
+    # This method is also able to slice query if different datasources are
+    # implied in the request
+    #
     #@param query_filter list|tuple|str : A single filter or a list of filters
     #@see LeFilteredQuery._prepare_filters()
     def set_query_filter(self, query_filter):
         if isinstance(query_filter, str):
             query_filter = [query_filter]
-        self.__query_filter = self._prepare_filters(query_filter)
+        #Query filter prepration
+        filters_orig , rel_filters = self._prepare_filters(query_filter)
+        # Here we now that each relational filter concern only one datasource
+        # thank's to _prepare_relational_fields
 
+        #Multiple datasources detection
+        self_ds_name = self._target_class._datasource_name
+        result_rel_filters = list() # The filters that will stay in the query
+        other_ds_filters = dict()
+        for rfilter in rel_filters:
+            (rfield, ref_dict), op, value = rfilter
+            #rfield : the field in self._target_class
+            tmp_rel_filter = dict() #designed to stores rel_field of same DS
+            # First step : simplification
+            # Trying to delete relational filters done on referenced class uid
+            for tclass, tfield in ref_dict.items():
+                #tclass : reference target class
+                #tfield : referenced field from target class
+                if tfield == tclass.uid_fieldname:
+                    #This relational filter can be simplified as 
+                    # ref_field, op, value
+                    # Note : we will have to dedup filters_orig
+                    filters_orig.append((rfield, op, value))
+                    del(ref_dict[tclass])
+            #Determine what to do with other relational filters given 
+            # referenced class datasource
+            #Remember : each class in a relational filter has the same 
+            # datasource
+            tclass = list(ref_dict.keys())[0]
+            cur_ds = tclass._datasource_name
+            if cur_ds == self_ds_name:
+                # Same datasource, the filter stay is self query
+                result_rel_filters.append(((rfield, ref_dict), op, value))
+            else:
+                # Different datasource, we will have to create a subquery
+                if cur_ds not in other_ds_filters:
+                    other_ds_filters[cur_ds] = list()
+                other_ds_filters[cur_ds].append(
+                    ((rfield, ref_dict), op, value))
+        #deduplication of std filters
+        filters_orig = list(set(filters_orig))
+        # Sets __query_filter attribute of self query
+        self.__query_filter = (filters_orig, result_rel_filters)
+
+        #Sub queries creation
+        subq = list()
+        for ds, rfilters in other_ds_filters.items():
+            for rfilter in rfilters:
+                (rfield, ref_dict), op, value = rfilter
+                for tclass, tfield in ref_dict.items():
+                    query = LeGetQuery(
+                        target_class = tclass,
+                        query_filter = [(rfield, op, value)],
+                        field_list = [tfield])
+                    subq.append((rfield, query))
+    
+    ##@return informations
     def dump_infos(self):
         ret = super().dump_infos()
         ret['query_filter'] = self.__query_filter
@@ -243,34 +310,6 @@ field to use for the relational filter"
                                         "Error while preparing filters : ",
                                         err_l)
         return (res_filters, rel_filters)
-    
-    ##@brief Prepare & check relational field
-    #
-    # The result is a tuple with (field, ref_field, concerned_classes), with :
-    # - field the target_class field name
-    # - ref_field the concerned_classes field names
-    # - concerned_classes a set of concerned LeObject classes
-    #@param field str : The target_class field name
-    #@param ref_field str : The referenced class field name
-    #@return a tuple(field, concerned_classes, ref_field) or an Exception
-    # class instance
-    def _prepare_relational_fields(self,field, ref_field):
-        field_dh = self._target_class.field(field)
-        concerned_classes = []
-        linked_classes = field_dh.linked_classes
-        if linked_classes is None:
-            linked_classes = []
-        for l_class in linked_classes:
-            try:
-                l_class.field(ref_field)
-                concerned_classes.append(l_class)
-            except KeyError:
-                pass
-        if len(concerned_classes) > 0:
-            return (field, ref_field, concerned_classes)
-        else:
-            msg = "None of the linked class of field %s has a field named '%s'"
-            return ValueError(msg % (field, ref_field))
 
     ## @brief Check and split a query filter
     # @note The query_filter format is "FIELD OPERATOR VALUE"
@@ -356,8 +395,7 @@ field to use for the relational filter"
     #@param ref_field str|None : The referenced field name (if None use
     #uniq identifiers as referenced field
     #@return a well formed relational filter tuple or an Exception instance
-    @classmethod
-    def __prepare_relational_fields(cls, fieldname, ref_field = None):
+    def _prepare_relational_fields(self, fieldname, ref_field = None):
         datahandler = self._target_class.field(fieldname)
         # now we are going to fetch the referenced class to see if the
         # reference field is valid
@@ -367,7 +405,12 @@ field to use for the relational filter"
             for ref_class in ref_classes:
                 ref_dict[ref_class] = ref_class.uid_fieldname
         else:
+            r_ds = None
             for ref_class in ref_classes:
+                if r_ds is None:
+                    r_ds = ref_class._datasource_name
+                elif ref_class._datasource_name != r_ds:
+                    return RuntimeError("All referenced class doesn't have the same datasource. Query not possible")
                 if ref_field in ref_class.fieldnames(True):
                     ref_dict[ref_class] = ref_field
                 else:
@@ -376,7 +419,7 @@ the relational filter %s" % ref_class.__name__)
         if len(ref_dict) == 0:
             return NameError(   "No field named '%s' in referenced objects"
                                 % ref_field)
-        return ( (fieldname, ref_dict), op, value)
+        return (fieldname, ref_dict)
  
 
 ##@brief A query to insert a new object
