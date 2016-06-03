@@ -79,7 +79,7 @@ class Plugin(object):
         self.started()
         self.name = plugin_name
         self.path = self.plugin_path(plugin_name)
-        print(self.path)
+
         self.module = None
         self.__confspecs = dict()
         self.loaded = False
