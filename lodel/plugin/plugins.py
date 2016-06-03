@@ -16,7 +16,7 @@ import plugins
 # - main.py containing hooks registration etc
 # - confspec.py containing a configuration specification dictionary named CONFSPEC
 
-##@brief The package in wich we will load plugins modules
+##@brief The package in which we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins'
 INIT_FILENAME = '__init__.py' # Loaded with settings
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
@@ -26,7 +26,26 @@ PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ACTIVATE_METHOD_NAME = '_activate'
 
 class PluginError(Exception):
-    pass
+    def __init__(self, msg = "Unknow error", exceptions = None):
+        self._msg = msg
+        self._exceptions = dict() if exceptions is None else exceptions
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        msg = self._msg
+        if isinstance(self._exceptions, dict):
+            for_iter = self._exceptions.items()
+        else:
+            for_iter = enumerate(self.__exceptions)
+        for obj, expt in for_iter:
+            msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
+                    expt_obj = obj,
+                    expt_name=expt.__class__.__name__,
+                    expt_msg=str(expt)
+            )
+        return msg
 
 ##@brief Handle plugins
 #
@@ -58,22 +77,23 @@ class Plugin(object):
     # @throw PluginError
     def __init__(self, plugin_name):
         self.started()
-        
         self.name = plugin_name
         self.path = self.plugin_path(plugin_name)
+        print(self.path)
         self.module = None
         self.__confspecs = dict()
         self.loaded = False
         
         # Importing __init__.py
-        plugin_module = '%s.%s' % ( VIRTUAL_PACKAGE_NAME,
+        plugin_module = '%s.%s' % (VIRTUAL_PACKAGE_NAME,
                                     plugin_name)
+
         init_source = self.path + INIT_FILENAME
         try:
             loader = SourceFileLoader(plugin_module, init_source)
             self.module = loader.load_module()
         except ImportError as e:
-            raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
+             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
 
         # loading confspecs
         try:
@@ -169,7 +189,7 @@ class Plugin(object):
         
     ##@brief Load a plugin
     #
-    #Loading a plugin mean importing a file. The filename is defined in the 
+    #Loading a plugin means importing a file. The filename is defined in the 
     #plugin's __init__.py file in a LOADER_FILENAME_VARNAME variable.
     #
     #The loading process has to take care of other things :
@@ -325,6 +345,15 @@ class Plugin(object):
         res = cls._plugin_directories is not None
         if raise_if_not and not res:
             raise RuntimeError("Class Plugins is not initialized")
+            
+    @classmethod
+    def clear(cls):
+        if cls._plugin_directories is not None:
+            cls._plugin_directories = None
+        if cls._plugin_instances != dict():
+            cls._plugin_instances = dict()
+        if cls._load_called != []:
+            cls._load_called = []
 
 ##@page lodel2_plugins Lodel2 plugins system
 #
