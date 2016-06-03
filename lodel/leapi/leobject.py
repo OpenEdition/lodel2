@@ -192,18 +192,18 @@ class LeObject(object):
     @classmethod
     def _init_datasource(cls):
         expt_msg = "In LeAPI class '%s' " % cls.__name__
-        datasource_orig_name = cls._datasource
-        if cls._datasource not in Settings.datasources._fields:
+        datasource_orig_name = cls._datasource_name
+        if cls._datasource_name not in Settings.datasources._fields:
             expt_msg += "Unknow or unconfigured datasource %s"
-            expt_msg %= (cls._datasource, cls.__name__)
+            expt_msg %= (cls._datasource_name, cls.__name__)
             raise SettingsError(expt_msg)
         
-        ds_identifier = getattr(Settings.datasources, cls._datasource)
+        ds_identifier = getattr(Settings.datasources, cls._datasource_name)
         try:
             ds_identifier = getattr(ds_identifier, 'identifier')
         except NameError:
             expt_msg += "Datasource %s is missconfigured, missing identifier."
-            expt_msg %= cls._datasource
+            expt_msg %= cls._datasource_name
             raise SettingsError(expt_msg)
 
         ds_plugin, ds_name = ds_identifier.split('.')

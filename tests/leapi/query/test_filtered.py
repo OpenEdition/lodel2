@@ -32,8 +32,9 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         for q_class in self.q_classes:
             for q_filter_arg, e_qfilter in test_datas:
                 get_q = q_class(dyncode.Publication, q_filter_arg)
-                self.assertEqual(   get_q.dump_infos()['query_filter'],
-                                    e_qfilter)
+                self.assertEqual(
+                    sorted(get_q.dump_infos()['query_filter'][0]),
+                    sorted(e_qfilter[0]))
 
     def test_invalid_filters(self):
         """ Testing invalid filters detection """
@@ -91,11 +92,11 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         test_datas = [  (   dyncode.Subsection,
                             'parent.lodel_id = 42',
                             (   [],
-                                [(('parent', 'lodel_id', [dyncode.Section]),'=','42')])),
+                                [(('parent', {dyncode.Section: 'lodel_id'}), '=', '42')])),
                         (   dyncode.Section,
                             'childs.lodel_id = 42',
                             (   [],
-                                [(('childs', 'lodel_id', [dyncode.Subsection]),'=','42')]))
+                                [(('childs', {dyncode.Subsection: 'lodel_id'}), '=', '42')]))
                         ]
 
         for le_class, q_filter_arg, e_qfilter in test_datas:
