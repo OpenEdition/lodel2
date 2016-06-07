@@ -220,14 +220,22 @@ class LeFilteredQuery(LeQuery):
     def dump_infos(self):
         ret = super().dump_infos()
         ret['query_filter'] = self.__query_filter
+        ret['subqueries'] = self.subqueries
         return ret
 
     def __repr__(self):
-        ret = "<{classname} target={target_class} query_filter={query_filter}>"
-        return ret.format(
-                            classname=self.__class__.__name__,
-                            query_filter = self.__query_filter,
-                            target_class = self._target_class)
+        res = "<{classname} target={target_class} query_filter={query_filter}"
+        res = ret.format(
+            classname=self.__class__.__name__,
+            query_filter = self.__query_filter,
+            target_class = self._target_class)
+        if len(self.subqueries) > 0:
+            for n,subq in enumerate(self.subqueries):
+                res += "\n\tSubquerie %d : %s"
+                res %= (n, subq)
+        res += '>'
+        return res
+
     ## @brief Prepare filters for datasource
     # 
     #A filter can be a string or a tuple with len = 3.
