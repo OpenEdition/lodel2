@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
 import re
+import copy
+
 from .leobject import LeObject, LeApiErrors, LeApiDataCheckError
 from lodel.plugin.hooks import LodelHook
 from lodel import logger
@@ -157,6 +159,7 @@ class LeFilteredQuery(LeQuery):
     #
     #@param query_filter list|tuple|str : A single filter or a list of filters
     #@see LeFilteredQuery._prepare_filters()
+    #@warning Does not support multiple UID
     def set_query_filter(self, query_filter):
         if isinstance(query_filter, str):
             query_filter = [query_filter]
@@ -175,15 +178,21 @@ class LeFilteredQuery(LeQuery):
             tmp_rel_filter = dict() #designed to stores rel_field of same DS
             # First step : simplification
             # Trying to delete relational filters done on referenced class uid
-            for tclass, tfield in ref_dict.items():
+            for tclass, tfield in copy.copy(ref_dict).items():
                 #tclass : reference target class
                 #tfield : referenced field from target class
-                if tfield == tclass.uid_fieldname:
+                #
+                #   !!!WARNING!!!
+                # The line below brake multi UID support
+                #
+                if tfield == tclass.uid_fieldname()[0]:
                     #This relational filter can be simplified as 
                     # ref_field, op, value
                     # Note : we will have to dedup filters_orig
                     filters_orig.append((rfield, op, value))
                     del(ref_dict[tclass])
+            if len(ref_dict) == 0:
+                continue
             #Determine what to do with other relational filters given 
             # referenced class datasource
             #Remember : each class in a relational filter has the same 
@@ -268,6 +277,7 @@ class LeFilteredQuery(LeQuery):
     #@param filters_l list : This list of str or tuple (or both)
     #@return a tuple(FILTERS, RELATIONNAL_FILTERS
     #@todo move this doc in another place (a dedicated page ?)
+    #@warning Does not supports multiple UID for an EmClass
     def _prepare_filters(self, filters_l):
         filters = list()
         res_filters = list()
@@ -294,7 +304,7 @@ class LeFilteredQuery(LeQuery):
             else:
                 err_l[field] = NameError(   "'%s' is not a valid relational \
 field name" % fieldname)
-                continue   
+                continue
             # Checking field against target_class
             ret = self._check_field(self._target_class, field)
             if isinstance(ret, Exception):
@@ -313,9 +323,15 @@ a relational field, but %s.%s was present in the filter"
                 #Relationnal field
                 if ref_field is None:
                     # ref_field default value
-                    ref_uid = set(
-                        [lc._uid for lc in field_datahandler.linked_classes])
-                    if len(ref_uid) == 1:
+                    #
+                    #   !!! WARNING !!!
+                    # This piece of code does not supports multiple UID for an
+                    # emclass
+                    #
+                    ref_uid = [ 
+                        lc._uid[0] for lc in field_datahandler.linked_classes]
+
+                    if len(set(ref_uid)) == 1:
                         ref_field = ref_uid[0]
                     else:
                         if len(ref_uid) > 1:
@@ -442,7 +458,8 @@ field to use for the relational filter"
                 if r_ds is None:
                     r_ds = ref_class._datasource_name
                 elif ref_class._datasource_name != r_ds:
-                    return RuntimeError("All referenced class doesn't have the same datasource. Query not possible")
+                    return RuntimeError("All referenced class doesn't have the\
+ same datasource. Query not possible")
                 if ref_field in ref_class.fieldnames(True):
                     ref_dict[ref_class] = ref_field
                 else:

@@ -130,3 +130,44 @@ class LeFilteredQueryMultiDataHandlerTestCase(unittest.TestCase):
             qinfos['query_filter'],
             ([('title', '=', 'super titre !')],[])) 
         self.assertEqual(qinfos['field_list'], ['title'])
+
+    def test_uid_as_ref_field(self):
+        """ Testing basic query optimisation with a relationnal filter 
+            with lodel_id as referenced field"""
+        getq = LeGetQuery(
+            dyncode.Indextheme,
+            "texts.lodel_id in 1,2,3,42")
+        qinfos = getq.dump_infos()
+        #No subqueries should be created because referenced field is 
+        #the referenced class UID
+        self.assertEqual(qinfos['subqueries'],[])
+        self.assertEqual(
+            qinfos['query_filter'], 
+            ([('texts', 'in', '1,2,3,42')], []))
+
+    def test_implicit_uid(self):
+        """ Testing query with an UID as implicit referenced field for a 
+            relationnal filter """
+        getq = LeGetQuery(
+            dyncode.Indextheme,
+            "texts in 13,1337,357,80")
+        qinfos = getq.dump_infos()
+        #No subqueries expected
+        self.assertEqual(qinfos['subqueries'],[])
+        self.assertEqual(
+            qinfos['query_filter'], 
+            ([('texts', 'in', '13,1337,357,80')], []))
+
+    def test_same_datasource(self):
+        """ Testing a query with relationnal filters concerning only one
+            datasource to check for 'false positive' in subqueries creation """ 
+        getq = LeGetQuery(
+            dyncode.Text,
+            "linked_persons.fullname = John Doe")
+        qinfos = getq.dump_infos()
+        self.assertEqual(qinfos['subqueries'],[])
+        self.assertEqual(
+            qinfos['query_filter'], 
+            (   [],
+                [(('linked_persons', {dyncode.Person:'fullname'}),'=', 'John Doe')]))
+

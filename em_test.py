@@ -276,7 +276,7 @@ person.new_field(   'linked_texts',
                     data_handler = 'list',
                     back_reference = ('Text', 'linked_persons'),
                     group = editorial_person_group,
-)
+                    allowed_classes = [text])
 
 text.new_field( 'linked_persons',
                 display_name = {
@@ -286,7 +286,7 @@ text.new_field( 'linked_persons',
                 data_handler = 'list',
                 back_reference = ('Person', 'linked_texts'),
                 group = editorial_person_group,
-)
+                allowed_classes = [person])
 
 #####################
 # Index classes     # <--- Note :   using a different datasource for testing
