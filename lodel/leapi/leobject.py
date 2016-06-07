@@ -153,7 +153,7 @@ class LeObject(object):
         if not fieldname in cls._fields:
             raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
         return cls._fields[fieldname]
- 
+    
     ##@brief Return a LeObject child class from a name
     # @warning This method has to be called from dynamically generated LeObjects
     # @param leobject_name str : LeObject name

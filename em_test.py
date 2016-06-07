@@ -321,49 +321,21 @@ index_value = index_abstract.new_field(
         'fre': 'valeur'},
     data_handler = 'varchar')
 
-index_text = em.new_class(
-    'indextext',
-    display_name = {
-        'eng': 'Index Text',
-        'fre': 'Index Texte'},
-    help_text = {
-        'eng': 'Represent a link between a text and an index',
-        'fre': 'Represente le lien entre une entrée d\'index et un texte'},
-    parents = None,
-    abstract = False,
-    datasource = 'default')
-
-bref_indextext_text = index_text.new_field(
-    'text',
-    display_name = {
-        'eng': 'Text with this index',
-        'fre': 'Texte comportant cet index'},
-    data_handler = 'link',
-    allowed_classes = [text],
-    group = index_group)
-
-bref_indextext_index = index_text.new_field(
-    'index',
-    display_name = {
-        'eng': 'Index within the referencend text',
-        'fre': 'Reference vers l\'index concerné'},
-    data_handler = 'link',
-    allowed_classes = [index_abstract],
-    group = index_group)
-
 text.new_field( 'indexes',
     display_name = {
         'eng': 'Indexes',
         'fre': 'Indexes'},
     data_handler = 'list',
-    back_reference = ('Indextext', 'text'))
+    back_reference = ('Indexabs', 'texts'),
+    allowed_classes = [index_abstract])
 
 index_abstract.new_field( 'texts',
     display_name = {
         'eng': 'Text referenced by this index',
         'fre': 'Texte contenant cette index'},
     data_handler = 'list',
-    back_reference = ('Indextext', 'index'))
+    back_reference = ('Text', 'indexes'),
+    allowed_classes = [text])
 
 index_theme = em.new_class(
     'indexTheme',

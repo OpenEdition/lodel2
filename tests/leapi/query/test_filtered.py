@@ -104,3 +104,29 @@ class LeFilteredQueryTestCase(unittest.TestCase):
             qinfos = get_q.dump_infos()
             self.assertEqual(   qinfos['query_filter'],
                                 e_qfilter)
+
+class LeFilteredQueryMultiDataHandlerTestCase(unittest.TestCase):
+    """ Testing LeFilteredQuery behavior when relational fields implies
+        different datasources """
+
+    q_classes = [LeDeleteQuery, LeUpdateQuery, LeGetQuery]
+    
+    def test_basic(self):
+        """ Testing a LeGetQuery with a relationnal field implying another
+            datasource """
+        getq = LeGetQuery(
+            dyncode.Indextheme,
+            "texts.title = super titre !")
+        qinfos = getq.dump_infos()
+        # The single query filter should be in subquery
+        self.assertEqual(qinfos['query_filter'], ([],[]))
+        self.assertEqual(len(qinfos['subqueries']), 1)
+        rfield, subq = qinfos['subqueries'][0]
+        # Checking subquery
+        self.assertEqual(rfield, 'texts') # The reference field of the subquery
+        qinfos = subq.dump_infos()
+        self.assertEqual(qinfos['target_class'], dyncode.Text)
+        self.assertEqual(
+            qinfos['query_filter'],
+            ([('title', '=', 'super titre !')],[])) 
+        self.assertEqual(qinfos['field_list'], ['title'])

@@ -190,7 +190,7 @@ class Reference(DataHandler):
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
-        self.__allowed_classes = None if allowed_classes is None else set(allowed_classes)
+        self.__allowed_classes = [] if allowed_classes is None else set(allowed_classes)
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)

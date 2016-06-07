@@ -212,9 +212,10 @@ class LeFilteredQuery(LeQuery):
                 for tclass, tfield in ref_dict.items():
                     query = LeGetQuery(
                         target_class = tclass,
-                        query_filter = [(rfield, op, value)],
+                        query_filter = [(tfield, op, value)],
                         field_list = [tfield])
                     subq.append((rfield, query))
+        self.subqueries = subq
     
     ##@return informations
     def dump_infos(self):
@@ -387,10 +388,10 @@ field to use for the relational filter"
     def _check_field(cls, target_class, fieldname):
         try:
             target_class.field(fieldname)
-        except NameError:
-            tc_name = target_class.__name__
-            return ValueError("No such field '%s' in %s" % (    fieldname,
-                                                                tc_name))
+        except NameError as e:
+            msg = "No field named '%s' in %s'"
+            msg %= (fieldname, target_class.__name__)
+            return NameError(msg)
 
     ##@brief Prepare a relational filter
     #
@@ -445,11 +446,13 @@ field to use for the relational filter"
                 if ref_field in ref_class.fieldnames(True):
                     ref_dict[ref_class] = ref_field
                 else:
-                    logger.debug("Warning the class %s is not considered in \
-the relational filter %s" % ref_class.__name__)
+                    msg = "Warning the class %s is not considered in \
+the relational filter %s"
+                    msg %= (ref_class.__name__, ref_field)
+                    logger.debug(msg)
         if len(ref_dict) == 0:
-            return NameError(   "No field named '%s' in referenced objects"
-                                % ref_field)
+            return NameError(   "No field named '%s' in referenced objects %s"
+                                % (ref_field, ref_class.__name__))
         return (fieldname, ref_dict)
  
 
@@ -668,8 +671,15 @@ class LeGetQuery(LeFilteredQuery):
         return ret
 
     def __repr__(self):
-        ret = "<LeGetQuery target={target_class} filter={query_filter} \
+        res = "<LeGetQuery target={target_class} filter={query_filter} \
 field_list={field_list} order={order} group={group} limit={limit} \
-offset={offset}>"
-        return ret.format(**self.dump_infos())
+offset={offset}"
+        res = res.format(**self.dump_infos())
+        if len(self.subqueries) > 0:
+            for n,subq in enumerate(self.subqueries):
+                res += "\n\tSubquerie %d : %s"
+                res %= (n, subq)
+        res += ">"
+        return res
+
 
