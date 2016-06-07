@@ -288,5 +288,55 @@ text.new_field( 'linked_persons',
                 group = editorial_person_group,
 )
 
+#####################
+# Index classes     # <--- Note :   using a different datasource for testing
+#####################               purpose
+
+index_group = em.new_group( 'index_group',
+                            display_name = 'Indexes',
+                            help_text = {
+                                'eng': 'EM class that represents indexes'},
+                            depends = (editorial_group,))
+
+index_abstract = em.new_class(
+    'indexAbs',
+    display_name = {'eng': 'Abstract Index'},
+    help_text = {'eng': 'Abstract class common to each Index classes'},
+    abstract = True,
+    group = index_group,
+    datasource = 'dummy2',
+    parents = em_object)
+
+index_name = index_abstract.new_field(
+    'name',
+    display_name = {
+        'eng': 'name',
+        'fre': 'nom'},
+    data_handler = 'varchar')
+
+index_value = index_abstract.new_field(
+    'value',
+    display_name = {
+        'eng': 'value',
+        'fre': 'valeur'},
+    data_handler = 'varchar')
+
+index_theme = em.new_class(
+    'indexTheme',
+    display_name = {
+        'eng': 'Thematic index',
+        'fre': 'Index thématique'},
+    group = index_group,
+    datasource = 'dummy2',
+    parents = index_abstract)
+
+index_theme_theme = index_abstract.new_field(
+    'theme',
+    display_name = {
+        'eng': 'theme'},
+    data_handler = 'varchar')
+
 #em.save('xmlfile', filename = 'examples/em_test.xml')
-em.save('picklefile', filename = 'examples/em_test.pickle')
+pickle_file = 'examples/em_test.pickle'
+em.save('picklefile', filename = pickle_file)
+print("Output written in %s" % pickle_file)
