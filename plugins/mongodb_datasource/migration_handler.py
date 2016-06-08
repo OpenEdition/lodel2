@@ -126,7 +126,7 @@ class MongoDbMigrationHandler(object):
     def _emfield_upgrade(self, model, uid, initial_state, new_state):
         collection_name = self._class_collection_name_from_field(model, initial_state)
         field_name = model.field(uid).name
-        self._check_field_in_collection(collection_name, field_name, , initial_state, new_state)
+        self._check_field_in_collection(collection_name, field_name, initial_state, new_state)
 
     def _check_field_in_collection(self,collection_name, field_name, initial_sate, new_state):
         collection = self.database[collection_name]
