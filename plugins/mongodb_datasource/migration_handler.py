@@ -105,7 +105,6 @@ class MongoDbMigrationHandler(object):
 
     ## @brief creates a new field in a collection
     # @see register_change()
-    # @todo add the filter parameter to add the field only to the documents corresponding to the given class
     def _emfield_new(self, model, uid, initial_state, new_state):
         if new_state['data_handler'] == 'relation':
             class_name = self.class_collection_name_from_field(model, new_state)
