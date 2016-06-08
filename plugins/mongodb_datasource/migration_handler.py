@@ -98,10 +98,10 @@ class MongoDbMigrationHandler(object):
 
     ## @brief deletes a collection corresponding to a given uid
     # @see register_change()
-    # @todo add a test to prevent the deletion of the basis collections ?
     def _emclass_delete(self, model, uid, initial_state, new_state):
-        collection_name = object_collection_name(model.classes(uid))
-        self._delete_collection(collection_name)
+        if uid not in MongoDbMigrationHandler.INIT_COLLECTIONS_NAMES:
+            collection_name = object_collection_name(model.classes(uid))
+            self._delete_collection(collection_name)
 
     ## @brief creates a new field in a collection
     # @see register_change()
@@ -123,7 +123,6 @@ class MongoDbMigrationHandler(object):
         self._delete_field_in_collection(collection_name, field_name)
 
     ## @brief upgrades a field
-    # @todo to be implemented
     def _emfield_upgrade(self, model, uid, initial_state, new_state):
         collection_name = self._class_collection_name_from_field(model, initial_state)
         field_name = model.field(uid).name
