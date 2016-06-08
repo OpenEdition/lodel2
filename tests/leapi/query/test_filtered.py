@@ -90,13 +90,13 @@ class LeFilteredQueryTestCase(unittest.TestCase):
     def test_rel_filters(self):
         """ Testing relational filters recognition """
         test_datas = [  (   dyncode.Subsection,
-                            'parent.lodel_id = 42',
+                            'parent.title = 42',
                             (   [],
-                                [(('parent', {dyncode.Section: 'lodel_id'}), '=', '42')])),
+                                [(('parent', {dyncode.Section: 'title'}), '=', '42')])),
                         (   dyncode.Section,
-                            'childs.lodel_id = 42',
+                            'childs.title = 42',
                             (   [],
-                                [(('childs', {dyncode.Subsection: 'lodel_id'}), '=', '42')]))
+                                [(('childs', {dyncode.Subsection: 'title'}), '=', '42')]))
                         ]
 
         for le_class, q_filter_arg, e_qfilter in test_datas:
@@ -104,6 +104,7 @@ class LeFilteredQueryTestCase(unittest.TestCase):
             qinfos = get_q.dump_infos()
             self.assertEqual(   qinfos['query_filter'],
                                 e_qfilter)
+
 
 class LeFilteredQueryMultiDataHandlerTestCase(unittest.TestCase):
     """ Testing LeFilteredQuery behavior when relational fields implies
