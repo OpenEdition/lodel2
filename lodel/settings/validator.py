@@ -3,6 +3,7 @@
 import sys
 import os.path
 import re
+import socket
 import inspect
 import copy
 
@@ -189,6 +190,27 @@ def str_val(value):
     except Exception as e:
         raise SettingsValidationError("Not able to convert value to string : " + str(e))
 
+def host_val(value):
+    if value == 'localhost':
+        return value
+    ok = False
+    try:
+        socket.inet_aton(value)
+        return value
+    except (TypeError,OSError):
+        pass
+    try:
+        socket.inet_pton(socket.AF_INET6, value)
+        return value
+    except (TypeError,OSError):
+        pass
+    try:
+        socket.getaddrinfo(value, 80)
+        return value
+    except (TypeError,socket.gaierrror):
+        msg = "The value '%s' is not a valid host"
+        raise SettingsValidationError(msg % value)
+
 #
 #   Default validators registration
 #
@@ -242,6 +264,11 @@ SettingValidator.register_validator(
                                         'path',
                                         path_val,
                                         'path validator')
+
+SettingValidator.register_validator(
+    'host',
+    host_val,
+    'host validator')
 
 SettingValidator.create_list_validator(
                                             'list',
