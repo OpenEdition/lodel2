@@ -161,7 +161,8 @@ class MongoDbMigrationHandler(object):
     # @param field str
     # @param options dict
     def _create_field_in_collection(self, collection_name, field, options):
-        self.database[collection_name].update_many({field: {'$exists': False}}, {'$set': {field: options['default']}}, False)
+        emfield = EmField(field)
+        self.database[collection_name].update_many({'uid': emfield.get_emclass_uid(), field: {'$exists': False}}, {'$set': {field: options['default']}}, False)
 
     ## @brief Deletes a field in a collection
     # @param collection_name str
