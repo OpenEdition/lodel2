@@ -16,7 +16,7 @@ name="$1"
 instdir="$2"
 
 libdir="$3"
-libdir="${libdir:=$(realpath $(dirname $0)/..)}/"
+libdir="${libdir:=$(realpath $(dirname $0)/..)}"
 
 loader="$instdir/loader.py"
 conf="$instdir/conf.d/lodel2.ini"
