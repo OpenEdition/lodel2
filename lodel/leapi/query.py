@@ -559,23 +559,9 @@ class LeDeleteQuery(LeFilteredQuery):
     ##@brief Implements delete query operations
     # @returns the number of deleted items
     # @exception when the number of deleted items is not as expected
-    def __query(self):
-        # select _uid corresponding to query_filter
-        l_uids = self._datasource.select(   self._target_class,
-                                            list(self._target_class.getuid()),
-                                            query_filter,
-                                            None,
-                                            None,
-                                            None,
-                                            None,
-                                            0,
-                                            False)
-        # list of dict l_uids : _uid(s) of the objects to be deleted
-        nb_deleted = datasource.update(self._target_class,l_uids, **datas)
-        if nb_deleted != len(l_uids):
-            msg = "Number of deleted items %d is not as expected %d "
-            msg %= (nb_deleted, len(l_uids))
-            raise LeQueryError(msg)
+    def __query(self, filters, rel_filters):
+        nb_deleted = datasource.delete(
+            self._target_class, filters, rel_filters)
         return nb_deleted
 
 class LeGetQuery(LeFilteredQuery):
