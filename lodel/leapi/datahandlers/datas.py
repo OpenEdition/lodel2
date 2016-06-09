@@ -71,3 +71,18 @@ class UniqID(Integer):
 
     def _check_data_value(self, value):
         return value, None
+
+class LeobjectSubclassIdentifier(Varchar):
+    
+    help = 'Datahandler designed to handle LeObject subclass identifier in DB'
+    base_type = 'varchar'
+
+    def __init__(self, **kwargs):
+        if 'internal' in kwargs and not kwargs['internal']:
+            raise RuntimeError(self.__class__.__name__+" datahandler can only \
+be internal")
+        kwargs['internal'] = True
+        super().__init__(**kwargs)
+
+    def _check_data_consistency(self, emcomponent, fname, datas):
+        datas[fname] = emcomponent.__class__.__name__

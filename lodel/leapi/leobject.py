@@ -7,6 +7,10 @@ from lodel import logger
 from lodel.settings import Settings
 from lodel.settings.utils import SettingsError
 
+##@brief Stores the name of the field present in each LeObject that indicates
+#the name of LeObject subclass represented by this object
+CLASS_ID_FIELDNAME = "classname"
+
 class LeApiErrors(Exception):
     ##@brief Instanciate a new exceptions handling multiple exceptions
     # @param msg str : Exception message
