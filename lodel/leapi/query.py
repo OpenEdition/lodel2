@@ -73,7 +73,7 @@ class LeQuery(object):
                                     self._target_class,
                                     ret)
         return ret
-    
+
     ##@brief Childs classes implements this method to execute the query
     # @param **datas
     # @return query result
@@ -89,14 +89,8 @@ class LeQuery(object):
         return ret.format(
                             classname=self.__class__.__name__,
                             target_class = self._target_class)
-        
 
 ##@brief Abstract class handling query with filters
-#
-#@todo add handling of inter-datasource queries
-#
-#@warning relationnal filters on multiple classes from different datasource
-# will generate a lot of subqueries
 class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
@@ -487,8 +481,9 @@ class LeInsertQuery(LeQuery):
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param new_datas : datas to be inserted
-    def __query(self, new_datas):
-        nb_inserted = self._rw_datasource.insert(self._target_class,new_datas)
+    def __query(self, datas):
+        datas = self._target_class.prepare_datas(datas, True, False)
+        nb_inserted = self._rw_datasource.insert(self._target_class,datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
@@ -504,9 +499,10 @@ class LeInsertQuery(LeQuery):
     """
 
     ## @brief Execute the insert query
-    def execute(self, new_datas):
-        return super().execute(new_datas)
-        
+    def execute(self, datas):
+        return super().execute(datas = datas)
+
+
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
     
@@ -516,19 +512,34 @@ class LeUpdateQuery(LeFilteredQuery):
     def __init__(self, target_class, query_filter):
         super().__init__(target_class, query_filter)
     
+    ##@brief Called by __query to do severals checks before running the update
+    #@warning Optimization issue : each time this method is called we do 
+    #a LeGetQuery to fetch ALL datas and construct instances for being able to
+    #construct datas and check consistency
+    #@todo implementation (waiting for LeApi to be plugged to LeQuery)
+    def __fetch_construct_check_update(self, filters, rel_filters, datas):
+        """
+        instances = self._target_class.get(filters, rel_filters)
+        for instance in instances:
+            instance.check_datas_value(instance.
+        """
+        pass
+        
+
     ##@brief Implements an update query
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
-    #@param updated_datas dict : datas to update
+    #@param datas dict : datas to update
     #@returns the number of updated items
-    def __query(self, filters, rel_filters, updated_datas):
+    def __query(self, filters, rel_filters, datas):
+        self.__fetch_construct_check_update(filters, rel_filters, datas)
         nb_updated = self._rw_datasource.update(
-            self._target_class, filters, rel_filters, update_datas)
+            self._target_class, filters, rel_filters, datas)
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, updated_datas):
-        return super().execute(updated_datas)
+    def execute(self, datas):
+        return super().execute(datas = datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
