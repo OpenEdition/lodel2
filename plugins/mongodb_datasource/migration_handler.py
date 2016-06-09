@@ -3,12 +3,21 @@ import datetime
 
 from lodel.editorial_model.components import EmClass, EmField
 
-from .utils import get_connection_args, mongodbconnect, collection_prefix, object_collection_name, mongo_fieldname
+from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
+from lodel.plugin import LodelHook
+
 
 class MigrationHandlerChangeError(Exception):
     pass
 
+
+@LodelHook('mongodb_mh_init_db')
+def mongodb_mh_init_db(conn_args=None):
+    connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
+    migration_handler = MongoDbMigrationHandler(connection_args)
+    migration_handler._install_collections()
+    migration_handler.database.close()
 
 class MongoDbMigrationHandler(object):
 
@@ -23,9 +32,9 @@ class MongoDbMigrationHandler(object):
     def __init__(self, conn_args=None, **kwargs):
         conn_args = get_connection_args() if conn_args is None else conn_args
 
-        self.connection_name = conn_args['name']
-
-        self.database = mongodbconnect(self.connection_name)
+        #self.connection_name = conn_args['name']
+        self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
+                                username=conn_args['username'], password=conn_args['password'])
 
         self.dry_run = kwargs['dry_run'] if 'dry_run' in kwargs else \
             MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
@@ -36,7 +45,7 @@ class MongoDbMigrationHandler(object):
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
             MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
 
-        self._install_collections()
+        #self._install_collections()
 
     ## @brief Installs the basis collections of the database
     def _install_collections(self):
