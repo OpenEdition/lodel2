@@ -55,7 +55,7 @@ class LeQuery(object):
     # @return the query result
     # @see LeQuery.__query()
     #
-    def execute(self, datas = None):
+    def execute(self, **datas):
         if len(datas) > 0:
             self._target_class.check_datas_value(
                                                     datas,
@@ -66,7 +66,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(self._target_class._datasource, **datas)
+        ret = self.__query(target = self._target_class._datasource, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -143,7 +143,8 @@ class LeFilteredQuery(LeQuery):
                 (rfield, ' in ', subq_res))
         self.__query_filter = (std_filters, rel_filters)
         try:
-            res = super().execute()
+            filters, rel_filters = self.__query_filter
+            res = super().execute(filters = filters, rel_filters = rel_filters)
         except Exception as e:
             #restoring filters even if an exception is raised
             self.__query_filter = orig_filter
