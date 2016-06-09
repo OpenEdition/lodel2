@@ -54,7 +54,7 @@ def connection_string(host, port, db_name, username, password):
 def connect(host, port, db_name, username, password):
     connection = MongoClient(
         connection_string(host, port, db_name, username, password))
-    database = connection[dbname]
+    database = connection[db_name]
     return database
 
 
