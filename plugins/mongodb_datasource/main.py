@@ -126,7 +126,7 @@ class MongoDbDatasource(object):
 
         return results
 
-    ##@brief Deletes one record defined by its uid
+    ##@brief Deletes records according to given filters
     #@param target Emclass : class of the record to delete
     #@param filters list : List of filters
     #@param relational_filters list : List of relational filters
@@ -137,7 +137,7 @@ class MongoDbDatasource(object):
         res = self.__collection(target).delete_many(mongo_filters)
         return res.deleted_count
 
-    ## @brief updates one or a list of records
+    ## @brief updates records according to given filters
     #@param target Emclass : class of the object to insert
     #@param filters list : List of filters
     #@param rel_filters list : List of relational filters

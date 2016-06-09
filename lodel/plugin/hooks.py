@@ -83,3 +83,4 @@ class LodelHook(object):
     @classmethod
     def __reset__(cls):
         cls._hooks = dict()
+

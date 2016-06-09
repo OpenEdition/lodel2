@@ -73,8 +73,8 @@ class Plugin(object):
         try:
             loader = SourceFileLoader(plugin_module, init_source)
             self.module = loader.load_module()
-        except ImportError as e:
-             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid" % plugin_name)
+        except (ImportError,FileNotFoundError) as e:
+             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid or the plugin do not exists" % plugin_name)
 
         # loading confspecs
         try:

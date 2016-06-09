@@ -22,10 +22,9 @@ from lodel.settings.settings import Settings as settings
 settings('conf.d')
 from lodel.settings import Settings
 
-
-
-
+#Starts hooks
 from lodel.plugin import LodelHook
+from lodel.plugin import core_hooks
 
 def start():
     #Load plugins
