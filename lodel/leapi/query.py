@@ -33,6 +33,7 @@ class LeQueryError(Exception):
             )
         return msg
 
+##@todo check datas when running query
 class LeQuery(object):
     
     ##@brief Hookname prefix

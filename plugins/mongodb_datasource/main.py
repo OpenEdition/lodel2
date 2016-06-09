@@ -16,7 +16,6 @@ from .utils import mongodbconnect, object_collection_name, MONGODB_SORT_OPERATOR
 class MongoDbDataSourceError(Exception):
     pass
 
-
 class MongoDbDatasource(object):
     
     ##@brief Mapping from lodel2 operators to mongodb operator
@@ -95,53 +94,42 @@ class MongoDbDatasource(object):
 
     ##@brief Deletes one record defined by its uid
     #@param target Emclass : class of the record to delete
-    #@param uid dict|list : a dictionary of fields and values composing the 
-    # unique identifier of the record or a list of several dictionaries
+    #@param filters list : List of filters
+    #@param relational_filters list : List of relational filters
     #@return int : number of deleted records
-    #@TODO Implement the error management
-    def delete(self, target, uid):
-        if isinstance(uid, dict):
-            uid = [uid]
-        collection_name = object_collection_name(target)
-        collection = self.database[collection_name]
-        result = collection.delete_many(uid)
-        return result.deleted_count
+    def delete(self, target, filters, relational_filters):
+        mongo_filters = self.__process_filters(
+            target, filters, relational_filters)
+        res = self.__collection(target).delete_many(mongo_filters)
+        return res.deleted_count
 
     ## @brief updates one or a list of records
-    # @param target Emclass : class of the object to insert
-    # @param uids list : list of uids to update
-    # @param datas dict : datas to update (new values)
-    # @return int : Number of updated records
-    # @todo check if the values need to be parsed
-    def update(self, target, uids, **datas):
-        if not isinstance(uids, list):
-            uids = [uids]
-        collection_name = object_collection_name(target)
-        collection = self.database[collection_name]
-        results = collection.update_many({'uid': {'$in': uids}}, datas)
-        return results.modified_count()
+    #@param target Emclass : class of the object to insert
+    #@param filters list : List of filters
+    #@param rel_filters list : List of relational filters
+    #@param upd_datas dict : datas to update (new values)
+    #@return int : Number of updated records
+    def update(self, target, filters, relational_filters, upd_datas):
+        mongo_filters = self.__process_filters(
+            target, filters, relational_filters)
+        res = self.__collection(target).update_many(mongo_filters, upd_datas)
+        return res.modified_count()
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
-    # @param datas dict : datas to insert
-    # @return bool
-    # @TODO Implement the error management
-    def insert(self, target, **datas):
-        collection_name = object_collection_name(target)
-        collection = self.database[collection_name]
-        result = collection.insert_one(datas)
-        return len(result.inserted_id)
+    # @param new_datas dict : datas to insert
+    # @return the inserted uid
+    def insert(self, target, new_datas):
+        res = self.__collection(target).insert_one(new_datas)
+        return res.inserted_id
 
     ## @brief Inserts a list of records in a given collection
     # @param target Emclass : class of the objects inserted
-    # @param datas_list
+    # @param datas_list list : list of dict
     # @return list : list of the inserted records' ids
-    # @TODO Implement the error management
     def insert_multi(self, target, datas_list):
-        collection_name = object_collection_name(target)
-        collection = self.database[collection_name]
-        result = collection.insert_many(datas_list)
-        return len(result.inserted_ids)
+        res = self.__collection.insert_many(datas_list)
+        return list(result.inserted_ids)
     
     ##@brief Return a pymongo collection given a LeObject child class
     #@param leobject LeObject child class (no instance)
