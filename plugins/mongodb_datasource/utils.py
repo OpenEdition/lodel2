@@ -49,7 +49,7 @@ def mongodbconnect(connection_name):
     return connect(host, port, db_name, username, password)
 
 def connection_string(host, port, db_name, username, password):
-    return 'mongodb://%s:%s@%s:%s' % (login, password, host, port)
+    return 'mongodb://%s:%s@%s:%s' % (username, password, host, port)
 
 def connect(host, port, db_name, username, password):
     connection = MongoClient(
