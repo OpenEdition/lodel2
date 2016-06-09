@@ -11,13 +11,23 @@ import urllib
 
 from lodel import logger
 
-from .utils import mongodbconnect, object_collection_name, MONGODB_SORT_OPERATORS_MAP
+from .utils import mongodbconnect, object_collection_name, \
+    connect, MONGODB_SORT_OPERATORS_MAP
 
 class MongoDbDataSourceError(Exception):
     pass
 
 class MongoDbDatasource(object):
     
+    ##@brief Stores existing connections
+    #
+    #The key of this dict is a hash of the connection string + ro parameter.
+    #The value is a dict with 2 keys :
+    # - conn_count : the number of instanciated datasource that use this
+    #connection
+    # - db : the pymongo database object instance
+    _connections = dict()
+
     ##@brief Mapping from lodel2 operators to mongodb operator
     lodel2mongo_op_map = {
         '=':'$eq', '<=':'$lte', '>=':'$gte', '!=':'$ne', '<':'$lt',
@@ -26,10 +36,34 @@ class MongoDbDatasource(object):
     mongo_op_re = ['$in', '$nin']
     wildcard_re = re.compile('[^\\\\]\*')
 
-    ## @brief instanciates a database object given a connection name
-    # @param connection_name str
-    def __init__(self, connection_name):
-        self.r_database = mongodbconnect(connection_name)
+    ##@brief instanciates a database object given a connection name
+    #@param host str : hostname or IP
+    #@param port int : mongodb listening port
+    #@param db_name str
+    #@param username str
+    #@param password str
+    #@param ro bool : If True the Datasource is for read only, else the
+    #Datasource is write only !
+    def __init__(self, host, port, db_name, username, password, read_only = False):
+        ##@brief Connections infos that can be kept securly
+        self.__db_infos = {'host': host, 'port': port, 'db_name': db_name}
+        ##@brief Is the instance read only ? (if not it's write only)
+        self.__read_only = bool(read_only)
+        ##@brief Uniq ID for mongodb connection
+        self.__conn_hash= None
+        ##@brief Stores the connection to MongoDB
+        self.database = self.__connect(username, password)
+
+    ##@brief Destructor that attempt to close connection to DB
+    #
+    #Decrease the conn_count of associated MongoDbDatasource::_connections
+    #item. If it reach 0 close the connection to the db
+    #@see MongoDbDatasource::__connect()
+    def __del__(self):
+        self._connections[self.__conn_hash]['conn_count'] -= 1
+        if self._connections[self.__conn_hash]['conn_count'] <= 0:
+            self._connections[self.__conn_hash]['db'].close()
+            del(self._connections[self.__conn_hash])
 
     ##@brief returns a selection of documents from the datasource
     #@param target Emclass
@@ -131,6 +165,24 @@ class MongoDbDatasource(object):
         res = self.__collection.insert_many(datas_list)
         return list(result.inserted_ids)
     
+    ##@brief Connect to database
+    #@not this method avoid opening two times the same connection using
+    #MongoDbDatasource::_connections static attribute
+    #@param host str : hostname or IP
+    #@param port int : mongodb listening port
+    #@param db_name str
+    #@param username str
+    #@param password str
+    #@param ro bool : If True the Datasource is for read only, else the
+    def __connect(self, username, password, ro):
+        conn_string = connection_string(
+            username = username, password = password, **self.__db_infos)
+        conn_string += "__ReadOnly__:"+self.__read_only
+        self.__conf_hash = conn_h = hash(conn_string)
+        if conn_h in self._connections:
+            self._connections[conn_h]['conn_count'] += 1
+            return self._connections[conn_h]['db']
+
     ##@brief Return a pymongo collection given a LeObject child class
     #@param leobject LeObject child class (no instance)
     #return a pymongo.collection instance

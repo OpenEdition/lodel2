@@ -46,10 +46,17 @@ def get_connection_args(connnection_name='default'):
 # @return MongoClient
 def mongodbconnect(connection_name):
     login, password, host, port, dbname = get_connection_args(connection_name)
-    connection_string = 'mongodb://%s:%s@%s:%s' % (login, password, host, port)
-    connection = MongoClient(connection_string)
+    return connect(host, port, db_name, username, password)
+
+def connection_string(host, port, db_name, username, password):
+    return 'mongodb://%s:%s@%s:%s' % (login, password, host, port)
+
+def connect(host, port, db_name, username, password):
+    connection = MongoClient(
+        connection_string(host, port, db_name, username, password))
     database = connection[dbname]
     return database
+
 
 
 ## @brief Returns a collection name given a EmClass
