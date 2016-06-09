@@ -76,8 +76,10 @@ class LeObject(object):
     _fields = None
     ##@brief A tuple of fieldname (or a uniq fieldname) representing uid
     _uid = None 
-    ##@brief The datasource name ( see @ref lodel2_datasources )
-    _datasource = None
+    ##@brief Read only datasource ( see @ref lodel2_datasources )
+    _ro_datasource = None
+    ##@breif Read & write datasource ( see @ref lodel2_datasources )
+    _rw_datasource = None
 
     ##@brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance
@@ -185,25 +187,57 @@ class LeObject(object):
             raise NameError("No field named '%s' in %s" % ( fieldname,
                                                             cls.__name__))
     
+    ##@brief Initialise both datasources (ro and rw)
+    #
+    #This method is used once at dyncode load to replace the datasource string
+    #by a datasource instance to avoid doing this operation for each query
+    #@see LeObject::_init_datasource()
+    @classmethod
+    def _init_datasources(cls):
+        if isinstance(cls._datasource_name, str):
+            rw_ds = ro_ds = cls._datasource_name
+        else:
+            ro_ds, rw_ds = cls._datasource_name
+        #Read only datasource initialisation
+        cls._ro_datasource = cls._init_datasource(ro_ds, True)
+        log_msg = "Read only datasource %s initialized for LeObject %s"
+        log_msg %= (ro_ds, cls.__name__)
+        logger.debug(log_msg)
+        #Read write datasource initialisation
+        cls._rw_datasource = cls._init_datasource(rw_ds, False)
+        log_msg = "Read&write only datasource %s initialized for LeObject %s"
+        log_msg %= (rw_ds, cls.__name__)
+        logger.debug(log_msg)
+        
+
     ##@brief Replace the _datasource attribute value by a datasource instance
     #
-    # This method is used once at dyncode load to replace the datasource string
-    # by a datasource instance to avoid doing this operation for each query
+    #This method is used once at dyncode load to replace the datasource string
+    #by a datasource instance to avoid doing this operation for each query
+    #@param ds_name str : The name of the datasource to instanciate
+    #@param ro bool : if true initialise the _ro_datasource attribute else
+    #initialise _rw_datasource attribute
     @classmethod
-    def _init_datasource(cls):
+    def _init_datasource(cls, ds_name, ro):
         expt_msg = "In LeAPI class '%s' " % cls.__name__
-        datasource_orig_name = cls._datasource_name
-        if cls._datasource_name not in Settings.datasources._fields:
+        datasource_orig_name = ds_name
+        if ds_name not in Settings.datasources._fields:
             expt_msg += "Unknow or unconfigured datasource %s"
-            expt_msg %= (cls._datasource_name, cls.__name__)
+            expt_msg %= (ds_name, cls.__name__)
             raise SettingsError(expt_msg)
         
-        ds_identifier = getattr(Settings.datasources, cls._datasource_name)
+        ds_identifier = getattr(Settings.datasources, ds_name)
+        read_only = getattr(ds_identifier, 'read_only')
         try:
             ds_identifier = getattr(ds_identifier, 'identifier')
         except NameError:
             expt_msg += "Datasource %s is missconfigured, missing identifier."
-            expt_msg %= cls._datasource_name
+            expt_msg %= ds_name
+            raise SettingsError(expt_msg)
+        if read_only and not ro:
+            expt_msg += "Error in datasource %s configuration. Trying to use \
+a read only as a read&write datasource"
+            expt_msg %= ds_name
             raise SettingsError(expt_msg)
 
         ds_plugin, ds_name = ds_identifier.split('.')
@@ -226,7 +260,8 @@ class LeObject(object):
             datasource_class = getattr(ds_plugin_module, "Datasource")
         except AttributeError as e:
             raise e
-            expt_msg += "The datasource plugin %s seems to be invalid. Error raised when trying to import Datasource"
+            expt_msg += "The datasource plugin %s seems to be invalid. Error \
+raised when trying to import Datasource"
             expt_msg %= ds_identifier
             raise SettingsError(expt_msg)
         ds_conf_old = ds_conf
@@ -234,10 +269,7 @@ class LeObject(object):
         for k in ds_conf_old._fields:
             ds_conf[k] = getattr(ds_conf_old, k)
 
-        cls._datasource = datasource_class(**ds_conf)
-        log_msg = "Datasource %s initialized for LeObject %s"
-        log_msg %= (datasource_orig_name, cls.__name__)
-        logger.debug(log_msg)
+        return datasource_class(**ds_conf)
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance

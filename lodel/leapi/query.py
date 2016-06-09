@@ -49,7 +49,8 @@ class LeQuery(object):
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
-        self._datasource = target_class._datasource
+        self._ro_datasource = target_class._ro_datasource
+        self._rw_datasource = target_class._rw_datasource
     
     ##@brief Execute a query and return the result
     # @param **datas
@@ -67,7 +68,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(target = self._target_class._datasource, **datas)
+        ret = self.__query(target = self._target_class, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -487,7 +488,7 @@ class LeInsertQuery(LeQuery):
     ## @brief Implements an insert query operation, with only one insertion
     # @param new_datas : datas to be inserted
     def __query(self, new_datas):
-        nb_inserted = self._datasource.insert(self._target_class,new_datas)
+        nb_inserted = self._rw_datasource.insert(self._target_class,new_datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
@@ -521,7 +522,7 @@ class LeUpdateQuery(LeFilteredQuery):
     #@param updated_datas dict : datas to update
     #@returns the number of updated items
     def __query(self, filters, rel_filters, updated_datas):
-        nb_updated = self._datasource.update(
+        nb_updated = self._rw_datasource.update(
             self._target_class, filters, rel_filters, update_datas)
         return nb_updated
     
@@ -546,7 +547,7 @@ class LeDeleteQuery(LeFilteredQuery):
     #@param rel_filters list : see @ref LeFilteredQuery
     #@returns the number of deleted items
     def __query(self, filters, rel_filters):
-        nb_deleted = datasource.delete(
+        nb_deleted = self._rw_datasource.delete(
             self._target_class, filters, rel_filters)
         return nb_deleted
 
@@ -636,9 +637,9 @@ class LeGetQuery(LeFilteredQuery):
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
-    def __query(self, datasource):
+    def __query(self):
         # select datas corresponding to query_filter
-        l_datas=datasource.select(  self._target_class,
+        l_datas=self._ro_datasource.select(  self._target_class,
                                     list(self.field_list),
                                     self.query_filter,
                                     None,

@@ -115,7 +115,8 @@ class {clsname}({parents}):
     _abstract = {abstract}
     _fields = None
     _uid = {uid_list}
-    _datasource = None
+    _ro_datasource = None
+    _rw_datasource = None
     _datasource_name = {datasource_name}
 
 """.format(
@@ -135,7 +136,7 @@ class {clsname}({parents}):
     bootstrap += "\n"
     for em_class in get_classes(model):
         # Dyncode datasource bootstrap instructions
-        bootstrap += """{classname}._init_datasource()
+        bootstrap += """{classname}._init_datasources()
 """.format(
             classname = LeObject.name2objname(em_class.uid))
     return res, set(imports), bootstrap

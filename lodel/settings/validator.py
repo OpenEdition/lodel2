@@ -329,6 +329,6 @@ LODEL2_CONF_SPECS = {
         'editormode': ( False, SettingValidator('bool')),
     },
     'lodel2.datasources.*': {
-        'read_only': (True, SettingValidator('bool')),
+        'read_only': (False, SettingValidator('bool')),
         'identifier': ( None, SettingValidator('string'))}
 }

@@ -47,18 +47,28 @@ class EmComponent(object):
 class EmClass(EmComponent):
     
     ##@brief Instanciate a new EmClass
-    # @param uid str : uniq identifier
-    # @param display_name MlString|str|dict : component display_name
-    # @param abstract bool : set the class as asbtract if True
-    # @param pure_abstract bool : if True the EmClass will not be represented in leapi dyncode
-    # @param parents list: parent EmClass list or uid list
-    # @param help_text MlString|str|dict : help_text
-    # @param datasource str : The datasource name ( see @ref lodel2_datasources )
-    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None, pure_abstract = False, datasource = 'default'):
+    #@param uid str : uniq identifier
+    #@param display_name MlString|str|dict : component display_name
+    #@param abstract bool : set the class as asbtract if True
+    #@param pure_abstract bool : if True the EmClass will not be represented in
+    #leapi dyncode
+    #@param parents list: parent EmClass list or uid list
+    #@param help_text MlString|str|dict : help_text
+    #@param datasources str|tuple|list : The datasource name ( see 
+    #@ref lodel2_datasources ) or two names (first is read_only datasource the
+    #second is read write)
+    def __init__(
+        self, uid, display_name = None, help_text = None, abstract = False,
+        parents = None, group = None, pure_abstract = False,
+        datasources = 'default'):
+
         super().__init__(uid, display_name, help_text, group)
         self.abstract = bool(abstract)
         self.pure_abstract = bool(pure_abstract)
-        self.__datasource = datasource
+        self.__datasource = datasources
+        if not isinstance(datasources, str) and len(datasources) != 2:
+            raise ValueError("datasources arguement can be a single datasource\
+ name or two names in a tuple or a list")
         if self.pure_abstract:
             self.abtract = True
         if parents is not None:
