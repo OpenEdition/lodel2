@@ -91,7 +91,7 @@ class LeObject(object):
             else:
                 self.__datas[fieldname] = fieldval
                 self.__initialized = list()
-        self.set_initialized()
+        self.__set_initialized()
     
     #-----------------------------------#
     #   Fields datas handling methods   #
