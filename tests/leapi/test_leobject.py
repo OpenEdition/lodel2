@@ -1,10 +1,13 @@
 import unittest
+from unittest import mock
+from unittest.mock import patch
 
 import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 
 from lodel.leapi.leobject import LeObject
-from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
+from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery, \
+    LeInsertQuery
 from lodel.leapi.exceptions import *
 
 class LeObjectDummyTestCase(unittest.TestCase):
@@ -104,3 +107,23 @@ class LeObjectDummyTestCase(unittest.TestCase):
             lodel_id = 1, firstname = "foo", lastname = "bar")
         inst.delete()
 
+
+class LeObjectQueryMockTestCase(unittest.TestCase):
+    """ Testing LeObject mocking LeQuery objects """
+
+    def test_insert(self):
+        datas = {'lastname': 'foo', 'firstname': 'bar'}
+        with patch.object(
+            LeInsertQuery, '__init__', return_value = None) as mock_init:
+
+            dyncode.Person.insert(datas)
+            mock_insert.assert_called_once_with(dyncode.Person)
+
+        with patch.object(
+            LeInsertQuery, 'execute', return_value = 42) as mock_insert:
+
+            ret = dyncode.Person.insert(datas)
+            self.AssertEqual(ret, 42, 'Bad return value forwarding')
+            mock_insert.assert_called_once_with(datas)
+                
+        
