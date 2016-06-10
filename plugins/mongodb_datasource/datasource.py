@@ -11,8 +11,8 @@ import urllib
 
 from lodel import logger
 
-from .utils import mongodbconnect, object_collection_name, \
-    connect, MONGODB_SORT_OPERATORS_MAP, connection_string
+from .utils import object_collection_name, connect, \
+    MONGODB_SORT_OPERATORS_MAP, connection_string
 
 class MongoDbDataSourceError(Exception):
     pass
