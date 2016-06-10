@@ -64,6 +64,11 @@ class Varchar(DataField):
     
     def _check_data_value(self, value):
         error = None
+        try:
+            value = str(value)
+        except(ValueError, TypeError):
+            error = TypeError("The value '%s' can't be a str" % value)
+        return value, error
         return value, error
 
 ##@brief Data field designed to handle date & time 
