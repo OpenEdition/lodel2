@@ -24,9 +24,8 @@ class LeQuery(object):
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract class")
         if not inspect.isclass(target_class) or \
-            not issubclass(target_class, LeObject):
-            raise TypeError("target class has to be a child class of LeObject \
-but %s given"% target_class)
+           not issubclass(target_class, LeObject):
+            raise TypeError("target class has to be a child class of LeObject but %s given"% target_class)
         self._target_class = target_class
         self._ro_datasource = target_class._ro_datasource
         self._rw_datasource = target_class._rw_datasource
@@ -39,7 +38,7 @@ but %s given"% target_class)
     def execute(self, **datas):
         if len(datas) > 0:
             self._target_class.check_datas_value(
-                                                    datas,
+                                                    datas['datas'lode],
                                                     **self._data_check_args)
             self._target_class.prepare_datas() #not yet implemented
         if self._hook_prefix is None:
