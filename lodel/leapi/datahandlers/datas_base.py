@@ -61,6 +61,10 @@ class Varchar(DataField):
         if data_handler.max_length != self.max_length:
             return False
         return True
+    
+    def _check_data_value(self, value):
+        error = None
+        return value, error
 
 ##@brief Data field designed to handle date & time 
 class DateTime(DataField):
@@ -77,6 +81,10 @@ class DateTime(DataField):
         self.now_on_create = now_on_create
         super().__init__(**kwargs)
 
+    def _check_data_value(self, value):
+        error = None
+        return value, error
+
 ##@brief Data field designed to handle long string
 class Text(DataField):
     help = 'A text field (big string)'
@@ -84,6 +92,10 @@ class Text(DataField):
 
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__(ftype='text', **kwargs)
+    
+    def _check_data_value(self, value):
+        error = None
+        return value, error
 
 ##@brief Data field designed to handle Files
 class File(DataField):
@@ -96,3 +108,8 @@ class File(DataField):
     def __init__(self, upload_path=None, **kwargs):
         self.upload_path = upload_path
         super().__init__(**kwargs)
+        
+    def _check_data_value(self, value):
+        error = None
+        return value, error
+
