@@ -69,7 +69,6 @@ class Varchar(DataField):
         except(ValueError, TypeError):
             error = TypeError("The value '%s' can't be a str" % value)
         return value, error
-        return value, error
 
 ##@brief Data field designed to handle date & time 
 class DateTime(DataField):
