@@ -44,9 +44,10 @@ def get_connection_args(connnection_name='default'):
 ## @brief Creates a connection to a MongoDb Database
 # @param connection_name str
 # @return MongoClient
-def mongodbconnect(connection_name):
+'''def mongodbconnect(connection_name):
     login, password, host, port, dbname = get_connection_args(connection_name)
-    return connect(host, port, db_name, username, password)
+    return connect(host, port, dbname, login, password)
+'''
 
 def connection_string(host, port, db_name, username, password):
     return 'mongodb://%s:%s@%s:%s' % (username, password, host, port)
