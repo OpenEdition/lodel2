@@ -9,8 +9,6 @@ from lodel.settings.utils import SettingsError
 from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
 from lodel.plugin.hooks import LodelHook
 
-CLASS_IDENTIFIER = 'classname'
-
 ##@brief Stores the name of the field present in each LeObject that indicates
 #the name of LeObject subclass represented by this object
 CLASS_ID_FIELDNAME = "classname"
@@ -523,7 +521,7 @@ raised when trying to import Datasource"
             query_filter.append((uid, '=', self.data(uid)))
         
         try:
-            query = LeUpdateQuery(cls.__name__, (query_filter,))
+            query = LeUpdateQuery(cls.__name__, query_filter)
         except Exception as err:
             raise err
             
@@ -542,7 +540,7 @@ raised when trying to import Datasource"
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
-        query = LeDeleteQuery(cls.__name__, (query_filter,))
+        query = LeDeleteQuery(cls.__name__, query_filter)
         try:
             result = query.execute()
         except LeQueryError as err:
@@ -586,7 +584,7 @@ raised when trying to import Datasource"
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', cls.data(uid)))
-        query = LeGetQuery(cls.__name__, (query_filter,), limit = 1)
+        query = LeGetQuery(cls.__name__, query_filter, limit = 1)
         try:
             result=query.execute()
         except LeQueryError as err:
@@ -630,7 +628,7 @@ raised when trying to import Datasource"
         
         objects = list()
         for res in result:
-            objects.append(cls.name2class(res[CLASS_IDENTIFIER])(res))
+            objects.append(cls.name2class(res[CLASS_ID_FIELDNAME])(res))
         
         return objects
 
