@@ -4,6 +4,7 @@ from lodel.settings.validator import SettingValidator
 
 CONFSPEC = {
     'lodel2.datasource.mongodb_datasource.*':{
+        'read_only': (True, SettingValidator('bool')),
         'host': ('localhost', SettingValidator('host')),
         'port': (None, SettingValidator('string')),
         'db_name':('lodel', SettingValidator('string')),

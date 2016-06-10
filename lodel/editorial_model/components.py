@@ -8,6 +8,7 @@ import hashlib
 from lodel.utils.mlstring import MlString
 
 from lodel.editorial_model.exceptions import *
+from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
 ##@brief Abstract class to represent editorial model components
 # @see EmClass EmField
@@ -47,18 +48,28 @@ class EmComponent(object):
 class EmClass(EmComponent):
     
     ##@brief Instanciate a new EmClass
-    # @param uid str : uniq identifier
-    # @param display_name MlString|str|dict : component display_name
-    # @param abstract bool : set the class as asbtract if True
-    # @param pure_abstract bool : if True the EmClass will not be represented in leapi dyncode
-    # @param parents list: parent EmClass list or uid list
-    # @param help_text MlString|str|dict : help_text
-    # @param datasource str : The datasource name ( see @ref lodel2_datasources )
-    def __init__(self, uid, display_name = None, help_text = None, abstract = False, parents = None, group = None, pure_abstract = False, datasource = 'default'):
+    #@param uid str : uniq identifier
+    #@param display_name MlString|str|dict : component display_name
+    #@param abstract bool : set the class as asbtract if True
+    #@param pure_abstract bool : if True the EmClass will not be represented in
+    #leapi dyncode
+    #@param parents list: parent EmClass list or uid list
+    #@param help_text MlString|str|dict : help_text
+    #@param datasources str|tuple|list : The datasource name ( see 
+    #@ref lodel2_datasources ) or two names (first is read_only datasource the
+    #second is read write)
+    def __init__(
+        self, uid, display_name = None, help_text = None, abstract = False,
+        parents = None, group = None, pure_abstract = False,
+        datasources = 'default'):
+
         super().__init__(uid, display_name, help_text, group)
         self.abstract = bool(abstract)
         self.pure_abstract = bool(pure_abstract)
-        self.__datasource = datasource
+        self.__datasource = datasources
+        if not isinstance(datasources, str) and len(datasources) != 2:
+            raise ValueError("datasources arguement can be a single datasource\
+ name or two names in a tuple or a list")
         if self.pure_abstract:
             self.abtract = True
         if parents is not None:
@@ -72,6 +83,19 @@ class EmClass(EmComponent):
         self.parents = parents
         ##@brief Stores EmFields instances indexed by field uid
         self.__fields = dict() 
+        
+        #Adding common field
+        if not self.abstract:
+            self.new_field(
+                CLASS_ID_FIELDNAME,
+                display_name = {
+                    'eng': "LeObject subclass identifier",
+                    'fre': "Identifiant de la class fille de LeObject"},
+                help_text = {
+                    'eng': "Allow to create instance of the good class when\
+ fetching arbitrary datas from DB"},
+                data_handler = 'LeobjectSubclassIdentifier',
+                internal = True)
     
     ##@brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
@@ -108,6 +132,8 @@ class EmClass(EmComponent):
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     def fields(self, uid = None, no_parents = False):
         fields = self.__fields if no_parents else self.__all_fields
+        if CLASS_ID_FIELDNAME in fields:
+            del(fields[CLASS_ID_FIELDNAME])
         try:
             return list(fields.values()) if uid is None else fields[uid]
         except KeyError:

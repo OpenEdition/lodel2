@@ -4,6 +4,8 @@ from lodel.plugin import LodelHook
 from lodel.settings import Settings
 from lodel import logger
 
+##@package lodel.plugin.core_hooks
+#@brief Lodel2 internal hooks declaration
 
 ##@brief Bootstrap hook to check datasources configuration
 @LodelHook('lodel2_bootstraped')

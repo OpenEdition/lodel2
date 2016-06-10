@@ -33,6 +33,7 @@ class LeQueryError(Exception):
             )
         return msg
 
+##@todo check datas when running query
 class LeQuery(object):
     
     ##@brief Hookname prefix
@@ -48,7 +49,8 @@ class LeQuery(object):
         if not issubclass(target_class, LeObject):
             raise TypeError("target class has to be a child class of LeObject")
         self._target_class = target_class
-        self._datasource = target_class._datasource
+        self._ro_datasource = target_class._ro_datasource
+        self._rw_datasource = target_class._rw_datasource
     
     ##@brief Execute a query and return the result
     # @param **datas
@@ -66,12 +68,12 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(target = self._target_class._datasource, **datas)
+        ret = self.__query(target = self._target_class, **datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
         return ret
-    
+
     ##@brief Childs classes implements this method to execute the query
     # @param **datas
     # @return query result
@@ -87,14 +89,8 @@ class LeQuery(object):
         return ret.format(
                             classname=self.__class__.__name__,
                             target_class = self._target_class)
-        
 
 ##@brief Abstract class handling query with filters
-#
-#@todo add handling of inter-datasource queries
-#
-#@warning relationnal filters on multiple classes from different datasource
-# will generate a lot of subqueries
 class LeFilteredQuery(LeQuery):
     
     ##@brief The available operators used in query definitions
@@ -485,8 +481,9 @@ class LeInsertQuery(LeQuery):
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param new_datas : datas to be inserted
-    def __query(self, new_datas):
-        nb_inserted = self._datasource.insert(self._target_class,new_datas)
+    def __query(self, datas):
+        datas = self._target_class.prepare_datas(datas, True, False)
+        nb_inserted = self._rw_datasource.insert(self._target_class,datas)
         if nb_inserted < 0:
             raise LeQueryError("Insertion error")
         return nb_inserted
@@ -502,9 +499,10 @@ class LeInsertQuery(LeQuery):
     """
 
     ## @brief Execute the insert query
-    def execute(self, new_datas):
-        return super().execute(new_datas)
-        
+    def execute(self, datas):
+        return super().execute(datas = datas)
+
+
 ##@brief A query to update datas for a given object
 class LeUpdateQuery(LeFilteredQuery):
     
@@ -514,19 +512,34 @@ class LeUpdateQuery(LeFilteredQuery):
     def __init__(self, target_class, query_filter):
         super().__init__(target_class, query_filter)
     
+    ##@brief Called by __query to do severals checks before running the update
+    #@warning Optimization issue : each time this method is called we do 
+    #a LeGetQuery to fetch ALL datas and construct instances for being able to
+    #construct datas and check consistency
+    #@todo implementation (waiting for LeApi to be plugged to LeQuery)
+    def __fetch_construct_check_update(self, filters, rel_filters, datas):
+        """
+        instances = self._target_class.get(filters, rel_filters)
+        for instance in instances:
+            instance.check_datas_value(instance.
+        """
+        pass
+        
+
     ##@brief Implements an update query
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
-    #@param updated_datas dict : datas to update
+    #@param datas dict : datas to update
     #@returns the number of updated items
-    def __query(self, filters, rel_filters, updated_datas):
-        nb_updated = self._datasource.update(
-            self._target_class, filters, rel_filters, update_datas)
+    def __query(self, filters, rel_filters, datas):
+        self.__fetch_construct_check_update(filters, rel_filters, datas)
+        nb_updated = self._rw_datasource.update(
+            self._target_class, filters, rel_filters, datas)
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, updated_datas):
-        return super().execute(updated_datas)
+    def execute(self, datas):
+        return super().execute(datas = datas)
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
@@ -545,7 +558,7 @@ class LeDeleteQuery(LeFilteredQuery):
     #@param rel_filters list : see @ref LeFilteredQuery
     #@returns the number of deleted items
     def __query(self, filters, rel_filters):
-        nb_deleted = datasource.delete(
+        nb_deleted = self._rw_datasource.delete(
             self._target_class, filters, rel_filters)
         return nb_deleted
 
@@ -635,9 +648,9 @@ class LeGetQuery(LeFilteredQuery):
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
-    def __query(self, datasource):
+    def __query(self):
         # select datas corresponding to query_filter
-        l_datas=datasource.select(  self._target_class,
+        l_datas=self._ro_datasource.select(  self._target_class,
                                     list(self.field_list),
                                     self.query_filter,
                                     None,

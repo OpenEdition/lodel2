@@ -52,12 +52,6 @@ em_object.new_field(    'date_update',
                         data_handler = 'datetime',
                         now_on_update = True,
 )
-em_object.new_field(    'classname',
-                        display_name = 'Class name',
-                        group = base_group,
-                        data_handler = 'varchar',
-                        immutable = True
-)
 
 ########################
 # Lodel old classtypes #
@@ -304,7 +298,7 @@ index_abstract = em.new_class(
     help_text = {'eng': 'Abstract class common to each Index classes'},
     abstract = True,
     group = index_group,
-    datasource = 'dummy2',
+    datasources = 'dummy2',
     parents = em_object)
 
 index_name = index_abstract.new_field(
@@ -343,7 +337,7 @@ index_theme = em.new_class(
         'eng': 'Thematic index',
         'fre': 'Index thématique'},
     group = index_group,
-    datasource = 'dummy2',
+    datasources = 'dummy2',
     parents = index_abstract)
 
 index_theme_theme = index_abstract.new_field(

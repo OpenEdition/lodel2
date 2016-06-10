@@ -24,7 +24,7 @@ class EditorialModelTestCase(unittest.TestCase):
         grp2 = model.new_group('testgroup2')
         grp2.add_components((cls2, c1f2, c2f1, c2f2))
         grp2.add_dependencie(grp1)
-        e_hash = 0x476f5917265b6fbd06d94b81f4e9b402
+        e_hash = 0x250eab75e782e51bbf212f47c6159571
         self.assertEqual(model.d_hash(), e_hash)
 
         c2f1.uid = 'foobar'

@@ -3,12 +3,21 @@ import datetime
 
 from lodel.editorial_model.components import EmClass, EmField
 
-from .utils import get_connection_args, mongodbconnect, collection_prefix, object_collection_name
+from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
+from lodel.plugin import LodelHook
+
 
 class MigrationHandlerChangeError(Exception):
     pass
 
+
+@LodelHook('mongodb_mh_init_db')
+def mongodb_mh_init_db(conn_args=None):
+    connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
+    migration_handler = MongoDbMigrationHandler(connection_args)
+    migration_handler._install_collections()
+    migration_handler.database.close()
 
 class MongoDbMigrationHandler(object):
 
@@ -22,12 +31,21 @@ class MongoDbMigrationHandler(object):
     # @param **kwargs : extra arguments
     def __init__(self, conn_args=None, **kwargs):
         conn_args = get_connection_args() if conn_args is None else conn_args
-        self.connection_name = conn_args['name']
-        self.database = mongodbconnect(self.connection_name)
-        self.dry_run = kwargs['dry_run'] if 'dry_run' in kwargs else MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
-        self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['foreign_keys']
-        self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
-        self._install_collections()
+
+        #self.connection_name = conn_args['name']
+        self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
+                                username=conn_args['username'], password=conn_args['password'])
+
+        self.dry_run = kwargs['dry_run'] if 'dry_run' in kwargs else \
+            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
+
+        self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else \
+            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['foreign_keys']
+
+        self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
+            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
+
+        #self._install_collections()
 
     ## @brief Installs the basis collections of the database
     def _install_collections(self):
@@ -40,7 +58,8 @@ class MongoDbMigrationHandler(object):
     # @param collection_name str
     # @param charset str : default value is "utf8"
     # @param if_exists str : defines the behavior to have if the collection to create already exists (default value : "nothing")
-    def _create_collection(self, collection_name, charset='utf8', if_exists=MongoDbMigrationHandler.COMMANDS_IFEXISTS_NOTHING):
+    def _create_collection(self, collection_name, charset='utf8',
+                           if_exists=MongoDbMigrationHandler.COMMANDS_IFEXISTS_NOTHING):
         if collection_name in self.database.collection_names(include_system_collections=False):
             if if_exists == MongoDbMigrationHandler.COMMANDS_IFEXISTS_DROP:
                 self._delete_collection(collection_name)
@@ -65,7 +84,8 @@ class MongoDbMigrationHandler(object):
     def register_change(self, model, uid, initial_state, new_state):
 
         if initial_state is None and new_state is None:
-            raise ValueError('An Editorial Model change should have at least one state precised (initial or new), none given here')
+            raise ValueError('An Editorial Model change should have at least one state precised (initial or new), '
+                             'none given here')
 
         if initial_state is None:
             state_change = 'new'
@@ -85,7 +105,8 @@ class MongoDbMigrationHandler(object):
             if hasattr(self, handler_func):
                 getattr(self, handler_func)(model, uid, initial_state, new_state)
         else:
-            raise ValueError("The component concerned in this change should be an EmClass or EmField instance, %s given", model.classes(uid).__class__)
+            raise ValueError("The component concerned should be an EmClass or EmField instance, %s given",
+                             model.classes(uid).__class__)
 
     def register_model_state(self, em, state_hash):
         pass
@@ -118,17 +139,18 @@ class MongoDbMigrationHandler(object):
     # @see register_change()
     def _emfield_del(self, model, uid, initial_state, new_state):
         collection_name = self._class_collection_name_from_field(model, initial_state)
-        field_name = model.field(uid).name
+        field_name = mongo_fieldname(model.field(uid).name)
         self._delete_field_in_collection(collection_name, field_name)
 
     ## @brief upgrades a field
     def _emfield_upgrade(self, model, uid, initial_state, new_state):
         collection_name = self._class_collection_name_from_field(model, initial_state)
-        field_name = model.field(uid).name
+        field_name = mongo_fieldname(model.field(uid).name)
         self._check_field_in_collection(collection_name, field_name, initial_state, new_state)
 
     def _check_field_in_collection(self,collection_name, field_name, initial_sate, new_state):
         collection = self.database[collection_name]
+        field_name = mongo_fieldname(field_name)
         cursor = collection.find({field_name: {'$exists': True}}, {field_name: 1})
         for document in cursor:
             # TODO vérifier que le champ contient une donnée compatible (document[field_name])
@@ -161,11 +183,15 @@ class MongoDbMigrationHandler(object):
     # @param options dict
     def _create_field_in_collection(self, collection_name, field, options):
         emfield = EmField(field)
-        self.database[collection_name].update_many({'uid': emfield.get_emclass_uid(), field: {'$exists': False}}, {'$set': {field: options['default']}}, False)
+        field_name = mongo_fieldname(field)
+        self.database[collection_name].update_many({'uid': emfield.get_emclass_uid(), field_name: {'$exists': False}},
+                                                   {'$set': {field_name: options['default']}}, False)
 
     ## @brief Deletes a field in a collection
     # @param collection_name str
     # @param field_name str
     def _delete_field_in_collection(self, collection_name, field_name):
         if field_name != '_id':
-            self.database[collection_name].update_many({field_name:{'$exists': True}}, {'$unset':{field_name:1}}, False)
+            field_name = mongo_fieldname(field_name)
+            self.database[collection_name].update_many({field_name: {'$exists': True}},
+                                                       {'$unset': {field_name:1}}, False)
