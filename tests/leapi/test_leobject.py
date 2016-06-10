@@ -55,9 +55,13 @@ class LeFilteredQueryTestCase(unittest.TestCase):
     def test_insert(self):
         dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
     
-    @unittest.skip("wait")
     def test_bad_insert(self):
         """ Insert with bad arguments """
-        dyncode.Person.insert({})
-        dyncode.Person.insert({'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'})
+        badargs = [
+            {},
+            {'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'}]
+        
+        for arg in badargs:
+            with self.assertRaises(LeApiDataCheckErrors):
+                dyncode.Person.insert(arg)
 
