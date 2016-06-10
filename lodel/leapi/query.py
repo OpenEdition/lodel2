@@ -23,8 +23,10 @@ class LeQuery(object):
         from .leobject import LeObject
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract class")
-        if not issubclass(target_class, LeObject):
-            raise TypeError("target class has to be a child class of LeObject")
+        if not inspect.isclass(target_class) or \
+            not issubclass(target_class, LeObject):
+            raise TypeError("target class has to be a child class of LeObject \
+but %s given"% target_class)
         self._target_class = target_class
         self._ro_datasource = target_class._ro_datasource
         self._rw_datasource = target_class._rw_datasource

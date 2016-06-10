@@ -52,3 +52,12 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         self.assertEqual(set(fnames),
             {'lastname', 'linked_texts', 'firstname', 'alias'})
 
+    def test_insert(self):
+        dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
+    
+    @unittest.skip("wait")
+    def test_bad_insert(self):
+        """ Insert with bad arguments """
+        dyncode.Person.insert({})
+        dyncode.Person.insert({'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'})
+
