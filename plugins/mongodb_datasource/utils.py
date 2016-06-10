@@ -86,7 +86,7 @@ def mongo_fieldname(fieldname):
 #@param fieldnames iterable : contains str only
 #@return a list of converted fildnames (str)
 #@see mongo_fieldname
-def mongo_filednames(fieldnames):
+def mongo_fieldnames(fieldnames):
     return [mongo_fieldname(fname) for fname in fieldnames]
 
 ## @brief Returns a list of orting options
