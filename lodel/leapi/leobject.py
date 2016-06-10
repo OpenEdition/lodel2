@@ -70,7 +70,7 @@ class LeObject(object):
         # Checks that uid is given
         for uid_name in self._uid:
             if uid_name not in kwargs:
-                raise AttributeError("Cannot instanciate a LeObject without it's identifier")
+                raise LeApiError("Cannot instanciate a LeObject without it's identifier")
             self.__datas[uid_name] = kwargs[uid_name]
             del(kwargs[uid_name])
             self.__initialized.append(uid_name)

@@ -67,7 +67,7 @@ entitie = em.new_class( 'entitie',
 person = em.new_class(  'person',
                         display_name = 'Person',
                         help_text = 'Replace old person classtype',
-                        abstract = True,
+                        abstract = False,
                         group = base_group,
                         parents = em_object,
 )
