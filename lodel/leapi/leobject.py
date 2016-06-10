@@ -86,11 +86,13 @@ class LeObject(object):
                     )
                 else:
                     err_list.append(
-                        AttributeError("Unknown fieldname : '%s'" % fieldname)
+                        LeApiError("Unknown fieldname : '%s'" % fieldname)
                     )
             else:
                 self.__datas[fieldname] = fieldval
                 self.__initialized = list()
+        if len(err_list) > 0:
+            raise LeApiErrors(err_list)
         self.__set_initialized()
     
     #-----------------------------------#
