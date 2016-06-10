@@ -82,7 +82,7 @@ class LeObject(object):
             if fieldname not in allowed_fieldnames:
                 if fieldname in self._fields:
                     err_list.append(
-                        AttributeError("Value given for internal field : '%s'" % fieldname)
+                        LeApiError("Value given for internal field : '%s'" % fieldname)
                     )
                 else:
                     err_list.append(

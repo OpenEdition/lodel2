@@ -33,7 +33,7 @@ class LeFilteredQueryTestCase(unittest.TestCase):
             dyncode.Person(
                 lodel_id = 1,
                 foobar = "barfoo")
-        with self.assertRaises(LeApiErrors):
+        with self.assertRaises(LeApiError):
             dyncode.Person(lastname = "foo", firstname = "bar")
 
     
