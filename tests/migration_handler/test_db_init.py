@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-from pymongo import MongoClient
 from plugins.mongodb_datasource.migration_handler import *
 
 class MongoDbMigrationHandlerTestCase(unittest.TestCase):
@@ -19,6 +18,8 @@ class MongoDbMigrationHandlerTestCase(unittest.TestCase):
             with self.assertRaises(MigrationHandlerError):
                 MongoDbMigrationHandler(bad_connection_args_dict)
 
+    ## @todo pass the connection arguments in the settings
+    @unittest.skip
     def test_init_db(self):
         correct_connection_args = {'host': 'localhost', 'port': 28015, 'username': 'lodel_admin', 'password': 'lapwd', 'db_name': 'lodel'}
         migration_handler = MongoDbMigrationHandler(correct_connection_args)
