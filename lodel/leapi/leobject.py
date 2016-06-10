@@ -6,6 +6,10 @@ from lodel.plugin import Plugin
 from lodel import logger
 from lodel.settings import Settings
 from lodel.settings.utils import SettingsError
+from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
+from lodel.plugin.hooks import LodelHook
+
+CLASS_IDENTIFIER = 'classname'
 
 class LeApiErrors(Exception):
     ##@brief Instanciate a new exceptions handling multiple exceptions
@@ -455,7 +459,145 @@ class LeObject(object):
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
     
-    ## @brief Add a new instance
-    def new():
-        pass
+    ## @brief Add a new instance of LeObject
+    # @param datas dict : the values to be inserted
+    # @param classname str : The class name
+    # @return a new uid en case of success, False otherwise
+    @classmethod
+    def insert(cls, datas):
+        if classname is not None:
+            class_is = cls.name2class(classname)
+            if not class_is:
+                raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
+            else:
+                target_cls = classname
+        else:
+            target_cls = cls.__name__
+        query = LeInsertQuery(target_cls)
+        return query.execute(datas)
+
+    ## @brief Update an instance of LeObject
+    #
+    #@param datas : list of new datas 
+    def update(self, datas):
+        datas = self.datas(internal=False) if datas is None else datas
+        uids = self._uid
+        query_filter = list()
+        for uid in uids:
+            query_filter.append((uid, '=', self.data(uid)))
+        
+        try:
+            query = LeUpdateQuery(cls.__name__, (query_filter,))
+        except Exception as err:
+            raise err
+            
+        try:
+            result = query.execute(datas)
+        except Exception as err;
+            raise err
+
+        return result
+    
+    ## @brief Delete an instance of LeObject
+    #
+    #@return 1 if the objet has been deleted
+    def delete(self):
+        uids = self._uid
+        query_filter = list()
+        for uid in uids:
+            query_filter.append((uid, '=', self.data(uid)))
+        query = LeDeleteQuery(cls.__name__, (query_filter,))
+        try:
+            result = query.execute()
+        except LeQueryError as err:
+            raise err
+            
+        return result
+    
+    ## @brief Delete instances of LeObject
+    #@param uids a list: lists of (fieldname, fieldvalue), with fieldname in cls._uids
+    #@returns the number of deleted items
+    @classmethod
+    def delete(cls, uids):
+        deleted = 0
+        for uid in uids:
+            if len(uid) != len(cls._uid):
+                raise AttributeError("Wrong number in uid's list, expected %d got %d" % (len(cls._uid), len(uid)))
+            filters = list()
+            for field in uid:
+                if field not in cls._uid:
+                    raise AttributeError("%s is not a uid or a part of uid for %s class" % (field, cls.__name__))
+                filters.append((field, uid[field]))
+            try:
+                query = LeDeleteQuery(cls.__name__, filters)
+            except Exception as err:
+                raise err
+                
+            try:
+                result = query.execute()
+            except Exception as err:
+                raise err
+            deleted += result
+        return deleted
+            
+    
+    ## @brief Load an instance of LeObject
+    #@param uid
+    #@return an instance of a subclass of LeObject
+    @classmethod
+    def load(cls, uid):
+        uids = cls._uid
+        query_filter = list()
+        for uid in uids:
+            query_filter.append((uid, '=', cls.data(uid)))
+        query = LeGetQuery(cls.__name__, (query_filter,), limit = 1)
+        try:
+            result=query.execute()
+        except LeQueryError as err:
+            print("Unable to load object of type %s" % cls.__name__)
+            raise err
+        
+        return cls.name2class(res[CLASS_IDENTIFIER])(result[0])
+        
+    ## @brief Get instances of LeObject
+    #
+    #@param target_class LeObject : class of object the query is about
+    
+    #@param query_filters dict : (filters, relational filters), with filters is a list of tuples : (FIELD, OPERATOR, VALUE) )
+    #@param field_list list|None : list of string representing fields see 
+    #@ref leobject_filters
+    #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #@param limit int : The maximum number of returned results
+    #@param offset int : offset
+    #@return a list of items (lists of (fieldname, fieldvalue))
+    @classmethod
+    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, classname = None):
+        if classname is not None:
+            class_is = cls.name2class(classname)
+            if not class_is:
+                raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
+            else:
+                target_cls = classname
+        else:
+            target_cls = cls.__name__
+                
+        try:
+            query = LeGetQuery(target_class, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
+        except ValueError as err:
+            raise err
+            
+        try:
+            result = query.execute()
+        except Exception as err:
+            raise err
+        
+        objects = list()
+        for res in result:
+            objects.append(cls.name2class(res[CLASS_IDENTIFIER])(res))
+        
+        return objects
+
+        
+        
 
