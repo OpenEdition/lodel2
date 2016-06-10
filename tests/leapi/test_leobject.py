@@ -3,13 +3,12 @@ import unittest
 import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 
-from lodel.leapi.leobject import LeApiDataCheckError
+from lodel.leapi.leobject import LeObject
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
 from lodel.leapi.exceptions import *
 
-class LeFilteredQueryTestCase(unittest.TestCase):
-
-    q_classes = [ LeDeleteQuery, LeUpdateQuery, LeGetQuery ]
+class LeObjectDummyTestCase(unittest.TestCase):
+    """ Testing LeObject method with a dummy datasource """
 
     def test_init(self):
         """ Testing LeObject child class __init__ """
@@ -36,7 +35,40 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         with self.assertRaises(LeApiError):
             dyncode.Person(lastname = "foo", firstname = "bar")
 
+    def test_data_accessor(self):
+        """ Testing data accessor method """
+        inst = dyncode.Person(lodel_id = 1, lastname = "foo")
+        self.assertEqual(inst.data('lodel_id'), 1)
+        self.assertEqual(inst.data('lastname'), 'foo')
+
+    def test_data_accessor_fails(self):
+        """ Testing that data accessor detects unitialized fields """
+        inst = dyncode.Person(lodel_id = 1, lastname = "foo")
+        with self.assertRaises(RuntimeError):
+            inst.data('firstname')
+
+    def test_name2class(self):
+        """ Testing the class method that returns a dynamic object given it's
+            name """
+        self.assertEqual(dyncode.Object.name2class('Person'), dyncode.Person)
+        self.assertEqual(dyncode.Object.name2class('Object'), dyncode.Object)
     
+    def test_bad_name2class(self):
+        """ Testing failures of the class method that returns a dynamic object
+            given it's name """
+        badnames = ['foobar', 'LeObject', 'str', str, None, 42]
+        callers = [dyncode.Object, dyncode.Person, dyncode.Entitie]
+        for caller in callers:
+            for badname in badnames:
+                with self.assertRaises(LeApiError):
+                    caller.name2class(badname)
+
+    def test_abstract_name2class(self):
+        with self.assertRaises(NotImplementedError):
+            LeObject.name2class('Person')
+        with self.assertRaises(NotImplementedError):
+            LeObject.name2class(42)
+
     def test_initilized(self):
         """ Testing initialized method """
         inst = dyncode.Person(
@@ -53,11 +85,22 @@ class LeFilteredQueryTestCase(unittest.TestCase):
             {'lastname', 'linked_texts', 'firstname', 'alias'})
 
     def test_insert(self):
+        """ Testing insert method """
         dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
     
-    @unittest.skip("wait")
     def test_bad_insert(self):
         """ Insert with bad arguments """
-        dyncode.Person.insert({})
-        dyncode.Person.insert({'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'})
+        badargs = [
+            {},
+            {'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'}]
+        
+        for arg in badargs:
+            with self.assertRaises(LeApiDataCheckErrors):
+                dyncode.Person.insert(arg)
+
+    def test_delete_instance(self):
+        """ Testing instance method delete """
+        inst = dyncode.Person(
+            lodel_id = 1, firstname = "foo", lastname = "bar")
+        inst.delete()
 

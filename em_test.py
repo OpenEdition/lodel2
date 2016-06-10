@@ -106,6 +106,8 @@ person.new_field(   'alias',
                     },
                     data_handler = 'set',
                     allowed_classes = [person],
+                    default = None,
+                    nullable = True,
 )
 
 
@@ -272,7 +274,9 @@ person.new_field(   'linked_texts',
                     data_handler = 'list',
                     back_reference = ('Text', 'linked_persons'),
                     group = editorial_person_group,
-                    allowed_classes = [text])
+                    allowed_classes = [text],
+                    default = None,
+                    nullable = True)
 
 text.new_field( 'linked_persons',
                 display_name = {
