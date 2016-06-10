@@ -11,8 +11,8 @@ import urllib
 
 from lodel import logger
 
-from .utils import mongodbconnect, object_collection_name, \
-    connect, MONGODB_SORT_OPERATORS_MAP, connection_string
+from .utils import object_collection_name, connect, \
+    MONGODB_SORT_OPERATORS_MAP, connection_string
 
 class MongoDbDataSourceError(Exception):
     pass
@@ -77,7 +77,7 @@ class MongoDbDatasource(object):
     #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     #@return list
     #@todo Implement the relations
-    def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0, instanciate=True):
+    def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0):
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         query_filters = self.__process_filters(
