@@ -478,7 +478,7 @@ raised when trying to import Datasource"
     # @return a new uid en case of success, False otherwise
     @classmethod
     def insert(cls, datas):
-        query = LeInsertQuery(cls.__name__)
+        query = LeInsertQuery(cls)
         return query.execute(datas)
 
     ## @brief Update an instance of LeObject
@@ -492,7 +492,7 @@ raised when trying to import Datasource"
             query_filter.append((uid, '=', self.data(uid)))
         
         try:
-            query = LeUpdateQuery(cls.__name__, query_filter)
+            query = LeUpdateQuery(cls, query_filter)
         except Exception as err:
             raise err
             
@@ -511,7 +511,7 @@ raised when trying to import Datasource"
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
-        query = LeDeleteQuery(cls.__name__, query_filter)
+        query = LeDeleteQuery(cls, query_filter)
         try:
             result = query.execute()
         except LeQueryError as err:
@@ -526,7 +526,7 @@ raised when trying to import Datasource"
     def delete_bundle(cls, query_filters):
         deleted = 0
         try:
-            query = LeDeleteQuery(cls.__name__, query_filters)
+            query = LeDeleteQuery(cls, query_filters)
         except Exception as err:
             raise err
                 
@@ -565,7 +565,7 @@ raised when trying to import Datasource"
                 query_filter.append((uids, '=', uid_tuples))
             else:
                 raise AttributeError("n %s:load :%s not a valid value for %s" % (uid_tuples, uids))
-        query = LeGetQuery(cls.__name__, query_filter, limit = 1)
+        query = LeGetQuery(cls, query_filter, limit = 1)
         try:
             result=query.execute()
         except LeQueryError as err:
@@ -598,7 +598,7 @@ raised when trying to import Datasource"
                 raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
 
         try:
-            query = LeGetQuery(cls.__name__, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
+            query = LeGetQuery(cls, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
         except ValueError as err:
             raise err
             
