@@ -38,7 +38,7 @@ class LeQuery(object):
     def execute(self, **datas):
         if len(datas) > 0:
             self._target_class.check_datas_value(
-                                                    datas['datas'lode],
+                                                    datas['datas'],
                                                     **self._data_check_args)
             self._target_class.prepare_datas() #not yet implemented
         if self._hook_prefix is None:
