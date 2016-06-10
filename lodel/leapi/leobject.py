@@ -494,20 +494,10 @@ raised when trying to import Datasource"
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
     
     ## @brief Add a new instance of LeObject
-    # @param datas dict : the values to be inserted
-    # @param classname str : The class name
     # @return a new uid en case of success, False otherwise
     @classmethod
     def insert(cls, datas):
-        if classname is not None:
-            class_is = cls.name2class(classname)
-            if not class_is:
-                raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
-            else:
-                target_cls = classname
-        else:
-            target_cls = cls.__name__
-        query = LeInsertQuery(target_cls)
+        query = LeInsertQuery(cls.__name__)
         return query.execute(datas)
 
     ## @brief Update an instance of LeObject
@@ -552,38 +542,48 @@ raised when trying to import Datasource"
     #@param uids a list: lists of (fieldname, fieldvalue), with fieldname in cls._uids
     #@returns the number of deleted items
     @classmethod
-    def delete(cls, uids):
+    def delete_bundle(cls, query_filters):
         deleted = 0
-        for uid in uids:
-            if len(uid) != len(cls._uid):
-                raise AttributeError("Wrong number in uid's list, expected %d got %d" % (len(cls._uid), len(uid)))
-            filters = list()
-            for field in uid:
-                if field not in cls._uid:
-                    raise AttributeError("%s is not a uid or a part of uid for %s class" % (field, cls.__name__))
-                filters.append((field, uid[field]))
-            try:
-                query = LeDeleteQuery(cls.__name__, filters)
-            except Exception as err:
-                raise err
+        try:
+            query = LeDeleteQuery(cls.__name__, query_filters)
+        except Exception as err:
+            raise err
                 
-            try:
-                result = query.execute()
-            except Exception as err:
-                raise err
-            deleted += result
+        try:
+            result = query.execute()
+        except Exception as err:
+            raise err
+        deleted += result
         return deleted
             
     
     ## @brief Load an instance of LeObject
-    #@param uid
+    #@param uid a list of tuple (uid_field_nane, value) ou a single value
     #@return an instance of a subclass of LeObject
     @classmethod
-    def load(cls, uid):
-        uids = cls._uid
+    def load(cls, uid_tuples):
         query_filter = list()
-        for uid in uids:
-            query_filter.append((uid, '=', cls.data(uid)))
+        uids = cls._uid
+        if uids.isinstance(tuple):
+            if not uid_tuples.isinstance(list):
+                raise AttributeError ("In %s:load : uid must be a list of tuple" % cls.__name__)
+            elif len(uid_tuples) != len(uids):
+                raise AttributeError ("In %s:load : must have %d uid fields" % len(uids))
+            for fieldname, fieldvalue in uid_tuples:
+                if fieldname in uids:
+                    dhdl = cls.data_handler(fieldname)
+                    if dhdl.check_data_value(fieldvalue)[1] is None:
+                        query_filter.append((fieldname, '=', fieldvalue))
+                    else:
+                        raise AttributeError("n %s:load :%s not a valid value for %s" % (fieldvalue, fieldname))
+                else:
+                    raise AttributeError ("In %s:load :%s not a uid field for class %s" % (fieldname, cls.__name__))
+        else:
+            dhdl = cls.data_handler(uids)
+            if dhdl.check_data_value(uid_tuples)[1] is None:
+                query_filter.append((uids, '=', uid_tuples))
+            else:
+                raise AttributeError("n %s:load :%s not a valid value for %s" % (uid_tuples, uids))
         query = LeGetQuery(cls.__name__, query_filter, limit = 1)
         try:
             result=query.execute()
@@ -604,20 +604,16 @@ raised when trying to import Datasource"
     #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
     #@param limit int : The maximum number of returned results
     #@param offset int : offset
+    #@param Inst
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
-    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0, classname = None):
-        if classname is not None:
-            class_is = cls.name2class(classname)
-            if not class_is:
-                raise LeApiErrors("Error when inserting",{'error':ValueError("The class '%s' was not found"%classname)})
-            else:
-                target_cls = classname
-        else:
-            target_cls = cls.__name__
-                
+    def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
+        for uid in cls._uids:
+            if uid not in field_list:
+                raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
+        
         try:
-            query = LeGetQuery(target_class, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
+            query = LeGetQuery(cls.__name__, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
         except ValueError as err:
             raise err
             
@@ -628,9 +624,12 @@ raised when trying to import Datasource"
         
         objects = list()
         for res in result:
-            objects.append(cls.name2class(res[CLASS_ID_FIELDNAME])(res))
+            inst = cls.name2class(res[CLASS_ID_FIELDNAME])(res)
+            objects.append(inst)
         
         return objects
+    
+
 
         
         
