@@ -16,6 +16,10 @@ class LeApiDataCheckError(LeApiError):
     pass
 
 
+class LeApiDataCheckErrors(LodelExceptions, LeApiError):
+    pass
+
+
 class LeApiQueryError(LeApiError):
     pass
 
@@ -23,3 +27,4 @@ class LeApiQueryError(LeApiError):
 ##@brief Handles mulitple query errors
 class LeApiQueryErrors(LodelExceptions, LeApiQueryError):
     pass
+

@@ -400,7 +400,7 @@ raised when trying to import Datasource"
             err_l[u_f] = AttributeError("Unknown or unauthorized field '%s'" % u_f)
         # searching for missing mandatory fieldsa
         for missing in mandatory - provided:
-            err_l[miss_field] = AttributeError("The data for field '%s' is missing" % missing)
+            err_l[missing] = AttributeError("The data for field '%s' is missing" % missing)
         #Checks datas
         checked_datas = dict()
         for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
@@ -411,7 +411,7 @@ raised when trying to import Datasource"
                 err_l[name] = err
 
         if len(err_l) > 0:
-            raise LeApiDataCheckError("Error while checking datas", err_l)
+            raise LeApiDataCheckErrors("Error while checking datas", err_l)
         return checked_datas
 
     ##@brief Check and prepare datas
