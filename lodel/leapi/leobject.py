@@ -229,11 +229,10 @@ a read only as a read&write datasource"
 
         ds_conf = getattr(ds_conf, ds_name)
         #Checks that the datasource plugin exists
-        ds_plugin_module = Plugin.get(ds_plugin).module
+        ds_plugin_module = Plugin.get(ds_plugin).loader_module()
         try:
             datasource_class = getattr(ds_plugin_module, "Datasource")
         except AttributeError as e:
-            raise e
             expt_msg += "The datasource plugin %s seems to be invalid. Error \
 raised when trying to import Datasource"
             expt_msg %= ds_identifier

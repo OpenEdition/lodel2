@@ -60,8 +60,11 @@ class Plugin(object):
         self.started()
         self.name = plugin_name
         self.path = self.plugin_path(plugin_name)
-
+        
+        ##@brief Stores the plugin module
         self.module = None
+        ##@breif Stores the plugin loader module
+        self.__loader_module = None
         self.__confspecs = dict()
         self.loaded = False
         
@@ -110,6 +113,7 @@ class Plugin(object):
 
     ##@brief Try to import a file from a variable in __init__.py
     #@param varname str : The variable name
+    #@return loaded module
     #@throw AttributeError if varname not found
     #@throw ImportError if the file fails to be imported
     #@throw PluginError if the filename was not valid
@@ -208,7 +212,7 @@ class Plugin(object):
         
         #Loading the plugin
         try:
-            self._import_from_init_var(LOADER_FILENAME_VARNAME)
+            self.__loader_module = self._import_from_init_var(LOADER_FILENAME_VARNAME)
         except AttributeError:
             msg = "Malformed plugin {plugin}. No {varname} found in __init__.py"
             msg = msg.format(
@@ -223,7 +227,12 @@ class Plugin(object):
             raise PluginError(msg)
         logger.debug("Plugin '%s' loaded" % self.name)
         self.loaded = True
-             
+    
+    def loader_module(self):
+        if not self.loaded:
+            raise RuntimeError("Plugin %s not loaded yet."%self.name)
+        return self.__loader_module
+
     ##@brief Call load method on every pre-loaded plugins
     #
     # Called by loader to trigger hooks registration.
@@ -245,6 +254,9 @@ class Plugin(object):
                 msg += "\n\t%20s : %s" % (name,e)
             msg += "\n"
             raise PluginError(msg)
+        from lodel.plugin.hooks import LodelHook
+        LodelHook.call_hook(
+            "lodel2_plugins_loaded", cls, cls._plugin_instances)
     
     ##@return a copy of __confspecs attr
     @property

@@ -15,6 +15,7 @@ def dyncode_from_em(model):
     # Header
     imports = """from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataField
+from lodel.plugin.hooks import LodelHook
 """
     for module in modules:
         imports += "import %s\n" % module
@@ -27,13 +28,26 @@ from lodel.leapi.datahandlers.base_classes import DataField
 {classes}
 {bootstrap_instr}
 dynclasses = {class_list}
+{init_hook}
 """.format(
             imports = imports,
             classes = cls_code,
             bootstrap_instr = bootstrap_instr,
             class_list = '[' + (', '.join([cls for cls in class_list]))+']',
+            init_hook = datasource_init_hook(),
     )
     return res_code
+
+##@brief Produce the source code of the LodelHook that initialize datasources
+#in dyncode
+#@return str
+def datasource_init_hook():
+    return """
+@LodelHook("lodel2_plugins_loaded")
+def lodel2_dyncode_datasources_init(self, caller, payload):
+    for cls in dynclasses:
+        cls._init_datasources()
+"""
 
 ##@brief return A list of EmClass sorted by dependencies
 #
@@ -134,10 +148,5 @@ class {clsname}({parents}):
     fields = '{' + (', '.join(['\n\t%s: %s' % (repr(emfield.uid),data_handler_constructor(emfield)) for emfield in em_class.fields()])) + '}',
 )
     bootstrap += "\n"
-    for em_class in get_classes(model):
-        # Dyncode datasource bootstrap instructions
-        bootstrap += """{classname}._init_datasources()
-""".format(
-            classname = LeObject.name2objname(em_class.uid))
     return res, set(imports), bootstrap
     
