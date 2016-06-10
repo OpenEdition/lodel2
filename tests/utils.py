@@ -10,5 +10,5 @@ def datasource_tests_init(conn_args):
     return (conn, database)
 
 
-def datasource_tests_clean(conn, dbname):
+def datasource_tests_db_clean(conn, dbname):
     conn.drop_database(dbname)
