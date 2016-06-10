@@ -12,6 +12,9 @@ class MigrationHandlerChangeError(Exception):
     pass
 
 
+class MigrationHandlerError(Exception):
+    pass
+
 @LodelHook('mongodb_mh_init_db')
 def mongodb_mh_init_db(conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
@@ -31,6 +34,9 @@ class MongoDbMigrationHandler(object):
     # @param **kwargs : extra arguments
     def __init__(self, conn_args=None, **kwargs):
         conn_args = get_connection_args() if conn_args is None else conn_args
+
+        if len(conn_args.keys()) == 0:
+            raise MigrationHandlerError("No connection arguments were given")
 
         #self.connection_name = conn_args['name']
         self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
@@ -58,8 +64,7 @@ class MongoDbMigrationHandler(object):
     # @param collection_name str
     # @param charset str : default value is "utf8"
     # @param if_exists str : defines the behavior to have if the collection to create already exists (default value : "nothing")
-    def _create_collection(self, collection_name, charset='utf8',
-                           if_exists=MongoDbMigrationHandler.COMMANDS_IFEXISTS_NOTHING):
+    def _create_collection(self, collection_name, charset='utf8', if_exists=COMMANDS_IFEXISTS_NOTHING):
         if collection_name in self.database.collection_names(include_system_collections=False):
             if if_exists == MongoDbMigrationHandler.COMMANDS_IFEXISTS_DROP:
                 self._delete_collection(collection_name)
