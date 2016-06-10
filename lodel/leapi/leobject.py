@@ -588,10 +588,14 @@ raised when trying to import Datasource"
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
-        for uid in cls._uids:
+        if isinstance(cls._uids, tuple):
+            for uid in cls._uids:
+                if uid not in field_list:
+                    raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
+        else:
             if uid not in field_list:
                 raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
-        
+
         try:
             query = LeGetQuery(cls.__name__, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
         except ValueError as err:
