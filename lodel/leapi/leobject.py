@@ -91,7 +91,7 @@ class LeObject(object):
                     )
             else:
                 self.__datas[fieldname] = fieldval
-                self.__initialized = list()
+                self.__initialized.append(fieldname)
         if len(err_list) > 0:
             raise LeApiErrors(err_list)
         self.__set_initialized()
