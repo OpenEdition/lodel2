@@ -7,44 +7,12 @@ from lodel import logger
 from lodel.settings import Settings
 from lodel.settings.utils import SettingsError
 from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
+from .exceptions import *
 from lodel.plugin.hooks import LodelHook
 
 ##@brief Stores the name of the field present in each LeObject that indicates
 #the name of LeObject subclass represented by this object
 CLASS_ID_FIELDNAME = "classname"
-
-class LeApiErrors(Exception):
-    ##@brief Instanciate a new exceptions handling multiple exceptions
-    # @param msg str : Exception message
-    # @param exceptions dict : A list of data check Exception with concerned field (or stuff) as key
-    def __init__(self, msg = "Unknow error", exceptions = None):
-        self._msg = msg
-        self._exceptions = dict() if exceptions is None else exceptions
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        msg = self._msg
-        for_iter = self._exceptions.items() if isinstance(self._exceptions, dict) else enumerate(self.__exceptions)
-        for obj, expt in for_iter:
-            msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
-                    expt_obj = obj,
-                    expt_name=expt.__class__.__name__,
-                    expt_msg=str(expt)
-            )
-        return msg
-
-
-##@brief When an error concern a query
-class LeApiQueryError(LeApiErrors):
-    pass
-
-
-##@brief When an error concerns a datas
-class LeApiDataCheckError(LeApiErrors):
-    pass
-
 
 ##@brief Wrapper class for LeObject getter & setter
 #
@@ -276,6 +244,12 @@ raised when trying to import Datasource"
             ds_conf[k] = getattr(ds_conf_old, k)
 
         return datasource_class(**ds_conf)
+    
+    ##@brief Return the uid of the current LeObject instance
+    #@return the uid value
+    #@warning Broke multiple uid capabilities
+    def uid(self):
+        return self.data(self._uid[0])
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
@@ -289,6 +263,12 @@ raised when trying to import Datasource"
         if not self.initialized and field_name not in self.__initialized:
             raise RuntimeError("The field %s is not initialized yet (and have no value)" % field_name)
         return self.__datas[field_name]
+    
+    ##@brief Read only access to all datas
+    #@return a dict representing datas of current instance
+    def datas(self):
+        return [self.data(fname) for fname in self.fieldnames(True)]
+        
     
     ##@brief Datas setter
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
@@ -527,7 +507,7 @@ raised when trying to import Datasource"
             
         try:
             result = query.execute(datas)
-        except Exception as err;
+        except Exception as err:
             raise err
 
         return result

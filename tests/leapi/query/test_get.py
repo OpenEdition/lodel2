@@ -5,8 +5,8 @@ import itertools
 import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 
-from lodel.leapi.leobject import LeApiDataCheckError
-from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery, LeQueryError
+from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
+from lodel.leapi.exceptions import LeApiQueryError
 
 class LeGetQueryTestCase(unittest.TestCase):
     
@@ -89,6 +89,6 @@ class LeGetQueryTestCase(unittest.TestCase):
                             ('lodel_id', None,) )
 
         for bad_field_list in bad_field_lists:
-            with self.assertRaises(LeQueryError):
+            with self.assertRaises(LeApiQueryError):
                 LeGetQuery(dyncode.Object, [], field_list = bad_field_list)
 

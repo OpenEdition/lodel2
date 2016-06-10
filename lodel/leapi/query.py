@@ -2,36 +2,12 @@
 
 import re
 import copy
+import inspect
 
-from .leobject import LeObject, LeApiErrors, LeApiDataCheckError
+from .exceptions import *
 from lodel.plugin.hooks import LodelHook
 from lodel import logger
 
-class LeQueryError(Exception):
-    ##@brief Instanciate a new exceptions handling multiple exceptions
-    #@param msg str : Exception message
-    #@param exceptions dict : A list of data check Exception with concerned
-    # field (or stuff) as key
-    def __init__(self, msg = "Unknow error", exceptions = None):
-        self._msg = msg
-        self._exceptions = dict() if exceptions is None else exceptions
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        msg = self._msg
-        if isinstance(self._exceptions, dict):
-            for_iter = self._exceptions.items()
-        else:
-            for_iter = enumerate(self.__exceptions)
-        for obj, expt in for_iter:
-            msg += "\n\t{expt_obj} : ({expt_name}) {expt_msg}; ".format(
-                    expt_obj = obj,
-                    expt_name=expt.__class__.__name__,
-                    expt_msg=str(expt)
-            )
-        return msg
 
 ##@todo check datas when running query
 class LeQuery(object):
@@ -44,6 +20,7 @@ class LeQuery(object):
     ##@brief Abstract constructor
     # @param target_class LeObject : class of object the query is about
     def __init__(self, target_class):
+        from .leobject import LeObject
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract class")
         if not issubclass(target_class, LeObject):
@@ -504,41 +481,81 @@ class LeInsertQuery(LeQuery):
 
 
 ##@brief A query to update datas for a given object
+#
+#@todo Change behavior, Huge optimization problem when updating using filters
+#and not instance. We have to run a GET and then 1 update by fecthed object...
 class LeUpdateQuery(LeFilteredQuery):
     
     _hook_prefix = 'leapi_update_'
     _data_check_args = { 'complete': True, 'allow_internal': False }
-
-    def __init__(self, target_class, query_filter):
-        super().__init__(target_class, query_filter)
     
-    ##@brief Called by __query to do severals checks before running the update
-    #@warning Optimization issue : each time this method is called we do 
-    #a LeGetQuery to fetch ALL datas and construct instances for being able to
-    #construct datas and check consistency
-    #@todo implementation (waiting for LeApi to be plugged to LeQuery)
-    def __fetch_construct_check_update(self, filters, rel_filters, datas):
-        """
-        instances = self._target_class.get(filters, rel_filters)
-        for instance in instances:
-            instance.check_datas_value(instance.
-        """
-        pass
-        
+    ##@brief Instanciate an update query
+    #
+    #If a class and not an instance is given, no query_filters are expected
+    #and the update will be fast and simple. Else we have to run a get query
+    #before updating (to fetch datas, update them and then, construct them
+    #and check their consistency)
+    #@param target LeObject clas or instance
+    #@param query_filters list|None
+    #@todo change strategy with instance update. We have to accept datas for
+    #the execute method
+    def __init__(self, target, query_filters = None):
+        ##@brief This attr is set only if the target argument is an 
+        #instance of a LeObject subclass
+        self.__leobject_datas = None
+        target_class = target
+        if not inspect.isclass(target):
+            if query_filters is not None:
+                msg = "No query_filters accepted when an instance is given as \
+target to LeUpdateQuery constructor"
+                raise AttributeError(msg)
+            target_class = target.__class__
+            if self.initialized():
+                self.__leobject_instance_datas = target.datas()
+            else:
+                filters = [(target._uid[0], '=', target.uid())]
+    
+        super().__init__(target_class, query_filters)
 
     ##@brief Implements an update query
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
     #@param datas dict : datas to update
     #@returns the number of updated items
+    #@todo change stategy for instance update. Datas should be allowed 
+    #for execute method (and query)
     def __query(self, filters, rel_filters, datas):
-        self.__fetch_construct_check_update(filters, rel_filters, datas)
-        nb_updated = self._rw_datasource.update(
-            self._target_class, filters, rel_filters, datas)
+        uid_name = self._target_class._uid[0]
+        if self.__leobject_instance is not None:
+            #Instance update
+            #Building query_filter
+            filters = [(
+                uid_name, '=', self.__leobject_instance_datas[uid_name])]
+            self._rw_datasource.update(
+                self._target_class, filters, [],
+                self.__leobject_instance_datas)
+        else:
+            #Update by filters, we have to fetch datas before updating
+            res = self._ro_datasource.select(
+                self._target_class, self._target_class.fieldnames(True),
+                filters, rel_filters)
+            #Checking and constructing datas
+            upd_datas = dict()
+            for res_data in res:
+                res_data.update(datas)
+                res_datas = self._target_class.check_datas_value(
+                    res_data, True, True)
+                filters = [(uid_name, '=', res_data[uid_name])]
+                self._rw_datasource.update(
+                    self._target_class, filters, [],
+                    res_datas)
         return nb_updated
     
     ## @brief Execute the update query
-    def execute(self, datas):
+    def execute(self, datas = None):
+        if self.__leobject_instance is not None and datas is not None:
+            raise AttributeError("No datas expected when running an update \
+query on an instance")
         return super().execute(datas = datas)
 
 ##@brief A query to delete an object
@@ -639,7 +656,7 @@ class LeGetQuery(LeFilteredQuery):
                 err_l[fieldname] =  expt
         if len(err_l) > 0:
             msg = "Error while setting field_list in a get query"
-            raise LeQueryError(msg = msg, exceptions = err_l)
+            raise LeApiQueryErrors(msg = msg, exceptions = err_l)
         self.__field_list = list(set(field_list))
     
     ##@brief Execute the get query
