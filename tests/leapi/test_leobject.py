@@ -112,6 +112,8 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
     """ Testing LeObject mocking LeQuery objects """
 
     def test_insert(self):
+        """ Checking that LeObject insert method calls LeInsertQuery
+            correctly """
         datas = {'lastname': 'foo', 'firstname': 'bar'}
         with patch.object(
             LeInsertQuery, '__init__', return_value = None) as mock_init:
@@ -125,5 +127,44 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             ret = dyncode.Person.insert(datas)
             self.AssertEqual(ret, 42, 'Bad return value forwarding')
             mock_insert.assert_called_once_with(datas)
-                
+    
+    def test_delete(self):
+        """ Checking that LeObject delete method calls LeDeleteQuery
+            correctly """
+        with patch.object(
+            LeDeleteQuery, '__init__', return_value = None) as mock_init:
+
+            inst = dyncode.Person(
+                lodel_id = 1, firstname = "foo", lastname = "bar")
+            inst.delete()
+            mock_init.assert_called_once_with(
+                dyncode.Person, [('lodel_id', '=', 1)])
+
+        with patch.object(
+            LeDeleteQuery, 'execute', return_value = 1) as mock_execute:
+
+            inst = dyncode.Person(
+                lodel_id = 1, firstname = "foo", lastname = "bar")
+            ret = inst.delete()
+            self.assertEqual(ret, 1, 'Bad return value forwarding')
+            mock_execute.assert_called_once_with(
+                dyncode.Person, [('lodel_id', '=', 1)], [])
+
+    def test_delete_bundle(self):
+        """ Checking that LeObject delete_bundle methid calls LeDeleteQuery
+            correctly """
+        with patch.object(
+            LeDeleteQuery, '__init__', return_value = None) as mock_init:
+            
+            dyncode.Person.delete_bundle(['lodel_id > 1'])
+            mock_init.assert_called_once_with(
+                dyncode.Person, ['lodel_id > 1'])
+
+        with patch.object(
+            LeDeleteQuery, 'execute', return_value = None) as mock_execute:
+            
+            dyncode.Person.delete_bundle(['lodel_id > 1'])
+            mock_init.assert_called_once_with(
+                dyncode.Person, [('lodel_id', '>', 1)], [])
+
         
