@@ -132,8 +132,6 @@ class EmClass(EmComponent):
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     def fields(self, uid = None, no_parents = False):
         fields = self.__fields if no_parents else self.__all_fields
-        if CLASS_ID_FIELDNAME in fields:
-            del(fields[CLASS_ID_FIELDNAME])
         try:
             return list(fields.values()) if uid is None else fields[uid]
         except KeyError:

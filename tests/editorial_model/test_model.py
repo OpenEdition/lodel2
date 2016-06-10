@@ -74,12 +74,13 @@ class EmClassTestCase(unittest.TestCase):
         cls.new_field('name', data_handler = 'varchar')
         cls.new_field('string', data_handler = 'varchar')
         cls.new_field('lodel_id', data_handler = 'varchar')
+        #Automatic field added
 
         fields = cls.fields()
-        self.assertEqual(len(fields), 3)
+        self.assertEqual(len(fields), 4)
         self.assertEqual(
             set([f.uid for f in fields]),
-            set(['name', 'string', 'lodel_id'])
+            set(['name', 'string', 'lodel_id', 'classname'])
         )
 
     def test_d_hash(self):
