@@ -543,7 +543,7 @@ target to LeUpdateQuery constructor"
             upd_datas = dict()
             for res_data in res:
                 res_data.update(datas)
-                res_datas = self._target_class.check_datas_value(
+                res_datas = self._target_class.prepare_datas(
                     res_data, True, True)
                 filters = [(uid_name, '=', res_data[uid_name])]
                 self._rw_datasource.update(
