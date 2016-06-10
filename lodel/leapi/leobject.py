@@ -145,7 +145,7 @@ class LeObject(object):
         try:
             return getattr(mod, leobject_name)
         except AttributeError:
-            raise NameError("No LeObject named '%s'" % leobject_name)
+            raise LeApiError("No LeObject named '%s'" % leobject_name)
     
     @classmethod
     def is_abstract(cls):
