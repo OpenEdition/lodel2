@@ -38,6 +38,10 @@ class MongoDbMigrationHandler(object):
         if len(conn_args.keys()) == 0:
             raise MigrationHandlerError("No connection arguments were given")
 
+        if 'host' not in conn_args.keys() or 'port' not in conn_args.keys() or 'db_name' not in conn_args.keys() \
+            or 'username' not in conn_args.keys() or 'password' not in conn_args.keys():
+            raise MigrationHandlerError("Missing connection arguments")
+
         #self.connection_name = conn_args['name']
         self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
                                 username=conn_args['username'], password=conn_args['password'])

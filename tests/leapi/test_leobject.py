@@ -36,4 +36,28 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         with self.assertRaises(LeApiErrors):
             dyncode.Person(lastname = "foo", firstname = "bar")
 
-        
+    
+    def test_initilized(self):
+        """ Testing initialized method """
+        inst = dyncode.Person(
+            lodel_id = 1, lastname="foo")
+        self.assertFalse(inst.initialized)
+
+    def test_uid_fieldname(self):
+        self.assertEqual(dyncode.Person.uid_fieldname(), ["lodel_id"])
+
+    def test_fieldnames_accessor(self):
+        """ Testing fieldnames() accessor method """
+        fnames = dyncode.Person.fieldnames(False)
+        self.assertEqual(set(fnames),
+            {'lastname', 'linked_texts', 'firstname', 'alias'})
+
+    def test_insert(self):
+        dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
+    
+    @unittest.skip("wait")
+    def test_bad_insert(self):
+        """ Insert with bad arguments """
+        dyncode.Person.insert({})
+        dyncode.Person.insert({'lodel_id': 1,'lastname': 'foo', 'firstname': 'bar'})
+

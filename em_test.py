@@ -45,12 +45,14 @@ em_object.new_field(    'date_create',
                         group = base_group,
                         data_handler = 'datetime',
                         now_on_create = True,
+                        internal = True,
 )
 em_object.new_field(    'date_update',
                         display_name = 'Last update',
                         group = base_group,
                         data_handler = 'datetime',
                         now_on_update = True,
+                        internal = True,
 )
 
 ########################
