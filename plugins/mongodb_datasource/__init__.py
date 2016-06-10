@@ -1,6 +1,3 @@
-from lodel.settings.validator import SettingValidator
-
-
 __loader__ = "main.py"
 __confspec__ = "confspec.py"
 __author__ = "Lodel2 dev team"
