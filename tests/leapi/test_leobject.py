@@ -59,11 +59,12 @@ class LeObjectDummyTestCase(unittest.TestCase):
     def test_bad_name2class(self):
         """ Testing failures of the class method that returns a dynamic object
             given it's name """
-        badnames = ['foobar', 'LeObject', 'str', str, None, 42]
+        badnames = ['foobar', 'str', str, None, 42]
         callers = [dyncode.Object, dyncode.Person, dyncode.Entitie]
         for caller in callers:
             for badname in badnames:
-                with self.assertRaises(LeApiError):
+                with self.assertRaises(LeApiError, msg="LeApiError not raised \
+but invalid name %s was given" % badname):
                     caller.name2class(badname)
 
     def test_abstract_name2class(self):
@@ -151,7 +152,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                 dyncode.Person, [('lodel_id', '=', 1)], [])
 
     def test_delete_bundle(self):
-        """ Checking that LeObject delete_bundle methid calls LeDeleteQuery
+        """ Checking that LeObject delete_bundle method calls LeDeleteQuery
             correctly """
         with patch.object(
             LeDeleteQuery, '__init__', return_value = None) as mock_init:
@@ -167,4 +168,3 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             mock_init.assert_called_once_with(
                 dyncode.Person, [('lodel_id', '>', 1)], [])
 
-        
