@@ -2,7 +2,7 @@
 import datetime
 
 from lodel.editorial_model.components import EmClass, EmField
-
+from lodel.editorial_model.model import EditorialModel
 from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
@@ -16,7 +16,7 @@ class MigrationHandlerError(Exception):
     pass
 
 @LodelHook('mongodb_mh_init_db')
-def mongodb_mh_init_db(conn_args=None):
+def mongodb_mh_init_db(editorial_model, conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
     migration_handler = MongoDbMigrationHandler(connection_args)
     migration_handler._install_collections()
@@ -26,13 +26,15 @@ class MongoDbMigrationHandler(object):
 
     COMMANDS_IFEXISTS_DROP = 'drop'
     COMMANDS_IFEXISTS_NOTHING = 'nothing'
-    INIT_COLLECTIONS_NAMES = ['object', 'relation', 'entitie', 'person', 'text', 'entry']
+    #INIT_COLLECTIONS_NAMES = ['object', 'relation', 'entitie', 'person', 'text', 'entry']
     MIGRATION_HANDLER_DEFAULT_SETTINGS = {'dry_run': False, 'foreign_keys': True, 'drop_if_exists': False}
 
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, conn_args=None, **kwargs):
+    def __init__(self, editorial_model, conn_args=None, **kwargs):
+        self.editorial_model = editorial_model
+
         conn_args = get_connection_args() if conn_args is None else conn_args
 
         if len(conn_args.keys()) == 0:
@@ -59,10 +61,13 @@ class MongoDbMigrationHandler(object):
 
     ## @brief Installs the basis collections of the database
     def _install_collections(self):
-        for collection_name in MongoDbMigrationHandler.INIT_COLLECTIONS_NAMES:
-            prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
-            collection_to_create = "%s%s" % (prefix, collection_name)
-            self._create_collection(collection_name=collection_to_create)
+        init_collections = self.editorial_model.all_classes()
+        for init_collection in init_collections.items():
+            if init_collection.abstract:
+                collection_name = init_collection.uid
+                prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
+                collection_to_create = "%s%s" % (prefix, collection_name)
+                self._create_collection(collection_name=collection_to_create)
 
     ## @brief Creates a collection in the database
     # @param collection_name str
