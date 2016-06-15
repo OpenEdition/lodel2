@@ -563,7 +563,7 @@ raised when trying to import Datasource"
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
         if field_list is None:
-            field_list = self.fieldnames(True)
+            field_list = cls.fieldnames(True)
         else:
             for uid in [ uidname
                 for uidname in cls.uid_fieldname()
