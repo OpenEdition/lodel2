@@ -512,12 +512,10 @@ raised when trying to import Datasource"
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
-        query = LeDeleteQuery(cls, query_filter)
-        try:
-            result = query.execute()
-        except LeQueryError as err:
-            raise err
-            
+        query = LeDeleteQuery(self.name2class(self.__class__.__name__), query_filter)
+
+        result = query.execute()
+
         return result
     
     ## @brief Delete instances of LeObject

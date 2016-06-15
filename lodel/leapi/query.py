@@ -40,7 +40,7 @@ class LeQuery(object):
             self._target_class.check_datas_value(
                                                     datas['datas'],
                                                     **self._data_check_args)
-            self._target_class.prepare_datas() #not yet implemented
+            self._target_class.prepare_datas(datas['datas']) #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
         LodelHook.call_hook(    self._hook_prefix+'_pre',
@@ -118,10 +118,10 @@ class LeFilteredQuery(LeQuery):
         self.__query_filter = (std_filters, rel_filters)
         try:
             filters, rel_filters = self.__query_filter
-            res = super().execute(filters = filters, rel_filters = rel_filters)
+            res = super().execute(filters = filters, rel_filters = rel_filters, datas)
         except Exception as e:
             #restoring filters even if an exception is raised
-            self.__query_filter = orig_filter
+            self.__query_filter = orig_filters
             raise e #reraise
         #restoring filters
         self.__query_filter = orig_filters
