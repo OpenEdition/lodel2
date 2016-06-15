@@ -141,7 +141,7 @@ class MongoDbMigrationHandler(object):
     ## @brief deletes a collection corresponding to a given uid
     # @see register_change()
     def _emclass_delete(self, model, uid, initial_state, new_state):
-        if uid not in self.init_collections_names():
+        if uid not in self.init_collections_names:
             collection_name = object_collection_name(model.classes(uid))
             self._delete_collection(collection_name)
 
