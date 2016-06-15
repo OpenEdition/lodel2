@@ -33,10 +33,10 @@ class LeQuery(object):
     ##@brief Execute a query and return the result
     # @param **datas
     # @return the query result
-    # @see LeQuery.__query()
+    # @see LeQuery._query()
     #
     def execute(self, **datas):
-        if len(datas) > 0:
+        if 'datas' in datas and len(datas['datas']) > 0:
             self._target_class.check_datas_value(
                                                     datas['datas'],
                                                     **self._data_check_args)
@@ -46,7 +46,7 @@ class LeQuery(object):
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self.__query(target = self._target_class, **datas)
+        ret = self._query(**datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -55,7 +55,7 @@ class LeQuery(object):
     ##@brief Childs classes implements this method to execute the query
     # @param **datas
     # @return query result
-    def __query(self, **datas):
+    def _query(self, **datas):
         raise NotImplementedError("Asbtract method")
     
     ##@return a dict with query infos
@@ -95,7 +95,7 @@ class LeFilteredQuery(LeQuery):
     def __init__(self, target_class, query_filters = None):
         super().__init__(target_class)
         ##@brief The query filter tuple(std_filter, relational_filters)
-        self.__query_filter = None
+        self._query_filter = None
         ##@brief Stores potential subqueries (used when a query implies
         # more than one datasource.
         #
@@ -108,23 +108,25 @@ class LeFilteredQuery(LeQuery):
     # This method takes care to execute subqueries before calling super execute
     def execute(self, datas = None):
         #copy originals filters
-        orig_filters = copy.copy(self.__query_filter)
-        std_filters, rel_filters = self.__query_filter
+        orig_filters = copy.copy(self._query_filter)
+        std_filters, rel_filters = self._query_filter
 
         for rfield, subq in self.subqueries:
             subq_res = subq.execute()
             std_filters.append(
                 (rfield, ' in ', subq_res))
-        self.__query_filter = (std_filters, rel_filters)
+        self._query_filter = (std_filters, rel_filters)
         try:
+
             filters, rel_filters = self.__query_filter
             res = super().execute(filters = filters, rel_filters = rel_filters, datas)
         except Exception as e:
             #restoring filters even if an exception is raised
             self.__query_filter = orig_filters
+
             raise e #reraise
         #restoring filters
-        self.__query_filter = orig_filters
+        self._query_filter = orig_filters
         return res
 
     ##@brief Add filter(s) to the query
@@ -185,8 +187,8 @@ class LeFilteredQuery(LeQuery):
                     ((rfield, ref_dict), op, value))
         #deduplication of std filters
         filters_orig = list(set(filters_orig))
-        # Sets __query_filter attribute of self query
-        self.__query_filter = (filters_orig, result_rel_filters)
+        # Sets _query_filter attribute of self query
+        self._query_filter = (filters_orig, result_rel_filters)
 
         #Sub queries creation
         subq = list()
@@ -204,7 +206,7 @@ class LeFilteredQuery(LeQuery):
     ##@return informations
     def dump_infos(self):
         ret = super().dump_infos()
-        ret['query_filter'] = self.__query_filter
+        ret['query_filter'] = self._query_filter
         ret['subqueries'] = self.subqueries
         return ret
 
@@ -212,7 +214,7 @@ class LeFilteredQuery(LeQuery):
         res = "<{classname} target={target_class} query_filter={query_filter}"
         res = ret.format(
             classname=self.__class__.__name__,
-            query_filter = self.__query_filter,
+            query_filter = self._query_filter,
             target_class = self._target_class)
         if len(self.subqueries) > 0:
             for n,subq in enumerate(self.subqueries):
@@ -459,7 +461,7 @@ class LeInsertQuery(LeQuery):
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param new_datas : datas to be inserted
-    def __query(self, datas):
+    def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
         nb_inserted = self._rw_datasource.insert(self._target_class,datas)
         if nb_inserted < 0:
@@ -468,7 +470,7 @@ class LeInsertQuery(LeQuery):
     """
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
-    def __query(self, datas):
+    def _query(self, datas):
         nb_inserted = self._datasource.insert_multi(
             self._target_class,datas_list)
         if nb_inserted < 0:
@@ -525,7 +527,7 @@ target to LeUpdateQuery constructor"
     #@returns the number of updated items
     #@todo change stategy for instance update. Datas should be allowed 
     #for execute method (and query)
-    def __query(self, filters, rel_filters, datas):
+    def _query(self, filters, rel_filters, datas):
         uid_name = self._target_class._uid[0]
         if self.__leobject_instance is not None:
             #Instance update
@@ -575,7 +577,7 @@ class LeDeleteQuery(LeFilteredQuery):
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
     #@returns the number of deleted items
-    def __query(self, filters, rel_filters):
+    def _query(self, filters, rel_filters):
         nb_deleted = self._rw_datasource.delete(
             self._target_class, filters, rel_filters)
         return nb_deleted
@@ -666,7 +668,7 @@ class LeGetQuery(LeFilteredQuery):
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
-    def __query(self):
+    def _query(self):
         # select datas corresponding to query_filter
         l_datas=self._ro_datasource.select(  self._target_class,
                                     list(self.field_list),

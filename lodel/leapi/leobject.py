@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 
 import importlib
-import warnings
 
 from lodel.plugin import Plugin
 from lodel import logger
@@ -145,7 +144,7 @@ class LeObject(object):
         mod = importlib.import_module(cls.__module__)
         try:
             return getattr(mod, leobject_name)
-        except AttributeError:
+        except (AttributeError, TypeError) :
             raise LeApiError("No LeObject named '%s'" % leobject_name)
     
     @classmethod
@@ -512,6 +511,7 @@ raised when trying to import Datasource"
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
+
         query = LeDeleteQuery(self.name2class(self.__class__.__name__), query_filter)
 
         result = query.execute()
