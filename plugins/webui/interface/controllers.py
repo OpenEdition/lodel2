@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os.path
 
 from werkzeug.wrappers import Response
 from .template.loader import TemplateLoader
