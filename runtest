@@ -55,6 +55,6 @@ cd $testdir
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
 #python3 -W ignore -m unittest $@
-python3 loader.py
+python3 loader.py $@
 
 rm -Rf $testdir
