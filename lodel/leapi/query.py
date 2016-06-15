@@ -119,7 +119,7 @@ class LeFilteredQuery(LeQuery):
         try:
 
             filters, rel_filters = self.__query_filter
-            res = super().execute(filters = filters, rel_filters = rel_filters, datas)
+            res = super().execute(filters = filters, rel_filters = rel_filters, dtats = datas)
         except Exception as e:
             #restoring filters even if an exception is raised
             self.__query_filter = orig_filters
