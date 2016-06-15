@@ -19,7 +19,8 @@ except ImportError:
 # Loading settings
 #
 from lodel.settings.settings import Settings as settings
-settings('conf.d')
+if not settings.started():
+    settings('conf.d')
 from lodel.settings import Settings
 
 #Starts hooks
