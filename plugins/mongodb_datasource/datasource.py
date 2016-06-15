@@ -2,16 +2,15 @@
 
 import re
 import warnings
-import bson
 from bson.son import SON
 from collections import OrderedDict
 import pymongo
 from pymongo.errors import BulkWriteError
-import urllib
 
 from lodel import logger
 
-from .utils import object_collection_name, connect, \
+from . import utils
+from .utils import object_collection_name,\
     MONGODB_SORT_OPERATORS_MAP, connection_string
 
 class MongoDbDataSourceError(Exception):
@@ -51,8 +50,9 @@ class MongoDbDatasource(object):
         self.__read_only = bool(read_only)
         ##@brief Uniq ID for mongodb connection
         self.__conn_hash= None
-        ##@brief Stores the connection to MongoDB
-        self.database = self.__connect(username, password)
+        ##@brief Stores the database cursor
+        self.database = self.__connect(
+            username, password, ro = self.__read_only)
 
     ##@brief Destructor that attempt to close connection to DB
     #
@@ -64,6 +64,7 @@ class MongoDbDatasource(object):
         if self._connections[self.__conn_hash]['conn_count'] <= 0:
             self._connections[self.__conn_hash]['db'].close()
             del(self._connections[self.__conn_hash])
+            logger.info("Closing connection to database")
 
     ##@brief returns a selection of documents from the datasource
     #@param target Emclass
@@ -176,12 +177,26 @@ class MongoDbDatasource(object):
     #@param ro bool : If True the Datasource is for read only, else the
     def __connect(self, username, password, ro):
         conn_string = connection_string(
-            username = username, password = password, **self.__db_infos)
-        conn_string += "__ReadOnly__:"+self.__read_only
-        self.__conf_hash = conn_h = hash(conn_string)
+            username = username, password = password,
+            host = self.__db_infos['host'],
+            port = self.__db_infos['port'])
+
+        conn_string += "__ReadOnly__:"+str(self.__read_only)
+        self.__conn_hash = conn_h = hash(conn_string)
         if conn_h in self._connections:
             self._connections[conn_h]['conn_count'] += 1
-            return self._connections[conn_h]['db']
+            return self._connections[conn_h]['db'][self.__db_infos['db_name']]
+        else:
+            logger.info("Opening a new connection to database")
+            self._connections[conn_h] = {
+                'conn_count': 1,
+                'db': utils.connection(
+                    host = self.__db_infos['host'],
+                    port = self.__db_infos['port'],
+                    username = username, 
+                    password = password)}
+            return self._connections[conn_h]['db'][self.__db_infos['db_name']]
+                    
 
     ##@brief Return a pymongo collection given a LeObject child class
     #@param leobject LeObject child class (no instance)

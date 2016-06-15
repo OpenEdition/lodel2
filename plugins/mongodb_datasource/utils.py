@@ -41,23 +41,36 @@ def get_connection_args(connnection_name='default'):
     return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
 
 
-## @brief Creates a connection to a MongoDb Database
-# @param connection_name str
-# @return MongoClient
-'''def mongodbconnect(connection_name):
-    login, password, host, port, dbname = get_connection_args(connection_name)
-    return connect(host, port, dbname, login, password)
-'''
+def connection_string(host, port, username, password):
+    ret = 'mongodb://'
+    if username != None:
+        ret += username
+        if password != None:
+            ret += ':'+password
+        ret+='@'
+    elif password != None:
+        raise RuntimeError("Password given but no username given...")
+    host = 'localhost' if host is None else host
+    ret += host
+    if port != None:
+        ret += ':'+str(port)
+    return ret
 
-
-def connection_string(host, port, db_name, username, password):
-    return 'mongodb://%s:%s@%s:%s' % (username, password, host, port)
-
-
+##@brief Return an instanciated MongoClient
+#@param host str : hostname or ip
+#@param port int : port
+#@param username str | None: username
+#@param password str|None : password
 def connection(host, port, username, password):
-    return MongoClient(connection_string(host, port, '', username, password))
+    conn_str = connection_string(host, port, username, password)
+    return MongoClient(conn_str)
 
-
+##@brief Return a database cursor
+#@param host str : hostname or ip
+#@param port int : port
+#@param db_name str : database name
+#@param username str | None: username
+#@param password str|None : password
 def connect(host, port, db_name, username, password):
     conn = connection(host, port, username, password)
     database = conn[db_name]
