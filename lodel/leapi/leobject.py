@@ -268,8 +268,8 @@ raised when trying to import Datasource"
     
     ##@brief Read only access to all datas
     #@return a dict representing datas of current instance
-    def datas(self):
-        return [self.data(fname) for fname in self.fieldnames(True)]
+    def datas(self, internal = False):
+        return {fname:self.data(fname) for fname in self.fieldnames(internal)}
         
     
     ##@brief Datas setter
@@ -485,7 +485,7 @@ raised when trying to import Datasource"
     ## @brief Update an instance of LeObject
     #
     #@param datas : list of new datas 
-    def update(self, datas):
+    def update(self, datas = None):
         datas = self.datas(internal=False) if datas is None else datas
         uids = self._uid
         query_filter = list()
@@ -493,7 +493,7 @@ raised when trying to import Datasource"
             query_filter.append((uid, '=', self.data(uid)))
         
         try:
-            query = LeUpdateQuery(cls, query_filter)
+            query = LeUpdateQuery(self.__class__, query_filter)
         except Exception as err:
             raise err
             

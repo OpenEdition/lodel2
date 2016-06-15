@@ -171,3 +171,21 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             dyncode.Person.delete_bundle(['lodel_id > 1'])
             mock_execute.assert_called_once_with()
 
+    def test_update_instance(self):
+        """ Checking that LeObject update method calls LeUpdateQuery
+            correctly """
+        with patch.object(
+            LeUpdateQuery, '__init__', return_value = None) as mock_init:
+            with patch.object(
+                LeObject, 'datas', return_value = {
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+            
+                inst = dyncode.Person(
+                    lodel_id = 1, firstname = "foo", lastname = "bar")
+                try:
+                   inst.update()
+                except AttributeError:
+                    pass
+                mock_init.assert_called_once_with(
+                    dyncode.Person, [('lodel_id', '=', 1)])
