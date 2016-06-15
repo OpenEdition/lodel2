@@ -3,6 +3,7 @@
 import re
 import copy
 import inspect
+import warnings
 
 from .exceptions import *
 from lodel.plugin.hooks import LodelHook
@@ -35,18 +36,18 @@ class LeQuery(object):
     # @return the query result
     # @see LeQuery._query()
     #
-    def execute(self, **datas):
+    def execute(self, datas):
         if not datas is None:
             self._target_class.check_datas_value(
-                                                    datas['datas'],
+                                                    datas,
                                                     **self._data_check_args)
-            self._target_class.prepare_datas(datas['datas']) #not yet implemented
+            self._target_class.prepare_datas(datas) #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
         LodelHook.call_hook(    self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self._query(**datas)
+        ret = self._query(datas = datas)
         ret = LodelHook.call_hook(  self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
@@ -119,7 +120,6 @@ class LeFilteredQuery(LeQuery):
         try:
 
             filters, rel_filters = self._query_filter
-            #res = super().execute(filters = filters, rel_filters = rel_filters)
             res = super().execute(datas)
         except Exception as e:
             #restoring filters even if an exception is raised
@@ -213,7 +213,7 @@ class LeFilteredQuery(LeQuery):
 
     def __repr__(self):
         res = "<{classname} target={target_class} query_filter={query_filter}"
-        res = ret.format(
+        res = res.format(
             classname=self.__class__.__name__,
             query_filter = self._query_filter,
             target_class = self._target_class)
@@ -571,14 +571,15 @@ class LeDeleteQuery(LeFilteredQuery):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
-    def execute(self):
+    def execute(self, datas = None):
         return super().execute()
     
     ##@brief Implements delete query operations
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
     #@returns the number of deleted items
-    def _query(self, filters, rel_filters):
+    def _query(self, datas = None):
+        filters, rel_filters = self._query_filter
         nb_deleted = self._rw_datasource.delete(
             self._target_class, filters, rel_filters)
         return nb_deleted
@@ -664,7 +665,7 @@ class LeGetQuery(LeFilteredQuery):
         self.__field_list = list(set(field_list))
     
     ##@brief Execute the get query
-    def execute(self):
+    def execute(self, datas = None):
         return super().execute()
 
     ##@brief Implements select query operations
