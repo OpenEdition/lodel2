@@ -118,7 +118,7 @@ class LeFilteredQuery(LeQuery):
         self._query_filter = (std_filters, rel_filters)
         try:
 
-            filters, rel_filters = self.__query_filter
+            filters, rel_filters = self._query_filter
             res = super().execute(filters = filters, rel_filters = rel_filters, dtats = datas)
         except Exception as e:
             #restoring filters even if an exception is raised
