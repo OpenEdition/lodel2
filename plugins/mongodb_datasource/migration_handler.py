@@ -57,17 +57,24 @@ class MongoDbMigrationHandler(object):
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
             MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
 
+        self.init_collections_names = self._set_init_collection_names()
         #self._install_collections()
 
-    ## @brief Installs the basis collections of the database
-    def _install_collections(self):
+    def _set_init_collection_names(self):
+        collection_names = []
         init_collections = self.editorial_model.all_classes()
         for init_collection in init_collections.items():
             if init_collection.abstract:
-                collection_name = init_collection.uid
-                prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
-                collection_to_create = "%s%s" % (prefix, collection_name)
-                self._create_collection(collection_name=collection_to_create)
+                collection_names.append(init_collection.uid)
+        return collection_names
+
+    ## @brief Installs the basis collections of the database
+    def _install_collections(self):
+        init_collection_names = self.init_collections_names
+        for collection_name in init_collection_names:
+            prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
+            collection_to_create = "%s%s" % (prefix, collection_name)
+            self._create_collection(collection_name=collection_to_create)
 
     ## @brief Creates a collection in the database
     # @param collection_name str
@@ -134,7 +141,7 @@ class MongoDbMigrationHandler(object):
     ## @brief deletes a collection corresponding to a given uid
     # @see register_change()
     def _emclass_delete(self, model, uid, initial_state, new_state):
-        if uid not in MongoDbMigrationHandler.INIT_COLLECTIONS_NAMES:
+        if uid not in self.init_collections_names():
             collection_name = object_collection_name(model.classes(uid))
             self._delete_collection(collection_name)
 
