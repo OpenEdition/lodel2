@@ -27,7 +27,7 @@ class DummyDatasource(object):
     #@param relational_filters list : List of relational filters
     #@return int : number of deleted records
     def delete(self, target, filters, relational_filters):
-        pass
+        return 0
 
     ## @brief updates records according to given filters
     #@param target Emclass : class of the object to insert
@@ -36,18 +36,18 @@ class DummyDatasource(object):
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
-        pass
+        return 0
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
-        pass
+        return 0
 
     ## @brief Inserts a list of records in a given collection
     # @param target Emclass : class of the objects inserted
     # @param datas_list list : list of dict
     # @return list : list of the inserted records' ids
     def insert_multi(self, target, datas_list):
-        pass
+        return 0

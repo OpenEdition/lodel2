@@ -88,10 +88,6 @@ but invalid name %s was given" % badname):
         self.assertEqual(set(fnames),
             {'lastname', 'linked_texts', 'firstname', 'alias'})
 
-    def test_insert(self):
-        """ Testing insert method """
-        dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
-    
     def test_bad_insert(self):
         """ Insert with bad arguments """
         badargs = [
@@ -154,8 +150,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                 lodel_id = 1, firstname = "foo", lastname = "bar")
             ret = inst.delete()
             self.assertEqual(ret, 1, 'Bad return value forwarding')
-            mock_execute.assert_called_once_with(
-                dyncode.Person, [('lodel_id', '=', 1)], [])
+            mock_execute.assert_called_once_with()
 
     def test_delete_bundle(self):
         """ Checking that LeObject delete_bundle method calls LeDeleteQuery
@@ -171,9 +166,8 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                 dyncode.Person, ['lodel_id > 1'])
 
         with patch.object(
-            LeDeleteQuery, 'execute', return_value = None) as mock_execute:
+            LeDeleteQuery, 'execute', return_value = 1) as mock_execute:
             
             dyncode.Person.delete_bundle(['lodel_id > 1'])
-            mock_init.assert_called_once_with(
-                dyncode.Person, [('lodel_id', '>', 1)], [])
+            mock_execute.assert_called_once_with()
 

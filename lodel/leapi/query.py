@@ -465,8 +465,8 @@ class LeInsertQuery(LeQuery):
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
         nb_inserted = self._rw_datasource.insert(self._target_class,datas)
-        if nb_inserted < 0:
-            raise LeQueryError("Insertion error")
+        if nb_inserted <= 0:
+            raise LeApiQueryError("Insertion error")
         return nb_inserted
     """
     ## @brief Implements an insert query operation, with multiple insertions
@@ -475,7 +475,7 @@ class LeInsertQuery(LeQuery):
         nb_inserted = self._datasource.insert_multi(
             self._target_class,datas_list)
         if nb_inserted < 0:
-            raise LeQueryError("Multiple insertions error")
+            raise LeApiQueryError("Multiple insertions error")
         return nb_inserted
     """
 
@@ -649,7 +649,7 @@ class LeGetQuery(LeFilteredQuery):
     ##@brief Set the field list
     # @param field_list list | None : If None use all fields
     # @return None
-    # @throw LeQueryError if unknown field given
+    # @throw LeApiQueryError if unknown field given
     def set_field_list(self, field_list):
         err_l = dict()
         for fieldname in field_list:

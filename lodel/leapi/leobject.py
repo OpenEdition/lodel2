@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import importlib
+import warnings
 
 from lodel.plugin import Plugin
 from lodel import logger
