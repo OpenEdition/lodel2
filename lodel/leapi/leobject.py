@@ -512,7 +512,7 @@ raised when trying to import Datasource"
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
 
-        query = LeDeleteQuery(self.name2class(self.__class__.__name__), query_filter)
+        query = LeDeleteQuery(self.__class__, query_filter)
 
         result = query.execute()
 
