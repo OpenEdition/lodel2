@@ -46,4 +46,13 @@
 # https://docs.python.org/3.4/library/unittest.html
 #
 
+testdir=$(mktemp -d)
+rmdir $testdir
+./scripts/create_instance.sh test_instance $testdir &>/dev/null
+cp -R examples $testdir
+cp -R tests $testdir
+cd $testdir
+rm -R conf.d && mv tests/tests_conf.d conf.d
 python3 -W ignore -m unittest $@
+
+rm -Rf $testdir
