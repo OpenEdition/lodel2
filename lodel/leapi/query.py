@@ -36,7 +36,7 @@ class LeQuery(object):
     # @see LeQuery._query()
     #
     def execute(self, **datas):
-        if 'datas' in datas and len(datas['datas']) > 0:
+        if not datas is None:
             self._target_class.check_datas_value(
                                                     datas['datas'],
                                                     **self._data_check_args)
@@ -119,7 +119,8 @@ class LeFilteredQuery(LeQuery):
         try:
 
             filters, rel_filters = self._query_filter
-            res = super().execute(filters = filters, rel_filters = rel_filters, dtats = datas)
+            #res = super().execute(filters = filters, rel_filters = rel_filters)
+            res = super().execute(datas)
         except Exception as e:
             #restoring filters even if an exception is raised
             self.__query_filter = orig_filters
