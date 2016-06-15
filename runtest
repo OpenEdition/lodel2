@@ -53,6 +53,8 @@ cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir
 rm -R conf.d && mv tests/tests_conf.d conf.d
-python3 -W ignore -m unittest $@
+make
+#python3 -W ignore -m unittest $@
+python3 loader.py
 
 rm -Rf $testdir

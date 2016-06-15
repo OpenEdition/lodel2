@@ -7,6 +7,7 @@ import sys, os
 LODEL2_LIB_ABS_PATH = None
 if LODEL2_LIB_ABS_PATH is not None:
     sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
+    sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
 
 try:
     import lodel
@@ -36,6 +37,16 @@ def start():
 
 if __name__ == '__main__':
     start()
+
+    if Settings.runtest:
+        import unittest
+        import tests
+        loader = unittest.TestLoader()
+        suite = loader.discover('tests')
+        runner = unittest.TextTestRunner()
+        runner.run(suite)
+        exit()
+
     LodelHook.call_hook('lodel2_loader_main', '__main__', None)
     #Run interative python
     import code

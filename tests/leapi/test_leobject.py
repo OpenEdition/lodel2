@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 import tests.loader_utils
-from tests.leapi.query.utils import dyncode_module as dyncode
+import leapi_dyncode as dyncode
 
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery, \

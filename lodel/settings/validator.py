@@ -308,6 +308,8 @@ LODEL2_CONF_SPECS = {
                         SettingValidator('strip')),
         'lib_path': (   None,
                         SettingValidator('path')),
+        'runtest': (    True,
+                        SettingValidator('bool')),
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
