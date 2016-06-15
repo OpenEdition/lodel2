@@ -189,3 +189,57 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                     pass
                 mock_init.assert_called_once_with(
                     dyncode.Person, [('lodel_id', '=', 1)])
+        
+        with patch.object(
+            LeUpdateQuery, 'execute', return_value = None) as mock_update:
+            with patch.object(
+                LeObject, 'datas', return_value = {
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+            
+                inst = dyncode.Person(
+                    lodel_id = 1, firstname = "foo", lastname = "bar")
+                inst.update()
+                mock_update.assert_called_once_with({
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None })
+                    
+    
+    def test_get(self):
+        """ Checking that LeObject.get method calls LeGetQuery
+            correctly """
+        get_args = {
+            'query_filters': ['lodel_id = 1'],
+            'field_list': ['firstname'],
+            'order': ['firstname'],
+            'group': ['alias'],
+            'limit': 42,
+            'offset': 24}
+
+        with patch.object(
+            LeGetQuery, '__init__', return_value = None) as mock_init:
+            
+            try:
+                dyncode.Person.get(**get_args)
+            except AttributeError:
+                pass
+
+            mock_init.assert_called_once_with(
+                dyncode.Person,
+                **get_args)
+
+        ret_val = [{
+            'lodel_id': 1,
+            'firstname': 'foo',
+            'lastname': 'bar',
+            'fullname': 'foo bar',
+            'alias': None,
+            'classname': 'Person'}]
+        with patch.object(
+            LeGetQuery, 'execute', return_value = ret_val) as mock_execute:
+            results = dyncode.Person.get(**get_args)
+            mock_execute.assert_called_once_with()
+            res = results[0]
+            self.assertEqual(res.d.lodel_id, 1)
+            self.assertEqual(res.d.firstname, 'foo')
+            self.assertEqual(res.d.lastname, 'bar')

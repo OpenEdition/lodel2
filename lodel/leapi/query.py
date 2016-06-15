@@ -199,7 +199,7 @@ class LeFilteredQuery(LeQuery):
                 for tclass, tfield in ref_dict.items():
                     query = LeGetQuery(
                         target_class = tclass,
-                        query_filter = [(tfield, op, value)],
+                        query_filters = [(tfield, op, value)],
                         field_list = [tfield])
                     subq.append((rfield, query))
         self.subqueries = subq
@@ -598,8 +598,8 @@ class LeGetQuery(LeFilteredQuery):
     #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
     #@param limit int : The maximum number of returned results
     #@param offset int : offset
-    def __init__(self, target_class, query_filter, **kwargs):
-        super().__init__(target_class, query_filter)
+    def __init__(self, target_class, query_filters, **kwargs):
+        super().__init__(target_class, query_filters)
         
         ##@brief The fields to get
         self.__field_list = None
@@ -631,7 +631,7 @@ class LeGetQuery(LeFilteredQuery):
             self.__group = kwargs['group']
         if 'limit' in kwargs:
             try:
-                self.__limit = int(kwargs[limit])
+                self.__limit = int(kwargs['limit'])
                 if self.__limit <= 0:
                     raise ValueError()
             except ValueError:
