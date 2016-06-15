@@ -1,12 +1,11 @@
 #-*- coding: utf-8 -*-
 
-import sys, os
+import sys, os, os.path
 #
 # Bootstraping
 #
 LODEL2_LIB_ABS_PATH = None
 if LODEL2_LIB_ABS_PATH is not None:
-    sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
     sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
 
 try:
@@ -42,7 +41,8 @@ if __name__ == '__main__':
         import unittest
         import tests
         loader = unittest.TestLoader()
-        suite = loader.discover('tests')
+        test_dir = os.path.join(LODEL2_LIB_ABS_PATH, 'tests')
+        suite = loader.discover(test_dir)
         runner = unittest.TextTestRunner()
         runner.run(suite)
         exit()
