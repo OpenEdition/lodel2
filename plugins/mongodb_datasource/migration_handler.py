@@ -110,7 +110,7 @@ class MongoDbMigrationHandler(object):
             component_class_name = 'emfield'
 
         if component_class_name:
-            handler_func('_'+component_class_name.lower()+'_'+state_change)
+            handler_func = '_'+component_class_name.lower()+'_'+state_change
             if hasattr(self, handler_func):
                 getattr(self, handler_func)(model, uid, initial_state, new_state)
         else:
