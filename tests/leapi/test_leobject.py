@@ -119,14 +119,17 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
         with patch.object(
             LeInsertQuery, '__init__', return_value = None) as mock_init:
 
-            dyncode.Person.insert(datas)
-            mock_insert.assert_called_once_with(dyncode.Person)
+            try:
+                dyncode.Person.insert(datas)
+            except AttributeError:
+                pass #Because of mock
+            mock_init.assert_called_once_with(dyncode.Person)
 
         with patch.object(
             LeInsertQuery, 'execute', return_value = 42) as mock_insert:
 
             ret = dyncode.Person.insert(datas)
-            self.AssertEqual(ret, 42, 'Bad return value forwarding')
+            self.assertEqual(ret, 42, 'Bad return value forwarding')
             mock_insert.assert_called_once_with(datas)
     
     def test_delete(self):
@@ -137,7 +140,10 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
 
             inst = dyncode.Person(
                 lodel_id = 1, firstname = "foo", lastname = "bar")
-            inst.delete()
+            try:
+                inst.delete()
+            except AttributeError:
+                pass
             mock_init.assert_called_once_with(
                 dyncode.Person, [('lodel_id', '=', 1)])
 
@@ -157,7 +163,10 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
         with patch.object(
             LeDeleteQuery, '__init__', return_value = None) as mock_init:
             
-            dyncode.Person.delete_bundle(['lodel_id > 1'])
+            try:
+                dyncode.Person.delete_bundle(['lodel_id > 1'])
+            except AttributeError:
+                pass
             mock_init.assert_called_once_with(
                 dyncode.Person, ['lodel_id > 1'])
 
