@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest import mock
 from unittest.mock import patch
@@ -6,6 +7,7 @@ import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery, \
     LeInsertQuery
+from lodel.leapi.exceptions import *
 
 class LeQueryDatasourceTestCase(unittest.TestCase):
     """ Testing LeQuery objects connection with datasource """
@@ -102,3 +104,73 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
             [(('alias', {cls: 'firstname'}), '=', 'foo')])
         self.check_nocall(read = False, exclude = ['delete'])
         self.check_nocall(read = True)
+
+    def test_insert(self):
+        """ Testing LeInsertQuery mocking datasource """
+        cls = self.dyncode['Person']
+        query = LeInsertQuery(
+            target_class = cls)
+        self.mockwrite.insert.return_value = 1
+        datas = {
+            'firstname': 'foo',
+            'lastname': 'bar',
+            'alias': None}
+        query.execute(datas)
+        self.mockwrite.insert.assert_called_once_with(
+            cls,
+            cls.prepare_datas(datas, True, False))
+        self.check_nocall(read = False, exclude = ['insert'])
+        self.check_nocall(read = True)
+
+    def test_update_instance(self):
+        """ Testing LeUpdateQuery with an instance mocking datasource """
+        cls = self.dyncode['Person']
+        inst = cls(lodel_id = 1, firstname = 'foo', lastname = 'bar',
+            alias = None, linked_texts = None)
+        query = LeUpdateQuery(inst)
+
+        with self.assertRaises(LeApiQueryError):
+            # Bad call, giving datas while an instance was given to __init__
+            query.execute(datas = {'firstname': 'ooba'})
+
+        query.execute()
+        self.mockwrite.update.assert_called_once_with(
+            cls,
+            [('lodel_id', '=', '1')],
+            [],
+            inst.datas(True))
+        self.check_nocall(read=False, exclude = ['update'])
+        self.check_nocall(read=True)
+
+    def test_update_filter(self):
+        """ Testing LeUpdateQuery with filter mocking datasource """
+        cls = self.dyncode['Person']
+        fake_db_datas = [{
+            'lodel_id': 1,
+            'firstname': 'barfoo',
+            'lastname': 'foobar',
+            'fullname': 'barfoo foobar',
+            'alias': None,
+            'linked_texts': None,
+            'help_text': None,
+            'classname': 'Person',
+            'date_create': None,
+            'date_update': None}]
+        q_datas = {'firstname': 'foobar', 'lastname': 'barfoo'}
+
+        expt_datas = copy.copy(fake_db_datas[0])
+        expt_datas.update(q_datas)
+        expt_datas = cls.prepare_datas(expt_datas, True, True)
+
+        query = LeUpdateQuery(cls, [('lodel_id', '=', 1)])
+        with self.assertRaises(LeApiQueryError):
+            # Bad call, no datas given while a class and a filters were given
+            # to __init__
+            query.execute()
+        self.mockread.select.return_value = fake_db_datas
+        query.execute(q_datas)
+        self.mockwrite.update.asser_called_once_with(
+            cls,
+            [('lodel_id', '=', '1')],
+            [],
+            expt_datas)

@@ -2,6 +2,7 @@
 
 import importlib
 import warnings
+import copy
 
 from lodel.plugin import Plugin
 from lodel import logger
@@ -10,6 +11,7 @@ from lodel.settings.utils import SettingsError
 from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
 from .exceptions import *
 from lodel.plugin.hooks import LodelHook
+from lodel.leapi.datahandlers.base_classes import DatasConstructor
 
 ##@brief Stores the name of the field present in each LeObject that indicates
 #the name of LeObject subclass represented by this object
@@ -70,6 +72,7 @@ class LeObject(object):
         for fieldname, fieldval in kwargs.items():
             self.__datas[fieldname] = fieldval
             self.__initialized.append(fieldname)
+        self.__is_initialized = False
         self.__set_initialized()
         return self
 
@@ -113,7 +116,7 @@ class LeObject(object):
     ##@brief @property True if LeObject is initialized else False
     @property
     def initialized(self):
-        return not isinstance(self.__initialized, list)
+        return self.__is_initialized
     
     ##@return The uid field name
     @classmethod
@@ -173,6 +176,10 @@ class LeObject(object):
         except KeyError:
             raise NameError("No field named '%s' in %s" % ( fieldname,
                                                             cls.__name__))
+    ##@return A dict with fieldname as key and datahandler as instance
+    @classmethod
+    def fields(cls):
+        return copy.copy(cls._fields)
     
     ##@brief Initialise both datasources (ro and rw)
     #
@@ -326,7 +333,7 @@ raised when trying to import Datasource"
         if isinstance(self.__initialized, list):
             expected_fields = self.fieldnames(include_ro = False) + self._uid
             if set(expected_fields) == set(self.__initialized):
-                self.__initialized = True
+                self.__is_initialized = True
 
     ##@brief Designed to be called when datas are modified
     #
@@ -456,16 +463,13 @@ raised when trying to import Datasource"
     # @todo IMPLEMENTATION
     @classmethod
     def _construct_datas(cls, datas):
-        """
-        constructor = DatasConstructor(cls, datas, cls.fieldtypes())
+        constructor = DatasConstructor(cls, datas, cls._fields)
         ret = {
                 fname:constructor[fname]
-                for fname, ftype in cls.fieldtypes().items()
+                for fname, ftype in cls._fields.items()
                 if not ftype.is_internal() or ftype.internal != 'autosql'
         }
         return ret
-        """
-        pass
 
     ## @brief Check datas consistency
     # 

@@ -102,6 +102,7 @@ class LeFilteredQuery(LeQuery):
         #
         # Subqueries are tuple(target_class_ref_field, LeGetQuery)
         self.subqueries = None
+        query_filters = [] if query_filters is None else query_filters
         self.set_query_filter(query_filters)
     
     ##@brief Abstract FilteredQuery execution method
@@ -506,18 +507,19 @@ class LeUpdateQuery(LeFilteredQuery):
     def __init__(self, target, query_filters = None):
         ##@brief This attr is set only if the target argument is an 
         #instance of a LeObject subclass
-        self.__leobject_datas = None
+        self.__leobject_instance_datas = None
         target_class = target
+        
         if not inspect.isclass(target):
             if query_filters is not None:
                 msg = "No query_filters accepted when an instance is given as \
 target to LeUpdateQuery constructor"
                 raise AttributeError(msg)
             target_class = target.__class__
-            if self.initialized():
-                self.__leobject_instance_datas = target.datas()
+            if target_class.initialized:
+                self.__leobject_instance_datas = target.datas(True)
             else:
-                filters = [(target._uid[0], '=', target.uid())]
+                query_filters = [(target._uid[0], '=', str(target.uid()))]
     
         super().__init__(target_class, query_filters)
 
@@ -530,36 +532,42 @@ target to LeUpdateQuery constructor"
     #for execute method (and query)
     def _query(self, datas):
         uid_name = self._target_class._uid[0]
-        if self.__leobject_instance is not None:
+        if self.__leobject_instance_datas is not None:
             #Instance update
             #Building query_filter
             filters = [(
-                uid_name, '=', self.__leobject_instance_datas[uid_name])]
-            self._rw_datasource.update(
+                uid_name, 
+                '=', 
+                str(self.__leobject_instance_datas[uid_name]))]
+            res = self._rw_datasource.update(
                 self._target_class, filters, [],
                 self.__leobject_instance_datas)
         else:
             #Update by filters, we have to fetch datas before updating
             res = self._ro_datasource.select(
                 self._target_class, self._target_class.fieldnames(True),
-                filters, rel_filters)
+                self._query_filter[0],
+                self._query_filter[1])
             #Checking and constructing datas
             upd_datas = dict()
             for res_data in res:
                 res_data.update(datas)
                 res_datas = self._target_class.prepare_datas(
                     res_data, True, True)
-                filters = [(uid_name, '=', res_data[uid_name])]
-                self._rw_datasource.update(
+                filters = [(uid_name, '=', str(res_data[uid_name]))]
+                res = self._rw_datasource.update(
                     self._target_class, filters, [],
                     res_datas)
-        return nb_updated
+        return res
     
     ## @brief Execute the update query
     def execute(self, datas = None):
-        if self.__leobject_instance is not None and datas is not None:
-            raise AttributeError("No datas expected when running an update \
+        if self.__leobject_instance_datas is not None and datas is not None:
+            raise LeApiQueryError("No datas expected when running an update \
 query on an instance")
+        if self.__leobject_instance_datas is None and datas is None:
+            raise LeApiQueryError("Datas are mandatory when running an update \
+query on a class with filters")
         return super().execute(datas = datas)
 
 ##@brief A query to delete an object
