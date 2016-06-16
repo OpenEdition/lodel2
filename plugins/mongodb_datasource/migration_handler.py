@@ -7,7 +7,7 @@ from .utils import get_connection_args, connect, collection_prefix, object_colle
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
 from leapi_dyncode import *
-
+from .datasource import MongoDbDatasource
 
 class MigrationHandlerChangeError(Exception):
     pass
@@ -17,9 +17,9 @@ class MigrationHandlerError(Exception):
     pass
 
 @LodelHook('mongodb_mh_init_db')
-def mongodb_mh_init_db(editorial_model, conn_args=None):
+def mongodb_mh_init_db(conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
-    migration_handler = MongoDbMigrationHandler(connection_args)
+    migration_handler = MongoDbMigrationHandler(conn_args=connection_args)
     migration_handler._install_collections()
     migration_handler.database.close()
 
@@ -37,9 +37,6 @@ class MongoDbMigrationHandler(object):
         self.editorial_model = editorial_model
 
         conn_args = get_connection_args() if conn_args is None else conn_args
-
-        if editorial_model is None:
-            raise MongoDbMigrationHandler("Missing editorial model")
 
         if len(conn_args.keys()) == 0:
             raise MigrationHandlerError("No connection arguments were given")
@@ -67,7 +64,9 @@ class MongoDbMigrationHandler(object):
     def _set_init_collection_names(self):
         collection_names = ['relation']
         for dynclass in dynclasses:
-            if dynclass._abstract:
+            if dynclass._abstract \
+                and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
+                and isinstance(dynclass._rw_datasource, MongoDbDatasource):
                 collection_names.append(dynclass.__name__)
         return collection_names
 
