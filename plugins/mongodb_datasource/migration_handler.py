@@ -2,7 +2,7 @@
 import datetime
 
 from lodel.editorial_model.components import EmClass, EmField
-
+from lodel.editorial_model.model import EditorialModel
 from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
@@ -16,7 +16,7 @@ class MigrationHandlerError(Exception):
     pass
 
 @LodelHook('mongodb_mh_init_db')
-def mongodb_mh_init_db(conn_args=None):
+def mongodb_mh_init_db(editorial_model, conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
     migration_handler = MongoDbMigrationHandler(connection_args)
     migration_handler._install_collections()
@@ -26,13 +26,15 @@ class MongoDbMigrationHandler(object):
 
     COMMANDS_IFEXISTS_DROP = 'drop'
     COMMANDS_IFEXISTS_NOTHING = 'nothing'
-    INIT_COLLECTIONS_NAMES = ['object', 'relation', 'entitie', 'person', 'text', 'entry']
+    #INIT_COLLECTIONS_NAMES = ['object', 'relation', 'entitie', 'person', 'text', 'entry']
     MIGRATION_HANDLER_DEFAULT_SETTINGS = {'dry_run': False, 'foreign_keys': True, 'drop_if_exists': False}
 
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, conn_args=None, **kwargs):
+    def __init__(self, editorial_model, conn_args=None, **kwargs):
+        self.editorial_model = editorial_model
+
         conn_args = get_connection_args() if conn_args is None else conn_args
 
         if len(conn_args.keys()) == 0:
@@ -55,11 +57,21 @@ class MongoDbMigrationHandler(object):
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
             MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
 
+        self.init_collections_names = self._set_init_collection_names()
         #self._install_collections()
+
+    def _set_init_collection_names(self):
+        collection_names = []
+        init_collections = self.editorial_model.all_classes()
+        for init_collection in init_collections.items():
+            if init_collection.abstract:
+                collection_names.append(init_collection.uid)
+        return collection_names
 
     ## @brief Installs the basis collections of the database
     def _install_collections(self):
-        for collection_name in MongoDbMigrationHandler.INIT_COLLECTIONS_NAMES:
+        init_collection_names = self.init_collections_names
+        for collection_name in init_collection_names:
             prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
             collection_to_create = "%s%s" % (prefix, collection_name)
             self._create_collection(collection_name=collection_to_create)
@@ -110,7 +122,7 @@ class MongoDbMigrationHandler(object):
             component_class_name = 'emfield'
 
         if component_class_name:
-            handler_func('_'+component_class_name.lower()+'_'+state_change)
+            handler_func = '_'+component_class_name.lower()+'_'+state_change
             if hasattr(self, handler_func):
                 getattr(self, handler_func)(model, uid, initial_state, new_state)
         else:
@@ -129,7 +141,7 @@ class MongoDbMigrationHandler(object):
     ## @brief deletes a collection corresponding to a given uid
     # @see register_change()
     def _emclass_delete(self, model, uid, initial_state, new_state):
-        if uid not in MongoDbMigrationHandler.INIT_COLLECTIONS_NAMES:
+        if uid not in self.init_collections_names:
             collection_name = object_collection_name(model.classes(uid))
             self._delete_collection(collection_name)
 

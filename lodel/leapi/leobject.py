@@ -26,21 +26,23 @@ class LeObjectValues(object):
     # @param set_callback method : The LeObject.set_datas() method of corresponding LeObject class
     # @param get_callback method : The LeObject.get_datas() method of corresponding LeObject class
     def __init__(self, fieldnames_callback, set_callback, get_callback):
-        self.__setter = set_callback
-        self.__getter = get_callback
+        self._setter = set_callback
+        self._getter = get_callback
     
     ##@brief Provide read access to datas values
     # @note Read access should be provided for all fields
     # @param fname str : Field name
     def __getattribute__(self, fname):
-        return self.__getter(fname)
+        getter = super().__getattribute__('_getter')
+        return getter(fname)
     
     ##@brief Provide write access to datas values
     # @note Write acces shouldn't be provided for internal or immutable fields
     # @param fname str : Field name
     # @param fval * : the field value
     def __setattribute__(self, fname, fval):
-        return self.__setter(fname, fval)
+        setter = super().__getattribute__('_setter')
+        return setter(fname, fval)
         
 
 class LeObject(object):
@@ -56,17 +58,26 @@ class LeObject(object):
     ##@breif Read & write datasource ( see @ref lodel2_datasources )
     _rw_datasource = None
 
-    ##@brief Construct an object representing an Editorial component
-    # @note Can be considered as EmClass instance
-    def __init__(self, **kwargs):
-        if self._abstract:
-            raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
+    def __new__(cls, **kwargs):
+        
+        self = object.__new__(cls)
         ##@brief A dict that stores fieldvalues indexed by fieldname
         self.__datas = { fname:None for fname in self._fields }
         ##@brief Store a list of initianilized fields when instanciation not complete else store True
         self.__initialized = list()
         ##@brief Datas accessor. Instance of @ref LeObjectValues
         self.d = LeObjectValues(self.fieldnames, self.set_data, self.data)
+        for fieldname, fieldval in kwargs.items():
+            self.__datas[fieldname] = fieldval
+            self.__initialized.append(fieldname)
+        self.__set_initialized()
+        return self
+
+    ##@brief Construct an object representing an Editorial component
+    # @note Can be considered as EmClass instance
+    def __init__(self, **kwargs):
+        if self._abstract:
+            raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
 
         # Checks that uid is given
         for uid_name in self._uid:
@@ -75,25 +86,24 @@ class LeObject(object):
             self.__datas[uid_name] = kwargs[uid_name]
             del(kwargs[uid_name])
             self.__initialized.append(uid_name)
-        
+
         # Processing given fields
         allowed_fieldnames = self.fieldnames(include_ro = False)
-        err_list = list()
+        err_list = dict()
         for fieldname, fieldval in kwargs.items():
             if fieldname not in allowed_fieldnames:
                 if fieldname in self._fields:
-                    err_list.append(
-                        LeApiError("Value given for internal field : '%s'" % fieldname)
-                    )
+                    err_list[fieldname] = LeApiError(
+                        "Value given but the field is internal")
                 else:
-                    err_list.append(
-                        LeApiError("Unknown fieldname : '%s'" % fieldname)
-                    )
+                    err_list[fieldname] = LeApiError(
+                        "Unknown fieldname : '%s'" % fieldname)
             else:
                 self.__datas[fieldname] = fieldval
                 self.__initialized.append(fieldname)
         if len(err_list) > 0:
-            raise LeApiErrors(err_list)
+            raise LeApiErrors(msg = "Unable to __init__ %s" % self.__class__,
+                exceptions = err_list)
         self.__set_initialized()
     
     #-----------------------------------#
@@ -268,8 +278,8 @@ raised when trying to import Datasource"
     
     ##@brief Read only access to all datas
     #@return a dict representing datas of current instance
-    def datas(self):
-        return [self.data(fname) for fname in self.fieldnames(True)]
+    def datas(self, internal = False):
+        return {fname:self.data(fname) for fname in self.fieldnames(internal)}
         
     
     ##@brief Datas setter
@@ -485,7 +495,7 @@ raised when trying to import Datasource"
     ## @brief Update an instance of LeObject
     #
     #@param datas : list of new datas 
-    def update(self, datas):
+    def update(self, datas = None):
         datas = self.datas(internal=False) if datas is None else datas
         uids = self._uid
         query_filter = list()
@@ -493,7 +503,7 @@ raised when trying to import Datasource"
             query_filter.append((uid, '=', self.data(uid)))
         
         try:
-            query = LeUpdateQuery(cls, query_filter)
+            query = LeUpdateQuery(self.__class__, query_filter)
         except Exception as err:
             raise err
             
@@ -538,43 +548,6 @@ raised when trying to import Datasource"
             deleted += result
         return deleted
             
-    
-    ## @brief Load an instance of LeObject
-    #@param uid a list of tuple (uid_field_nane, value) ou a single value
-    #@return an instance of a subclass of LeObject
-    @classmethod
-    def load(cls, uid_tuples):
-        query_filter = list()
-        uids = cls._uid
-        if uids.isinstance(tuple):
-            if not uid_tuples.isinstance(list):
-                raise AttributeError ("In %s:load : uid must be a list of tuple" % cls.__name__)
-            elif len(uid_tuples) != len(uids):
-                raise AttributeError ("In %s:load : must have %d uid fields" % len(uids))
-            for fieldname, fieldvalue in uid_tuples:
-                if fieldname in uids:
-                    dhdl = cls.data_handler(fieldname)
-                    if dhdl.check_data_value(fieldvalue)[1] is None:
-                        query_filter.append((fieldname, '=', fieldvalue))
-                    else:
-                        raise AttributeError("n %s:load :%s not a valid value for %s" % (fieldvalue, fieldname))
-                else:
-                    raise AttributeError ("In %s:load :%s not a uid field for class %s" % (fieldname, cls.__name__))
-        else:
-            dhdl = cls.data_handler(uids)
-            if dhdl.check_data_value(uid_tuples)[1] is None:
-                query_filter.append((uids, '=', uid_tuples))
-            else:
-                raise AttributeError("n %s:load :%s not a valid value for %s" % (uid_tuples, uids))
-        query = LeGetQuery(cls, query_filter, limit = 1)
-        try:
-            result=query.execute()
-        except LeQueryError as err:
-            print("Unable to load object of type %s" % cls.__name__)
-            raise err
-        
-        return cls.name2class(res[CLASS_IDENTIFIER])(result[0])
-        
     ## @brief Get instances of LeObject
     #
     #@param target_class LeObject : class of object the query is about
@@ -590,16 +563,19 @@ raised when trying to import Datasource"
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
-        if isinstance(cls._uids, tuple):
-            for uid in cls._uids:
-                if uid not in field_list:
-                    raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
+        if field_list is None:
+            field_list = cls.fieldnames(True)
         else:
-            if uid not in field_list:
-                raise AttributeError("In %s:get : Cannot instanciate a LeObject without it's identifier" % cls.__name__)
-
+            for uid in [ uidname
+                for uidname in cls.uid_fieldname()
+                if uidname not in field_list ]:
+                field_list.append(uid)
+            if CLASS_ID_FIELDNAME not in field_list:
+                field_list.append(CLASS_ID_FIELDNAME)
         try:
-            query = LeGetQuery(cls, query_filter, field_list = field_list, order = order, group = group, limit = limit, offset = offset)
+            query = LeGetQuery(
+                cls, query_filters = query_filters, field_list = field_list,
+                order = order, group = group, limit = limit, offset = offset)
         except ValueError as err:
             raise err
             
@@ -610,7 +586,8 @@ raised when trying to import Datasource"
         
         objects = list()
         for res in result:
-            inst = cls.name2class(res[CLASS_ID_FIELDNAME])(res)
+            res_cls = cls.name2class(res[CLASS_ID_FIELDNAME])
+            inst = res_cls.__new__(res_cls,**res)
             objects.append(inst)
         
         return objects

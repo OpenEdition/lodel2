@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 import tests.loader_utils
-from tests.leapi.query.utils import dyncode_module as dyncode
+import leapi_dyncode as dyncode
 
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery, \
@@ -88,10 +88,6 @@ but invalid name %s was given" % badname):
         self.assertEqual(set(fnames),
             {'lastname', 'linked_texts', 'firstname', 'alias'})
 
-    def test_insert(self):
-        """ Testing insert method """
-        dyncode.Person.insert({'lastname': 'foo', 'firstname': 'bar'})
-    
     def test_bad_insert(self):
         """ Insert with bad arguments """
         badargs = [
@@ -154,8 +150,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                 lodel_id = 1, firstname = "foo", lastname = "bar")
             ret = inst.delete()
             self.assertEqual(ret, 1, 'Bad return value forwarding')
-            mock_execute.assert_called_once_with(
-                dyncode.Person, [('lodel_id', '=', 1)], [])
+            mock_execute.assert_called_once_with()
 
     def test_delete_bundle(self):
         """ Checking that LeObject delete_bundle method calls LeDeleteQuery
@@ -171,9 +166,80 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
                 dyncode.Person, ['lodel_id > 1'])
 
         with patch.object(
-            LeDeleteQuery, 'execute', return_value = None) as mock_execute:
+            LeDeleteQuery, 'execute', return_value = 1) as mock_execute:
             
             dyncode.Person.delete_bundle(['lodel_id > 1'])
-            mock_init.assert_called_once_with(
-                dyncode.Person, [('lodel_id', '>', 1)], [])
+            mock_execute.assert_called_once_with()
 
+    def test_update_instance(self):
+        """ Checking that LeObject update method calls LeUpdateQuery
+            correctly """
+        with patch.object(
+            LeUpdateQuery, '__init__', return_value = None) as mock_init:
+            with patch.object(
+                LeObject, 'datas', return_value = {
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+            
+                inst = dyncode.Person(
+                    lodel_id = 1, firstname = "foo", lastname = "bar")
+                try:
+                   inst.update()
+                except AttributeError:
+                    pass
+                mock_init.assert_called_once_with(
+                    dyncode.Person, [('lodel_id', '=', 1)])
+        
+        with patch.object(
+            LeUpdateQuery, 'execute', return_value = None) as mock_update:
+            with patch.object(
+                LeObject, 'datas', return_value = {
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+            
+                inst = dyncode.Person(
+                    lodel_id = 1, firstname = "foo", lastname = "bar")
+                inst.update()
+                mock_update.assert_called_once_with({
+                    'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
+                    'fullname': 'Foo Bar', 'alias': None })
+                    
+    
+    def test_get(self):
+        """ Checking that LeObject.get method calls LeGetQuery
+            correctly """
+        get_args = {
+            'query_filters': ['lodel_id = 1'],
+            'field_list': ['firstname'],
+            'order': ['firstname'],
+            'group': ['alias'],
+            'limit': 42,
+            'offset': 24}
+
+        with patch.object(
+            LeGetQuery, '__init__', return_value = None) as mock_init:
+            
+            try:
+                dyncode.Person.get(**get_args)
+            except AttributeError:
+                pass
+
+            mock_init.assert_called_once_with(
+                dyncode.Person,
+                **get_args)
+
+        ret_val = [{
+            'lodel_id': 1,
+            'firstname': 'foo',
+            'lastname': 'bar',
+            'fullname': 'foo bar',
+            'alias': None,
+            'classname': 'Person'}]
+        with patch.object(
+            LeGetQuery, 'execute', return_value = ret_val) as mock_execute:
+            results = dyncode.Person.get(**get_args)
+            mock_execute.assert_called_once_with()
+            res = results[0]
+            self.assertEqual(res.d.lodel_id, 1)
+            self.assertEqual(res.d.firstname, 'foo')
+            self.assertEqual(res.d.lastname, 'bar')
