@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-
+import warnings
 from lodel.leapi.datahandlers.datas_base import *
 
 ##@brief Data field designed to handle formated strings
@@ -18,14 +18,20 @@ class FormatString(Varchar):
         self._format_string = format_string
         super().__init__(internal='automatic', max_length=max_length)
 
-
     def can_override(self, data_handler):
         if not super().can_override(data_handler):
             return False
         if data_handler.max_length != self.max_length:
             return False
         return True
-
+    
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        ret = self._format_string % tuple([ datas[fname] for fname in self._field_list ])
+        if len(ret) > self.max_length:
+            warnings.warn("Format field overflow. Truncating value")
+            ret = ret[:self.max_length-1]
+        return ret
+    
 ##@brief Varchar validated by a regex
 class Regex(Varchar):
 
@@ -39,7 +45,6 @@ class Regex(Varchar):
     def __init__(self, regex='', max_length=10, **kwargs):
         self.regex = regex
         self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
-
         super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
     def _check_data_value(self, value):
@@ -86,3 +91,22 @@ be internal")
 
     def _check_data_consistency(self, emcomponent, fname, datas):
         datas[fname] = emcomponent.__class__.__name__
+        
+##@brief Data field designed to handle concatenated fields
+class Concat(FormatString):
+    help = 'Automatic strings concatenation'
+    base_type = 'char'
+    
+    ##@brief Build its content with a field list and a separator
+    # @param field_list list : List of field to use
+    # @param max_length int : the maximum length of the handled value
+    # @param separator str
+    # @param **kwargs    
+    def _init__(self, field_list, max_length, separator = ' ', **kwargs):
+        if not field_list is None:
+            format_string = '%s'
+            for i in range(1,len(field_list)):
+                format_string = format_string + separator + '%s'
+                
+        super().__init__(format_string, field_list, max_length, **kwargs)
+
