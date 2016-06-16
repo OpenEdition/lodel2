@@ -7,8 +7,8 @@ from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import *
 from lodel.utils.mlstring import MlString
 
-## @package lodel.editorial_model.translator Lodel 2 Editorial Model Translators
-## @brief Packahg for saving a Editorial µModel in a xml fiel and loading an Editorial Model from a xml file
+##@package lodel.editorial_model.translator.xmlfile Translator module designed
+#to load & save EM in XML
 #
 # Structure of a xml file which represents an editorial model:
 # <ul>
