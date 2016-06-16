@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import importlib
+import warnings
 
 from lodel.plugin import Plugin
 from lodel import logger
@@ -520,7 +521,7 @@ raised when trying to import Datasource"
     
     ## @brief Delete instances of LeObject
     #@param uids a list: lists of (fieldname, fieldvalue), with fieldname in cls._uids
-    #@returns the number of deleted items
+    #@returns the 
     @classmethod
     def delete_bundle(cls, query_filters):
         deleted = 0
@@ -533,7 +534,8 @@ raised when trying to import Datasource"
             result = query.execute()
         except Exception as err:
             raise err
-        deleted += result
+        if not result is None:
+            deleted += result
         return deleted
             
     
