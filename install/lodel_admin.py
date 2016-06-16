@@ -6,6 +6,7 @@ import loader
 
 from lodel.settings import Settings
 from lodel import logger
+from .leapi_dyncode import *
 
 ## @brief Utility method to generate python code given an emfile and a
 # translator
@@ -44,3 +45,8 @@ def refresh_dyncode():
     create_dyncode( Settings.editorialmodel.emfile,
                     Settings.editorialmodel.emtranslator,
                     Settings.editorialmodel.dyncode)
+
+
+def init_all_dbs():
+    #TODO
+    pass
