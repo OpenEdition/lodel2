@@ -7,9 +7,63 @@ from lodel.editorial_model.model import EditorialModel
 from lodel.editorial_model.components import *
 from lodel.utils.mlstring import MlString
 
+## @package lodel.editorial_model.translator Lodel 2 Editorial Model Translators
+## @brief Packahg for saving a Editorial µModel in a xml fiel and loading an Editorial Model from a xml file
+#
+# Structure of a xml file which represents an editorial model:
+# <ul>
+# <li>\<name\>: name of the model, field <b><em>name</em></b>  in class <b><em>EditorialModel</em></b> 
+# <li>\<description\>: field <b><em>description</em></b>  of a composed element, one for each language translation named 
+#               <ul><li>\<fre\> for french, 
+#               <li>\<eng\> for english,
+#               <li>\<esp\> for spanish,
+#               <li>\<ger\> for german</ul>
+# <li>\<classes\>: set of all <b><em>EmClass</em></b> in the model \n
+#    for each classe: \n
+#       \<class\><ul>
+#       <li>\<uid\>the class's id
+#       <li>\<display_name\> The name of the class, field <b><em>display_name</em></b>  of the <b><em>EmClass</em></b> , in different languages if they're available :
+#               <ul><li>\<fre\> for french, 
+#               <li>\<eng\> for english,
+#               <li>\<esp\> for spanish,
+#               <li>\<ger> for german</ul>
+#       <li>\<help_text\> Short explanation of the class's purpose, in different languages, as above
+#       <li>\<abstract\> True or False, field <b><em>abstract</em></b> of the <b><em>EmClass</em></b> 
+#       <li>\<pure_abstract\> True or False, field <b><em>pure_bastract</em></b> of the <b><em>EmClass</em></b>
+#       <li>\<group\><b><em>uid</em></b> of the group of the field <b><em>group</em></b> of the <b><em>EmClass</em></b>
+#       <li>\<fields\>: set of all the <b><em>EmField</em></b> of the <b><em>EmClass</em></b>\n
+#         for each field: \n
+#           \<field\>
+#               <ul><li>\<uid\> uid of the <b><em>EmField</em></b>
+#               <li>\<display_name\> field <b><em>display_name</em></b>  of the <b><em>EmField</em></b>, in different languages, as above
+#               <li>\<help_text\> Short explanation of the class's purpose, in different languages, as above
+#               <li>\<group\><b><em>uid</em></b> of the group of the field <b><em>group</em></b> of the <b><em>EmClass</em></b>
+#               <li>\<datahandler_name\> field <b><em>datahandler_name</em></b> of the Emfield, the name of a datahandler
+#               <li>\<datahandler_options\>, a list of xml items, each of them named with an option name and contains its value</ul></ul>
+# <li>\<groups\>: set of all the groups <b><em>EmGroup</em></b> in the model\n
+#    for each group:\n
+#       <ul><li>\<uid\> uid of the <b><em>EmField</em></b>
+#       <li>\<display_name\> field <b><em>display_name</em></b>  of the <b><em>EmField</em></b>, in different languages, as above
+#       <li>\<help_text\> Short explanation of the class's purpose, in different languages, as above
+#       <li>\<requires\> all uids of the <b><em>EmGroups</em></b> required by this group and which are in the fields <b><em>require</em></b>
+#       <li>\<components\> Set of all components of the <b><em>EmGroups</em></b>, representation of the field <b><em>__components</em></b> \n
+#         this item is splitted in two parts :\
+#           <ul><li>\<emfields\> all the emfields with, for each of them:\n
+#               \<emfield\> \n
+#                  <ul><li> \<uid\> <b><em>uid</em></b> of the <b><em>EmField</em></b></ul>
+#           <li>\<emclasses\> all the emclasses with, for each of them:\n
+#               \<emclass\> \n
+#                   <ul><li> \<uid\> <b><em>uid</em></b> of the <b><em>EmClass</em></b></ul></ul></ul>
+
+
+
+
+
+
 ##@brief Saves a model in a xml file
 # @param model EditorialModel : the model to save
 # @param filename str|None : if None display on stdout else writes in the file filename
+
 def save(model, **kwargs):
     Em = etree.Element("editorial_model")
     em_name = etree.SubElement(Em, 'name')
