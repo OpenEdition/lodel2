@@ -2,7 +2,6 @@
 
 import sys
 import os, os.path
-from plugins.mongodb_datasource.migration_handler import MongoDbMigrationHandler
 
 sys.path.append(os.path.dirname(os.getcwd()+'/..'))
 from lodel.settings.settings import Settings as settings
@@ -23,7 +22,3 @@ def refresh_dyncode(model_file, translator, output_filename):
         out_fd.write(dyncode)
     out_fd.close()
 
-def init_db(conn_args, editorial_model):
-    migration_handler = MongoDbMigrationHandler(editorial_model, conn_args)
-    migration_handler.init_db()
-    migration_handler.database.close()
