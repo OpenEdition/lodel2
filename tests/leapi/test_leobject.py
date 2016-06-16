@@ -243,3 +243,28 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             self.assertEqual(res.d.lodel_id, 1)
             self.assertEqual(res.d.firstname, 'foo')
             self.assertEqual(res.d.lastname, 'bar')
+
+    def test_get_mini(self):
+        """ Checking that LeObject.get method calls LeGetQuery correctly
+            when called with minimum args """
+            
+        with patch.object(
+            LeGetQuery, '__init__', return_value = None) as mock_init:
+        
+            try:
+                dyncode.Person.get(['lodel_id = 1'])
+            except AttributeError:
+                pass
+            
+            mock_init.assert_called_once_with(
+                dyncode.Person,
+                query_filters = ['lodel_id = 1'],
+                field_list = dyncode.Person.fieldnames(True),
+                order = None, group = None, limit = None, offset = 0)
+
+        with patch.object(
+            LeGetQuery, 'execute', return_value = []) as mock_exec:
+            
+            dyncode.Person.get(['lodel_id = 1'])
+            mock_exec.assert_called_once_with()
+
