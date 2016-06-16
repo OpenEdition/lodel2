@@ -99,15 +99,15 @@ class DataHandler(object):
     # @throw RunTimeError if data construction fails
     def construct_data(self, emcomponent, fname, datas, cur_value):
         emcomponent_fields = emcomponent.fields()
-        fname_data_handler = None
+        data_handler = None
         if fname in emcomponent_fields:
-            fname_data_handler = DataHandler.from_name(emcomponent_fields[fname])
+            data_handler = emcomponent_fields[fname]
 
         if fname in datas.keys():
             return cur_value
-        elif fname_data_handler is not None and hasattr(fname_data_handler, 'default'):
-                return fname_data_handler.default
-        elif fname_data_handler is not None and fname_data_handler.nullable:
+        elif data_handler is not None and hasattr(data_handler, 'default'):
+                return data_handler.default
+        elif data_handler is not None and data_handler.nullable:
                 return None
 
         return RuntimeError("Unable to construct data for field %s", fname)
