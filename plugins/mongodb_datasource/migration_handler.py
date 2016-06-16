@@ -6,7 +6,7 @@ from lodel.editorial_model.model import EditorialModel
 from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
-from ...leapi_dyncode import *
+from leapi_dyncode import *
 
 
 class MigrationHandlerChangeError(Exception):
