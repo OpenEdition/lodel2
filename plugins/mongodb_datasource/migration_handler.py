@@ -6,6 +6,7 @@ from lodel.editorial_model.model import EditorialModel
 from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
+from ...leapi_dyncode import *
 
 
 class MigrationHandlerChangeError(Exception):
@@ -32,10 +33,13 @@ class MongoDbMigrationHandler(object):
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, editorial_model, conn_args=None, **kwargs):
+    def __init__(self, editorial_model=None, conn_args=None, **kwargs):
         self.editorial_model = editorial_model
 
         conn_args = get_connection_args() if conn_args is None else conn_args
+
+        if editorial_model is None:
+            raise MongoDbMigrationHandler("Missing editorial model")
 
         if len(conn_args.keys()) == 0:
             raise MigrationHandlerError("No connection arguments were given")
@@ -61,11 +65,10 @@ class MongoDbMigrationHandler(object):
         #self._install_collections()
 
     def _set_init_collection_names(self):
-        collection_names = []
-        init_collections = self.editorial_model.all_classes()
-        for init_collection in init_collections.items():
-            if init_collection.abstract:
-                collection_names.append(init_collection.uid)
+        collection_names = ['relation']
+        for dynclass in dynclasses:
+            if dynclass._abstract:
+                collection_names.append(dynclass.__name__)
         return collection_names
 
     ## @brief Installs the basis collections of the database
