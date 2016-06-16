@@ -47,6 +47,16 @@ def refresh_dyncode():
 
 
 def init_all_dbs():
-    import leapi_dyncode
-    #TODO
+    import loader
+    import leapi_dyncode as dyncode
+    ds_cls = dict() # EmClass indexed by rw_datasource
+    for cls in dyncode.dynclasses:
+        ds = cls._datasource_name
+        if ds not in ds_cls:
+            ds_cls[ds] = [cls]
+        else:
+            ds_cls.append(cls)
+    
+    #TODO : iter on datasource, fetch ds module and ds option
+    # then instanciate corresponfing MH with given options
     pass

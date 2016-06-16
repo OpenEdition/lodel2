@@ -213,34 +213,13 @@ class LeObject(object):
     #initialise _rw_datasource attribute
     @classmethod
     def _init_datasource(cls, ds_name, ro):
-        expt_msg = "In LeAPI class '%s' " % cls.__name__
-        datasource_orig_name = ds_name
-        if ds_name not in Settings.datasources._fields:
-            expt_msg += "Unknow or unconfigured datasource %s"
-            expt_msg %= (ds_name, cls.__name__)
-            raise SettingsError(expt_msg)
-        
-        ds_identifier = getattr(Settings.datasources, ds_name)
-        read_only = getattr(ds_identifier, 'read_only')
-        try:
-            ds_identifier = getattr(ds_identifier, 'identifier')
-        except NameError:
-            expt_msg += "Datasource %s is missconfigured, missing identifier."
-            expt_msg %= ds_name
-            raise SettingsError(expt_msg)
-        if read_only and not ro:
-            expt_msg += "Error in datasource %s configuration. Trying to use \
-a read only as a read&write datasource"
-            expt_msg %= ds_name
-            raise SettingsError(expt_msg)
-
-        ds_plugin, ds_name = ds_identifier.split('.')
+        ds_plugin, ds_name = cls._get_ds_plugin_name(ds_name, ro)
         #Checks that the datasource is configured
         if ds_plugin not in Settings.datasource._fields:
             expt_msg += "Unknown or unconfigured datasource plugin %s"
             expt_msg %= ds_plugin
             raise SettingsError(expt_msg)
-
+        # fetching datasource configuration
         ds_conf = getattr(Settings.datasource, ds_plugin)
         if ds_name not in ds_conf._fields:
             expt_msg += "Unknown or unconfigured datasource instance %s"
@@ -263,6 +242,32 @@ raised when trying to import Datasource"
             ds_conf[k] = getattr(ds_conf_old, k)
 
         return datasource_class(**ds_conf)
+
+    ##@brief fetch datasource plugin name
+    #@return a tuple(DATASOURCE_PLUGIN_NAME, DATASOURCE_CONNECTION_NAME)
+    @classmethod
+    def _get_ds_plugin_name(cls, ds_name, ro):
+        expt_msg = "In LeAPI class '%s' " % cls.__name__
+        datasource_orig_name = ds_name
+        if ds_name not in Settings.datasources._fields:
+            expt_msg += "Unknow or unconfigured datasource %s"
+            expt_msg %= (ds_name, cls.__name__)
+            raise SettingsError(expt_msg)
+        # fetching connection identifier given datasource name
+        ds_identifier = getattr(Settings.datasources, ds_name)
+        read_only = getattr(ds_identifier, 'read_only')
+        try:
+            ds_identifier = getattr(ds_identifier, 'identifier')
+        except NameError:
+            expt_msg += "Datasource %s is missconfigured, missing identifier."
+            expt_msg %= ds_name
+            raise SettingsError(expt_msg)
+        if read_only and not ro:
+            expt_msg += "Error in datasource %s configuration. Trying to use \
+a read only as a read&write datasource"
+            expt_msg %= ds_name
+            raise SettingsError(expt_msg)
+        return ds_identifier.split('.')
     
     ##@brief Return the uid of the current LeObject instance
     #@return the uid value
