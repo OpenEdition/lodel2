@@ -445,7 +445,8 @@ raised when trying to import Datasource"
     @classmethod
     def prepare_datas(cls, datas, complete=False, allow_internal=True):
         if not complete:
-            warnings.warn("\nActual implementation can make datas construction and consitency unsafe when datas are not complete\n")
+            warnings.warn("\nActual implementation can make broken datas \
+construction and consitency when datas are not complete\n")
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
         if isinstance(ret_datas, Exception):
             raise ret_datas

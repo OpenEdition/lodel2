@@ -94,8 +94,8 @@ person.new_field(   'fullname',
                         'fre': 'Nom complet',
                     },
                     group = base_group,
-                    data_handler = 'varchar', # <-- should be concat type
-                    internal = True,
+                    data_handler = 'Concat',
+                    field_list = ['firstname', 'lastname'],
                     immutable = True,
 )
 person.new_field(   'alias',

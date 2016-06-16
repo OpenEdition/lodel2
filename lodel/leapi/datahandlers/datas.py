@@ -1,11 +1,13 @@
 #-*- coding: utf-8 -*-
 import warnings
+import inspect
 from lodel.leapi.datahandlers.datas_base import *
 
 ##@brief Data field designed to handle formated strings
 class FormatString(Varchar):
 
-    help = 'Automatic string field, designed to use the str % operator to build its content'
+    help = 'Automatic string field, designed to use the str % operator to \
+build its content'
     base_type = 'char'
 
     ##@brief Build its content with a field list and a format string
@@ -13,20 +15,14 @@ class FormatString(Varchar):
     # @param max_length int : the maximum length of the handled value
     # @param field_list list : List of field to use
     # @param **kwargs
-    def __init__(self, format_string, field_list, max_length, **kwargs):
+    def __init__(self, format_string, field_list, **kwargs):
         self._field_list = field_list
         self._format_string = format_string
-        super().__init__(internal='automatic', max_length=max_length)
+        super().__init__(internal='automatic',**kwargs)
 
-    def can_override(self, data_handler):
-        if not super().can_override(data_handler):
-            return False
-        if data_handler.max_length != self.max_length:
-            return False
-        return True
-    
     def construct_data(self, emcomponent, fname, datas, cur_value):
-        ret = self._format_string % tuple([ datas[fname] for fname in self._field_list ])
+        ret = self._format_string % tuple(
+            datas[fname] for fname in self._field_list)
         if len(ret) > self.max_length:
             warnings.warn("Format field overflow. Truncating value")
             ret = ret[:self.max_length-1]
@@ -35,7 +31,8 @@ class FormatString(Varchar):
 ##@brief Varchar validated by a regex
 class Regex(Varchar):
 
-    help = 'String field validated with a regex. Takes two options : max_length and regex'
+    help = 'String field validated with a regex. Takes two options : \
+max_length and regex'
     base_type = 'char'
 
     ##@brief A string field validated by a regex
@@ -44,14 +41,15 @@ class Regex(Varchar):
     # @param **kwargs
     def __init__(self, regex='', max_length=10, **kwargs):
         self.regex = regex
-        self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
+        self.compiled_re = re.compile(regex)#trigger an error if invalid regex
         super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
     def _check_data_value(self, value):
         error = None
         if not self.compiled_re.match(value):
             value = ''
-            error = TypeError('"%s" doesn\'t match the regex "%s"' % (value, self.regex))
+            msg = '"%s" doesn\'t match the regex "%s"' % (value, self.regex)
+            error = TypeError(msg)
         return value, error
 
     def can_override(self, data_handler):
@@ -88,9 +86,12 @@ class LeobjectSubclassIdentifier(Varchar):
 be internal")
         kwargs['internal'] = True
         super().__init__(**kwargs)
-
-    def _check_data_consistency(self, emcomponent, fname, datas):
-        datas[fname] = emcomponent.__class__.__name__
+    
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        cls = emcomponent
+        if not inspect.isclass(emcomponent):
+            cls = emcomponent.__class__
+        return cls.__name__
         
 ##@brief Data field designed to handle concatenated fields
 class Concat(FormatString):
@@ -102,11 +103,8 @@ class Concat(FormatString):
     # @param max_length int : the maximum length of the handled value
     # @param separator str
     # @param **kwargs    
-    def _init__(self, field_list, max_length, separator = ' ', **kwargs):
-        if not field_list is None:
-            format_string = '%s'
-            for i in range(1,len(field_list)):
-                format_string = format_string + separator + '%s'
-                
-        super().__init__(format_string, field_list, max_length, **kwargs)
+    def __init__(self, field_list, separator = ' ', **kwargs):
+        format_string = separator.join(['%s' for _ in field_list])
+        super().__init__(
+            format_string = format_string, field_list = field_list, **kwargs)
 
