@@ -3,7 +3,7 @@ import unittest
 import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 
-from lodel.leapi.leobject import LeApiDataCheckError
+from lodel.leapi.exceptions import LeApiDataCheckError
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
 
 class LeFilteredQueryTestCase(unittest.TestCase):

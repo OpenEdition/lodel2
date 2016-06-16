@@ -528,7 +528,7 @@ target to LeUpdateQuery constructor"
     #@returns the number of updated items
     #@todo change stategy for instance update. Datas should be allowed 
     #for execute method (and query)
-    def _query(self, filters, rel_filters, datas):
+    def _query(self, datas):
         uid_name = self._target_class._uid[0]
         if self.__leobject_instance is not None:
             #Instance update
@@ -629,7 +629,7 @@ class LeGetQuery(LeFilteredQuery):
         if 'group' in kwargs:
             #check kwargs['group']
             self.__group = kwargs['group']
-        if 'limit' in kwargs:
+        if 'limit' in kwargs and kwargs['limit'] is not None:
             try:
                 self.__limit = int(kwargs['limit'])
                 if self.__limit <= 0:
@@ -670,7 +670,7 @@ class LeGetQuery(LeFilteredQuery):
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
-    def _query(self):
+    def _query(self, datas = None):
         # select datas corresponding to query_filter
         l_datas=self._ro_datasource.select(  self._target_class,
                                     list(self.field_list),
