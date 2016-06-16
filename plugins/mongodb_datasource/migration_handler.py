@@ -44,7 +44,6 @@ class MigrationHandler(object):
             or 'username' not in conn_args.keys() or 'password' not in conn_args.keys():
             raise MigrationHandlerError("Missing connection arguments")
 
-        #self.connection_name = conn_args['name']
         self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
                                 username=conn_args['username'], password=conn_args['password'])
 
@@ -57,7 +56,7 @@ class MigrationHandler(object):
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
             MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
 
-        self.init_collections_names = self._set_init_collection_names()
+        self._set_init_collection_names()
 
     def _set_init_collection_names(self):
         collection_names = ['relation']
@@ -66,7 +65,7 @@ class MigrationHandler(object):
                 and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
                 and isinstance(dynclass._rw_datasource, MongoDbDatasource):
                 collection_names.append(dynclass.__name__)
-        return collection_names
+        self.init_collections_names = collection_names
 
     ## @brief Installs the basis collections of the database
     def init_db(self):
