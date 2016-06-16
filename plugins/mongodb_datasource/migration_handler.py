@@ -19,15 +19,14 @@ class MigrationHandlerError(Exception):
 @LodelHook('mongodb_mh_init_db')
 def mongodb_mh_init_db(conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
-    migration_handler = MongoDbMigrationHandler(conn_args=connection_args)
-    migration_handler._install_collections()
+    migration_handler = MigrationHandler(conn_args=connection_args)
+    migration_handler.init_db()
     migration_handler.database.close()
 
-class MongoDbMigrationHandler(object):
+class MigrationHandler(object):
 
     COMMANDS_IFEXISTS_DROP = 'drop'
     COMMANDS_IFEXISTS_NOTHING = 'nothing'
-    #INIT_COLLECTIONS_NAMES = ['object', 'relation', 'entitie', 'person', 'text', 'entry']
     MIGRATION_HANDLER_DEFAULT_SETTINGS = {'dry_run': False, 'foreign_keys': True, 'drop_if_exists': False}
 
     ## @brief Constructs a MongoDbMigrationHandler
@@ -50,16 +49,15 @@ class MongoDbMigrationHandler(object):
                                 username=conn_args['username'], password=conn_args['password'])
 
         self.dry_run = kwargs['dry_run'] if 'dry_run' in kwargs else \
-            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
+            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
 
         self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else \
-            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['foreign_keys']
+            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['foreign_keys']
 
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
-            MongoDbMigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
+            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
 
         self.init_collections_names = self._set_init_collection_names()
-        #self._install_collections()
 
     def _set_init_collection_names(self):
         collection_names = ['relation']
@@ -71,7 +69,7 @@ class MongoDbMigrationHandler(object):
         return collection_names
 
     ## @brief Installs the basis collections of the database
-    def _install_collections(self):
+    def init_db(self):
         init_collection_names = self.init_collections_names
         for collection_name in init_collection_names:
             prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
@@ -84,7 +82,7 @@ class MongoDbMigrationHandler(object):
     # @param if_exists str : defines the behavior to have if the collection to create already exists (default value : "nothing")
     def _create_collection(self, collection_name, charset='utf8', if_exists=COMMANDS_IFEXISTS_NOTHING):
         if collection_name in self.database.collection_names(include_system_collections=False):
-            if if_exists == MongoDbMigrationHandler.COMMANDS_IFEXISTS_DROP:
+            if if_exists == MigrationHandler.COMMANDS_IFEXISTS_DROP:
                 self._delete_collection(collection_name)
                 self.database.create_collection(name=collection_name)
         else:

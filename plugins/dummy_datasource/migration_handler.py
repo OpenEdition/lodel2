@@ -11,3 +11,5 @@ class DummyMigrationHandler(object):
     def register_model_state(self, em, state_hash):
         pass
 
+    def init_db(self):
+        pass

@@ -25,5 +25,5 @@ def refresh_dyncode(model_file, translator, output_filename):
 
 def init_db(conn_args, editorial_model):
     migration_handler = MongoDbMigrationHandler(editorial_model, conn_args)
-    migration_handler._install_collections()
+    migration_handler.init_db()
     migration_handler.database.close()
