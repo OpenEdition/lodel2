@@ -32,29 +32,10 @@ class MigrationHandler(object):
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, **kwargs):
-
-        conn_args = dict()
-        if 'host' in kwargs:
-            conn_args['host'] = kwargs['host']
-        if 'port' in kwargs:
-            conn_args['port'] = kwargs['port']
-        if 'db_name' in kwargs:
-            conn_args['db_name'] = kwargs['db_name']
-        if 'username' in kwargs:
-            conn_args['username'] = kwargs['username']
-        if 'password' in kwargs:
-            conn_args['password'] = kwargs['password']
+    def __init__(self, host, port, db_name, username, password, **kwargs):
+        conn_args = {'host': host, 'port': port, 'db_name': db_name,
+            'username': username, 'password': password}
         
-        if len(conn_args.keys()) == 0:
-            conn_args = get_connection_args()
-        if len(conn_args.keys()) == 0:
-            raise MigrationHandlerError("No connection arguments were given")
-
-        if 'host' not in conn_args.keys() or 'port' not in conn_args.keys() or 'db_name' not in conn_args.keys() \
-            or 'username' not in conn_args.keys() or 'password' not in conn_args.keys():
-            raise MigrationHandlerError("Missing connection arguments")
-
         self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
                                 username=conn_args['username'], password=conn_args['password'])
 
