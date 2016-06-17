@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 __loader__ = "main.py"
 __confspec__ = "confspec.py"
+
 __author__ = "Lodel2 dev team"
 __fullname__ = "MongoDB plugin"
 

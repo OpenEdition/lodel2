@@ -222,7 +222,7 @@ class LeObject(object):
             raise SettingsError(expt_msg)
         try:
             #fetching plugin name
-            ds_plugin_name, ds_name = cls._get_ds_plugin_name(ds_name, ro)
+            ds_plugin_name, ds_identifier = cls._get_ds_plugin_name(ds_name, ro)
         except NameError:
             expt_msg += "Datasource %s is missconfigured, missing identifier."
             expt_msg %= ds_name
@@ -237,7 +237,7 @@ a read only as a read&write datasource"
             raise SettingsError(expt_msg)
         
         try:
-            ds_conf = cls._get_ds_connection_conf(ds_name, ds_plugin_name)
+            ds_conf = cls._get_ds_connection_conf(ds_identifier, ds_plugin_name)
         except NameError as e:
             expt_msg += str(e)
             raise SettingsError(expt_msg)
@@ -254,22 +254,22 @@ raised when trying to import Datasource"
         return datasource_class(**ds_conf)
 
     ##@brief Try to fetch a datasource configuration
-    #@param ds_name str : datasource name
+    #@param ds_identifier str : datasource name
     #@param ds_plugin_name : datasource plugin name
     #@return a dict containing datasource initialisation options
     #@throw NameError if a datasource plugin or instance cannot be found
     @staticmethod
-    def _get_ds_connection_conf(ds_name,ds_plugin_name):
+    def _get_ds_connection_conf(ds_identifier,ds_plugin_name):
         if ds_plugin_name not in Settings.datasource._fields:
             msg = "Unknown or unconfigured datasource plugin %s"
             msg %= ds_plugin
             raise NameError(msg)
         ds_conf = getattr(Settings.datasource, ds_plugin_name)
-        if ds_name not in ds_conf._fields:
+        if ds_identifier not in ds_conf._fields:
             msg = "Unknown or unconfigured datasource instance %s"
             msg %= ds_identifier
             raise NameError(msg)
-        ds_conf = getattr(ds_conf, ds_name)
+        ds_conf = getattr(ds_conf, ds_identifier)
         return {k: getattr(ds_conf,k) for k in ds_conf._fields }
 
     ##@brief fetch datasource plugin name

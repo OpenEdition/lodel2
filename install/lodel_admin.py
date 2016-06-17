@@ -49,6 +49,9 @@ def refresh_dyncode():
 def init_all_dbs():
     import loader
     import leapi_dyncode as dyncode
+    from lodel.settings.utils import SettingsError
+    from lodel.leapi.leobject import LeObject
+    from lodel.plugin import Plugin
     ds_cls = dict() # EmClass indexed by rw_datasource
     for cls in dyncode.dynclasses:
         ds = cls._datasource_name
@@ -57,6 +60,24 @@ def init_all_dbs():
         else:
             ds_cls.append(cls)
     
+    for ds_name in ds_cls:  
+        # Fetching datasource plugin name and datasource connection 
+        # identifier
+        try:
+            plugin_name, ds_indentifier = LeObject._get_ds_pugin_name(
+                ds_name, False)
+        except (NameError, ValueError, RuntimeError):
+            raise SettingsError("Datasource configuration error")
+        # Fetching datasource connection option
+        con_conf=LeObject._get_ds_connection_conf(ds_identifier, plugin_name)
+        # Fetching migration handler class from plugin
+        plugin_module = Plugin.get(plugin_name).loader_module()
+        mh_cls = plugin_module.migration_handler
+        #Instanciate the migrationhandler and start db initialisation
+        mh = mh_cls(**con_conf)
+        mh.init_db(ds_cls[ds_name])
+        pass
+        
     #TODO : iter on datasource, fetch ds module and ds option
     # then instanciate corresponfing MH with given options
     pass
