@@ -48,23 +48,29 @@ def refresh_dyncode():
 
 def init_all_dbs():
     import loader
+    loader.start()
     import leapi_dyncode as dyncode
     from lodel.settings.utils import SettingsError
     from lodel.leapi.leobject import LeObject
     from lodel.plugin import Plugin
+    from lodel.plugin.hooks import LodelHook
+    from lodel import logger
+
+    LodelHook.call_hook('datasources_migration_init', __name__, None)
+
     ds_cls = dict() # EmClass indexed by rw_datasource
     for cls in dyncode.dynclasses:
         ds = cls._datasource_name
         if ds not in ds_cls:
             ds_cls[ds] = [cls]
         else:
-            ds_cls.append(cls)
+            ds_cls[ds].append(cls)
     
     for ds_name in ds_cls:  
         # Fetching datasource plugin name and datasource connection 
         # identifier
         try:
-            plugin_name, ds_indentifier = LeObject._get_ds_pugin_name(
+            plugin_name, ds_identifier = LeObject._get_ds_plugin_name(
                 ds_name, False)
         except (NameError, ValueError, RuntimeError):
             raise SettingsError("Datasource configuration error")
@@ -72,12 +78,25 @@ def init_all_dbs():
         con_conf=LeObject._get_ds_connection_conf(ds_identifier, plugin_name)
         # Fetching migration handler class from plugin
         plugin_module = Plugin.get(plugin_name).loader_module()
-        mh_cls = plugin_module.migration_handler
+        try:
+            mh_cls = plugin_module.migration_handler_class()
+        except NameError as e:
+            raise RuntimeError("Malformed plugin '%s'. Missing \
+migration_handler_class() function in loader file" % ds_name)
         #Instanciate the migrationhandler and start db initialisation
-        mh = mh_cls(**con_conf)
-        mh.init_db(ds_cls[ds_name])
-        pass
+        try:
+            mh = mh_cls(**con_conf)
+        except Exception as e:
+            msg = "Migration failed for datasource %s(%s.%s) at migration \
+handler instanciation : %s"
+            msg %= (ds_name, plugin_name, ds_identifier, e)
+            raise RuntimeError(msg)
+        try:
+            mh.init_db(ds_cls[ds_name])
+        except Exception as e:
+            msg = "Migration failed for datasource %s(%s.%s) when running \
+init_db method: %s"
+            msg %= (ds_name, plugin_name, ds_identifier, e)
+        logger.info("Database initialisation done for %s(%s.%s)" % (
+            ds_name, plugin_name, ds_identifier))
         
-    #TODO : iter on datasource, fetch ds module and ds option
-    # then instanciate corresponfing MH with given options
-    pass
