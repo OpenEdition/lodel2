@@ -19,8 +19,8 @@ class MigrationHandlerError(Exception):
 @LodelHook('mongodb_mh_init_db')
 def mongodb_mh_init_db(classes_list, conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
-    migration_handler = MigrationHandler(classes_list, conn_args=connection_args)
-    migration_handler.init_db()
+    migration_handler = MigrationHandler(conn_args=connection_args)
+    migration_handler.init_db(classes_list)
     migration_handler.database.close()
 
 class MigrationHandler(object):
@@ -32,11 +32,22 @@ class MigrationHandler(object):
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, classes_list, conn_args=None, **kwargs):
-        self._classes_handled = classes_list
+    def __init__(self, **kwargs):
 
-        conn_args = get_connection_args() if conn_args is None else conn_args
-
+        conn_args = dict()
+        if 'host' in kwargs:
+            conn_args['host'] = kwargs['host']
+        if 'port' in kwargs:
+            conn_args['port'] = kwargs['port']
+        if 'db_name' in kwargs:
+            conn_args['db_name'] = kwargs['db_name']
+        if 'username' in kwargs:
+            conn_args['username'] = kwargs['username']
+        if 'password' in kwargs:
+            conn_args['password'] = kwargs['password']
+        
+        if len(conn_args.keys()) == 0:
+            conn_args = get_connection_args()
         if len(conn_args.keys()) == 0:
             raise MigrationHandlerError("No connection arguments were given")
 
@@ -55,12 +66,12 @@ class MigrationHandler(object):
 
         self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
             MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
-
-        self._set_init_collection_names()
-
-    def _set_init_collection_names(self):
+            
+        self.init_collections_names = None
+        
+    def _set_init_collection_names(self, emclass_list):
         collection_names = ['relation']
-        for dynclass in self._classes_handled:
+        for dynclass in emclass_list:
             if not dynclass.is_abstract() \
                 and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
                 and isinstance(dynclass._rw_datasource, MongoDbDatasource):
@@ -68,7 +79,8 @@ class MigrationHandler(object):
         self.init_collections_names = collection_names
 
     ## @brief Installs the basis collections of the database
-    def init_db(self):
+    def init_db(self, emclass_list):
+        self.init_collections_names(emclass_list)
         init_collection_names = self.init_collections_names
         for collection_name in init_collection_names:
             prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
