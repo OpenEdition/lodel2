@@ -61,7 +61,7 @@ class MigrationHandler(object):
     def _set_init_collection_names(self):
         collection_names = ['relation']
         for dynclass in self._classes_handled:
-            if not dynclass._abstract \
+            if not dynclass.is_abstract() \
                 and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
                 and isinstance(dynclass._rw_datasource, MongoDbDatasource):
                 collection_names.append(dynclass.__name__)
