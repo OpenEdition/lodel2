@@ -17,9 +17,9 @@ class MigrationHandlerError(Exception):
     pass
 
 @LodelHook('mongodb_mh_init_db')
-def mongodb_mh_init_db(conn_args=None):
+def mongodb_mh_init_db(classes_list, conn_args=None):
     connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
-    migration_handler = MigrationHandler(conn_args=connection_args)
+    migration_handler = MigrationHandler(classes_list, conn_args=connection_args)
     migration_handler.init_db()
     migration_handler.database.close()
 
@@ -32,8 +32,8 @@ class MigrationHandler(object):
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, editorial_model=None, conn_args=None, **kwargs):
-        self.editorial_model = editorial_model
+    def __init__(self, classes_list, conn_args=None, **kwargs):
+        self._classes_handled = classes_list
 
         conn_args = get_connection_args() if conn_args is None else conn_args
 
@@ -60,8 +60,8 @@ class MigrationHandler(object):
 
     def _set_init_collection_names(self):
         collection_names = ['relation']
-        for dynclass in dynclasses:
-            if dynclass._abstract \
+        for dynclass in self._classes_handled:
+            if not dynclass._abstract \
                 and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
                 and isinstance(dynclass._rw_datasource, MongoDbDatasource):
                 collection_names.append(dynclass.__name__)
