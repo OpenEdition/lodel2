@@ -53,10 +53,7 @@ def init_all_dbs():
     from lodel.settings.utils import SettingsError
     from lodel.leapi.leobject import LeObject
     from lodel.plugin import Plugin
-    from lodel.plugin.hooks import LodelHook
     from lodel import logger
-
-    LodelHook.call_hook('datasources_migration_init', __name__, None)
 
     ds_cls = dict() # EmClass indexed by rw_datasource
     for cls in dyncode.dynclasses:
