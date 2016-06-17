@@ -232,6 +232,9 @@ class LeObject(object):
 a read only as a read&write datasource"
             expt_msg %= ds_name
             raise SettingsError(expt_msg)
+        except ValueError as e:
+            expt_msg += str(e)
+            raise SettingsError(expt_msg)
         
         try:
             ds_conf = cls._get_ds_connection_conf(ds_name, ds_plugin_name)
@@ -287,7 +290,11 @@ raised when trying to import Datasource"
             raise e
         if read_only and not ro:
             raise RuntimeError()
-        return ds_identifier.split('.')
+        res = ds_identifier.split('.')
+        if len(res) != 2:
+            raise ValueError("expected value for identifier is like \
+DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
+        return res
     
     ##@brief Return the uid of the current LeObject instance
     #@return the uid value
