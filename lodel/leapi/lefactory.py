@@ -132,6 +132,7 @@ class {clsname}({parents}):
     _ro_datasource = None
     _rw_datasource = None
     _datasource_name = {datasource_name}
+    _child_classes = None
 
 """.format(
     clsname = LeObject.name2objname(em_class.uid),
@@ -143,9 +144,11 @@ class {clsname}({parents}):
         res += em_cls_code
         # Dyncode fields bootstrap instructions
         bootstrap += """{classname}._set__fields({fields})
+{classname}._child_classes = {child_classes}
 """.format(
     classname = LeObject.name2objname(em_class.uid),
     fields = '{' + (', '.join(['\n\t%s: %s' % (repr(emfield.uid),data_handler_constructor(emfield)) for emfield in em_class.fields()])) + '}',
+    child_classes = '(' + (', '.join([ LeObject.name2objname(emcls.uid) for emcls in model.get_class_childs(em_class.uid)]))+ ')',
 )
     bootstrap += "\n"
     return res, set(imports), bootstrap

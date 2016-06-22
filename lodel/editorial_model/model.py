@@ -96,7 +96,19 @@ class EditorialModel(object):
                                         uid)
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
-             
+    
+    ##@brief EmClass child list accessor
+    #@param uid str : the EmClass uid
+    #@return a set of EmClass
+    def get_class_childs(self, uid):
+        res = list()
+        cur = self.classes(uid)
+        for cls in self.classes():
+            if cur in cls.parents_recc:
+                res.append(cls)
+        return set(res)
+
+
     ##@brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator

@@ -57,8 +57,10 @@ class LeObject(object):
     _uid = None 
     ##@brief Read only datasource ( see @ref lodel2_datasources )
     _ro_datasource = None
-    ##@breif Read & write datasource ( see @ref lodel2_datasources )
+    ##@brief Read & write datasource ( see @ref lodel2_datasources )
     _rw_datasource = None
+    ##@brief Store the list of child classes
+    _child_classes = None
 
     def __new__(cls, **kwargs):
         
@@ -201,6 +203,13 @@ class LeObject(object):
                 res.append(cur)
         return res
     
+    ##@brief Return a tuple a child classes
+    #@return a tuple of child classes
+    @classmethod
+    def child_classes(cls):
+        return copy.copy(cls._child_classes)
+        
+
     ##@brief Return the parent class that is the "source" of uid
     #
     #The method goal is to return the parent class that defines UID.
