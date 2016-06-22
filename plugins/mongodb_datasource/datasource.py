@@ -85,7 +85,7 @@ class MongoDbDatasource(object):
             target, filters, rel_filters)
         query_result_ordering = None
         if order is not None:
-            query_result_ordering = parse_query_order(order)
+            query_result_ordering = utils.parse_query_order(order)
         results_field_list = None if len(field_list) == 0 else field_list
         limit = limit if limit is not None else 0
 
@@ -164,7 +164,7 @@ class MongoDbDatasource(object):
     # @return list : list of the inserted records' ids
     def insert_multi(self, target, datas_list):
         res = self.__collection(target).insert_many(datas_list)
-        return list(result.inserted_ids)
+        return list(res.inserted_ids)
 
     ##@brief Connect to database
     #@not this method avoid opening two times the same connection using
