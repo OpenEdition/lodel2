@@ -7,3 +7,6 @@ dyncode:
 
 init_db: dyncode
 	$(python) -c 'import lodel_admin; lodel_admin.init_all_dbs()'
+
+list_hooks: dyncode
+	$(python) -c 'import lodel_admin; lodel_admin.list_registered_hooks()'

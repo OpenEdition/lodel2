@@ -96,4 +96,22 @@ init_db method: %s"
             msg %= (ds_name, plugin_name, ds_identifier, e)
         logger.info("Database initialisation done for %s(%s.%s)" % (
             ds_name, plugin_name, ds_identifier))
-        
+
+def list_registered_hooks():
+    import loader
+    loader.start()
+    from lodel.plugin.hooks import LodelHook
+    hlist = LodelHook.hook_list()
+    print("Registered hooks are : ")
+    for name in sorted(hlist.keys()):
+        print("\t- %s is registered by : " % name)
+        for reg_hook in hlist[name]:
+            hook, priority = reg_hook
+            msg = "\t\t- {modname}.{funname} with priority : {priority}"
+            msg = msg.format(
+                modname = hook.__module__,
+                funname = hook.__name__,
+                priority = priority)
+            print(msg)
+        print("\n")
+
