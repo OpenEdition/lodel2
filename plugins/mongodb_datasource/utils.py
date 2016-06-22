@@ -67,7 +67,10 @@ def connect(host, port, db_name, username, password):
 # @param class_object EmClass
 # @return str
 def object_collection_name(class_object):
-    return class_object.__name__
+    if class_object.abstract:
+        return class_object.__name__
+    else:
+        return object_collection_name(class_object.__base__)
 
 
 ## @brief Determine a collection field name given a lodel2 fieldname
