@@ -153,7 +153,8 @@ text.new_field(    'subtitle',
                     },
                     group = editorial_group,
                     data_handler = 'varchar',
-                    nullable = True)
+                    nullable = True,
+                    default = None)
 
 # Classe collection
 collection = em.new_class(  'collection',
@@ -205,7 +206,9 @@ section.new_field(  'childs',
                     group = editorial_group,
                     data_handler = 'hierarch',
                     allowed_classes = [subsection],
-                    back_reference = ('subsection', 'parent'))
+                    back_reference = ('subsection', 'parent'),
+                    default = None,
+                    nullable = True)
 
 subsection.new_field(   'parent',
                         display_name = 'Parent',
@@ -286,7 +289,9 @@ text.new_field( 'linked_persons',
                 data_handler = 'list',
                 back_reference = ('Person', 'linked_texts'),
                 group = editorial_person_group,
-                allowed_classes = [person])
+                allowed_classes = [person],
+                default = None,
+                nullable = True)
 
 #####################
 # Index classes     # <--- Note :   using a different datasource for testing
@@ -327,7 +332,9 @@ text.new_field( 'indexes',
         'fre': 'Indexes'},
     data_handler = 'list',
     back_reference = ('Indexabs', 'texts'),
-    allowed_classes = [index_abstract])
+    allowed_classes = [index_abstract],
+    default = None,
+    nullable = True)
 
 index_abstract.new_field( 'texts',
     display_name = {

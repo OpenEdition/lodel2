@@ -6,7 +6,7 @@ class MongoDbMigrationHandlerTestCase(unittest.TestCase):
 
     def test_check_connection_args(self):
         empty_connection_args = {}
-        with self.assertRaises(MigrationHandlerError):
+        with self.assertRaises(TypeError):
             MigrationHandler(empty_connection_args)
 
         bad_connection_args_dicts = [
@@ -15,7 +15,7 @@ class MongoDbMigrationHandlerTestCase(unittest.TestCase):
             {'host': 'localhost', 'port': 28015, 'login':'lodel', 'password': 'lap'}
         ]
         for bad_connection_args_dict in bad_connection_args_dicts:
-            with self.assertRaises(MigrationHandlerError):
+            with self.assertRaises(TypeError):
                 MigrationHandler(bad_connection_args_dict)
 
     ## @todo pass the connection arguments in the settings
