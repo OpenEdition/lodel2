@@ -67,7 +67,6 @@ class MigrationHandler(object):
         for collection_name in [ object_collection_name(cls)
             for cls in emclass_list]:
             self._create_collection(collection_name)
-            logger.debug("Collection %s created" % collection_name)
 
     ## @brief Creates a collection in the database
     # @param collection_name str
@@ -77,9 +76,15 @@ class MigrationHandler(object):
         if collection_name in self.database.collection_names(include_system_collections=False):
             if if_exists == MigrationHandler.COMMANDS_IFEXISTS_DROP:
                 self._delete_collection(collection_name)
+                logger.debug("Collection %s deleted before creating \
+it again" % collection_name)
                 self.database.create_collection(name=collection_name)
+            else:
+                logger.info("Collection %s allready exists. \
+Doing nothing..." % collection_name)
         else:
             self.database.create_collection(name=collection_name)
+            logger.debug("Collection %s created" % collection_name)
 
     ## @brief Deletes a collection in the database
     # @param collection_name str
