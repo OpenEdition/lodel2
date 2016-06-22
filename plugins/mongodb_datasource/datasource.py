@@ -91,56 +91,63 @@ class MongoDbDatasource(object):
     #@return list
     #@todo Implement the relations
     def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None, offset=0):
-        # Default arg init
-        filters = [] if filters is None else filters
-        rel_filters = [] if rel_filters is None else rel_filters
-
-        collection_name = object_collection_name(target)
-        collection = self.database[collection_name]
-
-        query_filters = self.__process_filters(
-            target, filters, rel_filters)
-        query_result_ordering = None
-        if order is not None:
-            query_result_ordering = utils.parse_query_order(order)
-        results_field_list = None if len(field_list) == 0 else field_list
-        limit = limit if limit is not None else 0
-
-        if group is None:
-            cursor = collection.find(
-                filter=query_filters, projection=results_field_list,
-                skip=offset, limit=limit, sort=query_result_ordering)
-        else:
-            pipeline = list()
-            unwinding_list = list()
-            grouping_dict = OrderedDict()
-            sorting_list = list()
-            for group_param in group:
-                field_name = group_param[0]
-                field_sort_option = group_param[1]
-                sort_option = MONGODB_SORT_OPERATORS_MAP[field_sort_option]
-                unwinding_list.append({'$unwind': '$%s' % field_name})
-                grouping_dict[field_name] = '$%s' % field_name
-                sorting_list.append((field_name, sort_option))
-
-            sorting_list.extends(query_result_ordering)
-
-            pipeline.append({'$match': query_filters})
-            if results_field_list is not None:
-                pipeline.append({
-                    '$project': SON([{field_name: 1}
-                    for field_name in field_list])})
-            pipeline.extend(unwinding_list)
-            pipeline.append({'$group': grouping_dict})
-            pipeline.extend({'$sort': SON(sorting_list)})
-            if offset > 0:
-                pipeline.append({'$skip': offset})
-            if limit is not None:
-                pipeline.append({'$limit': limit})
-
         results = list()
-        for document in cursor:
-            results.append(document)
+        if target.abstract:
+            target_childs = target.child_classes()
+            for target_child in target_childs:
+                results.append(self.select(target=target, field_list=field_list, filters=filters,
+                                           rel_filters=rel_filters, order=order, group=group, limit=limit,
+                                           offset=offset))
+        else:
+            # Default arg init
+            filters = [] if filters is None else filters
+            rel_filters = [] if rel_filters is None else rel_filters
+
+            collection_name = object_collection_name(target)
+            collection = self.database[collection_name]
+
+            query_filters = self.__process_filters(target, filters, rel_filters)
+            query_result_ordering = None
+            if order is not None:
+                query_result_ordering = utils.parse_query_order(order)
+            results_field_list = None if len(field_list) == 0 else field_list
+            limit = limit if limit is not None else 0
+
+            if group is None:
+                cursor = collection.find(
+                    filter=query_filters, projection=results_field_list,
+                    skip=offset, limit=limit, sort=query_result_ordering)
+            else:
+                pipeline = list()
+                unwinding_list = list()
+                grouping_dict = OrderedDict()
+                sorting_list = list()
+                for group_param in group:
+                    field_name = group_param[0]
+                    field_sort_option = group_param[1]
+                    sort_option = MONGODB_SORT_OPERATORS_MAP[field_sort_option]
+                    unwinding_list.append({'$unwind': '$%s' % field_name})
+                    grouping_dict[field_name] = '$%s' % field_name
+                    sorting_list.append((field_name, sort_option))
+
+                sorting_list.extends(query_result_ordering)
+
+                pipeline.append({'$match': query_filters})
+                if results_field_list is not None:
+                    pipeline.append({
+                        '$project': SON([{field_name: 1}
+                        for field_name in field_list])})
+                pipeline.extend(unwinding_list)
+                pipeline.append({'$group': grouping_dict})
+                pipeline.extend({'$sort': SON(sorting_list)})
+                if offset > 0:
+                    pipeline.append({'$skip': offset})
+                if limit is not None:
+                    pipeline.append({'$limit': limit})
+
+            #results = list()
+            for document in cursor:
+                results.append(document)
 
         return results
 
