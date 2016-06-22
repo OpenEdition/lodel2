@@ -75,6 +75,12 @@ class UniqID(Integer):
     def _check_data_value(self, value):
         return value, None
 
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        if cur_value is None:
+            #Ask datasource to provide a new uniqID
+            return emcomponent._ro_datasource.new_numeric_id(emcomponent)
+        return cur_value
+
 class LeobjectSubclassIdentifier(Varchar):
     
     help = 'Datahandler designed to handle LeObject subclass identifier in DB'

@@ -93,6 +93,7 @@ class DateTime(DataField):
     def construct_data(self, emcomponent, fname, datas, cur_value):
         if (self.now_on_create and cur_value is None) or self.now_on_update:
             return datetime.datetime.now()
+        return cur_value
 
 ##@brief Data field designed to handle long string
 class Text(DataField):

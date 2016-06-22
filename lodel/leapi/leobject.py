@@ -181,6 +181,45 @@ class LeObject(object):
     def fields(cls):
         return copy.copy(cls._fields)
     
+    ##@brief Return the list of parents classes
+    #
+    #@note the first item of the list is the current class, the second is it's
+    #parent etc...
+    #@param cls
+    #@warning multiple inheritance broken by this method
+    #@return a list of LeObject child classes
+    #@todo multiple parent capabilities implementation
+    @classmethod
+    def hierarch(cls):
+        res = [cls]
+        cur = cls
+        while True:
+            cur = cur.__bases__[0] # Multiple inheritance broken HERE
+            if cur in (LeObject, object):
+                break
+            else:
+                res.append(cur)
+        return res
+    
+    ##@brief Return the parent class that is the "source" of uid
+    #
+    #The method goal is to return the parent class that defines UID.
+    #@return a LeObject child class or false if no UID defined
+    @classmethod
+    def uid_source(cls):
+        if cls._uid is None or len(cls._uid) == 0:
+            return False
+        hierarch = cls.hierarch()
+        prev = hierarch[0]
+        uid_handlers = set( cls._fields[name] for name in cls._uid )
+        for pcls in cls.hierarch()[1:]:
+            puid_handlers = set(cls._fields[name] for name in pcls._uid)
+            if set(pcls._uid) != set(pcls._uid) \
+                or puid_handlers != uid_handlers:
+                break
+            prev = pcls
+        return prev
+    
     ##@brief Initialise both datasources (ro and rw)
     #
     #This method is used once at dyncode load to replace the datasource string

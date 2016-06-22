@@ -66,6 +66,18 @@ class MongoDbDatasource(object):
             del(self._connections[self.__conn_hash])
             logger.info("Closing connection to database")
 
+    ##@brief Provide a new uniq numeric ID
+    #@param emcomp LeObject subclass (not instance) : To know on wich things we
+    #have to be uniq
+    #@warning multiple UID broken by this method
+    #@return an integer
+    def new_numeric_id(self, emcomp):
+        target = emcomp.uid_source()
+        tuid = target._uid[0] # Multiple UID broken here
+        results = self.select(
+            target, [tuid], [], order=[(tuid, 'DESC')], limit = 1)
+        return results[0][tuid]+1
+
     ##@brief returns a selection of documents from the datasource
     #@param target Emclass
     #@param field_list list
@@ -78,7 +90,11 @@ class MongoDbDatasource(object):
     #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     #@return list
     #@todo Implement the relations
-    def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0):
+    def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None, offset=0):
+        # Default arg init
+        filters = [] if filters is None else filters
+        rel_filters = [] if rel_filters is None else rel_filters
+
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         query_filters = self.__process_filters(

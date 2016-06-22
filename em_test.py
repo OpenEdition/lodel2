@@ -19,11 +19,18 @@ base_group = em.new_group(  'base_group',
 ####################
 #   Lodel Object   #
 ####################
+em_abstract = em.new_class( 'abstract_object',
+    display_name = 'Abstract lodel object',
+    help_text = 'For testing purpose',
+    group = base_group,
+    abstract = True)
+
 em_object = em.new_class(   'object',
                             display_name = 'Object',
                             help_text = 'Main class for all Em objects',
                             group = base_group,
                             abstract = True,
+                            parents = em_abstract,
 )
 em_object.new_field(    'lodel_id',
                         display_name = 'Lodel identifier',
