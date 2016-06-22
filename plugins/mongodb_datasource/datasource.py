@@ -98,10 +98,6 @@ class MongoDbDatasource(object):
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
 
-        if not target.abstract:
-            # Add the class name to the filters
-            filters.append(('classname', '=', target.__name__))
-
         query_filters = self.__process_filters(
             target, filters, rel_filters)
         query_result_ordering = None
