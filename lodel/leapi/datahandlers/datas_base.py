@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 import warnings
+import datetime
 
 from lodel.leapi.datahandlers.base_classes import DataField
 
@@ -88,6 +89,10 @@ class DateTime(DataField):
     def _check_data_value(self, value):
         error = None
         return value, error
+
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        if (self.now_on_create and cur_value is None) or self.now_on_update:
+            return datetime.datetime.now()
 
 ##@brief Data field designed to handle long string
 class Text(DataField):

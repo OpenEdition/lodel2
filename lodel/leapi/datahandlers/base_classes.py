@@ -47,11 +47,11 @@ class DataHandler(object):
         self.immutable = False
         self.primary_key = False
         self.internal = False
-        if 'defaults' in kwargs:
+        if 'default' in kwargs:
             self.default, error = self.check_data_value(kwargs['default'])
             if error:
                 raise error
-            del(args['default'])
+            del(kwargs['default'])
 
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
