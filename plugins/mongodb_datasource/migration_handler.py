@@ -3,7 +3,7 @@ import datetime
 
 from lodel.editorial_model.components import EmClass, EmField
 from lodel.editorial_model.model import EditorialModel
-from .utils import get_connection_args, connect, collection_prefix, object_collection_name, mongo_fieldname
+from .utils import connect, object_collection_name, mongo_fieldname
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
 from leapi_dyncode import *
@@ -17,51 +17,22 @@ class MigrationHandlerChangeError(Exception):
 class MigrationHandlerError(Exception):
     pass
 
-@LodelHook('mongodb_mh_init_db')
-def mongodb_mh_init_db(classes_list, conn_args=None):
-    connection_args = get_connection_args('default') if conn_args is None else get_connection_args(conn_args['name'])
-    migration_handler = MigrationHandler(conn_args=connection_args)
-    migration_handler.init_db(classes_list)
-    migration_handler.database.close()
-
 class MigrationHandler(object):
-
-    COMMANDS_IFEXISTS_DROP = 'drop'
-    COMMANDS_IFEXISTS_NOTHING = 'nothing'
-    MIGRATION_HANDLER_DEFAULT_SETTINGS = {'dry_run': False, 'foreign_keys': True, 'drop_if_exists': False}
 
     ## @brief Constructs a MongoDbMigrationHandler
     # @param conn_args dict : a dictionary containing the connection options
     # @param **kwargs : extra arguments
-    def __init__(self, host, port, db_name, username, password, **kwargs):
-        conn_args = {'host': host, 'port': port, 'db_name': db_name,
-            'username': username, 'password': password}
-        
-        self.database = connect(host=conn_args['host'], port=conn_args['port'], db_name=conn_args['db_name'],
-                                username=conn_args['username'], password=conn_args['password'])
+    def __init__(self, host, port, db_name, username, password,
+        charset='utf-8', dry_run = False, drop_if_exists = False):
 
-        self.dry_run = kwargs['dry_run'] if 'dry_run' in kwargs else \
-            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['dry_run']
-
-        self.foreign_keys = kwargs['foreign_keys'] if 'foreign_keys' in kwargs else \
-            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['foreign_keys']
-
-        self.drop_if_exists = kwargs['drop_if_exists'] if 'drop_is_exists' in kwargs else \
-            MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
+        self.database = connect(host, port, db_name, username, password)
+        self.dry_run = dry_run
+        self.drop_if_exists = drop_if_exists
+        self.charset = charset # Useless ?
             
-        self.init_collections_names = None
         logger.debug("MongoDb migration handler instanciated on db : \
 %s@%s:%s" % (db_name, host, port))
         
-    def _set_init_collection_names(self, emclass_list):
-        collection_names = ['relation']
-        for dynclass in emclass_list:
-            if not dynclass.is_abstract() \
-                and isinstance(dynclass._ro_datasource,MongoDbDatasource) \
-                and isinstance(dynclass._rw_datasource, MongoDbDatasource):
-                collection_names.append(dynclass.__name__)
-        self.init_collections_names = collection_names
-
     ## @brief Installs the basis collections of the database
     def init_db(self, emclass_list):
         for collection_name in [ object_collection_name(cls)
@@ -71,10 +42,11 @@ class MigrationHandler(object):
     ## @brief Creates a collection in the database
     # @param collection_name str
     # @param charset str : default value is "utf8"
-    # @param if_exists str : defines the behavior to have if the collection to create already exists (default value : "nothing")
-    def _create_collection(self, collection_name, charset='utf8', if_exists=COMMANDS_IFEXISTS_NOTHING):
-        if collection_name in self.database.collection_names(include_system_collections=False):
-            if if_exists == MigrationHandler.COMMANDS_IFEXISTS_DROP:
+    def _create_collection(self, collection_name):
+        existing = self.database.collection_names(
+            include_system_collections=False)
+        if collection_name in existing:
+            if self.drop_if_exists:
                 self._delete_collection(collection_name)
                 logger.debug("Collection %s deleted before creating \
 it again" % collection_name)
@@ -139,9 +111,8 @@ Doing nothing..." % collection_name)
     ## @brief deletes a collection corresponding to a given uid
     # @see register_change()
     def _emclass_delete(self, model, uid, initial_state, new_state):
-        if uid not in self.init_collections_names:
-            collection_name = object_collection_name(model.classes(uid))
-            self._delete_collection(collection_name)
+        collection_name = object_collection_name(model.classes(uid))
+        self._delete_collection(collection_name)
 
     ## @brief creates a new field in a collection
     # @see register_change()

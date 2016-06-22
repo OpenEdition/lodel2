@@ -10,12 +10,6 @@ common_collections = {
     'relation': 'relation'
 }
 
-collection_prefix = {
-    'relation': 'rel_',
-    'object': 'class_'
-}
-
-
 LODEL_SORT_OPERATORS_MAP = {
     'ASC': pymongo.ASCENDING,
     'DESC': pymongo.DESCENDING
@@ -31,14 +25,6 @@ MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
 
 class MongoDbConnectionError(Exception):
     pass
-
-
-## @brief gets the settings given a connection name
-# @param connection_name str
-# @return dict
-# @todo Use the settings module to store the connections parameters
-def get_connection_args(connnection_name='default'):
-    return {'host': 'localhost', 'port': 28015, 'login': 'lodel_admin', 'password': 'lapwd', 'dbname': 'lodel'}
 
 
 def connection_string(host, port, username, password):

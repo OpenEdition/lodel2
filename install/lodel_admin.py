@@ -81,7 +81,12 @@ def init_all_dbs():
             raise RuntimeError("Malformed plugin '%s'. Missing \
 migration_handler_class() function in loader file" % ds_name)
         #Instanciate the migrationhandler and start db initialisation
+        if con_conf['read_only'] is True:
+            raise SettingsError("Trying to instanciate a migration handler \
+with a read only datasource")
         try:
+            if 'read_only' in con_conf:
+                del(con_conf['read_only'])
             mh = mh_cls(**con_conf)
         except Exception as e:
             msg = "Migration failed for datasource %s(%s.%s) at migration \
