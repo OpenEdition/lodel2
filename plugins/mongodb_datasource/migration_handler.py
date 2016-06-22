@@ -8,6 +8,7 @@ from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
 from leapi_dyncode import *
 from .datasource import MongoDbDatasource
+from lodel import logger
 
 class MigrationHandlerChangeError(Exception):
     pass
@@ -49,6 +50,8 @@ class MigrationHandler(object):
             MigrationHandler.MIGRATION_HANDLER_DEFAULT_SETTINGS['drop_if_exists']
             
         self.init_collections_names = None
+        logger.debug("MongoDb migration handler instanciated on db : \
+%s@%s:%s" % (db_name, host, port))
         
     def _set_init_collection_names(self, emclass_list):
         collection_names = ['relation']
@@ -61,12 +64,10 @@ class MigrationHandler(object):
 
     ## @brief Installs the basis collections of the database
     def init_db(self, emclass_list):
-        self.init_collections_names(emclass_list)
-        init_collection_names = self.init_collections_names
-        for collection_name in init_collection_names:
-            prefix = collection_prefix['object'] if collection_name != 'relation' else collection_prefix['relation']
-            collection_to_create = "%s%s" % (prefix, collection_name)
-            self._create_collection(collection_name=collection_to_create)
+        for collection_name in [ object_collection_name(cls)
+            for cls in emclass_list]:
+            self._create_collection(collection_name)
+            logger.debug("Collection %s created" % collection_name)
 
     ## @brief Creates a collection in the database
     # @param collection_name str
