@@ -81,13 +81,7 @@ def connect(host, port, db_name, username, password):
 # @param class_object EmClass
 # @return str
 def object_collection_name(class_object):
-    if not class_object.pure_abstract:
-        class_parent = class_object.parents[0].uid
-        collection_name = ("%s%s" % (collection_prefix['object'], class_parent)).lower()
-    else:
-        collection_name = ("%s%s" % (collection_prefix['object'], class_object.name)).lower()
-
-    return collection_name
+    return class_object.__name__
 
 
 ## @brief Determine a collection field name given a lodel2 fieldname

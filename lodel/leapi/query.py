@@ -465,10 +465,8 @@ class LeInsertQuery(LeQuery):
     # @param new_datas : datas to be inserted
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
-        nb_inserted = self._rw_datasource.insert(self._target_class,datas)
-        if nb_inserted <= 0:
-            raise LeApiQueryError("Insertion error")
-        return nb_inserted
+        id_inserted = self._rw_datasource.insert(self._target_class,datas)
+        return id_inserted
     """
     ## @brief Implements an insert query operation, with multiple insertions
     # @param datas : list of **datas to be inserted
@@ -610,15 +608,15 @@ class LeGetQuery(LeFilteredQuery):
         super().__init__(target_class, query_filters)
         
         ##@brief The fields to get
-        self.__field_list = None
+        self._field_list = None
         ##@brief An equivalent to the SQL ORDER BY
-        self.__order = None
+        self._order = None
         ##@brief An equivalent to the SQL GROUP BY
-        self.__group = None
+        self._group = None
         ##@brief An equivalent to the SQL LIMIT x
-        self.__limit = None
+        self._limit = None
         ##@brief An equivalent to the SQL LIMIT x, OFFSET
-        self.__offset = 0
+        self._offset = 0
         
         # Checking kwargs and assigning default values if there is some
         for argname in kwargs:
@@ -633,22 +631,22 @@ class LeGetQuery(LeFilteredQuery):
 
         if 'order' in kwargs:
             #check kwargs['order']
-            self.__order = kwargs['order']
+            self._order = kwargs['order']
         if 'group' in kwargs:
             #check kwargs['group']
-            self.__group = kwargs['group']
+            self._group = kwargs['group']
         if 'limit' in kwargs and kwargs['limit'] is not None:
             try:
-                self.__limit = int(kwargs['limit'])
-                if self.__limit <= 0:
+                self._limit = int(kwargs['limit'])
+                if self._limit <= 0:
                     raise ValueError()
             except ValueError:
                 msg = "limit argument expected to be an interger > 0"
                 raise ValueError(msg)
         if 'offset' in kwargs:
             try:
-                self.__offset = int(kwargs['offset'])
-                if self.__offset < 0:
+                self._offset = int(kwargs['offset'])
+                if self._offset < 0:
                     raise ValueError()
             except ValueError:
                 msg = "offset argument expected to be an integer >= 0"
@@ -670,7 +668,7 @@ class LeGetQuery(LeFilteredQuery):
         if len(err_l) > 0:
             msg = "Error while setting field_list in a get query"
             raise LeApiQueryErrors(msg = msg, exceptions = err_l)
-        self.__field_list = list(set(field_list))
+        self._field_list = list(set(field_list))
     
     ##@brief Execute the get query
     def execute(self, datas = None):
@@ -680,25 +678,25 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
     def _query(self, datas = None):
         # select datas corresponding to query_filter
-        l_datas=self._ro_datasource.select(  self._target_class,
-                                    list(self.field_list),
-                                    self.query_filter,
-                                    None,
-                                    self.__order,
-                                    self.__group,
-                                    self.__limit,
-                                    self.offset,
-                                    False)
+        l_datas=self._ro_datasource.select( 
+            target = self._target_class,
+            field_list = list(self._field_list),
+            filters = self._query_filter[0],
+            rel_filters = self._query_filter[1],
+            order = self._order,
+            group = self._group,
+            limit = self._limit,
+            offset = self._offset)
         return l_datas
     
     ##@return a dict with query infos
     def dump_infos(self):
         ret = super().dump_infos()
-        ret.update( {   'field_list' : self.__field_list,
-                        'order' : self.__order,
-                        'group' : self.__group,
-                        'limit' : self.__limit,
-                        'offset': self.__offset,
+        ret.update( {   'field_list' : self._field_list,
+                        'order' : self._order,
+                        'group' : self._group,
+                        'limit' : self._limit,
+                        'offset': self._offset,
         })
         return ret
 

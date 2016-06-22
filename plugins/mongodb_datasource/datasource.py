@@ -82,7 +82,7 @@ class MongoDbDatasource(object):
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
         query_filters = self.__process_filters(
-            target, filters, relational_filters)
+            target, filters, rel_filters)
         query_result_ordering = None
         if order is not None:
             query_result_ordering = parse_query_order(order)
@@ -155,15 +155,15 @@ class MongoDbDatasource(object):
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
-        res = self.__collection(target).insert_one(new_datas)
-        return res.inserted_id
+        res = self.__collection(target).insert(new_datas)
+        return str(res)
 
     ## @brief Inserts a list of records in a given collection
     # @param target Emclass : class of the objects inserted
     # @param datas_list list : list of dict
     # @return list : list of the inserted records' ids
     def insert_multi(self, target, datas_list):
-        res = self.__collection.insert_many(datas_list)
+        res = self.__collection(target).insert_many(datas_list)
         return list(result.inserted_ids)
 
     ##@brief Connect to database
@@ -225,21 +225,20 @@ class MongoDbDatasource(object):
     #@return a list of pymongo filters ( dict {FIELD:{OPERATOR:VALUE}} )
     def __process_filters(self,target, filters, relational_filters):
         # Simple filters lodel2 -> pymongo converting
-        res = [convert_filter(filt) for filt in filters]
-        rfilters = self.__prepare_relational_filters(relational_filters)
+        res = self.__filters2mongo(filters)
+        rfilters = self.__prepare_relational_filters(target, relational_filters)
         #Now that everything is well organized, begin to forge subquerie
         #filters
-        subq_filters = self.__subqueries_from_relational_filters(
-            target, rfilters)
+        self.__subqueries_from_relational_filters(target, rfilters)
         # Executing subqueries, creating filters from result, and injecting
         # them in original filters of the query
-        if len(subq_filters) > 0:
+        if len(rfilters) > 0:
             logger.debug("Begining subquery execution")
-        for fname in subq_filters:
+        for fname in rfilters:
             if fname not in res:
                 res[fname] = dict()
             subq_results = set()
-            for leobject, sq_filters in subq_filters[fname].items():
+            for leobject, sq_filters in rfilters[fname].items():
                 uid_fname = mongo_fieldname(leobject._uid)
                 log_msg = "Subquery running on collection {coll} with filters \
 '{filters}'"
@@ -262,7 +261,7 @@ class MongoDbDatasource(object):
                     res[fname]['$in'] = list(deduped)
             else:
                 res[fname]['$in'] = list(subq_results)
-        if len(subq_filters) > 0:
+        if len(rfilters) > 0:
             logger.debug("End of subquery execution")
         return res
 
@@ -281,14 +280,15 @@ class MongoDbDatasource(object):
     #@param rfilters dict : A struct as returned by
     #MongoDbDatasource.__prepare_relational_filters()
     #@return None, the rfilters argument is modified by reference
-    def __subqueries_from_relational_filters(self, target, rfilters):
+    @classmethod
+    def __subqueries_from_relational_filters(cls, target, rfilters):
         for fname in rfilters:
             for leobject in rfilters[fname]:
                 for rfield in rfilters[fname][leobject]:
                     #This way of doing is not optimized but allows to trigger
                     #warnings in some case (2 different values for a same op
                     #on a same field on a same collection)
-                    mongofilters = self.__op_value_listconv(
+                    mongofilters = cls.__op_value_listconv(
                         rfilters[fname][leobject][rfield])
                     rfilters[fname][leobject][rfield] = mongofilters
 
@@ -307,7 +307,8 @@ class MongoDbDatasource(object):
     #@param target LeObject subclass (no instance) : Target class
     #@param relational_filters : same composition thant filters except that
     #@return a struct as described above
-    def __prepare_relational_filters(self, target, relational_filters):
+    @classmethod
+    def __prepare_relational_filters(cls, target, relational_filters):
         # We are going to regroup relationnal filters by reference field
         # then by collection
         rfilters = dict()
@@ -334,6 +335,26 @@ class MongoDbDatasource(object):
                     rfilters[fname][repr_leo][rfield] = list()
                 rfilters[fname][repr_leo][rfield].append((op, value))
         return rfilters
+    
+    ##@brief Convert lodel2 filters to pymongo conditions
+    #@param filters list : list of lodel filters
+    #@return dict representing pymongo conditions
+    @classmethod
+    def __filters2mongo(cls, filters):
+        res = dict()
+        for fieldname, op, value in filters:
+            oop = op
+            ovalue = value
+            op, value = cls.__op_value_conv(op, value)
+            if fieldname not in res:
+                res[fieldname] = dict()
+            if op in res[fieldname]:
+                logger.warn("Dropping condition : '%s %s %s'" % (
+                    fieldname, op, value))
+            else:
+                res[fieldname][op] = value
+        return res
+
 
     ##@brief Convert lodel2 operator and value to pymongo struct
     #
@@ -341,15 +362,16 @@ class MongoDbDatasource(object):
     #@param op str : take value in LeFilteredQuery::_query_operators
     #@param value mixed : the value
     #@return a tuple(mongo_op, mongo_value)
-    def __op_value_conv(self, op, value):
-        if op not in self.lodel2mongo_op_map:
+    @classmethod
+    def __op_value_conv(cls, op, value):
+        if op not in cls.lodel2mongo_op_map:
             msg = "Invalid operator '%s' found" % op
             raise MongoDbDataSourceError(msg)
-        mongop = self.lodel2mongo_op_map[op]
+        mongop = cls.lodel2mongo_op_map[op]
         mongoval = value
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
-        if mongop in self.mon_op_re:
+        if mongop in cls.mon_op_re:
             #unescaping \
             mongoval = value.replace('\\\\','\\')
             if not mongoval.startswith('*'):
@@ -358,16 +380,17 @@ class MongoDbDatasource(object):
             if not (mongoval[-1] == '*' and mongoval[-2] != '\\'):
                 mongoval += '$'
             #Replacing every other unescaped wildcard char
-            mongoval = self.wildcard_re.sub('.*', mongoval)
+            mongoval = cls.wildcard_re.sub('.*', mongoval)
             mongoval = {'$regex': mongoval, '$options': 'i'}
         return (op, mongoval)
 
     ##@brief Convert a list of tuple(OP, VALUE) into a pymongo filter dict
     #@return a dict with mongo op as key and value as value...
-    def __op_value_listconv(self, op_value_list):
+    @classmethod
+    def __op_value_listconv(cls, op_value_list):
         result = dict()
         for op, value in op_value_list:
-            mongop, mongoval = self.__op_value_conv(op, value)
+            mongop, mongoval = cls.__op_value_conv(op, value)
             if mongop in result:
                 warnings.warn("Duplicated value given for a single \
 field/operator couple in a query. We will keep only the first one")
