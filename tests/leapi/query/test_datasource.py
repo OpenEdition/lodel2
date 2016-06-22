@@ -1,4 +1,5 @@
 import copy
+import datetime
 import unittest
 from unittest import mock
 from unittest.mock import patch
@@ -116,9 +117,22 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
             'lastname': 'bar',
             'alias': None}
         query.execute(datas)
-        self.mockwrite.insert.assert_called_once_with(
-            cls,
-            cls.prepare_datas(datas, True, False))
+        self.assertEqual(self.mockwrite.insert.call_count, 1)
+        cargs , _ = self.mockwrite.insert.call_args
+        pdatas = cls.prepare_datas(datas, True, False)
+        self.assertEqual(cargs[0], cls)
+        cargs = cargs[1]
+        self.assertEqual(set(pdatas.keys()), set(cargs.keys()))
+        for dname in pdatas:
+            if isinstance(pdatas[dname], datetime.datetime):
+                d1 = pdatas[dname]
+                d2 = cargs[dname]
+                for vname in ('year', 'month', 'day', 'hour', 'minute'):
+                    self.assertEqual(
+                        getattr(d1, vname), getattr(d2, vname))
+                pass
+            else:
+                self.assertEqual(pdatas[dname], cargs[dname])
         self.check_nocall(read = False, exclude = ['insert'])
         self.check_nocall(read = True)
 
