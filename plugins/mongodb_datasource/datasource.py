@@ -90,12 +90,13 @@ class MongoDbDatasource(object):
     #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     #@return list
     #@todo Implement the relations
-    def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None, offset=0):
+    def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None,
+               offset=0):
         results = list()
         if target.abstract:
             target_childs = target.child_classes()
             for target_child in target_childs:
-                results.append(self.select(target=target, field_list=field_list, filters=filters,
+                results.append(self.select(target=target_child, field_list=field_list, filters=filters,
                                            rel_filters=rel_filters, order=order, group=group, limit=limit,
                                            offset=offset))
         else:
