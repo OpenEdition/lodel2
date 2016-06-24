@@ -76,6 +76,8 @@ class MongoDbDatasource(object):
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
             target, [tuid], [], order=[(tuid, 'DESC')], limit = 1)
+        if len(results) == 0: 
+            return 1
         return results[0][tuid]+1
 
     ##@brief returns a selection of documents from the datasource
@@ -96,9 +98,10 @@ class MongoDbDatasource(object):
         if target.is_abstract():
             target_childs = target.child_classes()
             for target_child in target_childs:
-                results.append(self.select(target=target_child, field_list=field_list, filters=filters,
-                                           rel_filters=rel_filters, order=order, group=group, limit=limit,
-                                           offset=offset))
+                results += self.select(
+                    target=target_child, field_list=field_list,
+                    filters=filters, rel_filters=rel_filters, order=order,
+                    group=group, limit=limit, offset=offset)
         else:
             # Default arg init
             filters = [] if filters is None else filters
