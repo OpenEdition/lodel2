@@ -89,7 +89,8 @@ class MongoDbDatasource(object):
     #@param field_list list
     #@param filters list : List of filters
     #@param rel_filters list : List of relational filters
-    #@param order list : List of column to order. ex: order = [('title', 'ASC'),]
+    #@param order list : List of column to order. ex: order = 
+    #[('title', 'ASC'),]
     #@param group list : List of tupple representing the column used as 
     #"group by" fields. ex: group = [('title', 'ASC'),]
     #@param limit int : Number of records to be returned
@@ -103,31 +104,36 @@ class MongoDbDatasource(object):
             results =  self.__act_on_abstract(target, filters,
                 relational_filters, self.select, field_list = field_list,
                 order = order, group = group, limit = limit)
-            sort_itemgetter_args = list()
-            sort_dir = None
-            for fname, csort_dir in order:
-                sort_itemgetter_args.append(fname)
-                if sort_dir is None:
-                    sort_dir = csort_dir
-                elif sort_dir != csort_dir:
-                    raise NotImplementedError("Multiple direction for ordering\
- is not implemented yet")
-            results = sorted(
-                results, key=operator.itemgetter(*sort_itemgetter_args),
-                reverse=False if sort_dir == 'ASC' else True)
+            #Here we may implement the group
+            #If sorted query we have to sort again
+            if order is not None:
+                sort_itemgetter_args = list()
+                sort_dir = None
+                for fname, csort_dir in order:
+                    sort_itemgetter_args.append(fname)
+                    if sort_dir is None:
+                        sort_dir = csort_dir
+                    elif sort_dir != csort_dir:
+                        raise NotImplementedError("Multiple direction for \
+ordering is not implemented yet")
+                results = sorted(
+                    results, key=operator.itemgetter(*sort_itemgetter_args),
+                    reverse=False if sort_dir == 'ASC' else True)
+            #If limit given apply limit again
             if limit is not None:
                 results = results[offset:offset+limit]
             return results
-                
-                
         # Default behavior
-        filters = [] if filters is None else filters
-        relational_filters = [] if relational_filters is None else relational_filters
+        if filters is None:
+            filters = list()
+        if relational_filters is None:
+            relational_filters = list()
 
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
 
-        query_filters = self.__process_filters(target, filters, relational_filters)
+        query_filters = self.__process_filters(
+            target, filters, relational_filters)
         query_result_ordering = None
         if order is not None:
             query_result_ordering = utils.parse_query_order(order)
@@ -221,7 +227,9 @@ class MongoDbDatasource(object):
     #@param act function : the caller method
     #@param **kwargs other arguments
     #@return sum of results (if it's an array it will result in a concat)
-    def __act_on_abstract(self, target, filters, relational_filters, act, **kwargs):
+    def __act_on_abstract(self,
+        target, filters, relational_filters, act, **kwargs):
+
         result = list() if act == self.select else 0
         if not target.is_abstract():
             target_childs = target
