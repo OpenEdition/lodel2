@@ -498,9 +498,10 @@ field/operator couple in a query. We will keep only the first one")
     def __generate_lambda_cmp_order(cls, order):
         if len(order) == 0:
             return lambda a,b: False
+        glco = cls.__generate_lambda_cmp_order
         fname, cmpdir = order[0]
         order = order[1:]
-        return lambda a,b: 0 if a[fname] == b[fname] else (\
+        return lambda a,b: glco(order) if a[fname] == b[fname] else (\
             1 if (a[fname]>b[fname] if cmpdir == 'ASC' else a[fname]<b[fname])\
             else -1)
 
