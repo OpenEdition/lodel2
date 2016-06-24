@@ -2,12 +2,15 @@
 
 import re
 import warnings
+import copy
+import operator
 from bson.son import SON
 from collections import OrderedDict
 import pymongo
 from pymongo.errors import BulkWriteError
 
 from lodel import logger
+from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
 from . import utils
 from .utils import object_collection_name,\
@@ -75,7 +78,8 @@ class MongoDbDatasource(object):
         target = emcomp.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
-            target, [tuid], [], order=[(tuid, 'DESC')], limit = 1)
+            target, field_list = [tuid], filters = [], 
+            order=[(tuid, 'DESC')], limit = 1)
         if len(results) == 0: 
             return 1
         return results[0][tuid]+1
@@ -86,73 +90,86 @@ class MongoDbDatasource(object):
     #@param filters list : List of filters
     #@param rel_filters list : List of relational filters
     #@param order list : List of column to order. ex: order = [('title', 'ASC'),]
-    #@param group list : List of tupple representing the column used as "group by" fields. ex: group = [('title', 'ASC'),]
+    #@param group list : List of tupple representing the column used as 
+    #"group by" fields. ex: group = [('title', 'ASC'),]
     #@param limit int : Number of records to be returned
     #@param offset int: used with limit to choose the start record
-    #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     #@return list
-    #@todo Implement the relations
-    def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None,
-               offset=0):
-        results = list()
+    #@todo Implement group for abstract LeObject childs
+    def select(self, target, field_list, filters = None,
+        relational_filters=None, order=None, group=None, limit=None, offset=0):
         if target.is_abstract():
-            target_childs = target.child_classes()
-            for target_child in target_childs:
-                results += self.select(
-                    target=target_child, field_list=field_list,
-                    filters=filters, rel_filters=rel_filters, order=order,
-                    group=group, limit=limit, offset=offset)
+            #Reccursiv calls for abstract LeObject child
+            results =  self.__act_on_abstract(target, filters,
+                relational_filters, self.select, field_list = field_list,
+                order = order, group = group, limit = limit)
+            sort_itemgetter_args = list()
+            sort_dir = None
+            for fname, csort_dir in order:
+                sort_itemgetter_args.append(fname)
+                if sort_dir is None:
+                    sort_dir = csort_dir
+                elif sort_dir != csort_dir:
+                    raise NotImplementedError("Multiple direction for ordering\
+ is not implemented yet")
+            results = sorted(
+                results, key=operator.itemgetter(*sort_itemgetter_args),
+                reverse=False if sort_dir == 'ASC' else True)
+            if limit is not None:
+                results = results[offset:offset+limit]
+            return results
+                
+                
+        # Default behavior
+        filters = [] if filters is None else filters
+        relational_filters = [] if relational_filters is None else relational_filters
+
+        collection_name = object_collection_name(target)
+        collection = self.database[collection_name]
+
+        query_filters = self.__process_filters(target, filters, relational_filters)
+        query_result_ordering = None
+        if order is not None:
+            query_result_ordering = utils.parse_query_order(order)
+        results_field_list = None if len(field_list) == 0 else field_list
+        limit = limit if limit is not None else 0
+
+        if group is None:
+            cursor = collection.find(
+                filter=query_filters, projection=results_field_list,
+                skip=offset, limit=limit, sort=query_result_ordering)
         else:
-            # Default arg init
-            filters = [] if filters is None else filters
-            rel_filters = [] if rel_filters is None else rel_filters
+            pipeline = list()
+            unwinding_list = list()
+            grouping_dict = OrderedDict()
+            sorting_list = list()
+            for group_param in group:
+                field_name = group_param[0]
+                field_sort_option = group_param[1]
+                sort_option = MONGODB_SORT_OPERATORS_MAP[field_sort_option]
+                unwinding_list.append({'$unwind': '$%s' % field_name})
+                grouping_dict[field_name] = '$%s' % field_name
+                sorting_list.append((field_name, sort_option))
 
-            collection_name = object_collection_name(target)
-            collection = self.database[collection_name]
+            sorting_list.extends(query_result_ordering)
 
-            query_filters = self.__process_filters(target, filters, rel_filters)
-            query_result_ordering = None
-            if order is not None:
-                query_result_ordering = utils.parse_query_order(order)
-            results_field_list = None if len(field_list) == 0 else field_list
-            limit = limit if limit is not None else 0
+            pipeline.append({'$match': query_filters})
+            if results_field_list is not None:
+                pipeline.append({
+                    '$project': SON([{field_name: 1}
+                    for field_name in field_list])})
+            pipeline.extend(unwinding_list)
+            pipeline.append({'$group': grouping_dict})
+            pipeline.extend({'$sort': SON(sorting_list)})
+            if offset > 0:
+                pipeline.append({'$skip': offset})
+            if limit is not None:
+                pipeline.append({'$limit': limit})
 
-            if group is None:
-                cursor = collection.find(
-                    filter=query_filters, projection=results_field_list,
-                    skip=offset, limit=limit, sort=query_result_ordering)
-            else:
-                pipeline = list()
-                unwinding_list = list()
-                grouping_dict = OrderedDict()
-                sorting_list = list()
-                for group_param in group:
-                    field_name = group_param[0]
-                    field_sort_option = group_param[1]
-                    sort_option = MONGODB_SORT_OPERATORS_MAP[field_sort_option]
-                    unwinding_list.append({'$unwind': '$%s' % field_name})
-                    grouping_dict[field_name] = '$%s' % field_name
-                    sorting_list.append((field_name, sort_option))
-
-                sorting_list.extends(query_result_ordering)
-
-                pipeline.append({'$match': query_filters})
-                if results_field_list is not None:
-                    pipeline.append({
-                        '$project': SON([{field_name: 1}
-                        for field_name in field_list])})
-                pipeline.extend(unwinding_list)
-                pipeline.append({'$group': grouping_dict})
-                pipeline.extend({'$sort': SON(sorting_list)})
-                if offset > 0:
-                    pipeline.append({'$skip': offset})
-                if limit is not None:
-                    pipeline.append({'$limit': limit})
-
-            #results = list()
-            for document in cursor:
-                results.append(document)
-
+        results = list()
+        for document in cursor:
+            results.append(document)
+        
         return results
 
     ##@brief Deletes records according to given filters
@@ -193,6 +210,41 @@ class MongoDbDatasource(object):
     def insert_multi(self, target, datas_list):
         res = self.__collection(target).insert_many(datas_list)
         return list(res.inserted_ids)
+    
+    ##@brief Act on abstract LeObject child
+    #
+    #This method is designed to be called by insert, select and delete method
+    #when they encounter an abtract class
+    #@param target LeObject child class
+    #@param filters
+    #@param relational_filters
+    #@param act function : the caller method
+    #@param **kwargs other arguments
+    #@return sum of results (if it's an array it will result in a concat)
+    def __act_on_abstract(self, target, filters, relational_filters, act, **kwargs):
+        result = list() if act == self.select else 0
+        if not target.is_abstract():
+            target_childs = target
+        else:
+            target_childs = [tc for tc in target.child_classes()
+                if not tc.is_abstract()]
+        for target_child in target_childs:
+            #Add target_child to filter
+            new_filters = copy.copy(filters)
+            for i in range(len(filters)):
+                fname, op, val = filters[i]
+                if fname == CLASS_ID_FIELDNAME:
+                    logger.warning("Dirty drop of filter : '%s %s %s'" % (
+                        fname, op, val))
+                    del(new_filters[i])
+            new_filters.append(
+                (CLASS_ID_FIELDNAME, '=', target_child.__name__))
+            result += act(
+                target = target_child,
+                filters = new_filters,
+                relational_filters = relational_filters,
+                **kwargs)
+        return result
 
     ##@brief Connect to database
     #@not this method avoid opening two times the same connection using
@@ -377,7 +429,7 @@ class MongoDbDatasource(object):
             if fieldname not in res:
                 res[fieldname] = dict()
             if op in res[fieldname]:
-                logger.warn("Dropping condition : '%s %s %s'" % (
+                logger.warning("Dropping condition : '%s %s %s'" % (
                     fieldname, op, value))
             else:
                 res[fieldname][op] = value
@@ -399,7 +451,7 @@ class MongoDbDatasource(object):
         mongoval = value
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
-        if mongop in cls.mon_op_re:
+        if mongop in cls.mongo_op_re:
             #unescaping \
             mongoval = value.replace('\\\\','\\')
             if not mongoval.startswith('*'):

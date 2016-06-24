@@ -682,7 +682,7 @@ class LeGetQuery(LeFilteredQuery):
             target = self._target_class,
             field_list = list(self._field_list),
             filters = self._query_filter[0],
-            rel_filters = self._query_filter[1],
+            relational_filters = self._query_filter[1],
             order = self._order,
             group = self._group,
             limit = self._limit,
