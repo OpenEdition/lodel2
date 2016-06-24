@@ -33,3 +33,8 @@ def datasources_bootstrap_callaback(hook_name, caller, payload):
         log_msg = "Found a datasource named '%s' identified by '%s'"
         log_msg %= (ds_name, identifier)
         logger.debug(log_msg)
+
+@LodelHook("lodel2_dyncode_loaded")
+def lodel2_plugins_custom_methods(self, caller, dynclasses):
+    from lodel.plugin.plugins import CustomMethod
+    CustomMethod.set_registered(dynclasses)

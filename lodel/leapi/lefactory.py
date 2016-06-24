@@ -47,6 +47,8 @@ def datasource_init_hook():
 def lodel2_dyncode_datasources_init(self, caller, payload):
     for cls in dynclasses:
         cls._init_datasources()
+    from lodel.plugin.hooks import LodelHook
+    LodelHook.call_hook("lodel2_dyncode_loaded", __name__, dynclasses)
 """
 
 ##@brief return A list of EmClass sorted by dependencies

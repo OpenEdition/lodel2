@@ -348,6 +348,118 @@ class Plugin(object):
         if cls._load_called != []:
             cls._load_called = []
 
+##@brief Decorator class designed to allow plugins to add custom methods
+#to LeObject childs (dyncode objects)
+#
+class CustomMethod(object):
+    ##@brief Stores registered custom methods
+    #
+    #Key = LeObject child class name
+    #Value = CustomMethod instance
+    _custom_methods = dict()
+
+    INSTANCE_METHOD = 0
+    CLASS_METHOD = 1
+    STATIC_METHOD = 2
+
+    ##@brief Decorator constructor
+    #@param component_name str : the name of the component to enhance
+    #@param method_name str : the name of the method to inject (if None given
+    #@param method_type int : take value in one of 
+    #CustomMethod::INSTANCE_METHOD CustomMethod::CLASS_METHOD or
+    #CustomMethod::STATIC_METHOD
+    #use the function name
+    def __init__(self, component_name, method_name = None, method_type=0):
+        ##@brief The targeted LeObject child class
+        self._comp_name = component_name
+        ##@brief The method name
+        self._method_name = method_name
+        ##@brief The function (that will be the injected method)
+        self._fun = None
+        ##@brief Stores the type of method (instance, class or static)
+        self._type = int(method_type)
+        if self._type not in (self.INSTANCE_METHOD, self.CLASS_METHOD,\
+            self.STATIC_METHOD):
+            raise ValueError("Excepted value for method_type was one of \
+CustomMethod::INSTANCE_METHOD CustomMethod::CLASS_METHOD or \
+CustomMethod::STATIC_METHOD, but got %s" % self._type)
+    
+    ##@brief called just after __init__
+    #@param fun function : the decorated function
+    #@param return the function
+    def __call__(self, fun):
+        if self._method_name is None:
+            self._method_name = fun.__name__
+        if self._comp_name not in self._custom_methods:
+            self._custom_methods[self._comp_name] = list()
+
+        if self._method_name in [ scm._method_name for scm in self._custom_methods[self._comp_name]]:
+            raise RuntimeError("A method named %s allready registered by \
+another plugin : %s" % (
+                self._method_name,
+                self._custom_methods[self._comp_name].__module__))
+        self._fun = fun
+        self._custom_methods[self._comp_name].append(self)
+    
+    ##@brief Textual representation
+    #@return textual representation of the CustomMethod instance
+    def __repr__(self):
+        res = "<CustomMethod name={method_name} target={classname} \
+source={module_name}.{fun_name}>"
+        return res.format(
+            method_name = self._method_name,
+            classname = self._comp_name,
+            module_name = self._fun.__module__,
+            fun_name = self._fun.__name__)
+    
+    ##@brief Return a well formed method
+    #
+    #@note the type of method depends on the _type attribute
+    #@return a method directly injectable in the target class
+    def __get_method(self):
+        if self._type == self.INSTANCE_METHOD:
+            def custom__get__(self, obj, objtype = None):
+                return types.MethodType(self, obj, objtype)
+            setattr(self._fun, '__get__', custom__get__)
+            return self._fun
+        elif self._type == self.CLASS_METHOD:
+            return classmethod(self._fun)
+        elif self._type == self.STATIC_METHOD:
+            return staticmethod(self._fun)
+        else:
+            raise RuntimeError("Attribute _type is not one of \
+CustomMethod::INSTANCE_METHOD CustomMethod::CLASS_METHOD \
+CustomMethod::STATIC_METHOD")
+
+    ##@brief Handle custom method dynamic injection in LeAPI dyncode
+    #
+    #Called by lodel2_dyncode_loaded hook defined at 
+    #lodel.plugin.core_hooks.lodel2_plugin_custom_methods()
+    #
+    #@param cls
+    #@param dynclasses LeObject child classes : List of dynamically generated
+    #LeObject child classes
+    @classmethod
+    def set_registered(cls, dynclasses):
+        from lodel import logger
+        dyn_cls_dict = { dc.__name__:dc for dc in dynclasses}
+        for cls_name, custom_methods in cls._custom_methods.items():
+            for custom_method in custom_methods:
+                if cls_name not in dyn_cls_dict:
+                    logger.error("Custom method %s adding fails : No dynamic \
+LeAPI objects named %s." % (custom_method, cls_name))
+                elif custom_method._method_name in dir(dyn_cls_dict[cls_name]):
+                    logger.warning("Overriding existing method '%s' on target \
+with %s" % (custom_method._method_name, custom_method))
+                else:
+                    setattr(
+                        dyn_cls_dict[cls_name],
+                        custom_method._method_name,
+                        custom_method.__get_method())
+                    logger.debug(
+                        "Custom method %s added to target" % custom_method)
+            
+
 ##@page lodel2_plugins Lodel2 plugins system
 #
 # @par Plugin structure
