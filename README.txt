@@ -1,9 +1,6 @@
-Local configuration :
-	First of all copy the settings.ini to settings_local.ini and replace values by correct path
-
 Dependencies :
-	with pip : see requierments.txt
-	debian stable : python3 python3-lxml python3-jinja2 python3-werkzeug python3-pymongo doxygen graphviz
+	with pip : see requirements.txt
+	debian stable : python3 python3-lxml python3-jinja2 python3-werkzeug python3-pymongo doxygen graphviz uwsgi-plugin-python3 mongodb
 
 Doxygen documentation generation :
 	doxygen
@@ -20,4 +17,5 @@ Instance operations :
 	A Makefile is written to allow running most of operations. Existing targets are for the moment :
 
 	make dyncode # Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 instance root dir)
-	make db_init # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
+	make init_db # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
+    make list_hooks # List all the hooks registered
