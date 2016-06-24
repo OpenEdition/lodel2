@@ -3,7 +3,7 @@
 import re
 import warnings
 import copy
-import operator
+import functools
 from bson.son import SON
 from collections import OrderedDict
 import pymongo
@@ -107,18 +107,9 @@ class MongoDbDatasource(object):
             #Here we may implement the group
             #If sorted query we have to sort again
             if order is not None:
-                sort_itemgetter_args = list()
-                sort_dir = None
-                for fname, csort_dir in order:
-                    sort_itemgetter_args.append(fname)
-                    if sort_dir is None:
-                        sort_dir = csort_dir
-                    elif sort_dir != csort_dir:
-                        raise NotImplementedError("Multiple direction for \
-ordering is not implemented yet")
-                results = sorted(
-                    results, key=operator.itemgetter(*sort_itemgetter_args),
-                    reverse=False if sort_dir == 'ASC' else True)
+                results = sorted(results,
+                    key=functools.cmp_to_key(
+                        self.__generate_lambda_cmp_order(order)))
             #If limit given apply limit again
             if offset > len(results):
                 results = list()
@@ -500,4 +491,16 @@ field/operator couple in a query. We will keep only the first one")
             else:
                 result[mongop] = mongoval
         return result
+
+    ##@brief Generate a comparison function for post reccursion sorting in
+    #select
+    @classmethod
+    def __generate_lambda_cmp_order(cls, order):
+        if len(order) == 0:
+            return lambda a,b: False
+        fname, cmpdir = order[0]
+        order = order[1:]
+        return lambda a,b: 0 if a[fname] == b[fname] else (\
+            1 if (a[fname]>b[fname] if cmpdir == 'ASC' else a[fname]<b[fname])\
+            else -1)
 
