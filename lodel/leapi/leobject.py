@@ -265,8 +265,8 @@ class LeObject(object):
         expt_msg = "In LeAPI class '%s' " % cls.__name__
         if ds_name not in Settings.datasources._fields:
             #Checking that datasource exists
-            expt_msg += "Unknown or unconfigured datasource %s"
-            expt_msg %= (ds_name) # , cls.__name__)
+            expt_msg += "Unknown or unconfigured datasource %s for class %s"
+            expt_msg %= (ds_name, cls.__name__)
             raise SettingsError(expt_msg)
         try:
             #fetching plugin name
