@@ -184,6 +184,11 @@ ordering is not implemented yet")
     #@param relational_filters list : List of relational filters
     #@return int : number of deleted records
     def delete(self, target, filters, relational_filters):
+        if target.is_asbtract():
+            #Deletion with abstract LeObject as target (reccursiv calls)
+            return self.__act_on_abstract(target, filters,
+                relational_filters, self.delete)
+        #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).delete_many(mongo_filters)
@@ -196,6 +201,11 @@ ordering is not implemented yet")
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
+        if target.is_asbtract():
+            #Update using abstract LeObject as target (reccursiv calls)
+            return self.__act_on_abstract(target, filters,
+                relational_filters, self.update, upd_datas = upd_datas)
+        #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update_many(mongo_filters, upd_datas)
