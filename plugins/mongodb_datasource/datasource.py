@@ -93,7 +93,7 @@ class MongoDbDatasource(object):
     def select(self, target, field_list, filters = None, rel_filters=None, order=None, group=None, limit=None,
                offset=0):
         results = list()
-        if target.abstract:
+        if hasattr(target, '_abstract') and target._abstract:
             target_childs = target.child_classes()
             for target_child in target_childs:
                 results.append(self.select(target=target_child, field_list=field_list, filters=filters,
