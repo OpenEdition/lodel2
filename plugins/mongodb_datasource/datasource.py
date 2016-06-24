@@ -120,8 +120,13 @@ ordering is not implemented yet")
                     results, key=operator.itemgetter(*sort_itemgetter_args),
                     reverse=False if sort_dir == 'ASC' else True)
             #If limit given apply limit again
-            if limit is not None:
-                results = results[offset:offset+limit]
+            if offset > len(results):
+                results = list()
+            else:
+                if limit is not None:
+                    if limit + offset >= len(results):
+                        limit = len(results)-offset-1
+                    results = results[offset:offset+limit]
             return results
         # Default behavior
         if filters is None:
