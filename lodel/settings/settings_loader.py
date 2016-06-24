@@ -156,9 +156,9 @@ class SettingsLoader(object):
         if sections == [] and default_section: 
              sections.append(section_prefix + '.' + default_section)
         elif sections == []:
-            raise NameError("Not existing settings section : %s" % section__prefix)
+            raise NameError("Not existing settings section : %s" % section_prefix)
             
-        return sections;
+        return sections
     
     ##@brief Returns invalid settings
     #
