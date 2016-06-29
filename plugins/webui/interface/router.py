@@ -26,9 +26,14 @@ def get_controller(request):
 
     # Returning the right controller to call
     for regex, callback in url_rules:
-        match = re.search(regex, request.PATH)
+        p = re.compile(regex)
+        m = p.search(request.PATH)
+        if m is not None:
+            request.url_args = m.groups()
+            return callback
+        '''match = re.search(regex, request.PATH)
         if match is not None:
             request.url_args = match.groups()
             return callback
-
+        '''
     return not_found
