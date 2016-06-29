@@ -5,7 +5,7 @@ import importlib
 import copy
 
 from lodel.utils.mlstring import MlString
-from lodel.logger import logger
+from lodel import logger
 from lodel.settings import Settings
 from lodel.settings.utils import SettingsError
 
@@ -128,19 +128,26 @@ class EditorialModel(object):
     #EditorialModel.__active_classes attibutes
     def __set_actives(self):
         if Settings.editorialmodel.editormode:
+            logger.warning("All EM groups active because editormode in ON")
             # all groups & classes actives because we are in editor mode
             self.__active_groups = self.__groups
             self.__active_classes = self.__classes
         else:
             #determine groups first
             self.__active_groups = dict()
+            self.__active_classes = dict()
             for agrp in Settings.editorialmodel.groups:
                 if agrp not in self.__groups:
                     raise SettingsError('Invalid group found in settings : %s' % agrp)
+                logger.debug("Set group '%s' as active" % agrp)
                 grp = self.__groups[agrp]
                 self.__active_groups[grp.uid] = grp
                 for acls in grp.components():
                     self.__active_classes[acls.uid] = acls
+            if len(self.__active_groups) == 0:
+                raise RuntimeError("No groups activated, abording...")
+            if len(self.__active_classes) == 0:
+                raise RuntimeError("No active class found. Abording")
     
     ##@brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"

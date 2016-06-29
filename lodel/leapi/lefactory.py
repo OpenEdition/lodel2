@@ -4,6 +4,7 @@ import functools
 from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataHandler
+from lodel import logger
 
 ##@brief Generate python module code from a given model
 # @param model lodel.editorial_model.model.EditorialModel
@@ -111,6 +112,7 @@ def generate_classes(model):
     bootstrap = ""
     # Generating field list for LeObjects generated from EmClass
     for em_class in get_classes(model):
+        logger.info("Generating a dynamic class for %s" % em_class.uid)
         uid = list()        # List of fieldnames that are part of the EmClass primary key
         parents = list()    # List of parents EmClass
         # Determine pk

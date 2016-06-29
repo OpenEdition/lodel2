@@ -96,6 +96,8 @@ class EmClass(EmComponent):
  fetching arbitrary datas from DB"},
                 data_handler = 'LeobjectSubclassIdentifier',
                 internal = True)
+        if group is not None:
+            group.add_components([self])
     
     ##@brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
