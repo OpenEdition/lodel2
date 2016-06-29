@@ -23,9 +23,4 @@ def not_found(request):
 
 def test(request):
     return get_response('test.html')
-
-
-def list_classes(request):
-    # TODO Add the method to get the classes list
-
-    return get_response('list_classes.html')
+    
