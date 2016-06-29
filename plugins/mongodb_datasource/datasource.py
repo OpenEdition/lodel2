@@ -494,10 +494,11 @@ field/operator couple in a query. We will keep only the first one")
 
     ##@brief Generate a comparison function for post reccursion sorting in
     #select
+    #@return a lambda function that take 2 dict as arguement
     @classmethod
     def __generate_lambda_cmp_order(cls, order):
         if len(order) == 0:
-            return lambda a,b: False
+            return lambda a,b: 0
         glco = cls.__generate_lambda_cmp_order
         fname, cmpdir = order[0]
         order = order[1:]
