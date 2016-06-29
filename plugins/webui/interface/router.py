@@ -3,19 +3,15 @@ import re
 
 from .controllers import *
 from .urls import urls
+from ..main import root_url
 from lodel.settings import Settings
 
-
 def format_url_rule(url_rule):
-    if url_rule == '^$':
-        return "^%s$" % Settings.sitename
-
-    formatted_rule = ''
     if url_rule.startswith('^'):
-        formatted_rule += "^"
-
-    formatted_rule += "%s/%s" % (Settings.sitename, url_rule)
-    return formatted_rule
+        res = url_rule.replace('^', '^'+root_url())
+    else:
+        res = root_url()+'.*'+url_rule
+    return res
 
 
 def get_controller(request):
@@ -26,9 +22,14 @@ def get_controller(request):
 
     # Returning the right controller to call
     for regex, callback in url_rules:
-        match = re.search(regex, request.PATH)
+        p = re.compile(regex)
+        m = p.search(request.PATH)
+        if m is not None:
+            request.url_args = m.groupdict()
+            return callback
+        '''match = re.search(regex, request.PATH)
         if match is not None:
             request.url_args = match.groups()
             return callback
-
+        '''
     return not_found

@@ -6,6 +6,11 @@ from lodel.settings import Settings
 
 PLUGIN_PATH = os.path.dirname(__file__)
 
+##@brief Return the root url of the instance
+def root_url():
+    return Settings.sitename
+
+
 ##@brief uwsgi startup demo
 @LodelHook('lodel2_loader_main')
 def uwsgi_fork(hook_name, caller, payload):
