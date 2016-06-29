@@ -2,9 +2,13 @@
 import jinja2
 import os
 
+from lodel.settings import Settings
+import leapi_dyncode
+
 import settings
 from .api import api_lodel_templates
 from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
+from ...main import root_url
 
 from ...main import PLUGIN_PATH
 TEMPLATE_PATH = os.path.realpath(os.path.join(PLUGIN_PATH, 'templates/'))
@@ -39,6 +43,11 @@ class TemplateLoader(object):
         # lodel2 default api is loaded
         # TODO change this if needed
         template.globals['lodel'] = api_lodel_templates
+        template.globals['leapi'] = leapi_dyncode
+        template.globals['settings'] = Settings
+        template.globals['url'] = lambda sufix='': root_url()\
+            + ('' if sufix.startswith('/') else '/')\
+            + sufix
 
         # Extra modules are loaded
         if template_extra is not None:
