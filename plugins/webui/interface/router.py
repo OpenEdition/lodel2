@@ -27,9 +27,5 @@ def get_controller(request):
         if m is not None:
             request.url_args = m.groupdict()
             return callback
-        '''match = re.search(regex, request.PATH)
-        if match is not None:
-            request.url_args = match.groups()
-            return callback
-        '''
+
     return not_found
