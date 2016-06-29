@@ -138,6 +138,15 @@ class EmClass(EmComponent):
             return list(fields.values()) if uid is None else fields[uid]
         except KeyError:
             raise EditorialModelError("No such EmField '%s'" % uid)
+    
+    ##@brief Keep in __fields only fields contained in active groups
+    def _set_active_fields(self, active_groups):
+        active_fields = []
+        for grp_name, agrp in active_groups.items():
+            active_fields += [ emc for emc in agrp.components()
+                if isinstance(emc, EmField)]
+        self.__fields = { fname:fdh for fname, fdh in self.__fields.items()
+            if fdh in active_fields }
 
     ##@brief Add a field to the EmClass
     # @param emfield EmField : an EmField instance
@@ -145,6 +154,7 @@ class EmClass(EmComponent):
     # @throw EditorialModelException if an EmField with same uid allready in this EmClass (overwritting allowed from parents)
     # @todo End the override checks (needs methods in data_handlers)
     def add_field(self, emfield):
+        assert_edit()
         if emfield.uid in self.__fields:
             raise EditorialModelError("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
         # Incomplete field override check
@@ -161,6 +171,7 @@ class EmClass(EmComponent):
     # @param uid str : the EmField uniq id
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() ) 
     def new_field(self, uid, data_handler, **field_kwargs):
+        assert_edit()
         return self.add_field(EmField(uid, data_handler, **field_kwargs))
 
     def d_hash(self):
@@ -317,6 +328,7 @@ class EmGroup(object):
     ##@brief Add components in a group
     # @param components list : EmComponent instances list
     def add_components(self, components):
+        assert_edit()
         for component in components:
             if isinstance(component, EmField):
                 if component._emclass is None:
@@ -328,6 +340,7 @@ class EmGroup(object):
     ##@brief Add a dependencie
     # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
     def add_dependencie(self, grp):
+        assert_edit()
         try:
             for group in grp:
                 self.add_dependencie(group)
@@ -345,6 +358,7 @@ class EmGroup(object):
     # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
     # Useless ???
     def add_applicant(self, grp):
+        assert_edit()
         try:
             for group in grp:
                 self.add_applicant(group)

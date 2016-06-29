@@ -148,6 +148,8 @@ class EditorialModel(object):
                 raise RuntimeError("No groups activated, abording...")
             if len(self.__active_classes) == 0:
                 raise RuntimeError("No active class found. Abording")
+            for clsname, acls in self.__active_classes.items():
+                acls._set_active_fields(self.__active_groups)
     
     ##@brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
@@ -174,7 +176,7 @@ class EditorialModel(object):
     # @param emclass EmClass : the EmClass instance to add
     # @return emclass
     def add_class(self, emclass):
-        self.raise_if_ro()
+        assert_edit()()
         if not isinstance(emclass, EmClass):
             raise ValueError("<class EmClass> expected but got %s " % type(emclass))
         if emclass.uid in self.classes():
@@ -186,7 +188,7 @@ class EditorialModel(object):
     # @param emgroup EmGroup : the EmGroup instance to add
     # @return emgroup
     def add_group(self, emgroup):
-        self.raise_if_ro()
+        assert_edit()()
         if not isinstance(emgroup, EmGroup):
             raise ValueError("<class EmGroup> expected but got %s" % type(emgroup))
         if emgroup.uid in self.groups():
@@ -199,7 +201,7 @@ class EditorialModel(object):
     #@param **kwargs : EmClass constructor options ( 
     # see @ref lodel.editorial_model.component.EmClass.__init__() )
     def new_class(self, uid, **kwargs):
-        self.raise_if_ro()
+        assert_edit()()
         return self.add_class(EmClass(uid, **kwargs))
     
     ##@brief Add a new EmGroup to the editorial model
@@ -207,14 +209,14 @@ class EditorialModel(object):
     #@param *kwargs : EmGroup constructor keywords arguments (
     # see @ref lodel.editorial_model.component.EmGroup.__init__() )
     def new_group(self, uid, **kwargs):
-        self.raise_if_ro()
+        assert_edit()()
         return self.add_group(EmGroup(uid, **kwargs))
 
     ##@brief Save a model
     # @param translator module : The translator module to use
     # @param **translator_args
     def save(self, translator, **translator_kwargs):
-        self.raise_if_ro()
+        assert_edit()()
         if isinstance(translator, str):
             translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
