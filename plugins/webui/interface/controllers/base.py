@@ -6,9 +6,9 @@ from ..template.loader import TemplateLoader
 # This module contains the web UI controllers that will be called from the web ui class
 
 
-def get_response(tpl, mimetype='text/html', status_code=200):
+def get_response(tpl, tpl_vars={}, mimetype='text/html', status_code=200):
     loader = TemplateLoader()
-    response = Response(loader.render_to_response(tpl), mimetype=mimetype)
+    response = Response(loader.render_to_response(tpl, template_vars=tpl_vars), mimetype=mimetype)
     response.status_code = status_code
     return response
 
