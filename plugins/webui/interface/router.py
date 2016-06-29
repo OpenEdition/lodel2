@@ -29,7 +29,7 @@ def get_controller(request):
         p = re.compile(regex)
         m = p.search(request.PATH)
         if m is not None:
-            request.url_args = m.groups()
+            request.url_args = m.groupdict()
             return callback
         '''match = re.search(regex, request.PATH)
         if match is not None:

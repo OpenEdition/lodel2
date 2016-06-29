@@ -1,6 +1,13 @@
 <html>
 <head></head>
 <body>
+    URL arg : id = {{ id }}<br />
+    GET values :<br />
+    <ul>
+    {% for argument_name, argument_value in params.items() %}
+        <li>{{argument_name}} = {{ argument_value }}</li>
+    {% endfor %}
+    </ul>
     <form action="http://localhost:9090/admin?r=1&rand[]=7&rand[]=5" method="POST" enctype="multipart/form-data">
         <input type="text" name="re[]" value="3"><br />
         <input type="text" name="re[]" value="1"><br />

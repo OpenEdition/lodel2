@@ -22,5 +22,10 @@ def not_found(request):
 
 
 def test(request):
+    template_vars = {
+        'id': request.url_args['id'],
+        'params': request.GET
+    }
+    return get_response('test.html', tpl_vars=template_vars)
     return get_response('test.html')
     
