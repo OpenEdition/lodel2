@@ -3,10 +3,12 @@ import loader # Lodel2 loader
 
 import os
 from werkzeug.contrib.sessions import FilesystemSessionStore
+from werkzeug.wrappers import Response
 
 from lodel.settings import Settings
 from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest
+from .exceptions import *
 from lodel.utils.datetime import get_utc_timestamp
 
 SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
@@ -55,9 +57,19 @@ def application(env, start_response):
             request.session = session_store.new()
             request.session['user_context'] = None
         request.session['last_accessed'] = current_timestamp
-
-    controller = get_controller(request)
-    response = controller(request)
+    
+    try:
+        controller = get_controller(request)
+        response = controller(request)
+    except HttpException as e:
+        try:
+            response = e.render(request)
+        except Exception as eb:
+            res = Response()
+            res.status_code = 500
+            return res
+        
+        
     if request.session.should_save:
         session_store.save(request.session)
         response.set_cookie('sid', request.session.sid)
