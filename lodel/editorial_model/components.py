@@ -170,7 +170,6 @@ class EmClass(EmComponent):
             if not emfield.data_handler_instance.can_override(parent_field.data_handler_instance):
                 raise AttributeError("'%s' field override a parent field, but data_handles are not compatible" % emfield.uid)
         self.__fields[emfield.uid] = emfield
-        emfield._emclass = self
         return emfield
     
     ##@brief Create a new EmField and add it to the EmClass
@@ -179,7 +178,7 @@ class EmClass(EmComponent):
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() ) 
     def new_field(self, uid, data_handler, **field_kwargs):
         assert_edit()
-        return self.add_field(EmField(uid, data_handler, **field_kwargs))
+        return self.add_field(EmField(uid, data_handler, self, **field_kwargs))
 
     def d_hash(self):
         m = hashlib.md5()
@@ -216,7 +215,7 @@ class EmField(EmComponent):
     # @param help_text MlString|str|dict : help text
     # @param group EmGroup :
     # @param **handler_kwargs : data handler arguments
-    def __init__(self, uid, data_handler, display_name = None, help_text = None, group = None, **handler_kwargs):
+    def __init__(self, uid, data_handler, em_class = None, display_name = None, help_text = None, group = None, **handler_kwargs):
         from lodel.leapi.datahandlers.base_classes import DataHandler
         super().__init__(uid, display_name, help_text, group)
         ##@brief The data handler name
@@ -228,9 +227,11 @@ class EmField(EmComponent):
         ##@brief Stores data handler instanciation options
         self.data_handler_options = handler_kwargs
         ##@brief Stores the emclass that contains this field (set by EmClass.add_field() method)
-        self._emclass = None
+        self._emclass = em_class
+        if self._emclass is None:
+            warnings.warn("No EmClass for field %s" %uid)
         if group is None:
-            warnings.warn("NO GROUP FOR FIELD %s" % uid)
+            warnings.warn("No EmGroup for field  %s" % uid)
         else:
             group.add_components([self])
 
@@ -343,7 +344,9 @@ class EmGroup(object):
         for component in components:
             if isinstance(component, EmField):
                 if component._emclass is None:
-                    warnings.warn("Adding an orphan EmField to an EmGroup")
+                    msg = "Adding an orphan EmField '%s' to EmGroup '%s'"
+                    msg %= (component, self)
+                    warnings.warn(msg)
             elif not isinstance(component, EmClass):
                 raise EditorialModelError("Expecting components to be a list of EmComponent, but %s found in the list" % type(component))
         self.__components |= set(components)

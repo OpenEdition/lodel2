@@ -14,7 +14,6 @@ except ImportError:
     print("Unable to load lodel module. exiting...")
     exit(1)
 
-
 #
 # Loading settings
 #
@@ -29,16 +28,19 @@ from lodel.plugin import core_hooks
 
 def start():
     #Load plugins
+    from lodel import logger
     from lodel.plugin import Plugin
+    logger.debug("Loader.start() called")
     Plugin.load_all()
 
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
 
 
 if __name__ == '__main__':
-    start()
 
+    start()
     if Settings.runtest:
+        start()
         import unittest
         import tests
         loader = unittest.TestLoader()
@@ -52,6 +54,7 @@ if __name__ == '__main__':
         exit()
 
     LodelHook.call_hook('lodel2_loader_main', '__main__', None)
+
     #Run interative python
     import code
     print("""

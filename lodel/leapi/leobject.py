@@ -242,14 +242,24 @@ class LeObject(object):
             ro_ds, rw_ds = cls._datasource_name
         #Read only datasource initialisation
         cls._ro_datasource = cls._init_datasource(ro_ds, True)
-        log_msg = "Read only datasource %s initialized for LeObject %s"
-        log_msg %= (ro_ds, cls.__name__)
-        logger.debug(log_msg)
+        if cls._ro_datasource is None:
+            log_msg = "No read only datasource set for LeObject %s"
+            log_msg %= cls.__name__
+            logger.debug(log_msg)
+        else:
+            log_msg = "Read only datasource '%s' initialized for LeObject %s"
+            log_msg %= (ro_ds, cls.__name__)
+            logger.debug(log_msg)
         #Read write datasource initialisation
         cls._rw_datasource = cls._init_datasource(rw_ds, False)
-        log_msg = "Read&write only datasource %s initialized for LeObject %s"
-        log_msg %= (rw_ds, cls.__name__)
-        logger.debug(log_msg)
+        if cls._ro_datasource is None:
+            log_msg = "No read/write datasource set for LeObject %s"
+            log_msg %= cls.__name__
+            logger.debug(log_msg)
+        else:
+            log_msg = "Read/write datasource '%s' initialized for LeObject %s"
+            log_msg %= (ro_ds, cls.__name__)
+            logger.debug(log_msg)
         
 
     ##@brief Replace the _datasource attribute value by a datasource instance

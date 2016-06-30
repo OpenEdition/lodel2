@@ -316,7 +316,7 @@ def load_class_xml(model, elem):
         
     fields = elem.find('fields')
     for field in fields:
-        emfield = load_field_xml(model, field)
+        emfield = load_field_xml(model, field, emclass)
         l_emfields = emclass.fields()
         incls = False
         for emf in l_emfields:
@@ -329,10 +329,11 @@ def load_class_xml(model, elem):
     return emclass
     
 ##@brief Creates a EmField from a xml description
-# @param elem : the element which represents the EmField
-# @param model  : the model which will contain the new field
-# @return a new EmField object
-def load_field_xml(model, elem):
+#@param elem : the element which represents the EmField
+#@param model  : the model which will contain the new field
+#@param emclass EmClass : the EmClass of the field
+#@return a new EmField object
+def load_field_xml(model, elem, emclass):
     uid = elem.find('uid').text
     if elem.find('display_name').text is None:
         name = None
@@ -354,16 +355,13 @@ def load_field_xml(model, elem):
         group = None
         
     dhdl = elem.find('datahandler_name')
+    dhdl_opts = {}
     if dhdl.text is not None:
         dhdl_opts = elem.find('datahandler_options')
-
         if dhdl_opts is not None:
             dhdl_options = load_dhdl_options_xml(model, dhdl_opts) 
-            emfield = EmField(uid, dhdl.text, name, help_text, group, **dhdl_options)
-        else:
-            emfield = EmField(uid, dhdl.text, name, help_text, group)
-    else:
-        emfield = EmField(uid, dhdl.text, name, help_text, group)
+    emfield = EmField(
+        uid, dhdl.text, emclass, name, help_text, group, **dhdl_options)
     
     return emfield
 

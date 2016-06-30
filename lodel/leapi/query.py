@@ -333,7 +333,7 @@ field to use for the relational filter"
                 res_filters.append((field,operator, value))
         
         if len(err_l) > 0:
-            raise LeApiDataCheckError(
+            raise LeApiDataCheckErrors(
                                         "Error while preparing filters : ",
                                         err_l)
         return (res_filters, rel_filters)
