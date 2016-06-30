@@ -5,7 +5,6 @@ import os
 from lodel.settings import Settings
 import leapi_dyncode
 
-import settings
 from .api import api_lodel_templates
 from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
 from ...main import root_url
