@@ -142,7 +142,7 @@ class EditorialModel(object):
                 logger.debug("Set group '%s' as active" % agrp)
                 grp = self.__groups[agrp]
                 self.__active_groups[grp.uid] = grp
-                for acls in grp.components():
+                for acls in [cls for cls in grp.components() if isinstance(cls, EmClass)]:
                     self.__active_classes[acls.uid] = acls
             if len(self.__active_groups) == 0:
                 raise RuntimeError("No groups activated, abording...")

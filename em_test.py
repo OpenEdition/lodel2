@@ -87,6 +87,7 @@ person.new_field(   'firstname',
                         'fre': 'Prénom',
                     },
                     data_handler = 'varchar',
+                    group = base_group,
 )
 person.new_field(   'lastname',
                     display_name = {
@@ -94,6 +95,7 @@ person.new_field(   'lastname',
                         'fre': 'Nom de famille',
                     },
                     data_handler = 'varchar',
+                    group = base_group,
 )
 person.new_field(   'fullname',
                     display_name = {
@@ -115,6 +117,7 @@ person.new_field(   'alias',
                     allowed_classes = [person],
                     default = None,
                     nullable = True,
+                    group = base_group,
 )
 
 
