@@ -1,6 +1,9 @@
+{% import "components/components.html" as components %}
+
 <html>
 <head></head>
 <body>
+    {{ components.textarea('test', value='ceci est un test', rows=10, cols=20) }}<br/>
     URL arg : id = {{ id }}<br />
     GET values :<br />
     <ul>

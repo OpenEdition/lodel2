@@ -28,10 +28,14 @@ def not_found(request):
 
 
 def test(request):
+    if 'id' not in request.url_args:
+        id = None
+    else:
+        id = request.url_args['id']
+
     template_vars = {
-        'id': request.url_args['id'],
+        'id': id,
         'params': request.GET
     }
     return get_response('test.html', tpl_vars=template_vars)
-    return get_response('test.html')
     

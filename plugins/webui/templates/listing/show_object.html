@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - Object {{ name }} {% endblock %}
-{% block content %} 
+{% import "components/components.html" as components %}
+{% block content %}
 <h1>Lodel 2 - Object {{ name }} </h1>
 <ul>
     {% my_object = params['classe'].get('lodel_id=' + id) %}
 {% for field in my_object.fieldnames() %}
+    <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
     <li> {{ fieldnames[field] }} </li>
     {% endfor %}
 </ul>
