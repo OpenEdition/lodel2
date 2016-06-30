@@ -290,6 +290,11 @@ field name" % fieldname)
                 err_l[field] = ret
                 continue
             field_datahandler = self._target_class.field(field)
+            # Casting value given datahandler
+            value, error = field_datahandler._check_data_value(value)
+            if isinstance(error, Exception):
+                err_l[field] = error
+                continue
             if ref_field is not None and not field_datahandler.is_reference():
                 # inconsistency
                 err_l[field] = NameError(   "The field '%s' in %s is not \
@@ -658,17 +663,18 @@ class LeGetQuery(LeFilteredQuery):
     # @throw LeApiQueryError if unknown field given
     def set_field_list(self, field_list):
         err_l = dict()
-        for fieldname in field_list:
-            ret = self._check_field(self._target_class, fieldname)
-            if isinstance(ret, Exception):
-                msg = "No field named '%s' in %s"
-                msg %= (fieldname, self._target_class.__name__)
-                expt = NameError(msg)
-                err_l[fieldname] =  expt
-        if len(err_l) > 0:
-            msg = "Error while setting field_list in a get query"
-            raise LeApiQueryErrors(msg = msg, exceptions = err_l)
-        self._field_list = list(set(field_list))
+        if field_list is not None:
+            for fieldname in field_list:
+                ret = self._check_field(self._target_class, fieldname)
+                if isinstance(ret, Exception):
+                    msg = "No field named '%s' in %s"
+                    msg %= (fieldname, self._target_class.__name__)
+                    expt = NameError(msg)
+                    err_l[fieldname] =  expt
+            if len(err_l) > 0:
+                msg = "Error while setting field_list in a get query"
+                raise LeApiQueryErrors(msg = msg, exceptions = err_l)
+            self._field_list = list(set(field_list))
     
     ##@brief Execute the get query
     def execute(self, datas = None):
@@ -678,9 +684,10 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
     def _query(self, datas = None):
         # select datas corresponding to query_filter
+        fl = list(self._field_list) if self._field_list is not None else None
         l_datas=self._ro_datasource.select( 
             target = self._target_class,
-            field_list = list(self._field_list),
+            field_list = fl,
             filters = self._query_filter[0],
             relational_filters = self._query_filter[1],
             order = self._order,

@@ -448,7 +448,7 @@ class MongoDbDatasource(object):
                 if fieldname in res:
                     logger.warning("Dropping previous condition. Overwritten \
 by an equality filter")
-                res[fieldname] = str(value)
+                res[fieldname] = value
                 continue
             if fieldname in eq_fieldname:
                 logger.warning("Dropping condition : '%s %s %s'" % (

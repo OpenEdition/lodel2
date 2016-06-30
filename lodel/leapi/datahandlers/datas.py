@@ -72,9 +72,6 @@ class UniqID(Integer):
         kwargs['internal'] = 'automatic'
         super(self.__class__, self).__init__(primary_key = True, **kwargs)
 
-    def _check_data_value(self, value):
-        return value, None
-
     def construct_data(self, emcomponent, fname, datas, cur_value):
         if cur_value is None:
             #Ask datasource to provide a new uniqID
