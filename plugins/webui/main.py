@@ -7,6 +7,7 @@ from lodel.settings import Settings
 PLUGIN_PATH = os.path.dirname(__file__)
 
 ##@brief Return the root url of the instance
+#@warning no trailing slash
 def root_url():
     return Settings.sitename
 

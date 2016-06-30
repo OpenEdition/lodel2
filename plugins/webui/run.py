@@ -15,6 +15,8 @@ SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
 
+#Starting instance
+loader.start()
 
 # TODO déplacer dans un module "sessions.py"
 def delete_old_session_files(timestamp_now):
