@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Lodel 2 - List of Classes{% endblock %}
+{% block content %} 
+<h1>Lodel 2 - List of Classes</h1>
+<ul>
+{% for class in my_classes %}
+    <li> {{ class.__name__ }} </li>
+    {% endfor %}
+</ul>
+{% endblock %}
