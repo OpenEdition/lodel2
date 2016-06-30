@@ -3,8 +3,8 @@
 {% block content %} 
 <h1>Lodel 2 - List of Classes</h1>
 <ul>
-{% for class in my_classes %}
-    <li> {{ class.__name__ }} </li>
+{% for classe in my_classes %}
+    <li> <a href="show_class/?classe={{ classe }}&name={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a></li>
     {% endfor %}
 </ul>
 {% endblock %}
