@@ -16,8 +16,12 @@ def root_url():
 @LodelHook('lodel2_loader_main')
 def uwsgi_fork(hook_name, caller, payload):
     if Settings.webui.standalone:
-        cmd='uwsgi_python3 --http-socket {addr}:{port} --module plugins.webui.run'
+        cmd='{uwsgi} --http-socket {addr}:{port} --module plugins.webui.run'
         cmd = cmd.format(
                     addr = Settings.webui.listen_address,
-                    port = Settings.webui.listen_port)
+                    port = Settings.webui.listen_port,
+                    uwsgi= Settings.webui.uwsgicmd)
+        if Settings.webui.virtualenv != '':
+            cmd += " --virtualenv %s" % Settings.webui.virtualenv
+
         exit(os.system(cmd))

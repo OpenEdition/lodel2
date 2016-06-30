@@ -1,3 +1,5 @@
 {% extends "base_backend.html" %}
 {% block title %}Lodel 2 - Document {{ id }}{% endblock %}
-{% block content %}ADMIN{% endblock %}
+{% block content %}
+    {{ leapi.Section.get([('lodel_id','=',id)]) }}
+{% endblock %}
