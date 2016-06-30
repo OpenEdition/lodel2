@@ -7,6 +7,7 @@ import hashlib
 
 from lodel.utils.mlstring import MlString
 
+from lodel.settings import Settings
 from lodel.editorial_model.exceptions import *
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
@@ -84,6 +85,12 @@ class EmClass(EmComponent):
         ##@brief Stores EmFields instances indexed by field uid
         self.__fields = dict() 
         
+        self.group = group
+        if group is None:
+            warnings.warn("NO GROUP FOR EMCLASS %s" % uid)
+        else:
+            group.add_components([self])
+    
         #Adding common field
         if not self.abstract:
             self.new_field(
@@ -95,10 +102,9 @@ class EmClass(EmComponent):
                     'eng': "Allow to create instance of the good class when\
  fetching arbitrary datas from DB"},
                 data_handler = 'LeobjectSubclassIdentifier',
-                internal = True)
-        if group is not None:
-            group.add_components([self])
-    
+                internal = True,
+                group = group)
+
     ##@brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     @property
@@ -141,12 +147,13 @@ class EmClass(EmComponent):
     
     ##@brief Keep in __fields only fields contained in active groups
     def _set_active_fields(self, active_groups):
-        active_fields = []
-        for grp_name, agrp in active_groups.items():
-            active_fields += [ emc for emc in agrp.components()
-                if isinstance(emc, EmField)]
-        self.__fields = { fname:fdh for fname, fdh in self.__fields.items()
-            if fdh in active_fields }
+        if not Settings.editorialmodel.editormode:
+            active_fields = []
+            for grp_name, agrp in active_groups.items():
+                active_fields += [ emc for emc in agrp.components()
+                    if isinstance(emc, EmField)]
+            self.__fields = { fname:fdh for fname, fdh in self.__fields.items()
+                if fdh in active_fields }
 
     ##@brief Add a field to the EmClass
     # @param emfield EmField : an EmField instance
@@ -222,6 +229,10 @@ class EmField(EmComponent):
         self.data_handler_options = handler_kwargs
         ##@brief Stores the emclass that contains this field (set by EmClass.add_field() method)
         self._emclass = None
+        if group is None:
+            warnings.warn("NO GROUP FOR FIELD %s" % uid)
+        else:
+            group.add_components([self])
 
     ##@brief Returns data_handler_name attribute
     def get_data_handler_name(self):
