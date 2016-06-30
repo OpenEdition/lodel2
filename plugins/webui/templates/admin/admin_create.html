@@ -1,4 +1,8 @@
 {% extends "base_backend.html" %}
+{% import "admin/editable_component.html" as edit %}
 {% block title %}- Creating a new {{target.__name__}}{% endblock %}
 {% block body %}
+	{% for fieldname, field in target.fields().items() %}
+		{{edit.input(fieldname, field) }}
+	{% endfor %}
 {% endblock %}

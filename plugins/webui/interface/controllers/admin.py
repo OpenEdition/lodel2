@@ -25,9 +25,6 @@ def admin_update(request):
         obj = dyncode.Object.get(['lodel_id = %d' % lodel_id])
         if len(obj) == 0:
             raise HttpException(404)
-    print("WHAT WE GOT AS RESPONSE : ")
-    for n,o in enumerate(obj):
-        print("\t",n,o.datas(True))
     return get_response('admin/admin_edit.html', obj = obj)
 
 def admin_create(request):

@@ -180,8 +180,11 @@ class LeObject(object):
                                                             cls.__name__))
     ##@return A dict with fieldname as key and datahandler as instance
     @classmethod
-    def fields(cls):
-        return copy.copy(cls._fields)
+    def fields(cls, include_ro = False):
+        if include_ro:
+            return copy.copy(cls._fields)
+        else:
+            return {fname:cls._fields[fname] for fname in cls._fields if not cls._fields[fname].is_internal()}
     
     ##@brief Return the list of parents classes
     #

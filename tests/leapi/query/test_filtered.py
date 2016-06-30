@@ -13,20 +13,20 @@ class LeFilteredQueryTestCase(unittest.TestCase):
     def test_filters(self):
         """ Testing FilteredQuery filters handling """
         test_datas = [  (   'lodel_id = 42',
-                            (   [('lodel_id','=','42')],
+                            (   [('lodel_id','=',42)],
                                 [])),
                         (   'lodel_id <= 42',
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ['lodel_id <= 42'],
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ('lodel_id <= 42',),
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ['lodel_id <= 42','lodel_id >= 33'],
-                            (   [   ('lodel_id','<=','42'),
-                                    ('lodel_id', '>=','33')],
+                            (   [   ('lodel_id','<=',42),
+                                    ('lodel_id', '>=',33)],
                                 [])),
         ]
         for q_class in self.q_classes:
@@ -70,7 +70,7 @@ class LeFilteredQueryTestCase(unittest.TestCase):
                         'not in',
                         'like',
                         'not like']
-        values = (  '42',
+        values = (  42,
                     'not in',
                     'in',
                     'like',

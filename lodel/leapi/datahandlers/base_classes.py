@@ -110,8 +110,7 @@ class DataHandler(object):
                 return data_handler.default
         elif data_handler is not None and data_handler.nullable:
                 return None
-
-        return RuntimeError("Unable to construct data for field %s", fname)
+        return cur_value
 
     ##@brief Check datas consistency
     # @param emcomponent EmComponent : An EmComponent child class instance
@@ -184,6 +183,7 @@ class DataField(DataHandler):
 # References are fields that stores a reference to another
 # editorial object
 class Reference(DataHandler):
+    base_type="ref"
 
     ##@brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
@@ -249,19 +249,22 @@ class SingleRef(Reference):
 ##@brief This class represent a data_handler for multiple references to another object
 #
 # The fields using this data handlers are like SingleRef but can store multiple references in one field
-# @note SQL implementation could be tricky
+# @note for the moment split on ',' chars
 class MultipleRef(Reference):
     
     ##
     # @param max_item int | None : indicate the maximum number of item referenced by this field, None mean no limit
     def __init__(self, max_item = None, **kwargs):
+        self.max_item = max_item
         super().__init__(**kwargs)
 
         
     def _check_data_value(self, value):
+        value = value.split(',')
         if self.max_item is not None:
             if self.max_item < len(value):
                 return None, FieldValidationError("To many items")
+        return value, None
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #

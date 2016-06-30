@@ -20,10 +20,9 @@ class List(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        val, expt = super()._check_data_value()
+        val, expt = super()._check_data_value(value)
         if not isinstance(expt, Exception):
             val = list(val)
-        val, expt = super()._check_data_value(value.values())
         return val, expt
 
 
@@ -41,10 +40,9 @@ class Set(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        val, expt = super()._check_data_value()
+        val, expt = super()._check_data_value(value)
         if not isinstance(expt, Exception):
-            val = set(val)
-        val, expt = super()._check_data_value(value.values())
+            val = tuple(set(val))
         return val, expt
 
 
@@ -62,9 +60,9 @@ class Map(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
+        val, expt = super()._check_data_value(value)
         if not isinstance(value, dict):
             return None, FieldValidationError("Values for dict fields should be dict")
-        val, expt = super()._check_data_value(value.values())
         return (
                 None if isinstance(expt, Exception) else value,
                 expt)

@@ -188,7 +188,9 @@ class LeFilteredQuery(LeQuery):
                 other_ds_filters[cur_ds].append(
                     ((rfield, ref_dict), op, value))
         #deduplication of std filters
-        filters_orig = list(set(filters_orig))
+        if not isinstance(filters_orig, set):
+            filters_orig = set(filters_orig)
+        filters_orig = list(filters_orig)
         # Sets _query_filter attribute of self query
         self._query_filter = (filters_orig, result_rel_filters)
 
@@ -290,9 +292,7 @@ field name" % fieldname)
                 err_l[field] = ret
                 continue
             field_datahandler = self._target_class.field(field)
-            # Casting value given datahandler
-            value, error = field_datahandler._check_data_value(value)
-            if isinstance(error, Exception):
+            if isinstance(field_datahandler, Exception):
                 err_l[field] = error
                 continue
             if ref_field is not None and not field_datahandler.is_reference():
@@ -335,6 +335,8 @@ field to use for the relational filter"
                 else:
                     rel_filters.append((ret, operator, value))
             else:
+                # Casting value given datahandler
+                value, error = field_datahandler._check_data_value(value)
                 res_filters.append((field,operator, value))
         
         if len(err_l) > 0:
