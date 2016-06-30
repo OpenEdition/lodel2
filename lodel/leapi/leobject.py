@@ -658,9 +658,7 @@ construction and consitency when datas are not complete\n")
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
-        if field_list is None:
-            field_list = cls.fieldnames(True)
-        else:
+        if field_list is not None:
             for uid in [ uidname
                 for uidname in cls.uid_fieldname()
                 if uidname not in field_list ]:

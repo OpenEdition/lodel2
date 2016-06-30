@@ -69,6 +69,9 @@ def connect(host, port, db_name, username, password):
 def object_collection_name(class_object):
     return class_object.__name__
 
+def collection_name(class_name):
+    return class_name
+
 ## @brief Determine a collection field name given a lodel2 fieldname
 # @note For the moment this method only return the argument but EVERYWHERE
 # in the datasource we should use this method to gather proper fieldnames
