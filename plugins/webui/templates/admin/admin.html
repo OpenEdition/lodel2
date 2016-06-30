@@ -1,3 +1,10 @@
 {% extends "base_backend.html" %}
-{% block title %}Lodel 2 - ADMIN{% endblock %}
-{% block content %}ADMIN{% endblock %}
+{% block title %}- Index{% endblock %}
+{% block body %}
+<h1>{{settings.sitename}} administration</h1>
+{{url('admin')}}
+<ul>
+	<li></li>
+</ul>
+
+{% endblock %}

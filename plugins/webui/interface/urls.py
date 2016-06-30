@@ -4,7 +4,8 @@ from .controllers import *
 urls = (
     (r'^/?$', index),
     (r'^/admin/?$', admin),
-    (r'^/admin/(.+)$', admin),
+    (r'^/admin/create$', admin_create),
+    (r'^/admin/update$', admin_update),
     (r'/test/(?P<id>.*)$', test),
     (r'^/test/?$', test),
     #(r'/show/(?P<id>.*)$', show_document),

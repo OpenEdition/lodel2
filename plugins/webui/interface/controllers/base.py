@@ -5,7 +5,15 @@ from ..template.loader import TemplateLoader
 
 # This module contains the web UI controllers that will be called from the web ui class
 
-def get_response(tpl='empty.html', tpl_vars={}, mimetype='text/html', status_code=200):
+##@brief Render a template and return a respone
+#@param tpl str : template relativ path
+#@param tpl_vars : templates variables (obsolete)
+#@param mimetype
+#@param status_code
+#@param **kwargs : new version of tpl_vars
+#@return a response...
+def get_response(tpl='empty.html', tpl_vars={}, mimetype='text/html', status_code=200, **kwargs):
+    tpl_vars.update(kwargs)
     loader = TemplateLoader()
     response = Response(loader.render_to_response(tpl, template_vars=tpl_vars), mimetype=mimetype)
     response.status_code = status_code
