@@ -2,22 +2,28 @@
 {% set my_classname = params['name'].pop() %}
 {% block title %}Lodel 2 - Class {{ my_classname }} {% endblock %}
 {% block content %} 
-<h1>Lodel 2 - Class {{ params['name'] }} </h1>
+<h1>Lodel 2 - Class {{ my_classname }} </h1>
  {% set my_class  = leapi.Object.name2class(my_classname) %}
- {% if my_class.is_abstract() %}
+ {% if my_class.child_classes()|length >0 %}
      <h2> Childs classes</h2>
      <ul>
      {% for child in my_class.child_classes() %}
-     <li><a href="show_class?name={{ child.__name__ }}" target="_blank">{{ child.__name__ }}</a></li>
+         {% if child.is_abstract() %}
+            {% set abst = ' - Abstract class ' %}
+            {% else %}
+            {% set abst = ' - ' ~ child.get(None)|length %}
+         {% endif %}
+     <li><a href="show_class?name={{ child.__name__ }}" target="_blank">{{ child.__name__ }}</a>{{ abst }}</li>
      {% endfor %}
      </ul>
- {% else %}
+  {% endif %}
+ {% if not my_class.is_abstract() %}
     {% set uid_f = my_class.uid_fieldname() %}
     {% set objects = my_class.get(None) %}
     <ul>
     {% for obj in objects %}
         <li><a href="show_object?classe={{ my_classname }}&id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
-     {% endfor %}
+    {% endfor %}
     </ul>
  {% endif %}
 
