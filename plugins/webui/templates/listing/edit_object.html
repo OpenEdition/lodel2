@@ -13,9 +13,7 @@
 <ul>
     <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
     {% for fieldname, fieldvalue in obj.datas().items() %}
-        {% if fieldvalue is not none %}
-    <li> {{ fieldname }} : {{ fieldvalue }} </li>
-        {% endif %}
+    <li> {{ fieldname }} : {{ components.input(fieldname , value=fieldvalue , type='text') }} </li>
     {% endfor %}
 </ul>
 {% endblock %}
