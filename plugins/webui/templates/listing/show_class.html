@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Lodel 2 - Class {{ params['name'] }} {% endblock %}
+{% set my_classname = params['name'].pop() %}
+{% block title %}Lodel 2 - Class {{ my_classname }} {% endblock %}
 {% block content %} 
 <h1>Lodel 2 - Class {{ params['name'] }} </h1>
-    {% set my_classname = params['name'].pop() %}
  {% set my_class  = leapi.Object.name2class(my_classname) %}
  {% if my_class.is_abstract() %}
      <h2> Childs classes</h2>
