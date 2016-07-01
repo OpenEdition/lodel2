@@ -1,8 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Lodel 2 - Class {{ name }} {% endblock %}
+{% block title %}Lodel 2 - Class {{ params['name'] }} {% endblock %}
 {% block content %} 
-<h1>Lodel 2 - Class {{ name }} </h1>
-<ul>
-   
-</ul>
+<h1>Lodel 2 - Class {{ params['name'] }} </h1>
+    {% set my_classname = params['name'].pop() %}
+ {% set my_class  = leapi.Object.name2class(my_classname) %}
+ {% if my_class.is_abstract() %}
+     <h2> Childs classes</h2>
+     <ul>
+     {% for child in my_class.child_classes() %}
+     <li><a href="show_class?name={{ child.__name__ }}" target="_blank">{{ child.__name__ }}</a></li>
+     {% endfor %}
+     </ul>
+ {% else %}
+    {% set uid_f = my_class.uid_fieldname() %}
+    {% set objects = my_class.get(None) %}
+    <ul>
+    {% for obj in objects %}
+        <li><a href="show_object?classe={{ my_classname }}&id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
+     {% endfor %}
+    </ul>
+ {% endif %}
+
 {% endblock %} 

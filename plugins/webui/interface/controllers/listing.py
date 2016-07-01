@@ -7,13 +7,13 @@ def list_classes(request):
     return get_response('listing/list_classes.html', tpl_vars=template_vars)
 
 def show_class(request):
-    templates_var = {
+    template_vars = {
         'params': request.GET
     }
     return get_response('listing/show_class.html', tpl_vars=template_vars)
 
 def show_object(request):
-    templates_var = {
+    template_vars = {
         'params': request.GET
     }
     return get_response('listing/show_object.html', tpl_vars=template_vars)
