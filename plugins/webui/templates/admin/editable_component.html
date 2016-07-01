@@ -1,0 +1,10 @@
+{% macro input(fieldname, field, value='') -%}
+	<label for="field_input_{{fieldname}}">{{fieldname}}</label>
+	{% if field.base_type == 'bool' %}
+		<input id="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" />
+	{% elif field.base_type == 'char' or field.base_type == 'int' %}
+		<input id="field_input_{{fieldname}}" type="text" value="{{value}}" />
+	{% else %}
+		<p>Unsupported base type "{{field.base_type}}" </p>
+	{% endif %}
+{%- endmacro %}
