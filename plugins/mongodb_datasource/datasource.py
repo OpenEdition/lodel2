@@ -75,7 +75,7 @@ class MongoDbDatasource(object):
     #@warning multiple UID broken by this method
     #@return an integer
     def new_numeric_id(self, emcomp):
-        target = emcomp.uid_source()
+        target = emcomp #.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
             target, field_list = [tuid], filters = [], 
@@ -181,7 +181,7 @@ class MongoDbDatasource(object):
     #@param relational_filters list : List of relational filters
     #@return int : number of deleted records
     def delete(self, target, filters, relational_filters):
-        if target.is_asbtract():
+        if target.is_abstract():
             #Deletion with abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.delete)
@@ -198,7 +198,7 @@ class MongoDbDatasource(object):
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
-        if target.is_asbtract():
+        if target.is_abstract():
             #Update using abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.update, upd_datas = upd_datas)
@@ -213,6 +213,7 @@ class MongoDbDatasource(object):
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
+        new_datas['lodel_id'] = self.new_numeric_id(target)
         res = self.__collection(target).insert(new_datas)
         return str(res)
 

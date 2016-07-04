@@ -1,1 +1,19 @@
 {% extends "base_backend.html" %}
+{% import "admin/editable_component.html" as edit %}
+{% set my_id = params['lodel_id'].pop() %}
+{% set classname = params['classname'].pop() %}}
+{% set my_class = leapi.Object.name2class(classname) %}
+{% set objects = my_class.get(('lodel_id = %s') % (my_id)) %}
+{% set obj = objects.pop() %}
+{% block title %}- Edit Object{% endblock %}
+{% block body %}
+<h1>Lodel 2 - Edit Object {{ my_id }} of {{ classname }}</h1>
+    <form action="" method ="post">
+    <input type="hidden" name="uid" value="{{ my_id}}" >
+    <input type="hidden" name="classname" value={{ classname }} />
+    {% for fieldname, fieldvalue in obj.fields().items() %}
+       <p> {{edit.input(fieldname, fieldvalue, obj.data(fieldname)) }} </p>
+    {% endfor %}
+     <input type="submit" value="Save">
+    </form>
+{% endblock %}

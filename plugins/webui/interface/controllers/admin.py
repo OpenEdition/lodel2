@@ -10,6 +10,32 @@ def index_admin(request):
     return get_response('admin/admin.html')
 
 def admin_update(request):
+    if request.method == 'POST':
+        error = None
+        datas = list()
+        classname = request.form['classname']
+        uid = request.form['uid']
+        try:
+            target_leo = dyncode.Object.name2class(classname)
+        except LeApiError:
+            classname = None
+        if classname is None or target_leo.is_abstract():
+            raise HttpException(400)
+        fieldnames = target_leo.fieldnames()
+        fields = dict()
+
+        for in_put, in_value in request.form.items():
+            if in_put != 'classname' and  in_put != 'uid':
+                fields[in_put[12:]] = in_value
+        obj = (target_leo.get(('lodel_id = %s' % (uid))))[0]
+        inserted = obj.update(fields)
+        
+        if new_uid==1:
+            msg = 'Successfull creation';
+        else:
+            msg = 'Oops something wrong happened...object not saved'
+        return get_response('admin/admin_edit.html', target=target_leo, lodel_id = uid, msg = msg)
+
     test_valid = 'lodel_id' in request.GET \
         and len(request.GET['lodel_id']) == 1
 
@@ -25,10 +51,38 @@ def admin_update(request):
         obj = dyncode.Object.get(['lodel_id = %d' % lodel_id])
         if len(obj) == 0:
             raise HttpException(404)
-    return get_response('admin/admin_edit.html', obj = obj)
+    template_vars = {
+        'params': request.GET
+    }
+    return get_response('admin/admin_edit.html', tpl_vars=template_vars)
 
 def admin_create(request):
     classname = None
+
+    if request.method == 'POST':
+        error = None
+        datas = list()
+        classname = request.form['classname']
+        try:
+            target_leo = dyncode.Object.name2class(classname)
+        except LeApiError:
+            classname = None
+        if classname is None or target_leo.is_abstract():
+            raise HttpException(400)
+        fieldnames = target_leo.fieldnames()
+        fields = dict()
+
+        for in_put, in_value in request.form.items():
+            if in_put != 'classname':
+                fields[in_put[12:]] = in_value
+        new_uid = target_leo.insert(fields)
+        
+        if not new_uid is None:
+            msg = 'Successfull creation';
+        else:
+            msg = 'Oops something wrong happened...object not saved'
+        return get_response('admin/admin_create.html', target=target_leo, msg = msg)
+    
     if 'classname' in request.GET:
         classname = request.GET['classname']
         if len(classname) > 1:
@@ -38,12 +92,20 @@ def admin_create(request):
             target_leo = dyncode.Object.name2class(classname)
         except LeApiError:
             classname = None
+    msg = None
+    if 'msg' in request.GET:
+        msg = request.GET['msg']
     if classname is None or target_leo.is_abstract():
         raise HttpException(400)
-    
-    return get_response('admin/admin_create.html', target=target_leo)
+    template_vars = {
+        'params': request.GET,
+        'msg' : msg
+    }
+    return get_response('admin/admin_create.html', tpl_vars=template_vars, target=target_leo)
 
 def admin(request):
     return get_response('admin/admin.html')
 
+        
+            
 
