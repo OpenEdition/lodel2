@@ -524,7 +524,7 @@ target to LeUpdateQuery constructor"
             if target_class.initialized:
                 self.__leobject_instance_datas = target.datas(True)
             else:
-                query_filters = [(target._uid[0], '=', str(target.uid()))]
+                query_filters = [(target._uid[0], '=', target.uid())]
     
         super().__init__(target_class, query_filters)
 
@@ -559,7 +559,7 @@ target to LeUpdateQuery constructor"
                 res_data.update(datas)
                 res_datas = self._target_class.prepare_datas(
                     res_data, True, True)
-                filters = [(uid_name, '=', str(res_data[uid_name]))]
+                filters = [(uid_name, '=', res_data[uid_name])]
                 res = self._rw_datasource.update(
                     self._target_class, filters, [],
                     res_datas)
