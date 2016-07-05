@@ -12,6 +12,7 @@ def index_admin(request):
     return get_response('admin/admin.html')
 
 def admin_update(request):
+    msg=''
     if request.method == 'POST':
 
         error = None

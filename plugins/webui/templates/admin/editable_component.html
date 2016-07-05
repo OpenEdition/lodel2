@@ -5,6 +5,6 @@
 	{% elif field.base_type == 'char' or field.base_type == 'int' %}
 		<input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{value}}" />
 	{% else %}
-		<p>Unsupported base type "{{field.base_type}}" </p>
+		Unsupported base type "{{field.base_type}}" </br>
 	{% endif %}
 {%- endmacro %}

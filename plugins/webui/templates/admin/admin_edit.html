@@ -12,7 +12,7 @@
     <input type="hidden" name="uid" value="{{ lodel_id}}" >
     <input type="hidden" name="classname" value={{ target.__name__ }} />
     {% for fieldname, fieldvalue in obj.fields().items() %}
-       <p> {{edit.input(fieldname, fieldvalue, obj.data(fieldname)) }} </p>
+       <div style="padding-bottom:15px;"> {{edit.input(fieldname, fieldvalue, obj.data(fieldname)) }} </div>
     {% endfor %}
      <input type="submit" value="Save">
     </form>

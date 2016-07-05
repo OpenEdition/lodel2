@@ -10,7 +10,7 @@
  <form action="" method ="post">
      <input type="hidden" name="classname" id="classname" value="{{target.__name__}}" />
 	{% for fieldname, field in target.fields().items() %}
-     <div> {{edit.input(fieldname, field) }}</div>
+     <div style="padding-bottom:15px;"> {{edit.input(fieldname, field) }}</div>
 	{% endfor %}
      <p>&nbsp;</p>
  <input type="submit" value="Save">
