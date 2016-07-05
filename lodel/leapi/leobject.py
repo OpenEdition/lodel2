@@ -599,7 +599,6 @@ construction and consitency when datas are not complete\n")
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
-        
         try:
             query = LeUpdateQuery(self.__class__, query_filter)
         except Exception as err:

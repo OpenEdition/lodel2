@@ -5,12 +5,15 @@ from lodel.leapi.exceptions import *
 from lodel import logger
 
 import leapi_dyncode as dyncode
+import warnings
+from lodel import logger
 
 def index_admin(request):
     return get_response('admin/admin.html')
 
 def admin_update(request):
     if request.method == 'POST':
+
         error = None
         datas = list()
         classname = request.form['classname']
@@ -60,10 +63,8 @@ def admin_update(request):
             target_leo = dyncode.Object.name2class(classname)
         except LeApiError:
             classname = None
-    template_vars = {
-        'params': request.GET
-    }
-    return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id, tpl_vars=template_vars)
+
+    return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
 
 def admin_create(request):
     classname = None
@@ -106,11 +107,7 @@ def admin_create(request):
         msg = request.GET['msg']
     if classname is None or target_leo.is_abstract():
         raise HttpException(400)
-    template_vars = {
-        'params': request.GET,
-        'msg' : msg
-    }
-    return get_response('admin/admin_create.html', tpl_vars=template_vars, target=target_leo)
+    return get_response('admin/admin_create.html', target=target_leo)
 
 def admin(request):
     return get_response('admin/admin.html')
