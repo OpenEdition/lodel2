@@ -130,11 +130,20 @@ class MongoDbDatasource(object):
 
         query_filters = self.__process_filters(
             target, filters, relational_filters)
+        
         query_result_ordering = None
         if order is not None:
             query_result_ordering = utils.parse_query_order(order)
         
         if group is None:
+            if field_list is None:
+                field_list = dict()
+            else:
+                f_list=dict()
+                for fl in field_list:
+                    f_list[fl] = 1
+                field_list = f_list
+            field_list['_id'] = 0
             cursor = collection.find(
                 spec = query_filters,
                 fields=field_list,
@@ -205,8 +214,9 @@ class MongoDbDatasource(object):
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
-        res = self.__collection(target).update_many(mongo_filters, upd_datas)
-        return res.modified_count()
+        res = self.__collection(target).update(mongo_filters, upd_datas)
+        
+        return 1 #res.modified_count()
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
