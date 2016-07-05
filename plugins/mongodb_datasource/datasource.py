@@ -215,15 +215,16 @@ class MongoDbDatasource(object):
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update(mongo_filters, upd_datas)
-        
-        return 1 #res.modified_count()
+        logger.warning(mongo_filters)
+        logger.warning(upd_datas)
+        logger.warning(res)
+        return res['n']
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
-        new_datas['lodel_id'] = self.new_numeric_id(target)
         res = self.__collection(target).insert(new_datas)
         return str(res)
 
