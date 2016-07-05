@@ -226,7 +226,7 @@ class LeObject(object):
         uid_handlers = set( cls._fields[name] for name in cls._uid )
         for pcls in cls.hierarch()[1:]:
             puid_handlers = set(cls._fields[name] for name in pcls._uid)
-            if set(pcls._uid) != set(pcls._uid) \
+            if set(pcls._uid) != set(prev._uid) \
                 or puid_handlers != uid_handlers:
                 break
             prev = pcls

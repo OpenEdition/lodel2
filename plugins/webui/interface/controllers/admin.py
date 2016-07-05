@@ -30,8 +30,8 @@ def admin_update(request):
         obj = (target_leo.get(('lodel_id = %s' % (uid))))[0]
         inserted = obj.update(fields)
         
-        if new_uid==1:
-            msg = 'Successfull creation';
+        if inserted==1:
+            msg = 'Successfully updated';
         else:
             msg = 'Oops something wrong happened...object not saved'
         return get_response('admin/admin_edit.html', target=target_leo, lodel_id = uid, msg = msg)
@@ -51,10 +51,19 @@ def admin_update(request):
         obj = dyncode.Object.get(['lodel_id = %d' % lodel_id])
         if len(obj) == 0:
             raise HttpException(404)
+    if 'classname' in request.GET:
+        classname = request.GET['classname']
+        if len(classname) > 1:
+            raise HttpException(400)
+        classname = classname[0]
+        try:
+            target_leo = dyncode.Object.name2class(classname)
+        except LeApiError:
+            classname = None
     template_vars = {
         'params': request.GET
     }
-    return get_response('admin/admin_edit.html', tpl_vars=template_vars)
+    return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id, tpl_vars=template_vars)
 
 def admin_create(request):
     classname = None
