@@ -157,7 +157,7 @@ class MongoDbDatasource(object):
             sorting_list.extends(query_result_ordering)
 
             pipeline.append({'$match': query_filters})
-            if results_field_list is not None:
+            if field_list is not None:
                 pipeline.append({
                     '$project': SON([{field_name: 1}
                     for field_name in field_list])})
