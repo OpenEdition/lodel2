@@ -111,3 +111,6 @@ class Concat(FormatString):
         super().__init__(
             format_string = format_string, field_list = field_list, **kwargs)
 
+class Password(Varchar):
+    help = 'Handle passwords'
+    pass

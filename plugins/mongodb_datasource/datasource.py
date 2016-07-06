@@ -215,9 +215,6 @@ class MongoDbDatasource(object):
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update(mongo_filters, upd_datas)
-        logger.warning(mongo_filters)
-        logger.warning(upd_datas)
-        logger.warning(res)
         return res['n']
 
     ## @brief Inserts a record in a given collection

@@ -10,6 +10,7 @@ from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest
 from .exceptions import *
 from lodel.utils.datetime import get_utc_timestamp
+from lodel.plugin.hooks import LodelHook
 
 SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
 SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
@@ -73,5 +74,7 @@ def application(env, start_response):
     if request.session.should_save:
         session_store.save(request.session)
         response.set_cookie('sid', request.session.sid)
-
-    return response(env, start_response)
+    
+    res = response(env, start_response)
+    LodelHook.call_hook('lodel2_session_end', __file__, None)
+    return res

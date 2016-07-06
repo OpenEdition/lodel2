@@ -53,6 +53,9 @@ if __name__ == '__main__':
         runner.run(suite)
         exit()
 
+    import lodel
+    import leapi_dyncode as dyncode
+    lodel.dyncode = dyncode
     LodelHook.call_hook('lodel2_loader_main', '__main__', None)
 
     #Run interative python
