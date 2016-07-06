@@ -7,6 +7,8 @@ import socket
 import inspect
 import copy
 
+from lodel.plugin.hooks import LodelHook
+
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
 # Validator are registered in the SettingValidator class.
@@ -31,6 +33,7 @@ class SettingValidator(object):
     def __init__(self, name, none_is_valid = False):
         if name is not None and name not in self._validators:
             raise NameError("No validator named '%s'" % name)
+        self.__none_is_valid = none_is_valid
         self.__name = name
 
     ##@brief Call the validator
@@ -40,6 +43,8 @@ class SettingValidator(object):
     def __call__(self, value):
         if self.__name is None:
             return value
+        if self.__none_is_valid and value is None:
+            return None
         try:
             return self._validators[self.__name](value)
         except Exception as e:
@@ -152,6 +157,8 @@ def file_err_output(value):
 
 ##@brief Boolean value validator callback
 def boolean_val(value):
+    if isinstance(value, bool):
+        return value
     if value.strip().lower() == 'true' or value.strip() == '1':
         value = True
     elif value.strip().lower() == 'false' or value.strip() == '0':
@@ -174,7 +181,7 @@ def loglevel_val(value):
     return value.upper()
 
 def path_val(value):
-    if not os.path.exists(value):
+    if value is None or not os.path.exists(value):
         raise SettingsValidationError(
                 "path '%s' doesn't exists" % value)
     return value
@@ -211,6 +218,28 @@ def host_val(value):
         msg = "The value '%s' is not a valid host"
         raise SettingsValidationError(msg % value)
 
+def emfield_val(value):
+    spl = value.split('.')
+    if len(spl) != 2:
+        msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
+        raise SettingsValidationError(msg % value)
+    value = tuple(spl)
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def emfield_conf_check(hookname, caller, payload):
+        from lodel import dyncode
+        classnames = { cls.__name__.lower():cls for cls in dyncode.dynclasses}
+        if value[0].lower() not in classnames:
+            msg = "Following dynamic class do not exists in current EM : %s"
+            raise SettingsValidationError(msg % value[0])
+        ccls = classnames[value[0].lower()]
+        if value[1].lower() not in ccls.fieldnames(True):
+            msg = "Following field not found in class %s : %s"
+            raise SettingsValidationError(msg % value)
+            
+            
+    return value
+        
 #
 #   Default validators registration
 #
@@ -270,6 +299,11 @@ SettingValidator.register_validator(
     host_val,
     'host validator')
 
+SettingValidator.register_validator(
+    'emfield',
+    emfield_val,
+    'EmField name validator')
+
 SettingValidator.create_list_validator(
     'list',
     SettingValidator('strip'),
@@ -306,8 +340,6 @@ LODEL2_CONF_SPECS = {
                         SettingValidator('list')),
         'sitename': (   'noname',
                         SettingValidator('strip')),
-        'lib_path': (   None,
-                        SettingValidator('path')),
         'runtest': (    False,
                         SettingValidator('bool')),
     },

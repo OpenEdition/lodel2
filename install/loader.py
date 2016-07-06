@@ -32,7 +32,6 @@ def start():
     from lodel.plugin import Plugin
     logger.debug("Loader.start() called")
     Plugin.load_all()
-
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
 
 
@@ -40,7 +39,6 @@ if __name__ == '__main__':
 
     start()
     if Settings.runtest:
-        start()
         import unittest
         import tests
         loader = unittest.TestLoader()
@@ -56,6 +54,7 @@ if __name__ == '__main__':
     import lodel
     import leapi_dyncode as dyncode
     lodel.dyncode = dyncode
+    LodelHook.call_hook('lodel2_dyncode_bootstraped', '__main__', None)
     LodelHook.call_hook('lodel2_loader_main', '__main__', None)
 
     #Run interative python
