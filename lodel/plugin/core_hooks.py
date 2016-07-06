@@ -9,7 +9,7 @@ from lodel import logger
 
 ##@brief Bootstrap hook to check datasources configuration
 @LodelHook('lodel2_bootstraped')
-def datasources_bootstrap_callaback(hook_name, caller, payload):
+def datasources_bootstrap_hook(hook_name, caller, payload):
     for ds_name in Settings.datasources._fields:
         ds_conf = getattr(Settings.datasources, ds_name)
         identifier = getattr(ds_conf, 'identifier')
@@ -34,6 +34,25 @@ def datasources_bootstrap_callaback(hook_name, caller, payload):
         log_msg %= (ds_name, identifier)
         logger.debug(log_msg)
 
+##@brief Bootstrap hook that print debug infos about registered hooks
+@LodelHook('lodel2_bootstraped')
+def list_hook_debug_hook(name, caller, payload):
+    from lodel.auth.auth import Auth
+    from lodel import logger
+    hlist = LodelHook.hook_list()
+    for name, reg_hooks in hlist.items():
+        for hook, priority in reg_hooks:
+            logger.debug("{modname}.{funname} is registered as hook \
+{hookname} with priority {priority}".format(
+                modname = hook.__module__,
+                funname = hook.__name__,
+                priority = priority,
+                hookname = name))
+            
+        
+
+
+##@brief Hooks that trigger custom methods injection in dynmic classes
 @LodelHook("lodel2_dyncode_loaded")
 def lodel2_plugins_custom_methods(self, caller, dynclasses):
     from lodel.plugin.plugins import CustomMethod
