@@ -216,54 +216,54 @@ def host_val(value):
 #
 
 SettingValidator.register_validator(
-                                        'dummy',
-                                        lambda value:value,
-                                        'Validate anything')
+    'dummy',
+    lambda value:value,
+    'Validate anything')
 
 SettingValidator.register_validator(
-                                        'none',
-                                        none_val,
-                                        'Validate None')
+    'none',
+    none_val,
+    'Validate None')
 
 SettingValidator.register_validator(
-                                        'string',
-                                        str_val,
-                                        'Validate string values')
+    'string',
+    str_val,
+    'Validate string values')
 
 SettingValidator.register_validator(
-                                        'strip',
-                                        str.strip,
-                                        'String trim')
+    'strip',
+    str.strip,
+    'String trim')
 
 SettingValidator.register_validator(
-                                        'int',
-                                        int_val,
-                                        'Integer value validator')
+    'int',
+    int_val,
+    'Integer value validator')
 
 SettingValidator.register_validator(
-                                        'bool',
-                                        boolean_val,
-                                        'Boolean value validator')
+    'bool',
+    boolean_val,
+    'Boolean value validator')
 
 SettingValidator.register_validator(
-                                        'errfile',
-                                        file_err_output,
-                                        'Error output file validator (return stderr if filename is "-")')
+    'errfile',
+    file_err_output,
+    'Error output file validator (return stderr if filename is "-")')
 
 SettingValidator.register_validator(
-                                        'directory',
-                                        directory_val,
-                                        'Directory path validator')
+    'directory',
+    directory_val,
+    'Directory path validator')
 
 SettingValidator.register_validator(
-                                        'loglevel',
-                                        loglevel_val,
-                                        'Loglevel validator')
+    'loglevel',
+    loglevel_val,
+    'Loglevel validator')
 
 SettingValidator.register_validator(
-                                        'path',
-                                        path_val,
-                                        'path validator')
+    'path',
+    path_val,
+    'path validator')
 
 SettingValidator.register_validator(
     'host',
@@ -271,25 +271,25 @@ SettingValidator.register_validator(
     'host validator')
 
 SettingValidator.create_list_validator(
-                                            'list',
-                                            SettingValidator('strip'),
-                                            description = "Simple list validator. Validate a list of values separated by ','",
-                                            separator = ',')
+    'list',
+    SettingValidator('strip'),
+    description = "Simple list validator. Validate a list of values separated by ','",
+    separator = ',')
 
 SettingValidator.create_list_validator(
-                                            'directory_list',
-                                            SettingValidator('directory'),
-                                            description = "Validator for a list of directory path separated with ','",
-                                            separator = ',')
+    'directory_list',
+    SettingValidator('directory'),
+    description = "Validator for a list of directory path separated with ','",
+    separator = ',')
 SettingValidator.create_write_list_validator(
-                                            'write_list',
-                                            SettingValidator('directory'),
-                                            description = "Validator for an array of values which will be set in a string, separated by ','",
-                                            separator = ',')
+    'write_list',
+    SettingValidator('directory'),
+    description = "Validator for an array of values which will be set in a string, separated by ','",
+    separator = ',')
 SettingValidator.create_re_validator(
-                                        r'^https?://[^\./]+.[^\./]+/?.*$',
-                                        'http_url',
-                                        'Url validator')
+    r'^https?://[^\./]+.[^\./]+/?.*$',
+    'http_url',
+    'Url validator')
 
 #
 #   Lodel 2 configuration specification
