@@ -18,7 +18,7 @@ class MlString(object):
     ]
 
     ##@brief Create a new MlString instance
-    # @param arg str | dict : Can be a json string, a string or a dict
+    # @param arg str | dict : Can be a json string, a string or a dict. It could be also a MlString object
     def __init__(self, arg):
         self.values = dict()
         if isinstance(arg, str):

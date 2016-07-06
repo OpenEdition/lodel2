@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import functools
-from lodel.editorial_model.components import *
+#from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataHandler
 
@@ -104,6 +104,7 @@ def forge_optval(optval):
 ##@brief Generate dyncode from an EmClass
 # @param model EditorialModel : 
 # @param emclass EmClass : EmClass instance
+# @todo delete imports. It is never use, consequently changed return parameters.
 # @return a tuple with emclass python code, a set containing modules name to import, and a list of python instruction to bootstrap dynamic code, in this order
 def generate_classes(model):
     res = ""
