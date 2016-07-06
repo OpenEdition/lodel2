@@ -38,7 +38,7 @@ def connection_string(host, port, username, password):
         raise RuntimeError("Password given but no username given...")
     host = 'localhost' if host is None else host
     ret += host
-    if port != None:
+    if port is not None:
         ret += ':'+str(port)
     return ret
 

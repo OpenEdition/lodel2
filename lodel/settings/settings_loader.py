@@ -63,51 +63,49 @@ class SettingsLoader(object):
     # @return the option
     def getoption(self,section,keyname,validator,default_value=None,mandatory=False):
         conf=self.__conf
-        if section in conf:
-            sec=conf[section]
-            if keyname in sec:
-                optionstr=sec[keyname]['value']
-                try:
-                    option= validator(sec[keyname]['value'])
-                except Exception as e:
-                    # Generating nice exceptions
-                    if sec[keyname]['file'] == SettingsLoader.DEFAULT_FILENAME:
-                        expt = SettingsError(   msg = 'Mandatory settings not found',
-                                                key_id = section+'.'+keyname)
-                        self.__errors_list.append(expt)
-                    else:
-                        expt = SettingsValidationError(
-                                                        "For %s.%s : %s" % 
-                                                        (section, keyname,e)
-                        )
-                        expt2 = SettingsError(  msg = str(expt),
-                                                key_id = section+'.'+keyname,
-                                                filename = sec[keyname]['file'])
-                        self.__errors_list.append(expt2)
-                    return
 
-                try:
-                    del self.__conf_sv[section + ':' + keyname]
-                except KeyError: #allready fetched
-                    pass
-                return option
-            elif default_value is None and mandatory:
-                msg = "Default value mandatory for option %s" % keyname
-                expt = SettingsError(   msg = msg,
-                                        key_id = section+'.'+keyname,
-                                        filename = sec[keyname]['file'])
-                self.__errors_list.append(expt)
-                return
+        if section not in conf:
+            conf[section] = dict()
+
+        sec = conf[section]
+        if keyname in sec:
+            result = sec[keyname]['value']
+            try:
+                del self.__conf_sv[section + ':' + keyname]
+            except KeyError: #allready fetched
+                pass
+        elif default_value is None and mandatory:
+            msg = "Default value mandatory for option %s" % keyname
+            expt = SettingsError(   msg = msg,
+                                    key_id = section+'.'+keyname,
+                                    filename = sec[keyname]['file'])
+            self.__errors_list.append(expt)
+            return
+        else:
             sec[keyname]=dict()
             sec[keyname]['value'] = default_value
             sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
-            return default_value
-        else:
-            conf[section]=dict()
-            conf[section][keyname]=dict()
-            conf[section][keyname]['value'] = default_value
-            conf[section][keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
-            return default_value
+            result = default_value
+
+        try:
+            return validator(result)
+        except Exception as e:
+            # Generating nice exceptions
+            if False and sec[keyname]['file'] == SettingsLoader.DEFAULT_FILENAME:
+                expt = SettingsError(   msg = 'Mandatory settings not found',
+                                        key_id = section+'.'+keyname)
+                self.__errors_list.append(expt)
+            else:
+                expt = SettingsValidationError(
+                                                "For %s.%s : %s" % 
+                                                (section, keyname,e)
+                )
+                expt2 = SettingsError(  msg = str(expt),
+                                        key_id = section+'.'+keyname,
+                                        filename = sec[keyname]['file'])
+                self.__errors_list.append(expt2)
+            return
+
     ##@brief Sets option in a config section. Writes in the conf file
     # @param section str : name of the section
     # @param keyname str
