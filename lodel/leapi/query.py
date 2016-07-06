@@ -188,7 +188,9 @@ class LeFilteredQuery(LeQuery):
                 other_ds_filters[cur_ds].append(
                     ((rfield, ref_dict), op, value))
         #deduplication of std filters
-        filters_orig = list(set(filters_orig))
+        if not isinstance(filters_orig, set):
+            filters_orig = set(filters_orig)
+        filters_orig = list(filters_orig)
         # Sets _query_filter attribute of self query
         self._query_filter = (filters_orig, result_rel_filters)
 
@@ -290,6 +292,9 @@ field name" % fieldname)
                 err_l[field] = ret
                 continue
             field_datahandler = self._target_class.field(field)
+            if isinstance(field_datahandler, Exception):
+                err_l[field] = error
+                continue
             if ref_field is not None and not field_datahandler.is_reference():
                 # inconsistency
                 err_l[field] = NameError(   "The field '%s' in %s is not \
@@ -330,10 +335,12 @@ field to use for the relational filter"
                 else:
                     rel_filters.append((ret, operator, value))
             else:
+                # Casting value given datahandler
+                value, error = field_datahandler._check_data_value(value)
                 res_filters.append((field,operator, value))
         
         if len(err_l) > 0:
-            raise LeApiDataCheckError(
+            raise LeApiDataCheckErrors(
                                         "Error while preparing filters : ",
                                         err_l)
         return (res_filters, rel_filters)
@@ -517,7 +524,7 @@ target to LeUpdateQuery constructor"
             if target_class.initialized:
                 self.__leobject_instance_datas = target.datas(True)
             else:
-                query_filters = [(target._uid[0], '=', str(target.uid()))]
+                query_filters = [(target._uid[0], '=', target.uid())]
     
         super().__init__(target_class, query_filters)
 
@@ -552,7 +559,7 @@ target to LeUpdateQuery constructor"
                 res_data.update(datas)
                 res_datas = self._target_class.prepare_datas(
                     res_data, True, True)
-                filters = [(uid_name, '=', str(res_data[uid_name]))]
+                filters = [(uid_name, '=', res_data[uid_name])]
                 res = self._rw_datasource.update(
                     self._target_class, filters, [],
                     res_datas)
@@ -658,17 +665,18 @@ class LeGetQuery(LeFilteredQuery):
     # @throw LeApiQueryError if unknown field given
     def set_field_list(self, field_list):
         err_l = dict()
-        for fieldname in field_list:
-            ret = self._check_field(self._target_class, fieldname)
-            if isinstance(ret, Exception):
-                msg = "No field named '%s' in %s"
-                msg %= (fieldname, self._target_class.__name__)
-                expt = NameError(msg)
-                err_l[fieldname] =  expt
-        if len(err_l) > 0:
-            msg = "Error while setting field_list in a get query"
-            raise LeApiQueryErrors(msg = msg, exceptions = err_l)
-        self._field_list = list(set(field_list))
+        if field_list is not None:
+            for fieldname in field_list:
+                ret = self._check_field(self._target_class, fieldname)
+                if isinstance(ret, Exception):
+                    msg = "No field named '%s' in %s"
+                    msg %= (fieldname, self._target_class.__name__)
+                    expt = NameError(msg)
+                    err_l[fieldname] =  expt
+            if len(err_l) > 0:
+                msg = "Error while setting field_list in a get query"
+                raise LeApiQueryErrors(msg = msg, exceptions = err_l)
+            self._field_list = list(set(field_list))
     
     ##@brief Execute the get query
     def execute(self, datas = None):
@@ -678,9 +686,10 @@ class LeGetQuery(LeFilteredQuery):
     # @returns a list containing the item(s)
     def _query(self, datas = None):
         # select datas corresponding to query_filter
+        fl = list(self._field_list) if self._field_list is not None else None
         l_datas=self._ro_datasource.select( 
             target = self._target_class,
-            field_list = list(self._field_list),
+            field_list = fl,
             filters = self._query_filter[0],
             relational_filters = self._query_filter[1],
             order = self._order,

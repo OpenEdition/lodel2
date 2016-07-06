@@ -1,3 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - DASHBOARD{% endblock %}
-{% block content %}DASHBOARD{% endblock %}
+{% block content %}
+    DASHBOARD <br />
+    {{ lodel.Test().ok() }}
+<ul>
+    <li><a href="list_classes">Tous les types</a></li>
+</ul>
+{% endblock %}

@@ -8,6 +8,9 @@ CONFSPEC = {
                             SettingValidator('dummy')),
         'listen_port': (    '9090',
                             SettingValidator('int')),
+        'virtualenv': ('',
+                       SettingValidator('path')),
+        'uwsgicmd': ('uwsgi_python3', SettingValidator('dummy')),
     },
     'lodel2.webui.sessions': {
         'directory': (  '/tmp/lodel2_session',

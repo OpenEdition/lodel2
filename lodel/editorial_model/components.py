@@ -7,6 +7,7 @@ import hashlib
 
 from lodel.utils.mlstring import MlString
 
+from lodel.settings import Settings
 from lodel.editorial_model.exceptions import *
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
@@ -84,6 +85,12 @@ class EmClass(EmComponent):
         ##@brief Stores EmFields instances indexed by field uid
         self.__fields = dict() 
         
+        self.group = group
+        if group is None:
+            warnings.warn("NO GROUP FOR EMCLASS %s" % uid)
+        else:
+            group.add_components([self])
+    
         #Adding common field
         if not self.abstract:
             self.new_field(
@@ -95,8 +102,9 @@ class EmClass(EmComponent):
                     'eng': "Allow to create instance of the good class when\
  fetching arbitrary datas from DB"},
                 data_handler = 'LeobjectSubclassIdentifier',
-                internal = True)
-    
+                internal = True,
+                group = group)
+
     ##@brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
     @property
@@ -136,6 +144,16 @@ class EmClass(EmComponent):
             return list(fields.values()) if uid is None else fields[uid]
         except KeyError:
             raise EditorialModelError("No such EmField '%s'" % uid)
+    
+    ##@brief Keep in __fields only fields contained in active groups
+    def _set_active_fields(self, active_groups):
+        if not Settings.editorialmodel.editormode:
+            active_fields = []
+            for grp_name, agrp in active_groups.items():
+                active_fields += [ emc for emc in agrp.components()
+                    if isinstance(emc, EmField)]
+            self.__fields = { fname:fdh for fname, fdh in self.__fields.items()
+                if fdh in active_fields }
 
     ##@brief Add a field to the EmClass
     # @param emfield EmField : an EmField instance
@@ -143,6 +161,7 @@ class EmClass(EmComponent):
     # @throw EditorialModelException if an EmField with same uid allready in this EmClass (overwritting allowed from parents)
     # @todo End the override checks (needs methods in data_handlers)
     def add_field(self, emfield):
+        assert_edit()
         if emfield.uid in self.__fields:
             raise EditorialModelError("Duplicated uid '%s' for EmField in this class ( %s )" % (emfield.uid, self))
         # Incomplete field override check
@@ -151,7 +170,6 @@ class EmClass(EmComponent):
             if not emfield.data_handler_instance.can_override(parent_field.data_handler_instance):
                 raise AttributeError("'%s' field override a parent field, but data_handles are not compatible" % emfield.uid)
         self.__fields[emfield.uid] = emfield
-        emfield._emclass = self
         return emfield
     
     ##@brief Create a new EmField and add it to the EmClass
@@ -159,7 +177,8 @@ class EmClass(EmComponent):
     # @param uid str : the EmField uniq id
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() ) 
     def new_field(self, uid, data_handler, **field_kwargs):
-        return self.add_field(EmField(uid, data_handler, **field_kwargs))
+        assert_edit()
+        return self.add_field(EmField(uid, data_handler, self, **field_kwargs))
 
     def d_hash(self):
         m = hashlib.md5()
@@ -196,7 +215,7 @@ class EmField(EmComponent):
     # @param help_text MlString|str|dict : help text
     # @param group EmGroup :
     # @param **handler_kwargs : data handler arguments
-    def __init__(self, uid, data_handler, display_name = None, help_text = None, group = None, **handler_kwargs):
+    def __init__(self, uid, data_handler, em_class = None, display_name = None, help_text = None, group = None, **handler_kwargs):
         from lodel.leapi.datahandlers.base_classes import DataHandler
         super().__init__(uid, display_name, help_text, group)
         ##@brief The data handler name
@@ -208,7 +227,13 @@ class EmField(EmComponent):
         ##@brief Stores data handler instanciation options
         self.data_handler_options = handler_kwargs
         ##@brief Stores the emclass that contains this field (set by EmClass.add_field() method)
-        self._emclass = None
+        self._emclass = em_class
+        if self._emclass is None:
+            warnings.warn("No EmClass for field %s" %uid)
+        if group is None:
+            warnings.warn("No EmGroup for field  %s" % uid)
+        else:
+            group.add_components([self])
 
     ##@brief Returns data_handler_name attribute
     def get_data_handler_name(self):
@@ -315,10 +340,13 @@ class EmGroup(object):
     ##@brief Add components in a group
     # @param components list : EmComponent instances list
     def add_components(self, components):
+        assert_edit()
         for component in components:
             if isinstance(component, EmField):
                 if component._emclass is None:
-                    warnings.warn("Adding an orphan EmField to an EmGroup")
+                    msg = "Adding an orphan EmField '%s' to EmGroup '%s'"
+                    msg %= (component, self)
+                    warnings.warn(msg)
             elif not isinstance(component, EmClass):
                 raise EditorialModelError("Expecting components to be a list of EmComponent, but %s found in the list" % type(component))
         self.__components |= set(components)
@@ -326,6 +354,7 @@ class EmGroup(object):
     ##@brief Add a dependencie
     # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
     def add_dependencie(self, grp):
+        assert_edit()
         try:
             for group in grp:
                 self.add_dependencie(group)
@@ -343,6 +372,7 @@ class EmGroup(object):
     # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
     # Useless ???
     def add_applicant(self, grp):
+        assert_edit()
         try:
             for group in grp:
                 self.add_applicant(group)

@@ -13,8 +13,8 @@ from lodel import logger
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
 from . import utils
-from .utils import object_collection_name,\
-    MONGODB_SORT_OPERATORS_MAP, connection_string
+from .utils import object_collection_name, collection_name, \
+    MONGODB_SORT_OPERATORS_MAP, connection_string, mongo_fieldname
 
 class MongoDbDataSourceError(Exception):
     pass
@@ -75,7 +75,7 @@ class MongoDbDatasource(object):
     #@warning multiple UID broken by this method
     #@return an integer
     def new_numeric_id(self, emcomp):
-        target = emcomp.uid_source()
+        target = emcomp #.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
             target, field_list = [tuid], filters = [], 
@@ -130,16 +130,26 @@ class MongoDbDatasource(object):
 
         query_filters = self.__process_filters(
             target, filters, relational_filters)
+        
         query_result_ordering = None
         if order is not None:
             query_result_ordering = utils.parse_query_order(order)
-        results_field_list = None if len(field_list) == 0 else field_list
-        limit = limit if limit is not None else 0
-
+        
         if group is None:
+            if field_list is None:
+                field_list = dict()
+            else:
+                f_list=dict()
+                for fl in field_list:
+                    f_list[fl] = 1
+                field_list = f_list
+            field_list['_id'] = 0
             cursor = collection.find(
-                filter=query_filters, projection=results_field_list,
-                skip=offset, limit=limit, sort=query_result_ordering)
+                spec = query_filters,
+                fields=field_list,
+                skip=offset,
+                limit=limit if limit != None else 0,
+                sort=query_result_ordering)
         else:
             pipeline = list()
             unwinding_list = list()
@@ -156,7 +166,7 @@ class MongoDbDatasource(object):
             sorting_list.extends(query_result_ordering)
 
             pipeline.append({'$match': query_filters})
-            if results_field_list is not None:
+            if field_list is not None:
                 pipeline.append({
                     '$project': SON([{field_name: 1}
                     for field_name in field_list])})
@@ -180,7 +190,7 @@ class MongoDbDatasource(object):
     #@param relational_filters list : List of relational filters
     #@return int : number of deleted records
     def delete(self, target, filters, relational_filters):
-        if target.is_asbtract():
+        if target.is_abstract():
             #Deletion with abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.delete)
@@ -197,15 +207,15 @@ class MongoDbDatasource(object):
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
-        if target.is_asbtract():
+        if target.is_abstract():
             #Update using abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.update, upd_datas = upd_datas)
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
-        res = self.__collection(target).update_many(mongo_filters, upd_datas)
-        return res.modified_count()
+        res = self.__collection(target).update(mongo_filters, upd_datas)
+        return res['n']
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
@@ -252,7 +262,8 @@ class MongoDbDatasource(object):
                         fname, op, val))
                     del(new_filters[i])
             new_filters.append(
-                (CLASS_ID_FIELDNAME, '=', target_child.__name__))
+                (CLASS_ID_FIELDNAME, '=',
+                    collection_name(target_child.__name__)))
             result += act(
                 target = target_child,
                 filters = new_filters,
@@ -348,7 +359,7 @@ class MongoDbDatasource(object):
             if '$in' in res[fname]:
                 #WARNING we allready have a IN on this field, doing dedup
                 #from result
-                deduped = set(res[fname]['$in']) & subq
+                deduped = set(res[fname]['$in']) & subq_results
                 if len(deduped) == 0:
                     del(res[fname]['$in'])
                 else:
@@ -419,8 +430,8 @@ class MongoDbDatasource(object):
                 #here we are filling a dict with leobject as index but
                 #we are doing a UNIQ on collection name
                 cur_collname = object_collection_name(leobject)
-                if cur_collname not in collnames:
-                    leo_collname[cur_collame] = leobject
+                if cur_collname not in leo_collname:
+                    leo_collname[cur_collname] = leobject
                     rfilters[fname][leobject] = dict()
                 #Fecthing the collection's representative leobject
                 repr_leo = leo_collname[cur_collname]
@@ -436,17 +447,33 @@ class MongoDbDatasource(object):
     @classmethod
     def __filters2mongo(cls, filters):
         res = dict()
+        eq_fieldname = [] #Stores field with equal comparison OP
         for fieldname, op, value in filters:
             oop = op
             ovalue = value
             op, value = cls.__op_value_conv(op, value)
+            if op == '=':
+                eq_fieldname.append(fieldname)
+                if fieldname in res:
+                    logger.warning("Dropping previous condition. Overwritten \
+by an equality filter")
+                res[fieldname] = value
+                continue
+            if fieldname in eq_fieldname:
+                logger.warning("Dropping condition : '%s %s %s'" % (
+                    fieldname, op, value))
+                continue
+
             if fieldname not in res:
                 res[fieldname] = dict()
             if op in res[fieldname]:
                 logger.warning("Dropping condition : '%s %s %s'" % (
                     fieldname, op, value))
             else:
-                res[fieldname][op] = value
+                if op not in cls.lodel2mongo_op_map:
+                    raise ValueError("Invalid operator : '%s'" % op)
+                new_op = cls.lodel2mongo_op_map[op]
+                res[fieldname][new_op] = value
         return res
 
 

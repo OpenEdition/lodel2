@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+dyncode = None
+
 ##@page lodel2_start Lodel2 boot mechanism
 #
 # @par Lodel2 boot sequence

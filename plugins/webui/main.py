@@ -6,12 +6,25 @@ from lodel.settings import Settings
 
 PLUGIN_PATH = os.path.dirname(__file__)
 
+##@brief Return the root url of the instance
+#@warning no trailing slash
+def root_url():
+    return Settings.sitename
+
+
 ##@brief uwsgi startup demo
 @LodelHook('lodel2_loader_main')
 def uwsgi_fork(hook_name, caller, payload):
+    from lodel.plugin.plugins import Plugin
+    Plugin.from_name('users')
+
     if Settings.webui.standalone:
-        cmd='uwsgi_python3 --http-socket {addr}:{port} --module plugins.webui.run'
+        cmd='{uwsgi} --http-socket {addr}:{port} --module plugins.webui.run'
         cmd = cmd.format(
                     addr = Settings.webui.listen_address,
-                    port = Settings.webui.listen_port)
+                    port = Settings.webui.listen_port,
+                    uwsgi= Settings.webui.uwsgicmd)
+        if Settings.webui.virtualenv != '':
+            cmd += " --virtualenv %s" % Settings.webui.virtualenv
+
         exit(os.system(cmd))

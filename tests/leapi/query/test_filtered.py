@@ -3,7 +3,7 @@ import unittest
 import tests.loader_utils
 from tests.leapi.query.utils import dyncode_module as dyncode
 
-from lodel.leapi.exceptions import LeApiDataCheckError
+from lodel.leapi.exceptions import *
 from lodel.leapi.query import LeDeleteQuery, LeUpdateQuery, LeGetQuery
 
 class LeFilteredQueryTestCase(unittest.TestCase):
@@ -13,20 +13,20 @@ class LeFilteredQueryTestCase(unittest.TestCase):
     def test_filters(self):
         """ Testing FilteredQuery filters handling """
         test_datas = [  (   'lodel_id = 42',
-                            (   [('lodel_id','=','42')],
+                            (   [('lodel_id','=',42)],
                                 [])),
                         (   'lodel_id <= 42',
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ['lodel_id <= 42'],
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ('lodel_id <= 42',),
-                            (   [('lodel_id','<=','42')],
+                            (   [('lodel_id','<=',42)],
                                 [])),
                         (   ['lodel_id <= 42','lodel_id >= 33'],
-                            (   [   ('lodel_id','<=','42'),
-                                    ('lodel_id', '>=','33')],
+                            (   [   ('lodel_id','<=',42),
+                                    ('lodel_id', '>=',33)],
                                 [])),
         ]
         for q_class in self.q_classes:
@@ -53,7 +53,7 @@ class LeFilteredQueryTestCase(unittest.TestCase):
         )
         for invalid_filter in invalid_filters:
             for q_class in self.q_classes:
-                with self.assertRaises( LeApiDataCheckError,
+                with self.assertRaises( LeApiDataCheckErrors,
                                         msg="for filter '%s'" % (invalid_filter,)):
                     q_class(dyncode.Publication, invalid_filter)
             
@@ -70,7 +70,7 @@ class LeFilteredQueryTestCase(unittest.TestCase):
                         'not in',
                         'like',
                         'not like']
-        values = (  '42',
+        values = (  42,
                     'not in',
                     'in',
                     'like',

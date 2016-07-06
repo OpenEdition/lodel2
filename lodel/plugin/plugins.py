@@ -7,6 +7,7 @@ import copy
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
 import plugins
+from .exceptions import *
 
 ## @package lodel.plugins Lodel2 plugins management
 #
@@ -25,8 +26,6 @@ LOADER_FILENAME_VARNAME = '__loader__'
 PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ACTIVATE_METHOD_NAME = '_activate'
 
-class PluginError(Exception):
-    pass
 
 ##@brief Handle plugins
 #
@@ -119,7 +118,14 @@ class Plugin(object):
     #@throw PluginError if the filename was not valid
     def _import_from_init_var(self, varname):
         # Read varname
-        filename = getattr(self.module, varname)
+        try:
+            filename = getattr(self.module, varname)
+        except AttributeError:
+            msg = "Malformed plugin {plugin}. No {varname} found in __init__.py"
+            msg = msg.format(
+                plugin = self.name,
+                varname = LOADER_FILENAME_VARNAME)
+            raise PluginError(msg)
         #Path are not allowed
         if filename != os.path.basename(filename):
             msg = "Invalid {varname} content : '{fname}' for plugin {name}"
@@ -213,12 +219,8 @@ class Plugin(object):
         #Loading the plugin
         try:
             self.__loader_module = self._import_from_init_var(LOADER_FILENAME_VARNAME)
-        except AttributeError:
-            msg = "Malformed plugin {plugin}. No {varname} found in __init__.py"
-            msg = msg.format(
-                plugin = self.name,
-                varname = LOADER_FILENAME_VARNAME)
-            raise PluginError(msg)
+        except PluginError as e:
+            raise e
         except ImportError as e:
             msg = "Broken plugin {plugin} : {expt}"
             msg = msg.format(

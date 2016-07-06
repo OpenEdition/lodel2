@@ -20,3 +20,7 @@ Instance operations :
 	make dyncode # Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 instance root dir)
 	make init_db # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
     make list_hooks # List all the hooks registered
+
+Instance loader uppdate :
+	If the install/loader.py is updated you can update instance's loader.py using
+		scripts/create_instance.sh -u INSTANCE_PATH

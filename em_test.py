@@ -87,6 +87,7 @@ person.new_field(   'firstname',
                         'fre': 'Prénom',
                     },
                     data_handler = 'varchar',
+                    group = base_group,
 )
 person.new_field(   'lastname',
                     display_name = {
@@ -94,6 +95,7 @@ person.new_field(   'lastname',
                         'fre': 'Nom de famille',
                     },
                     data_handler = 'varchar',
+                    group = base_group,
 )
 person.new_field(   'fullname',
                     display_name = {
@@ -115,6 +117,7 @@ person.new_field(   'alias',
                     allowed_classes = [person],
                     default = None,
                     nullable = True,
+                    group = base_group,
 )
 
 
@@ -324,14 +327,16 @@ index_name = index_abstract.new_field(
     display_name = {
         'eng': 'name',
         'fre': 'nom'},
-    data_handler = 'varchar')
+    data_handler = 'varchar',
+    group = index_group)
 
 index_value = index_abstract.new_field(
     'value',
     display_name = {
         'eng': 'value',
         'fre': 'valeur'},
-    data_handler = 'varchar')
+    data_handler = 'varchar',
+    group = index_group)
 
 text.new_field( 'indexes',
     display_name = {
@@ -341,7 +346,8 @@ text.new_field( 'indexes',
     back_reference = ('Indexabs', 'texts'),
     allowed_classes = [index_abstract],
     default = None,
-    nullable = True)
+    nullable = True,
+    group = index_group)
 
 index_abstract.new_field( 'texts',
     display_name = {
@@ -349,7 +355,8 @@ index_abstract.new_field( 'texts',
         'fre': 'Texte contenant cette index'},
     data_handler = 'list',
     back_reference = ('Text', 'indexes'),
-    allowed_classes = [text])
+    allowed_classes = [text],
+    group = index_group)
 
 index_theme = em.new_class(
     'indexTheme',
@@ -364,7 +371,8 @@ index_theme_theme = index_abstract.new_field(
     'theme',
     display_name = {
         'eng': 'theme'},
-    data_handler = 'varchar')
+    data_handler = 'varchar',
+    group = index_group)
 
 #em.save('xmlfile', filename = 'examples/em_test.xml')
 pickle_file = 'examples/em_test.pickle'

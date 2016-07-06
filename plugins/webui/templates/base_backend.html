@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>{% block title %}{% endblock %}</title>
+    <title>{{ settings.sitename }} Admin{% block title %}{% endblock %}</title>
     {% block style %}{% endblock %}
     {% block scripts %}{% endblock %}
 </head>
 <body>
-    <div id="content">
-        {% block content %}{% endblock %}
-    </div>
+    {% block body %}{% endblock %}
     <script type="text/javascript">{% block javascript %}{% endblock %}</script>
 </body>
 </html>

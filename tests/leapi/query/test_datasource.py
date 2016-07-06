@@ -71,7 +71,7 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
         self.assertEqual(call_args[0], cls)
         self.assertEqual(
             sorted(call_args[1]),
-            sorted([('lodel_id', '=', '1'), ('alias', '=', '2')]))
+            sorted([('lodel_id', '=', 1), ('alias', '=', '2')]))
         self.assertEqual(call_args[2], [])
         self.check_nocall(read = False, exclude = ['delete'])
         self.check_nocall(read = True)
@@ -87,7 +87,7 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
         query.execute()
         self.mockwrite.delete.assert_called_once_with(
             cls,
-            [('lodel_id', '=', '1')],
+            [('lodel_id', '=', 1)],
             [(('alias', {cls: 'firstname'}), '=', 'foo')])
         self.check_nocall(read = False, exclude = ['delete'])
         self.check_nocall(read = True)

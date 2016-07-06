@@ -180,8 +180,11 @@ class LeObject(object):
                                                             cls.__name__))
     ##@return A dict with fieldname as key and datahandler as instance
     @classmethod
-    def fields(cls):
-        return copy.copy(cls._fields)
+    def fields(cls, include_ro = False):
+        if include_ro:
+            return copy.copy(cls._fields)
+        else:
+            return {fname:cls._fields[fname] for fname in cls._fields if not cls._fields[fname].is_internal()}
     
     ##@brief Return the list of parents classes
     #
@@ -223,7 +226,7 @@ class LeObject(object):
         uid_handlers = set( cls._fields[name] for name in cls._uid )
         for pcls in cls.hierarch()[1:]:
             puid_handlers = set(cls._fields[name] for name in pcls._uid)
-            if set(pcls._uid) != set(pcls._uid) \
+            if set(pcls._uid) != set(prev._uid) \
                 or puid_handlers != uid_handlers:
                 break
             prev = pcls
@@ -242,14 +245,24 @@ class LeObject(object):
             ro_ds, rw_ds = cls._datasource_name
         #Read only datasource initialisation
         cls._ro_datasource = cls._init_datasource(ro_ds, True)
-        log_msg = "Read only datasource %s initialized for LeObject %s"
-        log_msg %= (ro_ds, cls.__name__)
-        logger.debug(log_msg)
+        if cls._ro_datasource is None:
+            log_msg = "No read only datasource set for LeObject %s"
+            log_msg %= cls.__name__
+            logger.debug(log_msg)
+        else:
+            log_msg = "Read only datasource '%s' initialized for LeObject %s"
+            log_msg %= (ro_ds, cls.__name__)
+            logger.debug(log_msg)
         #Read write datasource initialisation
         cls._rw_datasource = cls._init_datasource(rw_ds, False)
-        log_msg = "Read&write only datasource %s initialized for LeObject %s"
-        log_msg %= (rw_ds, cls.__name__)
-        logger.debug(log_msg)
+        if cls._ro_datasource is None:
+            log_msg = "No read/write datasource set for LeObject %s"
+            log_msg %= cls.__name__
+            logger.debug(log_msg)
+        else:
+            log_msg = "Read/write datasource '%s' initialized for LeObject %s"
+            log_msg %= (ro_ds, cls.__name__)
+            logger.debug(log_msg)
         
 
     ##@brief Replace the _datasource attribute value by a datasource instance
@@ -586,7 +599,6 @@ construction and consitency when datas are not complete\n")
         query_filter = list()
         for uid in uids:
             query_filter.append((uid, '=', self.data(uid)))
-        
         try:
             query = LeUpdateQuery(self.__class__, query_filter)
         except Exception as err:
@@ -648,9 +660,7 @@ construction and consitency when datas are not complete\n")
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
-        if field_list is None:
-            field_list = cls.fieldnames(True)
-        else:
+        if field_list is not None:
             for uid in [ uidname
                 for uidname in cls.uid_fieldname()
                 if uidname not in field_list ]:

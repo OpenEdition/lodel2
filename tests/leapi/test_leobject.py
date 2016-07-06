@@ -259,7 +259,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             mock_init.assert_called_once_with(
                 dyncode.Person,
                 query_filters = ['lodel_id = 1'],
-                field_list = dyncode.Person.fieldnames(True),
+                field_list = None,
                 order = None, group = None, limit = None, offset = 0)
 
         with patch.object(
