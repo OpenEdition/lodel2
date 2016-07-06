@@ -6,6 +6,8 @@ urls = (
     (r'^/admin/?$', admin),
     (r'^/admin/create$', admin_create),
     (r'^/admin/update$', admin_update),
+    (r'^/admin/classes_admin$', admin_classes),
+    (r'^/admin/class_admin$', admin_class),
     (r'/test/(?P<id>.*)$', test),
     (r'^/test/?$', test),
     #(r'/show/(?P<id>.*)$', show_document),

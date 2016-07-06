@@ -110,6 +110,23 @@ def admin_create(request):
         raise HttpException(400)
     return get_response('admin/admin_create.html', target=target_leo)
 
+def admin_classes(request):
+    return get_response('admin/list_classes_admin.html', my_classes = dyncode.dynclasses)
+
+def admin_class(request):
+    if 'classname' in request.GET:
+        classname = request.GET['classname']
+        if len(classname) > 1:
+            raise HttpException(400)
+        classname = classname[0]
+        try:
+            target_leo = dyncode.Object.name2class(classname)
+        except LeApiError:
+            classname = None
+    if classname is None or target_leo.is_abstract():
+        raise HttpException(400)
+    return get_response('admin/show_class_admin.html', target=target_leo)
+   
 def admin(request):
     return get_response('admin/admin.html')
 
