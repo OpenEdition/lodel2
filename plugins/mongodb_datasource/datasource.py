@@ -14,7 +14,7 @@ from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
 from . import utils
 from .utils import object_collection_name, collection_name, \
-    MONGODB_SORT_OPERATORS_MAP, connection_string
+    MONGODB_SORT_OPERATORS_MAP, connection_string, mongo_fieldname
 
 class MongoDbDataSourceError(Exception):
     pass
@@ -431,7 +431,7 @@ class MongoDbDatasource(object):
                 #we are doing a UNIQ on collection name
                 cur_collname = object_collection_name(leobject)
                 if cur_collname not in collnames:
-                    leo_collname[cur_collame] = leobject
+                    leo_collname[cur_collname] = leobject
                     rfilters[fname][leobject] = dict()
                 #Fecthing the collection's representative leobject
                 repr_leo = leo_collname[cur_collname]
