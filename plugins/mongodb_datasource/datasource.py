@@ -430,7 +430,7 @@ class MongoDbDatasource(object):
                 #here we are filling a dict with leobject as index but
                 #we are doing a UNIQ on collection name
                 cur_collname = object_collection_name(leobject)
-                if cur_collname not in collnames:
+                if cur_collname not in leo_collname:
                     leo_collname[cur_collname] = leobject
                     rfilters[fname][leobject] = dict()
                 #Fecthing the collection's representative leobject
