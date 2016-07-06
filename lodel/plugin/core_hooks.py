@@ -37,7 +37,6 @@ def datasources_bootstrap_hook(hook_name, caller, payload):
 ##@brief Bootstrap hook that print debug infos about registered hooks
 @LodelHook('lodel2_bootstraped')
 def list_hook_debug_hook(name, caller, payload):
-    from lodel.auth.auth import Auth
     from lodel import logger
     hlist = LodelHook.hook_list()
     for name, reg_hooks in hlist.items():
