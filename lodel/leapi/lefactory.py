@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import functools
-#from lodel.editorial_model.components import *
+from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel import logger
