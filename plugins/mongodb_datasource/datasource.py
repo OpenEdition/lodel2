@@ -359,7 +359,7 @@ class MongoDbDatasource(object):
             if '$in' in res[fname]:
                 #WARNING we allready have a IN on this field, doing dedup
                 #from result
-                deduped = set(res[fname]['$in']) & subq
+                deduped = set(res[fname]['$in']) & subq_results
                 if len(deduped) == 0:
                     del(res[fname]['$in'])
                 else:
