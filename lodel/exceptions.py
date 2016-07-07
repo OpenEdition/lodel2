@@ -3,7 +3,6 @@
 class LodelException(Exception):
     pass
 
-
 class LodelExceptions(LodelException):
     ##@brief Instanciate a new exceptions handling multiple exceptions
     # @param msg str : Exception message
@@ -25,3 +24,9 @@ class LodelExceptions(LodelException):
                     expt_msg=str(expt)
             )
         return msg
+
+##@brief Designed to be a non catched exception.
+#
+#@note Designed to be raised in dramatic case
+class LodelFatalError(Exception):
+    pass
