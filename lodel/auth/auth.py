@@ -215,14 +215,8 @@ class Auth(object):
             Settings.auth.pass_classfield)
         res_infos = []
         for clsname, fieldname in infos:
-<<<<<<< HEAD
-            res_infos.append((
-                dyncode.lowername2class(infos[0]),
-                dcls.field(infos[1])))  # TODO cls.field ?
-=======
             dcls = dyncode.lowername2class(infos[0][0])
             res_infos.append((dcls, infos[1][1]))
->>>>>>> Plug webui to auth
 
         link_field = None
         if res_infos[0][0] != res_infos[1][0]:
