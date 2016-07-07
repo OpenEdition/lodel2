@@ -1,9 +1,9 @@
 from lodel import logger
 
-def AuthenticationError(Exception):
+class AuthenticationError(Exception):
     pass
 
-def AuthenticationFailure(Exception):
+class AuthenticationFailure(Exception):
     
     def __init__(self, client):
         msg = "%s : authentication failure" % client
