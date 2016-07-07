@@ -29,6 +29,7 @@ class Client(object):
             del(old)
             logger.debug("Replacing old Client instance by a new one")
         Client._instance = self
+        logger.debug("New client : %s" % self)
 
         # Instanciation done. Triggering Auth instanciation
         self.__auth = Auth(self)
@@ -57,6 +58,18 @@ class Client(object):
 instance exists")
         return cls._instance
     
+    ##@brief Alias of Client::destroy()
+    @classmethod
+    def deauth(cls):
+        cls.destroy()
+    
+    ##@brief Destroy current client
+    @classmethod
+    def destroy(cls):
+        inst = cls._instance
+        cls._instance = None
+        del(inst)
+
     ##@brief Authenticate using login an password
     #@note Wrapper on Auth.auth()
     #@param login str
@@ -160,20 +173,24 @@ class Auth(object):
         # Singleton
         if self._instance is not None:
             bck = self._instance
+            bck.destroy()
             self._instance = None
-            del(bck)
             logger.debug("Previous Auth instance replaced by a new one")
         else:
             #First instance, fetching settings
             self.fetch_settings()
         self.__class__._instance = self
-        
-    ##@brief Instance destructor
-    def __del__(self):
-        self.__user_infos = LodelHook.call_hook('lodel2_session_destroy',
-            caller = self, payload = token)  # TODO unresolved variable
-        pass
     
+    ##@brief Destroy current instance an associated session
+    def _destroy(self):
+        self.__user_infos = LodelHook.call_hook('lodel2_session_destroy',
+            caller = self, payload = self.__session_id)
+    
+    ##@brief Destroy singleton instance
+    @classmethod
+    def destroy(cls):
+        cls._instance._destroy()
+
     ##@brief Raise exception because of authentication failure
     #@note trigger a security log containing client infos
     #@throw LodelFatalError if no instance exsists
@@ -194,20 +211,25 @@ class Auth(object):
             #Allready fetched
             return
         infos = (
-            Settings.auth.login_classfield.split('.'),
-            Settings.auth.pass_classfield.split('.'))
+            Settings.auth.login_classfield,
+            Settings.auth.pass_classfield)
         res_infos = []
         for clsname, fieldname in infos:
+<<<<<<< HEAD
             res_infos.append((
                 dyncode.lowername2class(infos[0]),
                 dcls.field(infos[1])))  # TODO cls.field ?
+=======
+            dcls = dyncode.lowername2class(infos[0][0])
+            res_infos.append((dcls, infos[1][1]))
+>>>>>>> Plug webui to auth
 
         link_field = None
-        if res_infos[0][0] != res_infos[0][1]:
+        if res_infos[0][0] != res_infos[1][0]:
             # login and password are in two separated EmClass
             # determining the field that links login EmClass to password
             # EmClass
-            for fname, fdh in res_infos[0][0].fields(True):
+            for fname, fdh in res_infos[0][0].fields(True).items():
                 if fdh.is_reference() and res_infos[1][0] in fdh.linked_classes():
                     link_field = fname
             if link_field is None:
@@ -243,7 +265,7 @@ login EmClass '%s' and password EmClass '%s'. Abording..." % (
             login_cls = infos['login'][0]
             pass_cls = infos['pass'][0]
             qfilter = "passfname = passhash"
-            uid_fname = login_cls.uid_fieldname()[0] #COMPOSED UID BROKEN
+            uid_fname = login_cls.uid_fieldname()[0] #COMPOSED UID BROKEN
             if login_cls == pass_cls:
                 #Same EmClass for login & pass
                 qfilter = qfilter.format(

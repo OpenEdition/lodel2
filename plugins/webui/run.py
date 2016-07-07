@@ -9,6 +9,7 @@ from lodel.settings import Settings
 from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest
 from .exceptions import *
+from .client import WebUiClient
 from lodel.utils.datetime import get_utc_timestamp
 from lodel.plugin.hooks import LodelHook
 
@@ -20,6 +21,10 @@ session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_tem
 
 #Starting instance
 loader.start()
+#providing access to dyncode
+import lodel
+import leapi_dyncode as dyncode
+lodel.dyncode = dyncode
 
 # TODO déplacer dans un module "sessions.py"
 def delete_old_session_files(timestamp_now):
@@ -44,6 +49,7 @@ def is_session_file_expired(timestamp_now, sid):
 
 # WSGI Application
 def application(env, start_response):
+    WebUiClient(env['REMOTE_ADDR'], env['HTTP_USER_AGENT'])
     current_timestamp = get_utc_timestamp()
     delete_old_session_files(current_timestamp)
     request = LodelRequest(env)
@@ -76,5 +82,5 @@ def application(env, start_response):
         response.set_cookie('sid', request.session.sid)
     
     res = response(env, start_response)
-    LodelHook.call_hook('lodel2_session_end', __file__, None)
+    WebUiClient.destroy()
     return res
