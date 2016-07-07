@@ -68,7 +68,7 @@ def is_session_file_expired(sid):
 ## @brief reads a session content
 # @param caller *
 # @param sid str : session id
-@LodelHook('session_read')
+@LodelHook('session_load')
 def read_session(caller, sid):
     session_file = get_session_file_path(sid)
     if os.path.isfile(session_file):
