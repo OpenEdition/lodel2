@@ -4,6 +4,7 @@ import os
 import pickle
 import uuid
 
+from lodel.auth.exceptions import AuthenticationError
 from lodel.plugin import LodelHook
 from lodel.settings import Settings
 from lodel.utils.datetime import get_utc_timestamp
@@ -46,6 +47,8 @@ def stop_session(caller, sid):
     session_file_path = get_session_file_path(sid)
     if os.path.isfile(session_file_path):
         os.unlink(session_file_path)
+    else:
+        raise AuthenticationError("No session file found for the sid : %s" % sid)
 
 
 ## @brief checks if a session file has expired
@@ -53,6 +56,10 @@ def stop_session(caller, sid):
 # @return bool
 def is_session_file_expired(sid):
     session_file = get_session_file_path(sid)
+
+    if not os.path.isfile(session_file):
+        raise AuthenticationError("No session file found for the sid : %s" % sid)
+
     expiration_timestamp = os.stat(session_file).st_mtime + SESSION_EXPIRATION_LIMIT
     timestamp_now = get_utc_timestamp()
     return timestamp_now >= expiration_timestamp
@@ -64,10 +71,14 @@ def is_session_file_expired(sid):
 @LodelHook('session_read')
 def read_session(caller, sid):
     session_file = get_session_file_path(sid)
-    if os.path.isfile(session_file) and not is_session_file_expired(sid):
-        session = pickle.load(open(session_file, "rb"))
+    if os.path.isfile(session_file):
+        if not is_session_file_expired(sid):
+            session = pickle.load(open(session_file, "rb"))
+        else:
+            LodelHook.call_hook('session_stop', __file__, sid)
+            session = {}
     else:
-        session = None
+        raise AuthenticationError("No session file found for the sid : %s" % sid)
 
     return session
 
