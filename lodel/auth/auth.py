@@ -269,7 +269,7 @@ login EmClass '%s' and password EmClass '%s'. Abording..." % (
     #@note Call a dedicated hook in order to allow session implementation as
     #plugin
     #@thrown AuthenticationFailure
-    def auth_session(self, token)
+    def auth_session(self, token):
         try:
             self.__user_infos = LodelHook.call_hook('lodel2_session_load',
                 caller = self, payload = token)
