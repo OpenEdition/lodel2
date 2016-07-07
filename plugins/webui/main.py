@@ -22,7 +22,7 @@ def uwsgi_fork(hook_name, caller, payload):
                     addr = Settings.webui.listen_address,
                     port = Settings.webui.listen_port,
                     uwsgi= Settings.webui.uwsgicmd)
-        if Settings.webui.virtualenv != '':
+        if Settings.webui.virtualenv is not None:
             cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
         exit(os.system(cmd))

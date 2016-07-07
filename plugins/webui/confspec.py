@@ -13,7 +13,7 @@ CONFSPEC = {
         'uwsgicmd': ('uwsgi_python3', SettingValidator('dummy')),
     },
     'lodel2.webui.sessions': {
-        'directory': (  '/tmp/lodel2_session',
+        'directory': (  '/tmp',
                         SettingValidator('path')),
         'expiration': ( 900,
                         SettingValidator('int')),

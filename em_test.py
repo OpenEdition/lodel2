@@ -374,6 +374,39 @@ index_theme_theme = index_abstract.new_field(
     data_handler = 'varchar',
     group = index_group)
 
+#############
+#   USERS   #
+#############
+
+user_group = em.new_group(
+    'users', display_name = 'Lodel users',
+    help_text = 'Group that handle users en perm')
+
+user = em.new_class(
+    'user', display_name = 'Lodel user', help_text = 'Represent a lodel user',
+    group = user_group, abstract = False)
+
+user.new_field(
+    'id', display_name = 'user identifier', help_text = 'Uniq ID',
+    group = user_group, data_handler = 'uniqid', internal = True)
+
+user.new_field(
+    'firstname', display_name = 'Firstname',
+    group = user_group, data_handler = 'varchar', internal = False)
+
+user.new_field(
+    'lastname', display_name = 'Lastname',
+    group = user_group, data_handler = 'varchar', internal = False)
+
+user.new_field(
+    'login', display_name = 'user login', help_text = 'login',
+    group = user_group, data_handler = 'varchar', uniq = True, internal = True)
+
+user.new_field(
+    'password', display_name = 'Password',
+    group = user_group, data_handler = 'password', internal = False)
+
+
 #em.save('xmlfile', filename = 'examples/em_test.xml')
 pickle_file = 'examples/em_test.pickle'
 em.save('picklefile', filename = pickle_file)

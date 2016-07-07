@@ -364,5 +364,10 @@ LODEL2_CONF_SPECS = {
     },
     'lodel2.datasources.*': {
         'read_only': (False, SettingValidator('bool')),
-        'identifier': ( None, SettingValidator('string'))}
+        'identifier': ( None, SettingValidator('string')),
+    },
+    'lodel2.auth': {
+        'login_classfield': ('user.login', SettingValidator('emfield')),
+        'pass_classfield': ('user.password', SettingValidator('emfield')),
+    },
 }
