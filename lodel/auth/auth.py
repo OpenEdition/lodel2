@@ -91,7 +91,7 @@ instance exists")
             #auth session
             if len(args) != 0 or len(kwargs) != 0:
                 # security issue ?
-                raise AuthenticationSecurityError(self)
+                raise AuthenticationSecurityError(cls.client())
             else:
                 session = kwargs['token']
         elif len(args) == 1:
@@ -109,10 +109,10 @@ instance exists")
         if login_pass is None and token is None:
             # bad arguments given. Security issue ?
             raise AuthenticationSecurityError(cls.client())
-        elif login is None:
+        elif login_pass is None:
             cls.auth_session(token)
         else:
-            cls.auth_passwor(*login_pass)
+            cls.auth_password(*login_pass)
         
 
 ##@brief Singleton class that handles authentication on lodel2 instances
@@ -171,7 +171,7 @@ class Auth(object):
     ##@brief Instance destructor
     def __del__(self):
         self.__user_infos = LodelHook.call_hook('lodel2_session_destroy',
-            caller = self, payload = token)
+            caller = self, payload = token)  # TODO unresolved variable
         pass
     
     ##@brief Raise exception because of authentication failure
@@ -186,7 +186,7 @@ class Auth(object):
 
     ##@brief Class method that fetches conf
     @classmethod
-    def fetch_settings(self):
+    def fetch_settings(cls):
         from lodel import dyncode
         if cls._infos_fields is None:
             cls._infos_fields = list()
@@ -200,7 +200,7 @@ class Auth(object):
         for clsname, fieldname in infos:
             res_infos.append((
                 dyncode.lowername2class(infos[0]),
-                dcls.field(infos[1])))
+                dcls.field(infos[1])))  # TODO cls.field ?
 
         link_field = None
         if res_infos[0][0] != res_infos[0][1]:
