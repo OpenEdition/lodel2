@@ -32,10 +32,10 @@ class LeQuery(object):
         self._rw_datasource = target_class._rw_datasource
     
     ##@brief Execute a query and return the result
-    # @param **datas
-    # @return the query result
-    # @see LeQuery._query()
-    #
+    #@param **datas
+    #@return the query result
+    #@see LeQuery._query()
+    #@todo check that the check_datas_value is not duplicated/useless
     def execute(self, datas):
         if not datas is None:
             self._target_class.check_datas_value(
@@ -54,8 +54,8 @@ class LeQuery(object):
         return ret
 
     ##@brief Childs classes implements this method to execute the query
-    # @param **datas
-    # @return query result
+    #@param **datas
+    #@return query result
     def _query(self, **datas):
         raise NotImplementedError("Asbtract method")
     
