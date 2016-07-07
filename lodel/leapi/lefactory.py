@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import os, os.path
 import functools
 from lodel.editorial_model.components import *
 from lodel.leapi.leobject import LeObject
@@ -28,29 +29,33 @@ from lodel.plugin.hooks import LodelHook
 {imports}
 {classes}
 {bootstrap_instr}
+#List of dynamically generated classes
 dynclasses = {class_list}
-{init_hook}
+#Dict of dynamically generated classes indexed by name
+dynclasses_dict = {class_dict}
+{common_code}
 """.format(
             imports = imports,
             classes = cls_code,
             bootstrap_instr = bootstrap_instr,
             class_list = '[' + (', '.join([cls for cls in class_list]))+']',
-            init_hook = datasource_init_hook(),
+            class_dict = '{' + (', '.join([ "'%s': %s" % (cls, cls)
+                for cls in class_list]))+'}',
+            common_code = common_code(),
     )
     return res_code
 
-##@brief Produce the source code of the LodelHook that initialize datasources
-#in dyncode
-#@return str
-def datasource_init_hook():
-    return """
-@LodelHook("lodel2_plugins_loaded")
-def lodel2_dyncode_datasources_init(self, caller, payload):
-    for cls in dynclasses:
-        cls._init_datasources()
-    from lodel.plugin.hooks import LodelHook
-    LodelHook.call_hook("lodel2_dyncode_loaded", __name__, dynclasses)
-"""
+##@brief Return the content of lodel.leapi.lefactory_common
+def common_code():
+    res = ""
+    fname = os.path.dirname(__file__)
+    fname = os.path.join(fname, 'lefactory_common.py')
+    with open(fname, 'r') as cfp:
+        for line in cfp:
+            if not line.startswith('#-'):
+                res += line
+    return res
+    
 
 ##@brief return A list of EmClass sorted by dependencies
 #
