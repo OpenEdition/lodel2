@@ -20,8 +20,14 @@ class MigrationHandlerError(Exception):
 class MigrationHandler(object):
 
     ## @brief Constructs a MongoDbMigrationHandler
-    # @param conn_args dict : a dictionary containing the connection options
-    # @param **kwargs : extra arguments
+    # @param host str
+    # @param port str
+    # @param db_name str
+    # @param username str
+    # @param password str
+    # @param charset str
+    # @param dry_run bool
+    # @param drop_if_exists bool : drops the table if it already exists
     def __init__(self, host, port, db_name, username, password,
         charset='utf-8', dry_run = False, drop_if_exists = False):
 
@@ -41,7 +47,6 @@ class MigrationHandler(object):
 
     ## @brief Creates a collection in the database
     # @param collection_name str
-    # @param charset str : default value is "utf8"
     def _create_collection(self, collection_name):
         existing = self.database.collection_names(
             include_system_collections=False)
