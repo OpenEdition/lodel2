@@ -44,7 +44,7 @@ class MongoDbDatasource(object):
     #@param db_name str
     #@param username str
     #@param password str
-    #@param ro bool : If True the Datasource is for read only, else the
+    #@param read_only bool : If True the Datasource is for read only, else the
     #Datasource is write only !
     def __init__(self, host, port, db_name, username, password, read_only = False):
         ##@brief Connections infos that can be kept securly
@@ -88,7 +88,7 @@ class MongoDbDatasource(object):
     #@param target Emclass
     #@param field_list list
     #@param filters list : List of filters
-    #@param rel_filters list : List of relational filters
+    #@param relational_filters list : List of relational filters
     #@param order list : List of column to order. ex: order = 
     #[('title', 'ASC'),]
     #@param group list : List of tupple representing the column used as 
@@ -203,7 +203,7 @@ class MongoDbDatasource(object):
     ## @brief updates records according to given filters
     #@param target Emclass : class of the object to insert
     #@param filters list : List of filters
-    #@param rel_filters list : List of relational filters
+    #@param relational_filters list : List of relational filters
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
@@ -272,11 +272,8 @@ class MongoDbDatasource(object):
         return result
 
     ##@brief Connect to database
-    #@not this method avoid opening two times the same connection using
+    #@note this method avoid opening two times the same connection using
     #MongoDbDatasource::_connections static attribute
-    #@param host str : hostname or IP
-    #@param port int : mongodb listening port
-    #@param db_name str
     #@param username str
     #@param password str
     #@param ro bool : If True the Datasource is for read only, else the

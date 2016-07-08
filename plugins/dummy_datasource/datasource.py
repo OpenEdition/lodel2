@@ -39,7 +39,7 @@ class DummyDatasource(object):
     ## @brief updates records according to given filters
     #@param target Emclass : class of the object to insert
     #@param filters list : List of filters
-    #@param rel_filters list : List of relational filters
+    #@param relational_filters list : List of relational filters
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
