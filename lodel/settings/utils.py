@@ -10,6 +10,7 @@ class SettingsError(Exception):
     ##@brief Instanciate a new SettingsError
     # @param msg str : Error message
     # @param key_id str : The key concerned by the error
+    # @param filename str
     def __init__(self, msg = "Unknown error", key_id = None, filename = None):
         self.__msg = msg
         self.__key_id = key_id

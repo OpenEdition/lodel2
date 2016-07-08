@@ -118,7 +118,7 @@ class Settings(object, metaclass=MetaSettings):
     ##@brief Saves a new configuration for section confname
     #@param confname is the name of the modified section
     #@param confvalue is a dict with variables to save
-    #@param validators is a dict with adapted validator
+    #@param validator is a dict with adapted validator
     @classmethod
     def set(cls, confname, confvalue,validator):
         loader = SettingsLoader(cls.instance.__conf_dir)
@@ -277,6 +277,7 @@ class Settings(object, metaclass=MetaSettings):
     
     ##@brief Forge a named tuple given a conftree node
     # @param conftree dict : A conftree node
+    # @param name str
     # @return a named tuple with fieldnames corresponding to conftree keys
     def __tree2namedtuple(self, conftree, name):
         ResNamedTuple = namedtuple(name, conftree.keys())

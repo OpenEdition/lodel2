@@ -53,6 +53,7 @@ class SettingValidator(object):
     ##@brief Register a new validator
     # @param name str : validator name
     # @param callback callable : the function that will validate a value
+    # @param description str
     @classmethod
     def register_validator(cls, name, callback, description=None):
         if name in cls._validators:
