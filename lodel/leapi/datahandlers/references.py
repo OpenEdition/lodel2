@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef, FieldValidationError
 
+from lodel import logger
 
 class Link(SingleRef):
     pass
@@ -20,11 +21,37 @@ class List(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        val, expt = super()._check_data_value(value)
+        if isinstance(value, list) or isintance(value, str):
+            val, expt = super()._check_data_value(value)
+        else:
+            return None, FieldValidationError("List or string expected for a list field")
         if not isinstance(expt, Exception):
             val = list(val)
         return val, expt
 
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        emcomponent_fields = emcomponent.fields()
+        data_handler = None
+        if fname in emcomponent_fields:
+            data_handler = emcomponent_fields[fname]
+        u_fname = emcomponent.uid_fieldname()
+        uidtype = u_fname[0] if isinstance(u_fname, tuple) else u_fname 
+        
+        if isinstance(cur_value, str):
+            value = cur_value.split(',')
+            l_value = [uidtype(uid) for uid in value]
+            return l_value
+        elif isinstance(cur_value, list):
+            type_list = str if isinstance(cur_value[0], str) else uidtype
+            l_value = list()
+            for value in cur_value:
+                if isinstance(value,uidtype):
+                    l_value.append(value)
+                else:
+                    raise ValueError("The items must be of the same type, string or %s" % (target.__name__))
+            return l_value
+        else:
+            return None
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):

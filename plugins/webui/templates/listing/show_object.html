@@ -1,20 +1,35 @@
 {% extends "base.html" %}
 {% import 'components/components.html' as components %}
-{% set my_classname = params['classe'].pop() %}
-{% set my_id = params['id'].pop() %}
-{% set my_class = leapi.Object.name2class(my_classname) %}
-{% set objects = my_class.get(('%s = %s') % ('lodel_id', my_id)) %}
+{% set my_class = leapi.Object.name2class(classname) %}
+{% set objects = my_class.get(('lodel_id = %s') % (lodel_id)) %}
 {% set obj = objects.pop() %}
-{% block title %}Lodel 2 - Object {{ my_id }} {% endblock %}
+{% if my_class.is_abstract() %}
+{{ obj.classname}}
+{% set classname = obj.classname %}
+{% set my_class = my_class.name2class(classname) %}
+{% endif %}
+{% block title %}Lodel 2 - Object {{ lodel_id }} {% endblock %}
 {% import "components/components.html" as components %}
 {% block content %}
-<h1>Lodel 2 - Object {{ my_id }} of the class {{ my_classname }}</h1>
+<h1>Lodel 2 - Object {{ lodel_id }} of the class {{ classname }}</h1>
     
 <ul>
     <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
-    {% for fieldname, fieldvalue in obj.datas().items() %}
+    {% for fieldname, fieldvalue in obj.fields().items() %}
         {% if fieldvalue is not none %}
-    <li> {{ fieldname }} : {{ fieldvalue }} </li>
+           {% if fieldvalue.base_type == 'ref' %}
+                {% if obj.data(fieldname) is iterable %}
+                    <li>{{ fieldname }}
+                        <ul>
+                    {% for rel in obj.data(fieldname) %}
+                            {% set l_classe = fieldvalue.allowed_classes %}
+                            <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel|int }}" target="_blank">{{ rel|int }}</a></li>
+                    {% endfor %}
+                        </ul></li>
+                {% endif %}
+            {% else %}
+                <li> {{ fieldname }} : {{ obj.data(fieldname) }} </li>
+            {% endif %}
         {% endif %}
     {% endfor %}
 </ul>

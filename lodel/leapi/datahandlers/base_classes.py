@@ -146,7 +146,7 @@ class DataHandler(object):
     # @param fieldtype_name str : A field type name (not case sensitive)
     # @return DataField child class
     # @todo implements custom handlers fetch
-    # @note To access custom data handlers it can be cool to preffix the handler name by plugin name for example ? (to ensure name unicity)
+    # @note To access custom data handlers it can be cool to prefix the handler name by plugin name for example ? (to ensure name unicity)
     @classmethod
     def from_name(cls, name):
         cls.load_base_handlers()
@@ -192,12 +192,15 @@ class Reference(DataHandler):
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
         self.__allowed_classes = [] if allowed_classes is None else set(allowed_classes)
+        logger.warning("We're going to inialize an temporary attribute, don't forget to fix this issue")
+        self.allowed_classes = None if allowed_classes is None else allowed_classes.pop() ## WARNING : just here for step over the issue with __allowed_classes
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
             #if not issubclass(back_reference[0], LeObject) or not isinstance(back_reference[1], str):
             #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
+
         super().__init__(internal=internal, **kwargs)
     
     @property
@@ -242,7 +245,7 @@ class SingleRef(Reference):
         val, expt = super()._check_data_value(value)
         if not isinstance(expt, Exception):
             if len(val) > 1:
-               return None, FieldValidationError("Only single values are allowed for SingleRef fields")
+                return None, FieldValidationError("Only single values are allowed for SingleRef fields")
         return val, expt
 
 
@@ -260,11 +263,15 @@ class MultipleRef(Reference):
 
         
     def _check_data_value(self, value):
-        value = value.split(',')
+        expt = None
+        if isinstance(str, value):
+            value, expt = super()._check_data_value(value)
+        elif not hasattr(value, '__iter__'):
+            return None, FieldValidationError("MultipleRef has to be an iterable or a string")
         if self.max_item is not None:
             if self.max_item < len(value):
-                return None, FieldValidationError("To many items")
-        return value, None
+                return None, FieldValidationError("Too many items")
+        return value, expt
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #

@@ -86,6 +86,9 @@ def admin_create(request):
         for in_put, in_value in request.form.items():
             if in_put != 'classname':
                 fields[in_put[12:]] = in_value
+            else:
+                fields[in_put] = in_value
+
         new_uid = target_leo.insert(fields)
         
         if not new_uid is None:

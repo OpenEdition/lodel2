@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% set my_classname = params['name'].pop() %}
-{% block title %}Lodel 2 - Class {{ my_classname }} {% endblock %}
+{% block title %}Lodel 2 - Class {{ classname }} {% endblock %}
 {% block content %} 
-<h1>Lodel 2 - Class {{ my_classname }} </h1>
- {% set my_class  = leapi.Object.name2class(my_classname) %}
+<h1>Lodel 2 - Class {{ classname }} </h1>
+ {% set my_class  = leapi.Object.name2class(classname) %}
  {% if my_class.child_classes()|length >0 %}
      <h2> Childs classes</h2>
      <ul>
@@ -22,7 +21,7 @@
     {% set objects = my_class.get(None) %}
     <ul>
     {% for obj in objects %}
-        <li><a href="show_object?classe={{ my_classname }}&id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
+        <li><a href="show_object?classname={{ classname }}&lodel_id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
     {% endfor %}
     </ul>
  {% endif %}

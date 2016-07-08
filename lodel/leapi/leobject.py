@@ -499,7 +499,7 @@ DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
         correct = set() #valid fields name
         mandatory = set() #mandatory fields name
         for fname, datahandler in cls._fields.items():
-            if allow_internal or not datahandler.is_internal():
+            if allow_internal or not datahandler.is_internal() or fname == CLASS_ID_FIELDNAME:
                 correct.add(fname)
                 if complete and not hasattr(datahandler, 'default'):
                     mandatory.add(fname)
@@ -543,7 +543,6 @@ construction and consitency when datas are not complete\n")
         ret_datas = cls.check_datas_value(datas, complete, allow_internal)
         if isinstance(ret_datas, Exception):
             raise ret_datas
-
         if complete:
             ret_datas = cls._construct_datas(ret_datas)
             cls._check_datas_consistency(ret_datas)
@@ -563,6 +562,7 @@ construction and consitency when datas are not complete\n")
                 for fname, ftype in cls._fields.items()
                 if not ftype.is_internal() or ftype.internal != 'autosql'
         }
+        logger.warning(ret)
         return ret
 
     ## @brief Check datas consistency

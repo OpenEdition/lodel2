@@ -10,7 +10,7 @@
     {% else %}
     {% set abst = ' - ' ~ classe.get(None)|length %}
     {% endif %}
-    <li> <a href="show_class?name={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
+    <li> <a href="show_class?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
     {% endfor %}
 </ul>
 {% endblock %}
