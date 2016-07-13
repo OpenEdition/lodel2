@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Lodel 2 - Admin - List of Classes{% endblock %}
+{% block content %} 
+<h1>Lodel 2 - Admin - List of Classes</h1>
+<ul>
+{% for classe in my_classes %}
+    {% set abst = '' %}
+    {% if not classe.is_abstract() %}
+    {% set abst = ' - ' ~ classe.get(None)|length %}
+    {% endif %}
+    <li> <a href="class_admin?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

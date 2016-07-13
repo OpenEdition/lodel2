@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Lodel 2 - Admin - Class {{ target.__name__ }} {% endblock %}
+{% block content %} 
+<h1>Lodel 2 - Admin - Class {{target.__name__  }} </h1>
+
+ {% if not target.is_abstract() %}
+    {% set objects = target.get(None) %}
+    <ul>
+    {% for obj in objects %}
+        <li><a href="update?classname={{ target.__name__  }}&lodel_id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
+    {% endfor %}
+    </ul>
+ {% endif %}
+
+{% endblock %} 
