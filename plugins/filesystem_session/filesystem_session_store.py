@@ -2,14 +2,14 @@
 
 import os
 import pickle
-import uuid
+import re
 
 from lodel.auth.exceptions import AuthenticationError
+from lodel.auth.session import SessionStore
 from lodel.settings import Settings
-from lodel.utils.datetime import get_utc_timestamp
 
 
-class FileSystemSessionStore:
+class FileSystemSessionStore(SessionStore):
 
     ## @brief instanciates a FileSystemSessionStore
     # @param base_directory str : path to the base directory containing the session files (default: session.directory param of the settings)
@@ -22,16 +22,6 @@ class FileSystemSessionStore:
 
     # === CRUD === #
 
-    ## @brief creates a new session and returns its id
-    # @param content dict : session content
-    # @return str
-    def create_new_session(self, content={}):
-        sid = FileSystemSessionStore.generate_new_sid()
-        session_file_path = self.get_session_file_path(sid)
-        session = content
-        self.save_session(sid, session)
-        return sid
-
     ## @brief delete a session
     # @param sid str : id of the session to be deleted
     def delete_session(self, sid):
@@ -40,54 +30,13 @@ class FileSystemSessionStore:
         else:
             raise AuthenticationError("No session file found for the sid %s" % sid)
 
-    ## @brief gets a session's content
-    # @param sid str : id of the session to read
-    def get_session(self, sid):
-        if self.is_session_existing(sid):
-            if not self.has_session_expired(sid):
-                session = self.get_session(sid)
-            else:
-                self.delete_session(sid)
-                session = {}
-        else:
-            raise AuthenticationError("No session file found for the sid %s" % sid)
-
-        return session
-
-    ## @brief updates a session's content
-    # @param sid str : session's id
-    # @param content dict : items to update with their new value
-    def update_session(self, sid, content):
-        session = self.get_session(sid)
-        for key, value in content.items():
-            if key != 'sid':
-                session[key] = value
-        self.save_session(sid, session)
-
-    ## @brief lists all the session files paths
-    # @return list
-    def list_all_sessions(self):
-        session_files_directory = os.path.abspath(self.base_directory)
-        session_files_list = [os.path.join(session_files_directory, file_object) for file_object in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_object))]
-        return session_files_list
-
-    def clean(self):
-        files_list = self.list_all_sessions()
-        now_timestamp = get_utc_timestamp()
-        for session_file in files_list:
-            if self.has_session_file_expired(session_file):
-                os.unlink(session_file)
-
-    # === UTILS === #
-    @classmethod
-    def generate_new_sid(cls):
-        return uuid.uuid1()
-
-    ## @brief returns the file path for a given session id
+    ## @brief reads the content of a session
     # @param sid str : session id
-    # @return str
-    def get_session_file_path(self, sid):
-        return os.path.join(self.base_directory, self.file_name_template) % sid
+    def read_session(self, sid):
+        session_file_path = self.get_session_file_path(sid)
+        with open(session_file_path, 'rb') as session_file:
+            session_content = pickle.load(session_file)
+        return session_content
 
     ## @brief saves a session to a file
     # @param sid str : session id
@@ -96,6 +45,33 @@ class FileSystemSessionStore:
         session_file_path = self.get_session_file_path(sid)
         pickle.dump(session, open(session_file_path, "wb"))
 
+    # === UTILS === #
+    ## @brief returns the session id from the filename
+    # @param filename str : session file's name (not the complete path)
+    # @return str
+    # @raise AuthenticationError : in case the sid could not be found for the given filename
+    def filename_to_sid(self,filename):
+        sid_regex = self.file_name_template % '(?P<sid>.*)'
+        sid_regex_compiled = re.compile(sid_regex)
+        sid_searching_result = sid_regex_compiled.match(filename)
+        if sid_searching_result is not None:
+            return sid_searching_result.groupdict()['sid']
+        else:
+            raise AuthenticationError('No session id could be found for this filename')
+
+    ## @brief lists all the session files paths
+    # @return list
+    def list_all_sessions(self):
+        session_files_directory = os.path.abspath(self.base_directory)
+        sid_list = [self.filename_to_sid(file_object) for file_object in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_object))]
+        return sid_list
+
+    ## @brief returns the file path for a given session id
+    # @param sid str : session id
+    # @return str
+    def get_session_file_path(self, sid):
+        return os.path.join(self.base_directory, self.file_name_template) % sid
+
     ## @brief checks if a session exists
     # @param sid str : session id
     # @return bool
@@ -103,14 +79,9 @@ class FileSystemSessionStore:
         session_file = self.get_session_file_path(sid)
         return os.path.is_file(session_file)
 
-    ## @brief checks if a session has expired
+    ## @brief gets a session's last modified timestamp
     # @param sid str: session id
-    # @return bool
-    def has_session_expired(self, sid):
+    # @return float
+    def get_session_last_modified(self, sid):
         session_file = self.get_session_file_path(sid)
-        return self.has_session_file_expired(session_file)
-
-    def has_session_file_expired(self, session_file):
-        expiration_timestamp = os.stat(session_file).st_mtime + self.expiration_limit
-        now_timestamp = get_utc_timestamp()
-        return now_timestamp > expiration_timestamp
+        return os.stat(session_file).st_mtime
