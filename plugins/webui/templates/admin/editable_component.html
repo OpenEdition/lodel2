@@ -1,18 +1,23 @@
 {% macro input(fieldname, field, value='') -%}
 	<label for="field_input_{{fieldname}}">{{fieldname}}</label>
 	{% if field.base_type == 'bool' %}
-		<input id="field_input_{{fieldname}}" name="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" />
+		<input id="field_input_{{fieldname}}" name="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" >
 	{% elif field.base_type == 'char' or field.base_type == 'int' %}
-		<input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{value}}" />
+		<input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{value}}" >
     {% elif field.base_type == 'ref' %}
         {% if value is iterable %}
-        {% set sval=value|join(',') %}
+            {% set sval=value|join(',') %}
         {% else %}
-        {% set sval = value %}
+            {% set sval = value %}
         {% endif %}
-        <input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{sval}}" />
-        {% set l_classe = field.allowed_classes %}
-        <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by comma </p>
+        {% if field.directly_editable %}
+            <input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
+            {% set l_classe = field.allowed_classes %}
+            <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
+        {% else %}
+            <input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{sval}}" readonly >
+            <p> If you want to update this field, please do it in child objects</p>
+        {% endif %}
 	{% else %}
 		Unsupported base type "{{field.base_type}}" </br>
 	{% endif %}

@@ -3,8 +3,11 @@ from .base import get_response
 import leapi_dyncode as dyncode
 
 def list_classes(request):
-    template_vars = {'my_classes': dyncode.dynclasses}
-    return get_response('listing/list_classes.html', my_classes=dyncode.dynclasses)
+    if 'allclasses' in request.GET:
+        allclasses = request.GET['allclasses']
+    else:
+        allclasses = 1
+    return get_response('listing/list_classes.html', my_classes=dyncode.dynclasses, allclasses = allclasses)
 
 def show_class(request):
     if 'classname' in request.GET:

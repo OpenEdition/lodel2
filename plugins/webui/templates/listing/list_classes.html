@@ -4,13 +4,13 @@
 <h1>Lodel 2 - List of Classes</h1>
 <ul>
 {% for classe in my_classes %}
-    {% set abst = '' %}
-    {% if classe.is_abstract() %}
-    {% set abst = ' - Abstract class ' %}
-    {% else %}
-    {% set abst = ' - ' ~ classe.get(None)|length %}
-    {% endif %}
+    {% if classe.is_abstract() and allclasses == 1 %}
+        {% set abst = ' - Abstract class ' %}
+        <li> <a href="show_class?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
+    {% elif not classe.is_abstract() %}
+        {% set abst = ' - ' ~ classe.get(None)|length %}
     <li> <a href="show_class?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
-    {% endfor %}
+    {% endif %}
+{% endfor %}
 </ul>
 {% endblock %}

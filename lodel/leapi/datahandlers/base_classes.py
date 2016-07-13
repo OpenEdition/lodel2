@@ -29,7 +29,8 @@ class DataHandler(object):
 
     ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
-
+    
+    directly_editable = True
     ##@brief constructor
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
@@ -274,6 +275,9 @@ class MultipleRef(Reference):
                 return None, FieldValidationError("Too many items")
         return value, expt
 
+    def check_data_consistency(self, emcomponent, fname, datas):
+        return True
+    
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #
 # This class is designed to allow automatic scheduling of construct_data calls. 

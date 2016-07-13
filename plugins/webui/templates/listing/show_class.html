@@ -2,7 +2,7 @@
 {% block title %}Lodel 2 - Class {{ classname }} {% endblock %}
 {% block content %} 
 <h1>Lodel 2 - Class {{ classname }} </h1>
- {% set my_class  = leapi.Object.name2class(classname) %}
+ {% set my_class  = leapi.name2class(classname) %}
  {% if my_class.child_classes()|length >0 %}
      <h2> Childs classes</h2>
      <ul>

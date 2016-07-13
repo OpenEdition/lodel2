@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import 'components/components.html' as components %}
-{% set my_class = leapi.Object.name2class(classname) %}
+{% set my_class = leapi.name2class(classname) %}
 {% set objects = my_class.get(('lodel_id = %s') % (lodel_id)) %}
 {% set obj = objects.pop() %}
 {% if my_class.is_abstract() %}
