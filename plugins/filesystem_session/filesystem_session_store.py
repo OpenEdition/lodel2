@@ -43,7 +43,9 @@ class FileSystemSessionStore(SessionStore):
     # @param session dict : content to be saved
     def save_session(self, sid, session):
         session_file_path = self.get_session_file_path(sid)
-        pickle.dump(session, open(session_file_path, "wb"))
+        with open(session_file_path, 'wb') as session_file:
+            pickle.dump(session, session_file)
+
 
     # === UTILS === #
     ## @brief returns the session id from the filename
