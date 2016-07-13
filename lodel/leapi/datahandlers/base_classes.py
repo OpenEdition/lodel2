@@ -264,7 +264,8 @@ class MultipleRef(Reference):
         
     def _check_data_value(self, value):
         expt = None
-        if isinstance(str, value):
+     
+        if isinstance(value, str):
             value, expt = super()._check_data_value(value)
         elif not hasattr(value, '__iter__'):
             return None, FieldValidationError("MultipleRef has to be an iterable or a string")

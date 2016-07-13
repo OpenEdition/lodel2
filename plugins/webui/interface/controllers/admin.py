@@ -31,6 +31,8 @@ def admin_update(request):
         for in_put, in_value in request.form.items():
             if in_put != 'classname' and  in_put != 'uid':
                 fields[in_put[12:]] = in_value
+            elif in_put == 'classname':
+                fields['classname'] = in_value
         obj = (target_leo.get(('lodel_id = %s' % (uid))))[0]
         inserted = obj.update(fields)
         
@@ -116,6 +118,9 @@ def admin_create(request):
 def admin_classes(request):
     return get_response('admin/list_classes_admin.html', my_classes = dyncode.dynclasses)
 
+def create_object(request):
+    return get_response('admin/list_classes_create.html', my_classes = dyncode.dynclasses)
+    
 def admin_class(request):
     if 'classname' in request.GET:
         classname = request.GET['classname']

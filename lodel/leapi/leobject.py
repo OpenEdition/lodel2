@@ -517,6 +517,9 @@ DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
         for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
             dh = cls._fields[name]
             res = dh.check_data_value(value)
+            logger.debug(name)
+            logger.debug(value)
+            logger.debug(res)
             checked_datas[name], err = res
             if err:
                 err_l[name] = err

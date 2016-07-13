@@ -4,14 +4,13 @@
 {% set objects = my_class.get(('lodel_id = %s') % (lodel_id)) %}
 {% set obj = objects.pop() %}
 {% if my_class.is_abstract() %}
-{{ obj.classname}}
-{% set classname = obj.classname %}
+{% set classname = obj.data('classname') %}
 {% set my_class = my_class.name2class(classname) %}
 {% endif %}
 {% block title %}Lodel 2 - Object {{ lodel_id }} {% endblock %}
 {% import "components/components.html" as components %}
 {% block content %}
-<h1>Lodel 2 - Object {{ lodel_id }} of the class {{ classname }}</h1>
+<h1>Lodel 2 - {{ classname }} with uid {{ lodel_id }}</h1>
     
 <ul>
     <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
