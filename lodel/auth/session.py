@@ -94,14 +94,14 @@ class SessionStore(ABC):
 
     ## @brief gets a session's content
     # @param sid str : id of the session to read
-    # @return dict
+    # @return dict | None if no valid session if found
     def get_session(self, sid):
         if self.is_session_existing(sid):
             if not self.has_session_expired(sid):
                 session = self.read_session(sid)
             else:
                 self.delete_session(sid)
-                session = {}
+                session = None
         else:
             raise AuthenticationError("No session file found for the sid %s" % sid)
 
