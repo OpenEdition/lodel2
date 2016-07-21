@@ -374,13 +374,14 @@ def load_dhdl_options_xml(model, elem):
     for opt in elem:
         if (opt.tag == 'allowed_classes'):
             classes = list()
-            clss = opt.text.split(',')
-            for classe in clss:
-                if classe in model.all_classes():
-                    classes.append(model.all_classes_ref(classe))
-                else:
-                    new_cls = model.add_class(EmClass(classe))
-                    classes.append(new_cls)
+            if opt.text is not None:
+                clss = opt.text.split(',')
+                for classe in clss:
+                    if classe in model.all_classes():
+                        classes.append(model.all_classes_ref(classe))
+                    else:
+                        new_cls = model.add_class(EmClass(classe))
+                        classes.append(new_cls)
             dhdl_options['allowed_classes'] = classes
         elif (opt.tag == 'back_reference'):
             dhdl_options['back_reference'] = tuple(opt.text.split(','))

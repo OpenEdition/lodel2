@@ -21,7 +21,7 @@
                     <li>{{ fieldname }}
                         <ul>
                     {% for rel in obj.data(fieldname) %}
-                            {% set l_classe = fieldvalue.allowed_classes %}
+                            {% set l_classe = fieldvalue.linked_classes() %}
                             <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel|int }}" target="_blank">{{ rel|int }}</a></li>
                     {% endfor %}
                         </ul></li>

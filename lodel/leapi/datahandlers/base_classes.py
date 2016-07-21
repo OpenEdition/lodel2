@@ -194,7 +194,6 @@ class Reference(DataHandler):
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
         self.__allowed_classes = [] if allowed_classes is None else set(allowed_classes)
         logger.warning("We're going to inialize an temporary attribute, don't forget to fix this issue")
-        self.allowed_classes = None if allowed_classes is None else allowed_classes.pop() ## WARNING : just here for step over the issue with __allowed_classes
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
