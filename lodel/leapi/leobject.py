@@ -499,7 +499,7 @@ DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
         correct = set() #valid fields name
         mandatory = set() #mandatory fields name
         for fname, datahandler in cls._fields.items():
-            if allow_internal or not datahandler.is_internal() or fname == CLASS_ID_FIELDNAME:
+            if allow_internal or not datahandler.is_internal():
                 correct.add(fname)
                 if complete and not hasattr(datahandler, 'default'):
                     mandatory.add(fname)
