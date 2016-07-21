@@ -454,7 +454,8 @@ the relational filter %s"
                     msg %= (ref_class.__name__, ref_field)
                     logger.debug(msg)
         if len(ref_dict) == 0:
-            return NameError(   "No field named '%s' in referenced objects %s"
+            print(ref_classes, 'DEBUG')
+            return NameError(   "No field named '%s' in referenced objects [%s]"
                                 % (ref_field,
                                     ','.join([rc.__name__ for rc in ref_classes])))
         return (fieldname, ref_dict)

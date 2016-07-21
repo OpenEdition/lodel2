@@ -58,7 +58,7 @@ class DataHandler(object):
             setattr(self, argname, argval)
 
     ## Fieldtype name
-    @staticmethod
+    @classcmethod
     def name(cls):
         return cls.__module__.split('.')[-1]
 
