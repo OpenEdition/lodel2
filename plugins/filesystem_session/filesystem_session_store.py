@@ -15,7 +15,7 @@ class FileSystemSessionStore(SessionStore):
     # @param base_directory str : path to the base directory containing the session files (default: session.directory param of the settings)
     # @param file_name_template str : template for the session files name (default : session.file_template param of the settings)
     # @param expiration_limit int : duration of a session validity without any action made (defaut : session.expiration param of the settings)
-    def __init__(self, base_directory=Settings.session.directory, file_name_template=Settings.session.file_template, expiration_limit=Settings.session.expiration):
+    def __init__(self, base_directory=Settings.sessions.directory, file_name_template=Settings.sessions.file_template, expiration_limit=Settings.sessions.expiration):
         self.expiration_limit = expiration_limit
         self.base_directory = base_directory
         self.file_name_template = file_name_template

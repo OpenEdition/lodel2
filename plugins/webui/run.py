@@ -13,9 +13,9 @@ from .client import WebUiClient
 from lodel.utils.datetime import get_utc_timestamp
 from lodel.plugin.hooks import LodelHook
 
-SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
-SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
-SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
+SESSION_FILES_BASE_DIR = Settings.sessions.directory
+SESSION_FILES_TEMPLATE = Settings.sessions.file_template
+SESSION_EXPIRATION_LIMIT = Settings.sessions.expiration
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
 
