@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .base import get_response
+from ...exceptions import *
 import leapi_dyncode as dyncode
 
 def list_classes(request):
@@ -19,6 +20,8 @@ def show_class(request):
             target_leo = dyncode.Object.name2class(classname)
         except LeApiError:
             classname = None
+    else:
+        raise HttpException(400)
     return get_response('listing/show_class.html', classname=classname)
 
 def show_object(request):
