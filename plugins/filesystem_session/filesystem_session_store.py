@@ -52,7 +52,7 @@ class FileSystemSession(LodelSession):
     @classmethod
     def clean(cls):
         # unregistered files in the session directory (if any)
-        session_dir_files = cls.list_all_session_files()
+        session_dir_files = cls.list_all_sessions()
         for session_dir_file in session_dir_files:
             sid = cls.filename_to_sid(session_dir_file)
             if sid is None or sid not in cls.__sessions.keys():
@@ -71,7 +71,7 @@ class FileSystemSession(LodelSession):
     ## @brief lists all the files contained in the session directory
     # @return list
     @classmethod
-    def list_all_session_files(cls):
+    def list_all_sessions(cls):
         session_files_directory = os.abspath(cls.BASE_DIRECTORY)
         files_list = [file_path for file_path in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_path))]
         return files_list

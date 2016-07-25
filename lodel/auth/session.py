@@ -126,126 +126,17 @@ class LodelSession(ABC):
         delattr(p_object=self, key)
         self.save()
 
-
-
-
-
-
-
-'''
-class SessionStore(ABC):
-
-    expiration_limit = 900
-
-    _instance = None
-
-    def __init__(self, session_class=Session):
-        self.session_class = session_class
-        if self.__class__._instance is None:
-            self.__class__._instance = self.__class__()
-
-    def __getattr__(self, item):
-        return getattr(self.__class__._instance, item)
-
-    ## @brief Generates a session unique ID
-    # @param cls
-    # @param salt str
-    # @return str
-    @classmethod
-    def generate_new_sid(cls, salt=None):
-        return generate_key(salt)
-
-    ## @brief Creates a new session
-    # @param content dict : session content (default: {})
-    # @return str
-    def create_new_session(self, content={}):
-        sid = self.__class__.generate_new_sid()
-        self.save_session(sid, content)
-        return sid
-
-    ## @brief Destroys a session
-    # @param sid str : session id
-    @abstractmethod
-    def delete_session(self, sid):
-        pass
-
-    ## @brief Reads a session content
-    # @param sid str : session id
-    # @return dict
-    @abstractmethod
-    def read_session(self, sid):
-        return {}
-
-    ## @brief saves a session to a file
-    # @param sid str : session id
-    # @param session dict : content to be saved
-    @abstractmethod
-    def save_session(self, sid, session):
-        pass
-
-    ## @brief lists all the sessions ids
+    ## @brief lists all the sessions in the session store
     # @return list
+    @classmethod
     @abstractmethod
-    def list_all_sessions(self):
+    def list_all_sessions(cls):
         return []
 
-    ## @brief cleans the session store's by destroying the expired sessions
-    def clean(self):
-        sessions_list = self.list_all_sessions()
-        for sid in sessions_list:
-            if self.has_session_expired(sid):
-                self.delete_session(sid)
-
-    ## @brief checks if a session exists
-    # @param sid str : session id
+    ## @brief checks if a given session id corresponds to an existing session
+    # @param sid str: session id
     # @return bool
+    @classmethod
     @abstractmethod
-    def is_session_existing(self, sid):
+    def exists(cls, sid):
         return True
-
-    ## @brief gets a session's last modified timestamp
-    # @param sid str: session id
-    # @return float
-    @abstractmethod
-    def get_session_last_modified(self, sid):
-        pass
-
-    ## @brief checks if a session has expired
-    # @param sid str: session id
-    # @return bool
-    def has_session_expired(self, sid):
-        session_last_modified = self.get_session_last_modified(sid)
-        expiration_timestamp = session_last_modified + self.expiration_limit
-        now_timestamp = get_utc_timestamp()
-        return now_timestamp > expiration_timestamp
-
-    ## @brief updates a session's content
-    # @param sid str : session's id
-    # @param content dict : items to update with their new value
-    def update_session(self, sid, content):
-        session = self.get_session(sid)
-        if session is not None:
-            for key, value in content.items():
-                if key != 'sid':
-                    session[key] = value
-            self.save_session(sid, session)
-            return session
-        else:
-            session = self.create_new_session(content)
-            return session
-
-    ## @brief gets a session's content
-    # @param sid str : id of the session to read
-    # @return dict | None if no valid session if found
-    def get_session(self, sid):
-        if self.is_session_existing(sid):
-            if not self.has_session_expired(sid):
-                session = self.read_session(sid)
-            else:
-                self.delete_session(sid)
-                session = None
-        else:
-            session = None
-
-        return session
-'''
