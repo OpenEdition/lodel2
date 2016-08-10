@@ -119,8 +119,8 @@ class Plugin(object):
             dirname = os.path.dirname(plugin_path)
             for f in os.listdir(plugin_path):
                 file_name = ''.join(dirname, f)
-                if f == '__init__.py':
-                    self.check(file_name)
+                if self.is_plugin_dir(file_name):
+                    return self.is_plugin_dir(file_name)
                 else:
                     self._discover_plugin(file_name)
         else:
