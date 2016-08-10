@@ -114,13 +114,17 @@ class Plugin(object):
     #@param plugin_path 
     #@return module existing
     def _discover_plugin(self, plugin_path):
-        import os
-        try:
-            for root, dirs, files in os.walk(plugin_path, topdown = True):
-                return dirs                
-        except NameError:
-            msg = "This plugin {plugin_path} is not valid"
-
+        res = os.listdir(plugin_path) is not None
+        if res:
+            dirname = os.path.dirname(plugin_path)
+            for f in os.listdir(plugin_path):
+                file_name = ''.join(dirname, f)
+                if f == '__init__.py':
+                    self.check(file_name)
+                else:
+                    self._discover_plugin(file_name)
+        else:
+            pass
 
 
     ##@brief Try to import a file from a variable in __init__.py
