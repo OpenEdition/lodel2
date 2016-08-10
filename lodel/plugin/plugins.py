@@ -110,6 +110,19 @@ class Plugin(object):
                     filename = confspec_filename)
                 raise PluginError(msg)
 
+    ##@brief Browse directory to get plugin
+    #@param plugin_path 
+    #@return module existing
+    def _discover_plugin(self, plugin_path):
+        import os
+        try:
+            for root, dirs, files in os.walk(plugin_path, topdown = True):
+                return dirs                
+        except NameError:
+            msg = "This plugin {plugin_path} is not valid"
+
+
+
     ##@brief Try to import a file from a variable in __init__.py
     #@param varname str : The variable name
     #@return loaded module

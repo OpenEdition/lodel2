@@ -196,7 +196,7 @@ class Reference(DataHandler):
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
-            #if not issubclass(back_reference[0], LeObject) or not isinstance(back_reference[1], str):
+            #if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0]) or not isinstance(back_reference[1], str):
             #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
 
