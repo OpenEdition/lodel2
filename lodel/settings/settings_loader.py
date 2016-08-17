@@ -4,6 +4,7 @@ import os
 import glob
 import copy
 
+from lodel import logger
 from lodel.settings.utils import *
 from lodel.settings.validator import SettingsValidationError
 from lodel.settings.utils import SettingsError, SettingsErrors
@@ -32,7 +33,9 @@ class SettingsLoader(object):
     # @return dict()
     def __merge(self):
         conf = dict()
-        l_dir = glob.glob(self.__conf_path+'/*.ini')  
+        l_dir = glob.glob(self.__conf_path+'/*.ini')
+        logger.debug("SettingsLoader found those settings files : %s" % (
+            ', '.join(l_dir)))
 
         for f_ini in l_dir:  
             config = configparser.ConfigParser(default_section = self.DEFAULT_SECTION ,interpolation=None)
@@ -86,6 +89,8 @@ class SettingsLoader(object):
             sec[keyname]['value'] = default_value
             sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
             result = default_value
+            logger.debug("Using default value for configuration key %s:%s" % (
+                section, keyname))
 
         try:
             return validator(result)

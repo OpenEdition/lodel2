@@ -157,6 +157,8 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
 # 1. Settings call start method to instanciate all plugins found in confs
 # 2. Settings fetch all confspecs
 # 3. the loader call load_all to register hooks etc
+#
+#@todo add log messages (now we can)
 class Plugin(object):
     
     ##@brief Stores plugin directories paths
@@ -438,6 +440,7 @@ name differ from the one found in plugin's init file"
             raise PluginError(msg)
         plugin = cls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
+        logger.debug("Plugin %s available." % plugin)
         return plugin
 
     ##@brief Plugins instances accessor

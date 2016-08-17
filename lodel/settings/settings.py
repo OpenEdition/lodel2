@@ -68,6 +68,7 @@ class MetaSettings(type):
 # '.*')
 # @todo delete the first stage, the lib path HAVE TO BE HARDCODED. In fact
 #when we will run lodel in production the lodel2 lib will be in the python path
+#@todo add log messages (now we can)
 class Settings(object, metaclass=MetaSettings):
 
     ## @brief Stores the singleton instance
@@ -85,6 +86,7 @@ class Settings(object, metaclass=MetaSettings):
         ## @brief Stores the configurations in namedtuple tree
         self.__confs = None
         self.__conf_dir = conf_dir
+        self.__started = False
         self.__bootstrap()
     
     ## @brief Get the named tuple representing configuration
@@ -100,7 +102,7 @@ class Settings(object, metaclass=MetaSettings):
 
     @classmethod
     def started(cls):
-        return cls.instance is not None and cls.instance.__confs is not None
+        return cls.instance is not None and cls.instance.__started
 
     ##@brief An utility method that raises if the singleton is not in a good
     # state
@@ -128,6 +130,7 @@ class Settings(object, metaclass=MetaSettings):
 
     ##@brief This method handlers Settings instance bootstraping
     def __bootstrap(self):
+        logger.debug("Settings bootstraping")
         lodel2_specs = LODEL2_CONF_SPECS
         for section in lodel2_specs:
             if section.lower() != section:
@@ -154,6 +157,7 @@ class Settings(object, metaclass=MetaSettings):
                                             plugins_path_opt_specs[0],
                                             False)
         # Starting the Plugins class
+        logger.debug("Starting lodel.plugin.Plugin class")
         Plugin.start(plugins_path, plugins_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
@@ -167,6 +171,7 @@ class Settings(object, metaclass=MetaSettings):
             raise SettingsErrors(errors)
         self.__conf_specs = self.__merge_specs(specs)
         self.__populate_from_specs(self.__conf_specs, loader)
+        self.__started = True
     
     ##@brief Produce a configuration specification dict by merging all specifications
     #
