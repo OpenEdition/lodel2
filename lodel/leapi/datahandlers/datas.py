@@ -9,7 +9,7 @@ class FormatString(Varchar):
     help = 'Automatic string field, designed to use the str % operator to \
 build its content'
     base_type = 'char'
-
+    
     ##@brief Build its content with a field list and a format string
     # @param format_string str
     # @param max_length int : the maximum length of the handled value
@@ -65,6 +65,7 @@ class UniqID(Integer):
 
     help = 'Fieldtype designed to handle editorial model UID'
     base_type = 'int'
+    cast_type = int
 
     ##@brief A uid field
     # @param **kwargs

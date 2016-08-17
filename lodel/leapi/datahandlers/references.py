@@ -42,8 +42,8 @@ class List(MultipleRef):
 
         if isinstance(cur_value, str):
             value = cur_value.split(',')
-            l_value = [int(uid) for uid in value] ## à remplacer par uidtype
-            logger.debug(l_value)
+            l_value = [uidtype.cast_type(uid) for uid in value] ## à remplacer par uidtype
+
             return l_value
         elif isinstance(cur_value, list):
             type_list = str if isinstance(cur_value[0], str) else uidtype
