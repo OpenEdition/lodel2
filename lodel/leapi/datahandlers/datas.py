@@ -2,6 +2,7 @@
 import warnings
 import inspect
 from lodel.leapi.datahandlers.datas_base import *
+import re
 
 ##@brief Data field designed to handle formated strings
 class FormatString(Varchar):
@@ -46,7 +47,7 @@ max_length and regex'
 
     def _check_data_value(self, value):
         error = None
-        if not self.compiled_re.match(value):
+        if not self.compiled_re.match(value) or len(value) > self.max_length:
             value = ''
             msg = '"%s" doesn\'t match the regex "%s"' % (value, self.regex)
             error = TypeError(msg)
