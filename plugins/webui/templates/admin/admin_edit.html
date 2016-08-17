@@ -1,6 +1,7 @@
 {% extends "base_backend.html" %}
 {% import "admin/editable_component.html" as edit %}
 {% set objects = target.get(('lodel_id = %s') % (lodel_id)) %}
+{% set objects = target.get(('%s = %s') % (uidfield, lodel_id)) %}
 {% set obj = objects.pop() %}
 {% block title %}- Edit Object{% endblock %}
 {% block body %}

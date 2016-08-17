@@ -18,6 +18,7 @@ def admin_update(request):
         error = None
         datas = list()
         classname = request.form['classname']
+        logger.warning('Composed uids broken here')
         uid = request.form['uid']
         try:
             target_leo = dyncode.Object.name2class(classname)
@@ -26,37 +27,27 @@ def admin_update(request):
         if classname is None or target_leo.is_abstract():
             raise HttpException(400)
         fieldnames = target_leo.fieldnames()
+
+        uid_field = target_leo.uid_fieldname()[0]
         fields = dict()
 
         for in_put, in_value in request.form.items():
             if in_put != 'classname' and  in_put != 'uid':
                 fields[in_put[12:]] = in_value
-            elif in_put == 'classname':
-                fields['classname'] = in_value
-        obj = (target_leo.get(('lodel_id = %s' % (uid))))[0]
+            #elif in_put == 'classname':
+            #    fields['classname'] = in_value
+
+        filter_q = '%s = %s' % (uid_field, uid)
+        obj = (target_leo.get((filter_q)))[0]
+
         inserted = obj.update(fields)
         
         if inserted==1:
             msg = 'Successfully updated';
         else:
             msg = 'Oops something wrong happened...object not saved'
-        return get_response('admin/admin_edit.html', target=target_leo, lodel_id = uid, msg = msg)
+        return get_response('admin/admin_edit.html', target=target_leo, uidfield = uid_field, lodel_id = uid, msg = msg)
 
-    test_valid = 'lodel_id' in request.GET \
-        and len(request.GET['lodel_id']) == 1
-
-    if test_valid:
-        try:
-            lodel_id = int(request.GET['lodel_id'][0])
-        except (ValueError, TypeError):
-            test_valid = False
-
-    if not test_valid:
-        raise HttpException(400)
-    else:
-        obj = dyncode.Object.get(['lodel_id = %d' % lodel_id])
-        if len(obj) == 0:
-            raise HttpException(404)
     if 'classname' in request.GET:
         classname = request.GET['classname']
         if len(classname) > 1:
@@ -65,9 +56,30 @@ def admin_update(request):
         try:
             target_leo = dyncode.Object.name2class(classname)
         except LeApiError:
-            classname = None
+            # classname = None
+            raise HttpException(400)
+        logger.warning('Composed uids broken here')
+        uid_field = target_leo.uid_fieldname()[0]
 
-    return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
+    test_valid = uid_field in request.GET \
+        and len(request.GET[uid_field]) == 1
+
+    if test_valid:
+        try:
+            lodel_id = request.GET[uid_field][0]
+        except (ValueError, TypeError):
+            test_valid = False
+
+    if not test_valid:
+        raise HttpException(400)
+    else:
+        query_filters = list()
+        query_filters.append((uid_field,'=',lodel_id))
+        obj = dyncode.Object.get(query_filters)
+        if len(obj) == 0:
+            raise HttpException(404)
+
+    return get_response('admin/admin_edit.html', target=target_leo, uidfield = uid_field, lodel_id =lodel_id)
 
 def admin_create(request):
     classname = None
@@ -88,8 +100,8 @@ def admin_create(request):
         for in_put, in_value in request.form.items():
             if in_put != 'classname':
                 fields[in_put[12:]] = in_value
-            else:
-                fields[in_put] = in_value
+            #else:
+            #    fields[in_put] = in_value
 
         new_uid = target_leo.insert(fields)
         
