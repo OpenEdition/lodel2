@@ -157,8 +157,6 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
 # 1. Settings call start method to instanciate all plugins found in confs
 # 2. Settings fetch all confspecs
 # 3. the loader call load_all to register hooks etc
-#
-#@todo add log messages (now we can)
 class Plugin(object):
     
     ##@brief Stores plugin directories paths
@@ -587,6 +585,7 @@ name differ from the one found in plugin's init file"
     #@return a dict with name, version and path if path is a plugin module, else False
     @classmethod
     def dir_is_plugin(cls, path):
+        log_msg = "%s is not a plugin directory because : " % path
         #Checks that path exists
         if not os.path.isdir(path):
             raise ValueError(
@@ -594,15 +593,23 @@ name differ from the one found in plugin's init file"
         #Checks that path contains plugin's init file
         initfile = os.path.join(path, INIT_FILENAME)
         if not os.path.isfile(initfile):
+            log_msg += "'%s' not found" % (INIT_FILENAME)
+            logger.debug(log_msg)
             return False
         #Importing plugin's init file to check contained datas
         try:
             initmod, modname = cls.import_init(path)
-        except PluginError:
+        except PluginError as e:
+            log_msg += "unable to load '%s'. Exception raised : %s"
+            log_msg %= (INIT_FILENAME, e)
+            logger.debug(log_msg)
             return False
         #Checking mandatory init module variables
         for attr_name in MANDATORY_VARNAMES:
             if not hasattr(initmod,attr_name):
+                log_msg += " mandatory variable '%s' not found in '%s'"
+                log_msg %= (attr_name, INIT_FILENAME)
+                logger.debug(log_msg)
                 return False
         try:
             pversion = getattr(initmod, PLUGIN_VERSION_VARNAME)
@@ -650,6 +657,7 @@ name differ from the one found in plugin's init file"
                     #Check if it is a plugin directory
                     test_result = cls.dir_is_plugin(f_path)
                     if not (test_result is False):
+                        logger.info("Plugin found in %s" % f_path)
                         res.append(test_result)
                     else:
                         to_explore.append(f_path)
