@@ -41,7 +41,7 @@ MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME,
     PLUGIN_VERSION_VARNAME]
 
 PLUGIN_DEFAULT_TYPE = 'default'
-PLUGINS_TYPES = [PLUGIN_DEFAULT_TYPE, 'datasource', 'session_handler']
+PLUGINS_TYPES = [PLUGIN_DEFAULT_TYPE, 'datasource', 'session_handler', 'ui']
 
 
 ##@brief Describe and handle version numbers
@@ -529,7 +529,9 @@ name differ from the one found in plugin's init file"
     #found plugin in a file...
     #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
     @classmethod
-    def discover(cls, paths):
+    def discover(cls, paths = None):
+        if paths is None:
+            paths = DEFAULT_PLUGINS_PATH_LIST
         tmp_res = []
         for path in paths:
             tmp_res += cls._discover(path)
