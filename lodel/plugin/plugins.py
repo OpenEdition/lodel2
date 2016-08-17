@@ -4,6 +4,7 @@ import sys
 import os.path
 import importlib
 import copy
+import json
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
 import plugins
@@ -19,12 +20,131 @@ from .exceptions import *
 
 ##@brief The package in which we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins'
+##@brief The temporary package to import python sources
+VIRTUAL_TEMP_PACKAGE_NAME = 'lodel.plugin_tmp'
+##@brief Plugin init filename
 INIT_FILENAME = '__init__.py' # Loaded with settings
+PLUGIN_NAME_VARNAME = '__plugin_name__'
+PLUGIN_TYPE_VARNAME = '__type__'
+PLUGIN_VERSION_VARNAME = '__version__'
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
 CONFSPEC_VARNAME = 'CONFSPEC'
 LOADER_FILENAME_VARNAME = '__loader__'
 PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ACTIVATE_METHOD_NAME = '_activate'
+##@brief Discover stage cache filename
+DISCOVER_CACHE_FILENAME = '.plugin_discover_cache.json'
+##@brief Default & failover value for plugins path list
+DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
+
+MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME, 
+    PLUGIN_VERSION_VARNAME]
+
+PLUGIN_DEFAULT_TYPE = 'default'
+PLUGINS_TYPES = [PLUGIN_DEFAULT_TYPE, 'datasource', 'session_handler']
+
+
+##@brief Describe and handle version numbers
+class PluginVersion(object):
+
+    PROPERTY_LIST = ['major', 'minor', 'revision' ]
+
+    ##@brief Version constructor
+    #@param *args : You can either give a str that will be splitted on . or you
+    #can give a iterable containing 3 integer or 3 arguments representing
+    #major, minor and revision version
+    def __init__(self, *args):
+        self.__version = [0 for _ in range(3) ]
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, str):
+                spl = arg.split('.')
+                invalid = False
+                if len(spl) > 3:
+                    raise PluginError("The string '%s' is not a valid plugin \
+version number" % arg)
+            else:
+                try:
+                    if len(arg) >= 1:
+                        if len(arg) > 3:
+                            raise PluginError("Expected maximum 3 value to \
+create a plugin version number but found '%s' as argument" % arg)
+                        for i, v in enumerate(arg):
+                            self.__version[i] = arg[i]
+                except TypeError:
+                    raise PluginError("Unable to convert argument into plugin \
+version number" % arg)
+        elif len(args) > 3:
+            raise PluginError("Expected between 1 and 3 positional arguments \
+but %d arguments found" % len(args))
+        else: 
+            for i,v in enumerate(args):
+                self.__version[i] = v
+    
+    @property
+    def major(self):
+        return self.__version[0]
+
+    @property
+    def minor(self):
+        return self.__version[1]
+
+    @property
+    def revision(self):
+        return self.__version[2]
+    
+    ##@brief Check and prepare comparisoon argument
+    #@return A PluginVersion instance
+    #@throw PluginError if invalid argument provided
+    def __cmp_check(self, other):
+        if not isinstance(other, PluginVersion):
+            try:
+                if len(other) <= 3 and len(other) > 0:
+                    return PluginVersion(other)
+            except TypeError:
+                raise PluginError("Cannot compare argument '%s' with \
+a PluginVerison instance" % other)
+        return other
+    
+    ##@brief Generic comparison function
+    #@param other PluginVersion or iterable
+    #@param cmp_fun_name function : interger comparison function
+    def __generic_cmp(self, other, cmp_fun_name):
+        other = self.__cmp_check(other)
+        try:
+            cmpfun = getattr(int, cmp_fun_name)
+        except AttributeError:
+            raise LodelFatalError("Invalid comparison callback given \
+to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
+        for property_name in self.PROPERTY_LIST:
+            if not cmpfun(getattr(self, pname), getattr(other, pname)):
+                return False
+        return True
+
+    def __lt__(self, other):
+        return self.__generic_cmp(other, '__lt__')
+
+    def __le__(self, other):
+        return self.__generic_cmp(other, '__le__')
+
+    def __eq__(self, other):
+        return self.__generic_cmp(other, '__eq__')
+
+    def __ne__(self, other):
+        return self.__generic_cmp(other, '__ne__')
+
+    def __gt__(self, other):
+        return self.__generic_cmp(other, '__gt__')
+
+    def __ge__(self, other):
+        return self.__generic_cmp(other, '__ge__')
+
+    def __str__(self):
+        return '%d.%d.%d' % tuple(self.__version)
+
+    def __repr__(self):
+        return {'major': self.major, 'minor': self.minor,
+            'revision': self.revision}
 
 
 ##@brief Handle plugins
@@ -48,6 +168,9 @@ class Plugin(object):
     #dependencies
     _load_called = []
 
+    ##@brief Attribute that stores plugins list from discover cache file
+    _plugin_list = None
+
     ##@brief Plugin class constructor
     #
     # Called by setting in early stage of lodel2 boot sequence using classmethod
@@ -67,11 +190,11 @@ class Plugin(object):
         self.__confspecs = dict()
         self.loaded = False
         
-        # Importing __init__.py
+        # Importing __init__.py infos in it
         plugin_module = '%s.%s' % (VIRTUAL_PACKAGE_NAME,
                                     plugin_name)
 
-        init_source = self.path + INIT_FILENAME
+        init_source = os.path.join(self.path, INIT_FILENAME)
         try:
             loader = SourceFileLoader(plugin_module, init_source)
             self.module = loader.load_module()
@@ -109,23 +232,39 @@ class Plugin(object):
                     varname = CONFSPEC_VARNAME,
                     filename = confspec_filename)
                 raise PluginError(msg)
+        # loading plugin version
+        try:
+            #this try block should be useless. The existance of
+            #PLUGIN_VERSION_VARNAME in init file is mandatory
+            self.__version = getattr(self.module, PLUGIN_VERSION_VARNAME)
+        except AttributeError:
+            msg = "Error that should not append : no %s found in plugin \
+init file. Malformed plugin"
+            msg %= PLUGIN_VERSION_VARNAME
+            raise LodelFatalError(msg)
 
-    ##@brief Browse directory to get plugin
-    #@param plugin_path 
-    #@return module existing
-    def _discover_plugin(self, plugin_path):
-        res = os.listdir(plugin_path) is not None
-        if res:
-            dirname = os.path.dirname(plugin_path)
-            for f in os.listdir(plugin_path):
-                file_name = ''.join(dirname, f)
-                if self.is_plugin_dir(file_name):
-                    return self.is_plugin_dir(file_name)
-                else:
-                    self._discover_plugin(file_name)
-        else:
-            pass
-
+        # Load plugin type
+        try:
+            self.__type = getattr(self.module, PLUGIN_TYPE_VARNAME)
+        except AttributeError:
+            self.__type = PLUGIN_DEFAULT_TYPE
+        self.__type = str(self.__type).lower()
+        if self.__type not in PLUGINS_TYPES:
+            raise PluginError("Unknown plugin type '%s'" % self.__type)
+        # Load plugin name from init file (just for checking)
+        try:
+            #this try block should be useless. The existance of
+            #PLUGIN_NAME_VARNAME in init file is mandatory
+            pname = getattr(self.module, PLUGIN_NAME_VARNAME)
+        except AttributeError:
+            msg = "Error that should not append : no %s found in plugin \
+init file. Malformed plugin"
+            msg %= PLUGIN_NAME_VARNAME
+            raise LodelFatalError(msg)
+        if pname != plugin_name:
+            msg = "Plugin's discover cache inconsistency detected ! Cached \
+name differ from the one found in plugin's init file"
+            raise PluginError(msg)
 
     ##@brief Try to import a file from a variable in __init__.py
     #@param varname str : The variable name
@@ -153,7 +292,7 @@ class Plugin(object):
             raise PluginError(msg)
         # importing the file in varname
         module_name = self.module.__name__+"."+varname
-        filename = self.path + filename
+        filename = os.path.join(self.path, filename)
         loader = SourceFileLoader(module_name, filename)
         return loader.load_module()
     
@@ -252,6 +391,9 @@ class Plugin(object):
             raise RuntimeError("Plugin %s not loaded yet."%self.name)
         return self.__loader_module
 
+    def __str__(self):
+        return "<LodelPlugin '%s' version %s>" % (self.name, self.__version)
+
     ##@brief Call load method on every pre-loaded plugins
     #
     # Called by loader to trigger hooks registration.
@@ -317,18 +459,17 @@ class Plugin(object):
     @classmethod
     def plugin_path(cls, plugin_name):
         cls.started()
+        plist = cls.plugin_list()
+        if plugin_name not in plist:
+            raise PluginError("No plugin named '%s' found" % plugin_name)
+
         try:
             return cls.get(plugin_name).path
         except PluginError:
             pass
-        
-        path = None
-        for cur_path in cls._plugin_directories:
-            plugin_path = os.path.join(cur_path, plugin_name)+'/'
-            if os.path.isdir(plugin_path):
-                return plugin_path
-        raise NameError("No plugin named '%s'" % plugin_name)
 
+        return plist[plugin_name]['path']
+        
     @classmethod
     def plugin_module_name(cls, plugin_name):
         return "%s.%s" % (VIRTUAL_PACKAGE_NAME, plugin_name)
@@ -366,6 +507,164 @@ class Plugin(object):
             cls._plugin_instances = dict()
         if cls._load_called != []:
             cls._load_called = []
+    
+    @classmethod
+    ##@brief Browse directory to get plugin
+    #@param plugin_path 
+    #@return module existing
+    def plugin_discover(self, plugin_path):
+        res = os.listdir(plugin_path) is not None
+        if res:
+            dirname = os.path.dirname(plugin_path)
+            for f in os.listdir(plugin_path):
+                file_name = ''.join(dirname, f)
+                if self.is_plugin_dir(file_name):
+                    return self.is_plugin_dir(file_name)
+                else:
+                    self._discover_plugin(file_name)
+        else:
+            pass
+    
+    ##@brief Reccursively walk throught paths to find plugin, then stores
+    #found plugin in a file...
+    #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
+    @classmethod
+    def discover(cls, paths):
+        tmp_res = []
+        for path in paths:
+            tmp_res += cls._discover(path)
+        #Formating and dedoubloning result
+        result = dict()
+        for pinfos in tmp_res:
+            pname = pinfos['name']
+            if (
+                    pname in result 
+                    and pinfos['version'] > result[pname]['version'])\
+                or pname not in result:
+                result[pname] = pinfos
+            else:
+                #dropped
+                pass
+        result = {'path_list': paths, 'plugins': result}
+        #Writing to cache
+        with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
+            pdcache.write(json.dumps(result))
+        return result
+    
+    ##@brief Return discover result
+    #@param refresh bool : if true invalidate all plugin list cache
+    #@note If discover cache file not found run discover first
+    #@note if refresh is set to True discover MUST have been run at least
+    #one time. In fact refresh action load the list of path to explore
+    #from the plugin's discover cache
+    @classmethod
+    def plugin_list(cls, refresh = False):
+        try:
+            infos = cls._load_discover_cache()
+            path_list = infos['path_list']
+        except PluginError:
+            refresh = True
+            path_list = DEFAULT_PLUGINS_PATH_LIST
+
+        if cls._plugin_list is None or refresh:
+            if not os.path.isfile(DISCOVER_CACHE_FILENAME) or refresh:
+                infos = cls.discover(path_list)
+        cls._plugin_list = infos['plugins']
+        return cls._plugin_list
+
+    ##@brief Attempt to open and load plugin discover cache
+    #@return discover cache
+    #@throw PluginError when open or load fails
+    @classmethod
+    def _load_discover_cache(cls):
+        try:
+            pdcache = open(DISCOVER_CACHE_FILENAME, 'r')
+        except Exception as e:
+            msg = "Unable to open discover cache : %s"
+            msg %= e
+            raise PluginError(msg)
+        try:
+            res = json.load(pdcache)
+        except Exception as e:
+            msg = "Unable to load discover cache : %s"
+            msg %= e
+            raise PluginError(msg)
+        pdcache.close()
+        return res
+
+    ##@brief Check if a directory is a plugin module
+    #@param path str : path to check
+    #@return a dict with name, version and path if path is a plugin module, else False
+    @classmethod
+    def dir_is_plugin(cls, path):
+        #Checks that path exists
+        if not os.path.isdir(path):
+            raise ValueError(
+                "Expected path to be a directory, but '%s' found" % path)
+        #Checks that path contains plugin's init file
+        initfile = os.path.join(path, INIT_FILENAME)
+        if not os.path.isfile(initfile):
+            return False
+        #Importing plugin's init file to check contained datas
+        try:
+            initmod, modname = cls.import_init(path)
+        except PluginError:
+            return False
+        #Checking mandatory init module variables
+        for attr_name in MANDATORY_VARNAMES:
+            if not hasattr(initmod,attr_name):
+                return False
+        try:
+            pversion = getattr(initmod, PLUGIN_VERSION_VARNAME)
+        except PluginError as e:
+            msg = "Invalid plugin version found in %s : %s"
+            msg %= (path, e)
+            raise PluginError(msg)
+        pname = getattr(initmod, PLUGIN_NAME_VARNAME)
+        return {'name': pname,
+            'version': pversion,
+            'path': path}
+    
+    ##@brief Import init file from a plugin path
+    #@param path str : Directory path
+    #@return a tuple (init_module, module_name)
+    @classmethod
+    def import_init(self, path):
+        init_source = os.path.join(path, INIT_FILENAME)
+        temp_module = '%s.%s.%s' % (
+            VIRTUAL_TEMP_PACKAGE_NAME, os.path.basename(os.path.dirname(path)),
+            'test_init')
+        try:
+            loader = SourceFileLoader(temp_module, init_source)
+        except (ImportError, FileNotFoundError) as e:
+            raise PluginError("Unable to import init file from '%s' : %s" % (
+                temp_module, e))
+        try:
+            res_module = loader.load_module()
+        except Exception as e:
+            raise PluginError("Unable to import initfile")
+        return (res_module, temp_module)
+
+    ##@brief Reccursiv plugin discover given a path
+    #@param path str : the path to walk through
+    #@return A dict with plugin_name as key and {'path':..., 'version':...} as value
+    @classmethod
+    def _discover(cls, path):
+        res = []
+        to_explore = [path]
+        while len(to_explore) > 0:
+            cur_path = to_explore.pop()
+            for f in os.listdir(cur_path):
+                f_path = os.path.join(cur_path, f)
+                if f not in ['.', '..'] and os.path.isdir(f_path):
+                    #Check if it is a plugin directory
+                    test_result = cls.dir_is_plugin(f_path)
+                    if not (test_result is False):
+                        res.append(test_result)
+                    else:
+                        to_explore.append(f_path)
+        return res
+
 
 ##@brief Decorator class designed to allow plugins to add custom methods
 #to LeObject childs (dyncode objects)

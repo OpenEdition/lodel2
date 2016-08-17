@@ -1,6 +1,8 @@
 from lodel.settings.validator import SettingValidator
 from .datasource import DummyDatasource as Datasource
 
+__plugin_name__ = "dummy_datasource"
+__version__ = '0.0.1'
 __loader__ = 'main.py'
 __plugin_deps__ = []
 
