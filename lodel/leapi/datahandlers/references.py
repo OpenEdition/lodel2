@@ -42,11 +42,10 @@ class List(MultipleRef):
 
         if isinstance(cur_value, str):
             value = cur_value.split(',')
-            l_value = [uidtype.cast_type(uid) for uid in value] ## à remplacer par uidtype
+            l_value = [uidtype.cast_type(uid) for uid in value]
 
             return l_value
         elif isinstance(cur_value, list):
-            type_list = str if isinstance(cur_value[0], str) else uidtype
             l_value = list()
             
             for value in cur_value:
@@ -89,10 +88,9 @@ class Set(MultipleRef):
         uidtype = emcomponent.field(u_fname[0]) if isinstance(u_fname, list) else emcomponent.field(u_fname)
         if isinstance(cur_value, str):
             value = cur_value.split(',')
-            l_value = [int(uid) for uid in value] ## à remplacer par uidtype
+            l_value = [uidtype.cast_type(uid) for uid in value] 
             return list(l_value)
         elif isinstance(cur_value, set):
-            type_list = str if isinstance(cur_value[0], str) else uidtype
             l_value = list()
             
             for value in cur_value:
@@ -159,12 +157,10 @@ class Hierarch(MultipleRef):
         uidtype = emcomponent.field(u_fname[0]) if isinstance(u_fname, list) else emcomponent.field(u_fname)
         if isinstance(cur_value, str):
             value = cur_value.split(',')
-            l_value = [int(uid) for uid in value] ## à remplacer par uidtype
+            l_value = [uidtype.cast_type(uid) for uid in value] 
             return list(l_value)
         elif isinstance(cur_value, list):
-            type_list = str if isinstance(cur_value[0], str) else uidtype
             l_value = list()
-            
             for value in cur_value:
                 if isinstance(value,uidtype):
                     l_value.append(value)

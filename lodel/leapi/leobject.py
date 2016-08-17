@@ -562,7 +562,6 @@ construction and consitency when datas are not complete\n")
                 for fname, ftype in cls._fields.items()
                 if not ftype.is_internal() or ftype.internal != 'autosql'
         }
-        logger.warning(ret)
         return ret
 
     ## @brief Check datas consistency
