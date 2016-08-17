@@ -1,8 +1,8 @@
 #-*- coding: utf-8 -*-
 
+import copy
 import logging, logging.handlers
 import os.path
-from lodel.settings import Settings
 
 # Variables & constants definitions
 default_format = '%(asctime)-15s %(levelname)s %(_pathname)s:%(_lineno)s:%(_funcName)s() : %(message)s'
@@ -10,12 +10,22 @@ simple_format = '%(asctime)-15s %(levelname)s : %(message)s'
 SECURITY_LOGLEVEL = 35
 logging.addLevelName(SECURITY_LOGLEVEL, 'SECURITY')
 handlers = dict() # Handlers list (generated from settings)
+##@brief Stores sent messages until module is able to be initialized
+msg_buffer = []
 
 # Fetching default root logger
 logger = logging.getLogger()
 
-# Setting options from Lodel.settings.Settings.logging
+##@brief Module initialisation from settings
+#@return True if inited else False
 def __init_from_settings():
+    try:
+        from lodel.settings import Settings
+    except Exception:
+        return False
+    from lodel.settings.settings import Settings as Lodel2Settings
+    if not Lodel2Settings.started():
+        return False
     # capture warning disabled, because the custom format raises error (unable
     # to give the _ preffixed arguments to logger resulting into a KeyError
     # exception )
@@ -24,6 +34,7 @@ def __init_from_settings():
     logger.setLevel(logging.DEBUG)
     for name in Settings.logging._fields:
         add_handler(name, getattr(Settings.logging, name))
+    return True
     
 
 ##@brief Add an handler, identified by a name, to a given logger 
@@ -85,8 +96,9 @@ def remove_console_handlers():
         if isinstance(handler, logging.StreamHandler):
             remove_handler(name)
     
-
-# Utility functions
+#####################
+# Utility functions #
+#####################
 
 ##@brief Generic logging function
 # @param lvl int : Log severity
@@ -94,6 +106,15 @@ def remove_console_handlers():
 # @param *args : additional positionnal arguments
 # @param **kwargs : additional named arguments
 def log(lvl, msg, *args, **kwargs):
+    if len(handlers) == 0: #late initialisation
+        if not __init_from_settings():
+            s_kwargs = copy.copy(kwargs)
+            s_kwargs.update({'lvl': lvl, 'msg':msg})
+            msg_buffer.append((s_kwargs, args))
+            return
+        else:
+            for s_kwargs, args in msg_buffer:
+                log(*args, **s_kwargs)
     caller = logger.findCaller() # Opti warning : small overhead
     extra = {
         '_pathname': os.path.abspath(caller[0]),
@@ -109,6 +130,3 @@ def security(msg, *args, **kwargs): log(SECURITY_LOGLEVEL, msg, *args, **kwargs)
 def error(msg, *args, **kwargs): log(logging.ERROR, msg, *args, **kwargs)
 def critical(msg, *args, **kwargs): log(logging.CRITICAL, msg, *args, **kwargs)
 
-# Initialisation triggering
-if len(handlers) == 0:
-    __init_from_settings()

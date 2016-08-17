@@ -9,6 +9,7 @@ from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
 import plugins
 from .exceptions import *
+from lodel import logger
 
 ## @package lodel.plugins Lodel2 plugins management
 #
@@ -508,28 +509,12 @@ name differ from the one found in plugin's init file"
         if cls._load_called != []:
             cls._load_called = []
     
-    @classmethod
-    ##@brief Browse directory to get plugin
-    #@param plugin_path 
-    #@return module existing
-    def plugin_discover(self, plugin_path):
-        res = os.listdir(plugin_path) is not None
-        if res:
-            dirname = os.path.dirname(plugin_path)
-            for f in os.listdir(plugin_path):
-                file_name = ''.join(dirname, f)
-                if self.is_plugin_dir(file_name):
-                    return self.is_plugin_dir(file_name)
-                else:
-                    self._discover_plugin(file_name)
-        else:
-            pass
-    
     ##@brief Reccursively walk throught paths to find plugin, then stores
     #found plugin in a file...
     #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
     @classmethod
     def discover(cls, paths = None):
+        logger.info("Running plugin discover")
         if paths is None:
             paths = DEFAULT_PLUGINS_PATH_LIST
         tmp_res = []

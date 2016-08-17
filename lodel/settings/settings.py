@@ -8,6 +8,7 @@ import warnings
 import types # for dynamic bindings
 from collections import namedtuple
 
+from lodel import logger
 from lodel.plugin.plugins import Plugin, PluginError
 from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS
@@ -99,7 +100,7 @@ class Settings(object, metaclass=MetaSettings):
 
     @classmethod
     def started(cls):
-        return cls.instance is not None
+        return cls.instance is not None and cls.instance.__confs is not None
 
     ##@brief An utility method that raises if the singleton is not in a good
     # state
