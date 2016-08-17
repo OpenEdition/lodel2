@@ -2,10 +2,16 @@
 
 import sys
 import os, os.path
-import loader
+import argparse
 
-from lodel.settings import Settings
-from lodel import logger
+"""
+#Dirty hack to solve symlinks problems :
+#   When loader was imported the original one (LODEL_LIBDIR/install/loader)
+#   because lodel_admin.py is a symlink from this folder
+#Another solution can be delete loader from install folder
+sys.path[0] = os.getcwd()
+import loader
+"""
 
 ## @brief Utility method to generate python code given an emfile and a
 # translator
@@ -27,6 +33,7 @@ def generate_dyncode(model_file, translator):
 # @param translator str : a translator name
 # @param output_filename str : the output file
 def create_dyncode(model_file, translator, output_filename):
+    from lodel import logger
     dyncode = generate_dyncode(model_file, translator)
     with open(output_filename, 'w+') as out_fd:
         out_fd.write(dyncode)
@@ -36,6 +43,8 @@ def create_dyncode(model_file, translator, output_filename):
 
 ## @brief Refresh dynamic leapi code from settings
 def refresh_dyncode():
+    import loader
+    from lodel.settings import Settings
     # EditorialModel update/refresh
     
     # TODO
@@ -120,3 +129,16 @@ def list_registered_hooks():
             print(msg)
         print("\n")
 
+##@brief update plugin's discover cache
+#@note impossible to give arguments from a Makefile...
+#@todo write a __main__ to be able to run ./lodel_admin
+def update_plugin_discover_cache(path_list = None):
+    os.environ['LODEL2_NO_SETTINGS_LOAD'] = 'True'
+    import loader
+    from lodel.plugin.plugins import Plugin
+    res = Plugin.discover(path_list)
+    print("Plugin discover result in %s :\n" % res['path_list'])
+    for pname, pinfos in res['plugins'].items():
+        print("\t- %s %s -> %s" % (
+            pname, pinfos['version'], pinfos['path']))
+    

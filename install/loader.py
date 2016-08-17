@@ -1,30 +1,41 @@
 #-*- coding: utf-8 -*-
 
+##@brief Lodel2 loader script
+#
+#@note If you want to avoid settings loading you can set the environment
+#variable LODEL2_NO_SETTINGS_LOAD (see @ref install.lodel_admin.update_plugin_discover_cache()
+#
+
 import sys, os, os.path
 #
 # Bootstraping
 #
 LODEL2_LIB_ABS_PATH = None
 if LODEL2_LIB_ABS_PATH is not None:
+    if not os.path.isdir(LODEL2_LIB_ABS_PATH):
+        print("FATAL ERROR : the LODEL2_LIB_ABS_PATH variable in loader.py is \
+not correct : '%s'" % LODEL2_LIB_ABS_PATH, file=sys.stderr)
     sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
 
 try:
     import lodel
-except ImportError:
+except ImportError as e:
     print("Unable to load lodel module. exiting...")
+    print(e)
     exit(1)
 
-#
-# Loading settings
-#
-from lodel.settings.settings import Settings as settings
-if not settings.started():
-    settings('conf.d')
-from lodel.settings import Settings
+if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
+    #
+    # Loading settings
+    #
+    from lodel.settings.settings import Settings as settings
+    if not settings.started():
+        settings('conf.d')
+    from lodel.settings import Settings
 
-#Starts hooks
-from lodel.plugin import LodelHook
-from lodel.plugin import core_hooks
+    #Starts hooks
+    from lodel.plugin import LodelHook
+    from lodel.plugin import core_hooks
 
 def start():
     #Load plugins
