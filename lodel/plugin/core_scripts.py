@@ -1,5 +1,8 @@
 import lodel.plugin.scripts as lodel_script
 
+##@brief Implements lodel_admin.py discover-plugin action
+#
+#In depth directory scan to find plugins.
 class DiscoverPlugin(lodel_script.LodelScript):
     _action = 'discover-plugin'
     _description = 'Walk through given folders looking for plugins'

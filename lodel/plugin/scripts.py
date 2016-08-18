@@ -30,7 +30,7 @@ action identifier" % name)
         if self._description is None:
             self._description = self._default_description()
         self._parser = argparse.ArgumentParser(
-            prog = self._prog_name,
+            prog = self._prog_name(),
             description = self._description)
         self.argparser_config(self._parser)
             
@@ -45,6 +45,9 @@ action identifier" % name)
             self._action = name
         self._action = self._action.lower()
         script_registration(self._action, self)
+
+    def __str__(self):
+        return '%s : %s' % (self._action, self._description)
 
 class LodelScript(object, metaclass=MetaLodelScript):
     
@@ -87,7 +90,7 @@ MUST be implemented by ALL child classes")
     #@note See argparse.ArgumentParser() prog argument
     @classmethod
     def _prog_name(cls):
-        return '%s %s' % (sys.argv[0], self._action)
+        return '%s %s' % (sys.argv[0], cls._action)
     
     ##@brief Return the default description for an action
     @classmethod
@@ -120,18 +123,32 @@ def _default_parser():
         action_list = 'NO SCRIPT FOUND !'
 
     parser = argparse.ArgumentParser(description = "Lodel2 script runner")
+    parser.add_argument('-L', '--list-actions', action='store_true',
+        default=False, help="List available actions")
     parser.add_argument('action', metavar="ACTION", type=str,
-        help="One of the following actions : %s" % action_list)
+        help="One of the following actions : %s" % action_list, nargs='?')
     parser.add_argument('option', metavar="OPTIONS", type=str, nargs='*',
         help="Action options. Use %s ACTION -h to have help on a specific \
 action" % sys.argv[0])
     return parser
 
+##@brief Main function of lodel_admin.py script
+#
+#This function take care to run the good plugins and clean sys.argv from
+#action name before running script
+#
+#@return DO NOT RETURN BUT exit() ONCE SCRIPT EXECUTED !!
 def main_run():
     default_parser = _default_parser()
     if len(sys.argv) == 1:
         default_parser.print_help()
         exit(1)
+    args = default_parser.parse_args()
+    if args.list_actions:
+        print("Available actions :")
+        for sname in sorted(__registered_scripts.keys()):
+            print("\t- %s" % __registered_scripts[sname])
+        exit(0)
     #preparing sys.argv (deleting action)
     action = sys.argv[1].lower()
     del(sys.argv[1])

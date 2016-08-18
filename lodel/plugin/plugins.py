@@ -516,6 +516,7 @@ name differ from the one found in plugin's init file"
     #@param no_cache bool : if true only return a list of found plugins 
     #without modifying the cache file
     #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
+    #@todo add max_depth and symlink following options
     @classmethod
     def discover(cls, paths = None, no_cache = False):
         logger.info("Running plugin discover")
