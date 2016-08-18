@@ -13,13 +13,14 @@ class Boolean(DataField):
     ##@brief A boolean field
     def __init__(self, **kwargs):
         if 'check_data_value' not in kwargs:
-            kwargs['check_data_value'] = self.check_value
+            kwargs['check_data_value'] = self.check_data_value
         super().__init__(ftype='bool', **kwargs)
 
     def _check_data_value(self, value):
         error = None
         try:
-            value = bool(value)
+            if type(value) != bool:
+                raise TypeError()
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be a boolean" % value)
         return value, error
