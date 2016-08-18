@@ -245,7 +245,7 @@ def plugin_val(value):
     def plugin_check(hookname, caller, payload):
         from lodel import plugin
         for inst in plugin._plugin_instances:
-            if (!isinstance(value, inst)):
+            if (not isinstance(value, inst)):
                 msg = "Following plugin types do not exists in the loader: %s"
                 raise SettingsValidationError(msg % value)
     return value
