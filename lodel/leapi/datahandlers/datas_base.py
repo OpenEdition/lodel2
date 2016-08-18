@@ -37,7 +37,11 @@ class Integer(DataField):
     def _check_data_value(self, value):
         error = None
         try:
-            value = int(value)
+            value = float(value)
+            if value % 1 == 0:
+                value = int(value)
+            else:
+                raise TypeError()
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be an integer" % value)
         return value, error
