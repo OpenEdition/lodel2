@@ -72,8 +72,12 @@ class Varchar(DataField):
         error = None
         try:
             value = str(value)
-        except(ValueError, TypeError):
+            if len(value) > self.max_length:
+                raise ValueError
+        except TypeError:
             error = TypeError("The value '%s' can't be a str" % value)
+        except ValueError:
+            error = ValueError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
         return value, error
 
 ##@brief Data field designed to handle date & time 
