@@ -41,8 +41,8 @@ DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
 MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME, 
     PLUGIN_VERSION_VARNAME]
 
-PLUGIN_DEFAULT_TYPE = 'default'
-PLUGINS_TYPES = [PLUGIN_DEFAULT_TYPE, 'datasource', 'session_handler', 'ui']
+EXTENSIONS = 'default'
+PLUGINS_TYPES = [EXTENSIONS, 'datasource', 'session_handler', 'ui']
 
 
 ##@brief Describe and handle version numbers
@@ -248,7 +248,7 @@ init file. Malformed plugin"
         try:
             self.__type = getattr(self.module, PLUGIN_TYPE_VARNAME)
         except AttributeError:
-            self.__type = PLUGIN_DEFAULT_TYPE
+            self.__type = EXTENSIONS
         self.__type = str(self.__type).lower()
         if self.__type not in PLUGINS_TYPES:
             raise PluginError("Unknown plugin type '%s'" % self.__type)
@@ -296,7 +296,7 @@ name differ from the one found in plugin's init file"
         filename = os.path.join(self.path, filename)
         loader = SourceFileLoader(module_name, filename)
         return loader.load_module()
-    
+   
     ##@brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
     def check_deps(self):
@@ -419,7 +419,8 @@ name differ from the one found in plugin's init file"
         from lodel.plugin.hooks import LodelHook
         LodelHook.call_hook(
             "lodel2_plugins_loaded", cls, cls._plugin_instances)
-    
+   
+
     ##@return a copy of __confspecs attr
     @property
     def confspecs(self):
@@ -785,3 +786,18 @@ with %s" % (custom_method._method_name, custom_method))
 # - an _activate() method that returns True if the plugin can be activated (
 # optionnal)
 #
+
+
+
+
+
+class SessionHandler(Plugin):
+    __instance = None
+
+    def __new__(cls):
+        if cls.__instance == None:
+            cls.instance == object.__new__(cls)
+        return cls.__instance
+        
+    def __init__(self, plugin_name):
+        super(Plugin, self).__init__(plugin_name)

@@ -237,13 +237,47 @@ def emfield_val(value):
         if value[1].lower() not in ccls.fieldnames(True):
             msg = "Following field not found in class %s : %s"
             raise SettingsValidationError(msg % value)
-            
-            
     return value
         
+def plugin_val(value):
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def plugin_check(hookname, caller, payload):
+        from lodel import plugin
+        for inst in plugin._plugin_instances:
+            if (!isinstance(value, inst)):
+                msg = "Following plugin types do not exists in the loader: %s"
+                raise SettingsValidationError(msg % value)
+    return value
+
+def plugins_val(value):
+    spl = value.split('.')
+    if len(spl) < 1:
+        msg = "Expected a value in the form PLUGIN.NAME or PLUGIN.VERSION but got : %s"
+        raise SettingsValidationError(msg % value)
+    value = tuple(spl)
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def plugin_check(hookname, caller, payload):
+        from lodel import plugin
+        pluginnames = { cls.__type.lower():cls for cls in dyncode.dynclasses}
+        if value[0].lower() not in pluginsnames:
+            msg = "Following plugin types do not exists in the loader: %s"
+            raise SettingsValidationError(msg % value[0])
+        ccls = classnames[value[0].lower()]
+        if value[1].lower() not in ccls.fieldnames(True):
+            msg = "Following field not found in class %s : %s"
+            raise SettingsValidationError(msg % value)
+    return value
+
 #
 #   Default validators registration
 #
+
+SettingValidator.register_validator(
+    'plugin',
+    plugin_val,
+    'plugin validator')
 
 SettingValidator.register_validator(
     'dummy',
