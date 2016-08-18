@@ -4,14 +4,20 @@ import sys
 import os, os.path
 import argparse
 
-"""
-#Dirty hack to solve symlinks problems :
-#   When loader was imported the original one (LODEL_LIBDIR/install/loader)
-#   because lodel_admin.py is a symlink from this folder
-#Another solution can be delete loader from install folder
-sys.path[0] = os.getcwd()
-import loader
-"""
+##@brief Dirty hack to avoid problems with simlink to lodel2 lib folder
+#
+#In instance folder we got a loader.py (the one we want to import here when
+#writing "import loader". The problem is that lodel_admin.py is a simlink to
+#LODEL2LIB_FOLDER/install/lodel_admin.py . In this folder there is the 
+#generic loader.py template. And when writing "import loader" its 
+#LODEL2LIB_FOLDER/install/loader.py that gets imported.
+#
+#In order to solve this problem the _simlink_hack() function delete the
+#LODEL2LIB_FOLDER/install entry from sys.path
+#@note This problem will be solved once lodel lib dir will be in 
+#/usr/lib/python3/lodel
+def _simlink_hack():
+    sys.path[0] = os.getcwd()
 
 ## @brief Utility method to generate python code given an emfile and a
 # translator
@@ -141,4 +147,10 @@ def update_plugin_discover_cache(path_list = None):
     for pname, pinfos in res['plugins'].items():
         print("\t- %s %s -> %s" % (
             pname, pinfos['version'], pinfos['path']))
-    
+
+if __name__ == '__main__':
+    _simlink_hack()
+    import loader
+    loader.start()
+    from lodel.plugin.scripts import main_run
+    main_run()

@@ -13,13 +13,14 @@ class Boolean(DataField):
     ##@brief A boolean field
     def __init__(self, **kwargs):
         if 'check_data_value' not in kwargs:
-            kwargs['check_data_value'] = self.check_value
+            kwargs['check_data_value'] = self.check_data_value
         super().__init__(ftype='bool', **kwargs)
 
     def _check_data_value(self, value):
         error = None
         try:
-            value = bool(value)
+            if type(value) != bool:
+                raise TypeError()
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be a boolean" % value)
         return value, error
@@ -36,7 +37,11 @@ class Integer(DataField):
     def _check_data_value(self, value):
         error = None
         try:
-            value = int(value)
+            value = float(value)
+            if value % 1 == 0:
+                value = int(value)
+            else:
+                raise TypeError()
         except(ValueError, TypeError):
             error = TypeError("The value '%s' is not, and will never, be an integer" % value)
         return value, error
@@ -67,8 +72,12 @@ class Varchar(DataField):
         error = None
         try:
             value = str(value)
-        except(ValueError, TypeError):
+            if len(value) > self.max_length:
+                raise ValueError
+        except TypeError:
             error = TypeError("The value '%s' can't be a str" % value)
+        except ValueError:
+            error = ValueError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
         return value, error
 
 ##@brief Data field designed to handle date & time 
