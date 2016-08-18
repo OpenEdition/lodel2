@@ -512,9 +512,12 @@ name differ from the one found in plugin's init file"
     
     ##@brief Reccursively walk throught paths to find plugin, then stores
     #found plugin in a file...
+    #@param paths list : list of directory paths
+    #@param no_cache bool : if true only return a list of found plugins 
+    #without modifying the cache file
     #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
     @classmethod
-    def discover(cls, paths = None):
+    def discover(cls, paths = None, no_cache = False):
         logger.info("Running plugin discover")
         if paths is None:
             paths = DEFAULT_PLUGINS_PATH_LIST
@@ -535,8 +538,9 @@ name differ from the one found in plugin's init file"
                 pass
         result = {'path_list': paths, 'plugins': result}
         #Writing to cache
-        with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
-            pdcache.write(json.dumps(result))
+        if not no_cache:
+            with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
+                pdcache.write(json.dumps(result))
         return result
     
     ##@brief Return discover result

@@ -32,10 +32,11 @@ if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
     if not settings.started():
         settings('conf.d')
     from lodel.settings import Settings
-
+    
     #Starts hooks
     from lodel.plugin import LodelHook
     from lodel.plugin import core_hooks
+    from lodel.plugin import core_scripts
 
 def start():
     #Load plugins
