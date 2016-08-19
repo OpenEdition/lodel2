@@ -10,12 +10,12 @@ class BooleanTestCase(unittest.TestCase):
 
         # correct values
         for test_value in [True, False]:
-            value, error = test_boolean._check_data_value(test_value)
+            value, error = test_boolean.check_data_value(test_value)
             self.assertIsNone(error)
 
         # incorrect values
         for test_value in ['ok', 'True', 'False']:
-            value, error = test_boolean._check_data_value(test_value)
+            value, error = test_boolean.check_data_value(test_value)
             self.assertIsNotNone(error)
 
     def test_can_override(self):

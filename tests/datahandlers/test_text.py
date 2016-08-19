@@ -11,5 +11,5 @@ class TextTestCase(unittest.TestCase):
         Text
         """
         test_text = Text()
-        _, error = test_text._check_data_value(test_value)
+        _, error = test_text.check_data_value(test_value)
         self.assertIsNone(error)

@@ -10,12 +10,12 @@ class IntegerTestCase(unittest.TestCase):
 
         # Incorrect values
         for test_bad_value in ['ok','ceci est un test', '15.2', 15.2]:
-            _, error = test_int._check_data_value(test_bad_value)
+            _, error = test_int.check_data_value(test_bad_value)
             self.assertIsNotNone(error)
 
         # Correct values
         for test_correct_value in [10, '15', '15.0']:
-            _, error = test_int._check_data_value(test_correct_value)
+            _, error = test_int.check_data_value(test_correct_value)
             self.assertIsNone(error)
 
     def test_can_override(self):

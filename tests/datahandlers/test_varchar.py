@@ -8,13 +8,13 @@ class VarcharTestCase(unittest.TestCase):
     def test_check_data_value(self):
         test_varchar = Varchar(max_length=10)
 
-        _, error = test_varchar._check_data_value("c" * 10)
+        _, error = test_varchar.check_data_value("c" * 10)
         self.assertIsNone(error)
 
-        _, error = test_varchar._check_data_value("c" * 9)
+        _, error = test_varchar.check_data_value("c" * 9)
         self.assertIsNone(error)
 
-        _, error = test_varchar._check_data_value("c" * 11)
+        _, error = test_varchar.check_data_value("c" * 11)
         self.assertIsNotNone(error)
         self.assertIsInstance(error, ValueError)
 
