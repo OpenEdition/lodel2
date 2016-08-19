@@ -1,26 +1,52 @@
 from lodel import logger
 
-##@brief Handles common errors on authentication
-class AuthenticationError(Exception):
-    pass
+##@brief Handles common errors with a Client
+class ClientError(Exception):
+    ##@brief The logger function to use to log the error message
+    _loglvl = logger.warning
+    ##@brief Error str
+    _err_str = "Error"
+    ##@brief the hook name to trigger with error
+    _action = 'lodel2_ui_error'
+    ##@brief the hook payload
+    _payload = None
 
-
-##@brief Handles authentication error with possible security issue
-#
-#@note Handle the creation of a security log message containing client info
-class AuthenticationSecurityError(AuthenticationError):
-    def __init__(self, client):
-        msg = "%s : authentication error" % client
-        logger.security(msg)
+    ##@brief Constructor
+    #
+    #Log message are build using the following format :
+    #"<client infos> : <_err_str>[ : <msg>]"
+    def __init__(self, client, msg = ""):
+        msg = self.build_message(client, msg)
+        if cls._loglvl is not None:
+            cls._loglvl(msg)
         super().__init__(msg)
+        if self._action is not None:
+            LodelHook.call_hook(self._action, self, self._payload)
+
+    ##@brief build error message
+    def build_message(self, client, msg):
+        res = "%s : %s" % (client, self._err_str)
+        if len(msg) > 0:
+            res += " : %s" % msg
+        return res
+
+##@brief Handles authentication failure errors
+class ClientAuthenticationFailure(ClientError):
+    _loglvl = logger.security
+    _err_str = 'Authentication failure'
+    _action = 'lodel2_ui_authentication_failure'
 
 
-##@brief Handles authentication failure
-#
-#@note Handle the creation of a security log message containing client info
-class AuthenticationFailure(Exception):
+##@brief Handles permission denied errors
+class ClientPermissionDenied(ClientError):
+    _loglvl = logger.security
+    _err_str = 'Permission denied'
+    _action = 'lodel2_ui_permission_denied'
     
-    def __init__(self, client):
-        msg = "%s : authentication failure" % client
-        logger.security(msg)
-        super().__init__(msg)
+
+##@brief Handles common errors on authentication
+class ClientAuthenticationError(ClientError):
+    _loglvl = logger.error
+    _err_str = 'Authentication error'
+    _action = 'lodel2_ui_error'
+
