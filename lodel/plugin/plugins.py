@@ -163,20 +163,20 @@ class MetaPlugType(type):
         if len(bases) == 1 and bases[0] == object:
             print("Dropped : ", name, bases)
             return
-        list_name= [cls._name__ for cls in plugin_types(self)] 
-        if self.name is in list_name:
-            return
-        else:
-            plug_type_register(self)
+        self.__register_types()
+        #list_name= [cls.__name__ for cls in __all_ptypes] 
+        #if self.name in list_name:
+        #    return
+        #else:
+        #    plug_type_register(self)
+
+    def __register_types(self):
+        plug_type_register(self)
 
 def plug_type_register(cls):
-    __all__ptypes.append(cls)
+    __all_ptypes.append(cls)
     logger.info("New child class registered : %s" % cls.__name__)
 
-##@brief Return a list of child Class Plugin
-@classmethod
-def plugin_types(cls):
-    return cls.__all_ptypes
 
 ##@brief Handle plugins
 #
@@ -638,6 +638,11 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                 infos = cls.discover(path_list)
         cls._plugin_list = infos['plugins']
         return cls._plugin_list
+
+    ##@brief Return a list of child Class Plugin
+    @classmethod
+    def plugin_types(cls):
+        return cls.__all_ptypes
 
     ##@brief Attempt to open and load plugin discover cache
     #@return discover cache
