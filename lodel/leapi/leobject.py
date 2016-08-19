@@ -4,13 +4,14 @@ import importlib
 import warnings
 import copy
 
-from lodel.plugin import Plugin
 from lodel import logger
 from lodel.settings import Settings
 from lodel.settings.utils import SettingsError
 from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
 from .exceptions import *
+from lodel.plugin.exceptions import *
 from lodel.plugin.hooks import LodelHook
+from lodel.plugin import Plugin, DatasourcePlugin
 from lodel.leapi.datahandlers.base_classes import DatasConstructor
 
 ##@brief Stores the name of the field present in each LeObject that indicates
@@ -244,7 +245,7 @@ class LeObject(object):
         else:
             ro_ds, rw_ds = cls._datasource_name
         #Read only datasource initialisation
-        cls._ro_datasource = cls._init_datasource(ro_ds, True)
+        cls._ro_datasource = DatasourcePlugin.init_datasource(ro_ds, True)
         if cls._ro_datasource is None:
             log_msg = "No read only datasource set for LeObject %s"
             log_msg %= cls.__name__
@@ -254,7 +255,7 @@ class LeObject(object):
             log_msg %= (ro_ds, cls.__name__)
             logger.debug(log_msg)
         #Read write datasource initialisation
-        cls._rw_datasource = cls._init_datasource(rw_ds, False)
+        cls._rw_datasource = DatasourcePlugin.init_datasource(rw_ds, False)
         if cls._ro_datasource is None:
             log_msg = "No read/write datasource set for LeObject %s"
             log_msg %= cls.__name__
@@ -264,99 +265,6 @@ class LeObject(object):
             log_msg %= (ro_ds, cls.__name__)
             logger.debug(log_msg)
         
-
-    ##@brief Replace the _datasource attribute value by a datasource instance
-    #
-    #This method is used once at dyncode load to replace the datasource string
-    #by a datasource instance to avoid doing this operation for each query
-    #@param ds_name str : The name of the datasource to instanciate
-    #@param ro bool : if true initialise the _ro_datasource attribute else
-    #initialise _rw_datasource attribute
-    #@throw SettingsError if an error occurs
-    @classmethod
-    def _init_datasource(cls, ds_name, ro):
-        expt_msg = "In LeAPI class '%s' " % cls.__name__
-        if ds_name not in Settings.datasources._fields:
-            #Checking that datasource exists
-            expt_msg += "Unknown or unconfigured datasource %s for class %s"
-            expt_msg %= (ds_name, cls.__name__)
-            raise SettingsError(expt_msg)
-        try:
-            #fetching plugin name
-            ds_plugin_name, ds_identifier = cls._get_ds_plugin_name(ds_name, ro)
-        except NameError:
-            expt_msg += "Datasource %s is missconfigured, missing identifier."
-            expt_msg %= ds_name
-            raise SettingsError(expt_msg)
-        except RuntimeError:
-            expt_msg += "Error in datasource %s configuration. Trying to use \
-a read only as a read&write datasource"
-            expt_msg %= ds_name
-            raise SettingsError(expt_msg)
-        except ValueError as e:
-            expt_msg += str(e)
-            raise SettingsError(expt_msg)
-        
-        try:
-            ds_conf = cls._get_ds_connection_conf(ds_identifier, ds_plugin_name)
-        except NameError as e:
-            expt_msg += str(e)
-            raise SettingsError(expt_msg)
-        #Checks that the datasource plugin exists
-        ds_plugin_module = Plugin.get(ds_plugin_name).loader_module()
-        try:
-            datasource_class = getattr(ds_plugin_module, "Datasource")
-        except AttributeError as e:
-            expt_msg += "The datasource plugin %s seems to be invalid. Error \
-raised when trying to import Datasource"
-            expt_msg %= ds_identifier
-            raise SettingsError(expt_msg)
-
-        return datasource_class(**ds_conf)
-
-    ##@brief Try to fetch a datasource configuration
-    #@param ds_identifier str : datasource name
-    #@param ds_plugin_name : datasource plugin name
-    #@return a dict containing datasource initialisation options
-    #@throw NameError if a datasource plugin or instance cannot be found
-    @staticmethod
-    def _get_ds_connection_conf(ds_identifier,ds_plugin_name):
-        if ds_plugin_name not in Settings.datasource._fields:
-            msg = "Unknown or unconfigured datasource plugin %s"
-            msg %= ds_plugin
-            raise NameError(msg)
-        ds_conf = getattr(Settings.datasource, ds_plugin_name)
-        if ds_identifier not in ds_conf._fields:
-            msg = "Unknown or unconfigured datasource instance %s"
-            msg %= ds_identifier
-            raise NameError(msg)
-        ds_conf = getattr(ds_conf, ds_identifier)
-        return {k: getattr(ds_conf,k) for k in ds_conf._fields }
-
-    ##@brief fetch datasource plugin name
-    #@param ds_name str : datasource name
-    #@param ro bool : if true consider the datasource as read only
-    #@return a tuple(DATASOURCE_PLUGIN_NAME, DATASOURCE_CONNECTION_NAME)
-    #@throw NameError if datasource identifier not found
-    #@throw RuntimeError if datasource is read_only but ro flag was false
-    @staticmethod
-    def _get_ds_plugin_name(ds_name, ro):
-        datasource_orig_name = ds_name
-        # fetching connection identifier given datasource name
-        ds_identifier = getattr(Settings.datasources, ds_name)
-        read_only = getattr(ds_identifier, 'read_only')
-        try:
-            ds_identifier = getattr(ds_identifier, 'identifier')
-        except NameError as e:
-            raise e
-        if read_only and not ro:
-            raise RuntimeError()
-        res = ds_identifier.split('.')
-        if len(res) != 2:
-            raise ValueError("expected value for identifier is like \
-DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
-        return res
-    
     ##@brief Return the uid of the current LeObject instance
     #@return the uid value
     #@warning Broke multiple uid capabilities

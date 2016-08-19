@@ -8,8 +8,9 @@ import json
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
 import plugins
-from .exceptions import *
 from lodel import logger
+from lodel.settings.utils import SettingsError
+from .exceptions import *
 
 ## @package lodel.plugins Lodel2 plugins management
 #

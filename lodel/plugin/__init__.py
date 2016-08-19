@@ -41,3 +41,4 @@
 
 from .hooks import LodelHook
 from .plugins import Plugin, CustomMethod
+from .datasource_plugin import DatasourcePlugin
