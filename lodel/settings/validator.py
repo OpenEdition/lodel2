@@ -245,15 +245,15 @@ def plugin_val(value):
         msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
         raise SettingsValidationError(msg % value)
     value = tuple(spl)
-        #Late validation hook
-        @LodelHook('lodel2_dyncode_bootstraped')
-        def type_check(hookname, caller, payload):
-            from lodel import plugin
-            typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
-            if value[1].lower() not in typesname:
-                msg = "Following plugin type do not exist in plugin list %s : %s"
-                raise SettingsValidationError(msg % value)
-            return value
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def type_check(hookname, caller, payload):
+        from lodel import plugin
+        typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
+        if value[1].lower() not in typesname:
+            msg = "Following plugin type do not exist in plugin list %s : %s"
+            raise SettingsValidationError(msg % value)
+        return value
     plug_type_val = plugin_val(value)
     return plug_type_val
 
