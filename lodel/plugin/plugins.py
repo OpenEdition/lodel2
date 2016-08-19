@@ -795,14 +795,13 @@ with %s" % (custom_method._method_name, custom_method))
 
 class SessionHandler(Plugin):
     __instance = None
-
-    def __new__(cls):
-        if cls.__instance == None:
-            cls.instance == object.__new__(cls)
-        return cls.__instance
         
     def __init__(self, plugin_name):
-        super(Plugin, self).__init__(plugin_name)
+        if self.__instance is None:
+            super(Plugin, self).__init__(plugin_name)
+            self.__instance = True
+        else:
+            raise RuntimeError("A SessionHandler Plugin is already plug")
 
 class InterfacePlugin(Plugin):
     def __init__(self, plugin_name):

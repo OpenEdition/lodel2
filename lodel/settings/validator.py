@@ -240,7 +240,7 @@ def emfield_val(value):
     return value
 
 def plugin_val(value):
-    if spl = value.split('.')
+    spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
         raise SettingsValidationError(msg % value)
