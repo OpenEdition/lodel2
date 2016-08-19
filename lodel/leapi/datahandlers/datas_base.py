@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 import warnings
 import datetime
+import time
+import os
 
 from lodel.leapi.datahandlers.base_classes import DataField
 
@@ -94,10 +96,15 @@ class DateTime(DataField):
     def __init__(self, now_on_update=False, now_on_create=False, **kwargs):
         self.now_on_update = now_on_update
         self.now_on_create = now_on_create
+        self.datetime_format = '%Y-%m-%d' if 'format' not in kwargs else kwargs['format']
         super().__init__(**kwargs)
 
     def _check_data_value(self, value):
         error = None
+        try:
+            datetime_value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
+        except ValueError:
+            error = ValueError("The value '%s' cannot be converted as a datetime" % value)
         return value, error
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
@@ -132,7 +139,8 @@ class File(DataField):
     def __init__(self, upload_path=None, **kwargs):
         self.upload_path = upload_path
         super().__init__(**kwargs)
-        
+
+    # @todo Add here a check for the validity of the given value (should have a correct path syntax)
     def _check_data_value(self, value):
         error = None
         return value, error
