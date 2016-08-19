@@ -173,6 +173,7 @@ class MetaPlugType(type):
     def __register_types(self):
         plug_type_register(self)
 
+
 def plug_type_register(cls):
     __all_ptypes.append(cls)
     logger.info("New child class registered : %s" % cls.__name__)
