@@ -793,9 +793,6 @@ with %s" % (custom_method._method_name, custom_method))
 #
 
 
-
-
-
 class SessionHandler(Plugin):
     __instance = None
 
@@ -806,3 +803,9 @@ class SessionHandler(Plugin):
         
     def __init__(self, plugin_name):
         super(Plugin, self).__init__(plugin_name)
+
+class InterfacePlugin(Plugin):
+    def __init__(self, plugin_name):
+        super(Plugin, self).__init__(plugin_name)
+
+        
