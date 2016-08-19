@@ -238,37 +238,25 @@ def emfield_val(value):
             msg = "Following field not found in class %s : %s"
             raise SettingsValidationError(msg % value)
     return value
-        
-def plugin_val(value):
-    #Late validation hook
-    @LodelHook('lodel2_dyncode_bootstraped')
-    def plugin_check(hookname, caller, payload):
-        from lodel import plugin
-        for inst in plugin._plugin_instances:
-            if (not isinstance(value, inst)):
-                msg = "Following plugin types do not exists in the loader: %s"
-                raise SettingsValidationError(msg % value)
-    return value
 
-def plugins_val(value):
-    spl = value.split('.')
-    if len(spl) < 1:
-        msg = "Expected a value in the form PLUGIN.NAME or PLUGIN.VERSION but got : %s"
+def plugin_val(value):
+    if spl = value.split('.')
+    if len(spl) != 2:
+        msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
         raise SettingsValidationError(msg % value)
     value = tuple(spl)
-    #Late validation hook
-    @LodelHook('lodel2_dyncode_bootstraped')
-    def plugin_check(hookname, caller, payload):
-        from lodel import plugin
-        pluginnames = { cls.__type.lower():cls for cls in dyncode.dynclasses}
-        if value[0].lower() not in pluginsnames:
-            msg = "Following plugin types do not exists in the loader: %s"
-            raise SettingsValidationError(msg % value[0])
-        ccls = classnames[value[0].lower()]
-        if value[1].lower() not in ccls.fieldnames(True):
-            msg = "Following field not found in class %s : %s"
-            raise SettingsValidationError(msg % value)
-    return value
+        #Late validation hook
+        @LodelHook('lodel2_dyncode_bootstraped')
+        def type_check(hookname, caller, payload):
+            from lodel import plugin
+            typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
+            if value[1].lower() not in typesname:
+                msg = "Following plugin type do not exist in plugin list %s : %s"
+                raise SettingsValidationError(msg % value)
+            return value
+    plug_type_val = plugin_val(value)
+    return plug_type_val
+
 
 #
 #   Default validators registration
