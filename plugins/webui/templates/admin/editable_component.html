@@ -12,13 +12,13 @@
         {% endif %}
         {% if field.directly_editable %}
             <input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
-            {% set l_classe = field._linked_classes %}
+            {% set l_classe = field.l_classes %}
             <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
         {% else %}
             <input id="{{fieldname}}" name="field_input_{{fieldname}}" type="text" value="{{sval}}" readonly >
             <p> If you want to update this field, please do it in child objects</p>
         {% endif %}
 	{% else %}
-		Unsupported base type "{{field.base_type}}" </br>
+		Unsupported base type "{{field.base_type}}" <br>
 	{% endif %}
 {%- endmacro %}

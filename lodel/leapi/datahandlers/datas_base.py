@@ -30,6 +30,7 @@ class Integer(DataField):
 
     help = 'Basic integer field'
     base_type = 'int'
+    cast_type = int
 
     def __init__(self, **kwargs):
         super().__init__( **kwargs)

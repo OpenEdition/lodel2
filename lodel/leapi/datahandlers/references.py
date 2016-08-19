@@ -43,6 +43,7 @@ class List(MultipleRef):
         if isinstance(cur_value, str):
             value = cur_value.split(',')
             l_value = [uidtype.cast_type(uid) for uid in value]
+            #l_value = [int(uid) for uid in value]
 
             return l_value
         elif isinstance(cur_value, list):
@@ -89,6 +90,8 @@ class Set(MultipleRef):
         if isinstance(cur_value, str):
             value = cur_value.split(',')
             l_value = [uidtype.cast_type(uid) for uid in value] 
+            logger.debug("Valeur avec uidtype : %d" % l_value) 
+            #l_value = [int(uid) for uid in value] 
             return list(l_value)
         elif isinstance(cur_value, set):
             l_value = list()

@@ -66,7 +66,6 @@ class UniqID(Integer):
 
     help = 'Fieldtype designed to handle editorial model UID'
     base_type = 'int'
-    cast_type = int
 
     ##@brief A uid field
     # @param **kwargs

@@ -193,7 +193,8 @@ class Reference(DataHandler):
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
         self.__allowed_classes = set() if allowed_classes is None else set(allowed_classes)
-        self._linked_classes = list() if allowed_classes is None else allowed_classes
+        self.allowed_classes = list() if allowed_classes is None else allowed_classes
+        
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
