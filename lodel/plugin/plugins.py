@@ -148,6 +148,35 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
         return {'major': self.major, 'minor': self.minor,
             'revision': self.revision}
 
+##@brief Stores plugin class registered
+__all_ptypes = list()
+
+##@brief Plugin metaclass that allows to "catch" child class
+#declaration
+#
+#Automatic script registration on child class declaration
+class MetaPlugType(type):
+    
+    def __init__(self, name, bases, attrs):
+        #Here we can store all child classes of Plugin
+        super().__init__(name, bases, attrs)
+        if len(bases) == 1 and bases[0] == object:
+            print("Dropped : ", name, bases)
+            return
+        list_name= [cls._name__ for cls in plugin_types(self)] 
+        if self.name is in list_name:
+            return
+        else:
+            plug_type_register(self)
+
+def plug_type_register(cls):
+    __all__ptypes.append(cls)
+    logger.info("New child class registered : %s" % cls.__name__)
+
+##@brief Return a list of child Class Plugin
+@classmethod
+def plugin_types(cls):
+    return cls.__all_ptypes
 
 ##@brief Handle plugins
 #
@@ -158,7 +187,7 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
 # 1. Settings call start method to instanciate all plugins found in confs
 # 2. Settings fetch all confspecs
 # 3. the loader call load_all to register hooks etc
-class Plugin(object):
+class Plugin(object, metaclass=MetaPlugType):
     
     ##@brief Stores plugin directories paths
     _plugin_directories = None
