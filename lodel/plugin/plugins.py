@@ -172,6 +172,9 @@ class Plugin(object):
 
     ##@brief Attribute that stores plugins list from discover cache file
     _plugin_list = None
+    
+    ##@brief Store dict representation of discover cache content
+    _discover_cache = None
 
     ##@brief Plugin class constructor
     #
@@ -432,11 +435,29 @@ name differ from the one found in plugin's init file"
     #@return a dict (see @ref _discover() )
     @classmethod
     def plugin_cache(cls):
-        if not os.path.isfile(DISCOVER_CACHE_FILENAME):
-            cls.discover()
-        with open(DISCOVER_CACHE_FILENAME) as pdcache_fd:
-            res = json.load(pdcache_fd)
-        return res
+        if cls._discover_cache is None:
+            if not os.path.isfile(DISCOVER_CACHE_FILENAME):
+                cls.discover()
+            with open(DISCOVER_CACHE_FILENAME) as pdcache_fd:
+                res = json.load(pdcache_fd)
+            #Check consistency of loaded cache
+            if 'path_list' not in res:
+                raise LodelFatalError("Malformed plugin's discover cache file \
+: '%s'. Unable to find plugin's paths list." % DISCOVER_CACHE_FILENAME)
+            expected_keys = ['type', 'path', 'version']
+            for pname in res['plugins']:
+                for ekey in expected_keys:
+                    if ekey not in res['plugins'][pname]:
+                        #Bad cache !
+                        logger.warning("Malformed plugin's discover cache \
+file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
+                        cls._discover_cache = cls.discover(res['path_list'])
+                        break
+            else:
+                #The cache we just read was OK
+                cls._discover_cache = res
+                
+        return cls._discover_cache
 
     ##@brief Register a new plugin
     # 
