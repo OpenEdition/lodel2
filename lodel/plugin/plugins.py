@@ -8,8 +8,9 @@ import json
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
 import plugins
-from .exceptions import *
 from lodel import logger
+from lodel.settings.utils import SettingsError
+from .exceptions import *
 
 ## @package lodel.plugins Lodel2 plugins management
 #
@@ -26,7 +27,7 @@ VIRTUAL_TEMP_PACKAGE_NAME = 'lodel.plugin_tmp'
 ##@brief Plugin init filename
 INIT_FILENAME = '__init__.py' # Loaded with settings
 PLUGIN_NAME_VARNAME = '__plugin_name__'
-PLUGIN_TYPE_VARNAME = '__type__'
+PLUGIN_TYPE_VARNAME = '__plugin_type__'
 PLUGIN_VERSION_VARNAME = '__version__'
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
 CONFSPEC_VARNAME = 'CONFSPEC'
@@ -41,8 +42,8 @@ DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
 MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME, 
     PLUGIN_VERSION_VARNAME]
 
-EXTENSIONS = 'default'
-PLUGINS_TYPES = [EXTENSIONS, 'datasource', 'session_handler', 'ui']
+DEFAULT_PLUGIN_TYPE = 'extension'
+PLUGINS_TYPES = [DEFAULT_PLUGIN_TYPE, 'datasource', 'session_handler', 'ui']
 
 
 ##@brief Describe and handle version numbers
@@ -147,6 +148,35 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
         return {'major': self.major, 'minor': self.minor,
             'revision': self.revision}
 
+##@brief Stores plugin class registered
+__all_ptypes = list()
+
+##@brief Plugin metaclass that allows to "catch" child class
+#declaration
+#
+#Automatic script registration on child class declaration
+class MetaPlugType(type):
+    
+    def __init__(self, name, bases, attrs):
+        #Here we can store all child classes of Plugin
+        super().__init__(name, bases, attrs)
+        if len(bases) == 1 and bases[0] == object:
+            print("Dropped : ", name, bases)
+            return
+        self.__register_types()
+        #list_name= [cls.__name__ for cls in __all_ptypes] 
+        #if self.name in list_name:
+        #    return
+        #else:
+        #    plug_type_register(self)
+
+    def __register_types(self):
+        plug_type_register(self)
+
+def plug_type_register(cls):
+    __all_ptypes.append(cls)
+    logger.info("New child class registered : %s" % cls.__name__)
+
 
 ##@brief Handle plugins
 #
@@ -157,7 +187,7 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
 # 1. Settings call start method to instanciate all plugins found in confs
 # 2. Settings fetch all confspecs
 # 3. the loader call load_all to register hooks etc
-class Plugin(object):
+class Plugin(object, metaclass=MetaPlugType):
     
     ##@brief Stores plugin directories paths
     _plugin_directories = None
@@ -171,6 +201,9 @@ class Plugin(object):
 
     ##@brief Attribute that stores plugins list from discover cache file
     _plugin_list = None
+    
+    ##@brief Store dict representation of discover cache content
+    _discover_cache = None
 
     ##@brief Plugin class constructor
     #
@@ -248,7 +281,7 @@ init file. Malformed plugin"
         try:
             self.__type = getattr(self.module, PLUGIN_TYPE_VARNAME)
         except AttributeError:
-            self.__type = EXTENSIONS
+            self.__type = DEFAULT_PLUGIN_TYPE
         self.__type = str(self.__type).lower()
         if self.__type not in PLUGINS_TYPES:
             raise PluginError("Unknown plugin type '%s'" % self.__type)
@@ -426,6 +459,50 @@ name differ from the one found in plugin's init file"
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
+    ##@brief Retrieves plugin list confspecs
+    #
+    #This method ask for each Plugin child class the confspecs specifying where
+    #the wanted plugin list is stored. (For example DatasourcePlugin expect
+    #that a list of ds plugin to load stored in lodel2 section, datasources key
+    # etc...
+    @classmethod
+    def plugin_list_confspec(cls):
+        from lodel.settings.validator import confspec_append
+        res = dict()
+        for pcls in cls.plugin_types():
+            plcs = pcls.plist_confspec()
+            confspec_append(res, plcs)
+        return res
+
+    ##@brief Attempt to read plugin discover cache
+    #@note If no cache yet make a discover with default plugin directory
+    #@return a dict (see @ref _discover() )
+    @classmethod
+    def plugin_cache(cls):
+        if cls._discover_cache is None:
+            if not os.path.isfile(DISCOVER_CACHE_FILENAME):
+                cls.discover()
+            with open(DISCOVER_CACHE_FILENAME) as pdcache_fd:
+                res = json.load(pdcache_fd)
+            #Check consistency of loaded cache
+            if 'path_list' not in res:
+                raise LodelFatalError("Malformed plugin's discover cache file \
+: '%s'. Unable to find plugin's paths list." % DISCOVER_CACHE_FILENAME)
+            expected_keys = ['type', 'path', 'version']
+            for pname in res['plugins']:
+                for ekey in expected_keys:
+                    if ekey not in res['plugins'][pname]:
+                        #Bad cache !
+                        logger.warning("Malformed plugin's discover cache \
+file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
+                        cls._discover_cache = cls.discover(res['path_list'])
+                        break
+            else:
+                #The cache we just read was OK
+                cls._discover_cache = res
+                
+        return cls._discover_cache
+
     ##@brief Register a new plugin
     # 
     #@param plugin_name str : The plugin name
@@ -433,11 +510,23 @@ name differ from the one found in plugin's init file"
     #@throw PluginError
     @classmethod
     def register(cls, plugin_name):
+        from .datasource_plugin import DatasourcePlugin
         if plugin_name in cls._plugin_instances:
             msg = "Plugin allready registered with same name %s"
             msg %= plugin_name
             raise PluginError(msg)
-        plugin = cls(plugin_name)
+        #Here we check that previous discover found a plugin with that name
+        pdcache = cls.plugin_cache()
+        if plugin_name not in pdcache['plugins']:
+            raise PluginError("No plugin named %s found" % plugin_name)
+        pinfos = pdcache['plugins'][plugin_name]
+        ptype = pinfos['type']
+        if ptype == 'datasource':
+            pcls = DatasourcePlugin
+        else:
+            pcls = cls
+        print(plugin_name, ptype, pcls)
+        plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
         logger.debug("Plugin %s available." % plugin)
         return plugin
@@ -530,8 +619,7 @@ name differ from the one found in plugin's init file"
         result = dict()
         for pinfos in tmp_res:
             pname = pinfos['name']
-            if (
-                    pname in result 
+            if (    pname in result 
                     and pinfos['version'] > result[pname]['version'])\
                 or pname not in result:
                 result[pname] = pinfos
@@ -565,6 +653,11 @@ name differ from the one found in plugin's init file"
                 infos = cls.discover(path_list)
         cls._plugin_list = infos['plugins']
         return cls._plugin_list
+
+    ##@brief Return a list of child Class Plugin
+    @classmethod
+    def plugin_types(cls):
+        return cls.__all_ptypes
 
     ##@brief Attempt to open and load plugin discover cache
     #@return discover cache
@@ -617,16 +710,23 @@ name differ from the one found in plugin's init file"
                 log_msg %= (attr_name, INIT_FILENAME)
                 logger.debug(log_msg)
                 return False
+        #Fetching plugin's version
         try:
             pversion = getattr(initmod, PLUGIN_VERSION_VARNAME)
-        except PluginError as e:
+        except (NameError, AttributeError) as e:
             msg = "Invalid plugin version found in %s : %s"
             msg %= (path, e)
             raise PluginError(msg)
+        #Fetching plugin's type
+        try:
+            ptype = getattr(initmod, PLUGIN_TYPE_VARNAME)
+        except (NameError, AttributeError) as e:
+            ptype = DEFAULT_PLUGIN_TYPE
         pname = getattr(initmod, PLUGIN_NAME_VARNAME)
         return {'name': pname,
             'version': pversion,
-            'path': path}
+            'path': path,
+            'type': ptype}
     
     ##@brief Import init file from a plugin path
     #@param path str : Directory path
@@ -795,14 +895,13 @@ with %s" % (custom_method._method_name, custom_method))
 
 class SessionHandler(Plugin):
     __instance = None
-
-    def __new__(cls):
-        if cls.__instance == None:
-            cls.instance == object.__new__(cls)
-        return cls.__instance
         
     def __init__(self, plugin_name):
-        super(Plugin, self).__init__(plugin_name)
+        if self.__instance is None:
+            super(Plugin, self).__init__(plugin_name)
+            self.__instance = True
+        else:
+            raise RuntimeError("A SessionHandler Plugin is already plug")
 
 class InterfacePlugin(Plugin):
     def __init__(self, plugin_name):

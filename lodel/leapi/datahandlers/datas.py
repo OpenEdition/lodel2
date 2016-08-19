@@ -26,7 +26,7 @@ build its content'
             datas[fname] for fname in self._field_list)
         if len(ret) > self.max_length:
             warnings.warn("Format field overflow. Truncating value")
-            ret = ret[:self.max_length-1]
+            ret = ret[:self.max_length]
         return ret
     
 ##@brief Varchar validated by a regex

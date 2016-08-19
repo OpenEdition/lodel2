@@ -240,20 +240,20 @@ def emfield_val(value):
     return value
 
 def plugin_val(value):
-    if spl = value.split('.')
+    spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
         raise SettingsValidationError(msg % value)
     value = tuple(spl)
-        #Late validation hook
-        @LodelHook('lodel2_dyncode_bootstraped')
-        def type_check(hookname, caller, payload):
-            from lodel import plugin
-            typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
-            if value[1].lower() not in typesname:
-                msg = "Following plugin type do not exist in plugin list %s : %s"
-                raise SettingsValidationError(msg % value)
-            return value
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def type_check(hookname, caller, payload):
+        from lodel import plugin
+        typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
+        if value[1].lower() not in typesname:
+            msg = "Following plugin type do not exist in plugin list %s : %s"
+            raise SettingsValidationError(msg % value)
+        return value
     plug_type_val = plugin_val(value)
     return plug_type_val
 
@@ -351,6 +351,23 @@ SettingValidator.create_re_validator(
 #
 #   Lodel 2 configuration specification
 #
+
+##@brief Append a piece of confspec
+#@note orig is modified during the process
+#@param orig dict : the confspec to update
+#@param upd dict : the confspec to add
+#@return new confspec
+def confspec_append(orig, upd):
+    for section in orig:
+        if section in upd:
+            orig[section].update(upd[section])
+        else:
+            orig[section] = upd[section]
+    return orig
+
+def confspec_add(orig, section, key, default, validator):
+    if section not in orig:
+        section[orig] = dict()
 
 ##@brief Global specifications for lodel2 settings
 LODEL2_CONF_SPECS = {
