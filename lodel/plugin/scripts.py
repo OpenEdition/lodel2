@@ -17,7 +17,6 @@ class MetaLodelScript(type):
         #Here we can store all child classes of LodelScript
         super().__init__(name, bases, attrs)
         if len(bases) == 1 and bases[0] == object:
-            print("Dropped : ", name, bases)
             return
 
         self.__register_script(name)

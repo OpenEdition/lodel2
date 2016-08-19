@@ -1,7 +1,7 @@
 from lodel.settings.validator import SettingValidator
 
 __plugin_name__ = 'filesystem_session'
-__version = [0,0,1]
+__version__ = [0,0,1]
 __type__ = 'session_handler'
 __loader__ = 'main.py'
 __confspec__ = "confspec.py"

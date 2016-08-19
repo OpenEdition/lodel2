@@ -66,7 +66,6 @@ class SettingsLoader(object):
     # @return the option
     def getoption(self,section,keyname,validator,default_value=None,mandatory=False):
         conf=self.__conf
-
         if section not in conf:
             conf[section] = dict()
 

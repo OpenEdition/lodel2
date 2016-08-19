@@ -11,6 +11,7 @@ import plugins
 from lodel import logger
 from lodel.settings.utils import SettingsError
 from .exceptions import *
+from lodel.exceptions import *
 
 ## @package lodel.plugins Lodel2 plugins management
 #
@@ -161,7 +162,6 @@ class MetaPlugType(type):
         #Here we can store all child classes of Plugin
         super().__init__(name, bases, attrs)
         if len(bases) == 1 and bases[0] == object:
-            print("Dropped : ", name, bases)
             return
         self.__register_types()
         #list_name= [cls.__name__ for cls in __all_ptypes] 
@@ -176,6 +176,9 @@ class MetaPlugType(type):
 def plug_type_register(cls):
     __all_ptypes.append(cls)
     logger.info("New child class registered : %s" % cls.__name__)
+
+def all_types():
+    return copy.copy(__all_ptypes)
 
 
 ##@brief Handle plugins
@@ -204,6 +207,10 @@ class Plugin(object, metaclass=MetaPlugType):
     
     ##@brief Store dict representation of discover cache content
     _discover_cache = None
+    
+    #@brief Designed to store, in child classes, the confspec indicating \
+    #where plugin list is stored
+    _plist_confspecs = None
 
     ##@brief Plugin class constructor
     #
@@ -213,7 +220,7 @@ class Plugin(object, metaclass=MetaPlugType):
     # @param plugin_name str : plugin name
     # @throw PluginError
     def __init__(self, plugin_name):
-        self.started()
+        
         self.name = plugin_name
         self.path = self.plugin_path(plugin_name)
         
@@ -272,9 +279,9 @@ class Plugin(object, metaclass=MetaPlugType):
             #PLUGIN_VERSION_VARNAME in init file is mandatory
             self.__version = getattr(self.module, PLUGIN_VERSION_VARNAME)
         except AttributeError:
-            msg = "Error that should not append : no %s found in plugin \
-init file. Malformed plugin"
-            msg %= PLUGIN_VERSION_VARNAME
+            msg = "Error that should not append while loading plugin '%s': no \
+%s found in plugin init file. Malformed plugin"
+            msg %= (plugin_name, PLUGIN_VERSION_VARNAME)
             raise LodelFatalError(msg)
 
         # Load plugin type
@@ -459,6 +466,13 @@ name differ from the one found in plugin's init file"
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
+    @classmethod
+    def plist_confspecs(cls):
+        if cls._plist_confspecs is None:
+            raise LodelFatalError('Unitialized _plist_confspecs attribute for \
+%s' % cls.__name__)
+        return copy.copy(cls._plist_confspecs)
+
     ##@brief Retrieves plugin list confspecs
     #
     #This method ask for each Plugin child class the confspecs specifying where
@@ -525,7 +539,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             pcls = DatasourcePlugin
         else:
             pcls = cls
-        print(plugin_name, ptype, pcls)
         plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
         logger.debug("Plugin %s available." % plugin)
@@ -550,7 +563,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     # @return the plugin directory path
     @classmethod
     def plugin_path(cls, plugin_name):
-        cls.started()
+        
         plist = cls.plugin_list()
         if plugin_name not in plist:
             raise PluginError("No plugin named '%s' found" % plugin_name)
@@ -572,25 +585,10 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #
     # This method load path and preload plugins
     @classmethod
-    def start(cls, plugins_directories, plugins):
-        if cls._plugin_directories is not None:
-            return
-        import inspect
-        self_path = inspect.getsourcefile(Plugin)
-        default_plugin_path = os.path.abspath(self_path + '../../../../plugins')
-        if plugins_directories is None:
-            plugins_directories = list()
-        plugins_directories += [ default_plugin_path ]
-        cls._plugin_directories = list(set(plugins_directories))
+    def start(cls, plugins):
         for plugin_name in plugins:
             cls.register(plugin_name)
         
-    @classmethod
-    def started(cls, raise_if_not = True):
-        res = cls._plugin_directories is not None
-        if raise_if_not and not res:
-            raise RuntimeError("Class Plugins is not initialized")
-            
     @classmethod
     def clear(cls):
         if cls._plugin_directories is not None:
@@ -657,7 +655,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Return a list of child Class Plugin
     @classmethod
     def plugin_types(cls):
-        return cls.__all_ptypes
+        return all_types()
 
     ##@brief Attempt to open and load plugin discover cache
     #@return discover cache
@@ -880,31 +878,3 @@ with %s" % (custom_method._method_name, custom_method))
                         custom_method.__get_method())
                     logger.debug(
                         "Custom method %s added to target" % custom_method)
-            
-
-##@page lodel2_plugins Lodel2 plugins system
-#
-# @par Plugin structure
-#A plugin is  a package (a folder containing, at least, an __init__.py file.
-#This file should expose multiple things :
-# - a CONFSPEC variable containing configuration specifications
-# - an _activate() method that returns True if the plugin can be activated (
-# optionnal)
-#
-
-
-class SessionHandler(Plugin):
-    __instance = None
-        
-    def __init__(self, plugin_name):
-        if self.__instance is None:
-            super(Plugin, self).__init__(plugin_name)
-            self.__instance = True
-        else:
-            raise RuntimeError("A SessionHandler Plugin is already plug")
-
-class InterfacePlugin(Plugin):
-    def __init__(self, plugin_name):
-        super(Plugin, self).__init__(plugin_name)
-
-        

@@ -14,9 +14,9 @@ class DatasourcePlugin(Plugin):
     ##@brief Stores confspecs indicating where DatasourcePlugin list is stored
     _plist_confspecs = {
         'section': 'lodel2',
-        'key': 'datasources',
+        'key': 'datasource_connectors',
         'default': None,
-        'validator': SettingValidator('list', none_is_valid = False) }
+        'validator': SettingValidator('strip', none_is_valid = False) }
     
     def __init__(self, name):
         super().__init__(name)
@@ -29,10 +29,6 @@ class DatasourcePlugin(Plugin):
 
     def migration_handler(self):
         return self.loader_module().migration_handler_class()
-
-    @classmethod
-    def plist_confspec(cls):
-        return copy.copy(cls._plist_confspecs)
 
     ##@brief Return an initialized Datasource instance
     #@param ds_name str : The name of the datasource to instanciate

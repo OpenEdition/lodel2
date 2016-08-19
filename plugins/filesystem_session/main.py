@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+"""
 from lodel.auth.exceptions import AuthenticationError
 from lodel.plugin import LodelHook
 
@@ -38,3 +39,4 @@ def read_session(caller, sid):
 def clean_sessions(caller):
     FileSystemSession.clean()
 '''
+"""

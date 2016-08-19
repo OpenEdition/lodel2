@@ -357,17 +357,12 @@ SettingValidator.create_re_validator(
 #@param orig dict : the confspec to update
 #@param upd dict : the confspec to add
 #@return new confspec
-def confspec_append(orig, upd):
-    for section in orig:
-        if section in upd:
-            orig[section].update(upd[section])
-        else:
-            orig[section] = upd[section]
-    return orig
-
-def confspec_add(orig, section, key, default, validator):
+def confspec_append(orig, section, key, validator, default):
     if section not in orig:
-        section[orig] = dict()
+        orig[section] = dict()
+    if key not in orig[section]:
+        orig[section][key] = (default, validator)
+    return orig
 
 ##@brief Global specifications for lodel2 settings
 LODEL2_CONF_SPECS = {

@@ -4,6 +4,7 @@ import unittest
 import os.path
 
 from lodel.settings.utils import *
+from lodel.plugin.exceptions import *
 from lodel.settings.settings_loader import SettingsLoader
 
 
@@ -255,5 +256,5 @@ class SettingsLoaderTestCase(unittest.TestCase):
     def test_invalid_conf(self):
         from lodel.settings.settings import Settings
         Settings.stop()
-        with self.assertRaises(SettingsErrors):
+        with self.assertRaises((SettingsErrors, PluginError)):
             Settings('tests/settings/settings_examples/bad_conf.d')

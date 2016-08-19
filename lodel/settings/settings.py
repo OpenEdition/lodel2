@@ -11,7 +11,8 @@ from collections import namedtuple
 from lodel import logger
 from lodel.plugin.plugins import Plugin, PluginError
 from lodel.settings.utils import SettingsError, SettingsErrors
-from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS
+from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS, \
+    confspec_append
 from lodel.settings.settings_loader import SettingsLoader
 
 ## @package lodel.settings.settings Lodel2 settings module
@@ -132,37 +133,39 @@ class Settings(object, metaclass=MetaSettings):
     def __bootstrap(self):
         logger.debug("Settings bootstraping")
         lodel2_specs = LODEL2_CONF_SPECS
+        loader = SettingsLoader(self.__conf_dir) 
+        plugin_list = []
+        for ptype in Plugin.plugin_types():
+            pls = ptype.plist_confspecs()
+            lodel2_specs = confspec_append(lodel2_specs, **pls)
+            cur_list = loader.getoption(
+                pls['section'],
+                pls['key'],
+                pls['validator'],
+                pls['default'])
+            if cur_list is None:
+                continue
+            try:
+                if isinstance(cur_list, str):
+                    cur_list = [cur_list]
+                plugin_list += cur_list
+            except TypeError:
+                plugin_list += [cur_list]
+        #Checking confspecs
         for section in lodel2_specs:
             if section.lower() != section:
                 raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
             for kname in lodel2_specs[section]:
                 if kname.lower() != kname:
                     raise SettingsError("Only lower case are allowed in section name (thank's ConfigParser...)")
-         
-        # Load specs for the plugins list and plugins_path list conf keys
-        plugins_opt_specs = lodel2_specs['lodel2']['plugins']
-        plugins_path_opt_specs = lodel2_specs['lodel2']['plugins_path']
-        # Init the settings loader
-        loader = SettingsLoader(self.__conf_dir)
-        # fetching list of plugins to load
 
-        plugins_list = loader.getoption(    'lodel2',
-                                            'plugins',
-                                            plugins_opt_specs[1],
-                                            plugins_opt_specs[0],
-                                            False)
-        plugins_path = loader.getoption(    'lodel2',
-                                            'plugins_path',
-                                            plugins_path_opt_specs[1],
-                                            plugins_path_opt_specs[0],
-                                            False)
         # Starting the Plugins class
         logger.debug("Starting lodel.plugin.Plugin class")
-        Plugin.start(plugins_path, plugins_list)
+        Plugin.start(plugin_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
         errors = list()
-        for plugin_name in plugins_list:
+        for plugin_name in plugin_list:
             try:
                 specs.append(Plugin.get(plugin_name).confspecs)
             except PluginError as e:

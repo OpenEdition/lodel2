@@ -42,3 +42,5 @@
 from .hooks import LodelHook
 from .plugins import Plugin, CustomMethod
 from .datasource_plugin import DatasourcePlugin
+from .sessionhandler import SessionHandlerPlugin
+from .extensions import Extension
