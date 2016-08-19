@@ -114,6 +114,10 @@ class Text(DataField):
     
     def _check_data_value(self, value):
         error = None
+        try:
+            value = str(value)
+        except (ValueError, TypeError):
+            error = ValueError("The content passed to this Text field is not a convertible to a string")
         return value, error
 
 ##@brief Data field designed to handle Files
