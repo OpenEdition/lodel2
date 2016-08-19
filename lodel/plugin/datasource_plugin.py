@@ -12,10 +12,12 @@ class DatasourcePlugin(Plugin):
     
     def __init__(self, name):
         super().__init__(name)
-        self.__datasource_cls = self.loader_module().Datasource
+        self.__datasource_cls = None
 
-    def datasource(self):
-        return self.__datasource
+    def datasource_cls(self):
+        if self.__datasource_cls is None:
+            self.__datasource_cls = self.loader_module().Datasource
+        return self.__datasource_cls
 
     def migration_handler(self):
         return self.loader_module().migration_handler_class()
@@ -111,7 +113,7 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
     #@throw PluginTypeError if ds_name is not the name of a DatasourcePlugin
     @classmethod
     def get_datasource(cls, ds_plugin_name):
-        return cls.get(ds_plugin_name).datasource()
+        return cls.get(ds_plugin_name).datasource_cls()
 
     @classmethod
     def get_migration_handler(cls, ds_plugin_name):

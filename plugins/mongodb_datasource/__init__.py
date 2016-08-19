@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+__plugin_type__ = 'datasource'
 __plugin_name__ = 'mongodb_datasource'
 __version__ = '0.0.1'
 __plugin_type__ = 'datasource'

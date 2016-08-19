@@ -27,7 +27,7 @@ VIRTUAL_TEMP_PACKAGE_NAME = 'lodel.plugin_tmp'
 ##@brief Plugin init filename
 INIT_FILENAME = '__init__.py' # Loaded with settings
 PLUGIN_NAME_VARNAME = '__plugin_name__'
-PLUGIN_TYPE_VARNAME = '__type__'
+PLUGIN_TYPE_VARNAME = '__plugin_type__'
 PLUGIN_VERSION_VARNAME = '__version__'
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
 CONFSPEC_VARNAME = 'CONFSPEC'
@@ -42,8 +42,8 @@ DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
 MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME, 
     PLUGIN_VERSION_VARNAME]
 
-EXTENSIONS = 'default'
-PLUGINS_TYPES = [EXTENSIONS, 'datasource', 'session_handler', 'ui']
+DEFAULT_PLUGIN_TYPE = 'extension'
+PLUGINS_TYPES = [DEFAULT_PLUGIN_TYPE, 'datasource', 'session_handler', 'ui']
 
 
 ##@brief Describe and handle version numbers
@@ -249,7 +249,7 @@ init file. Malformed plugin"
         try:
             self.__type = getattr(self.module, PLUGIN_TYPE_VARNAME)
         except AttributeError:
-            self.__type = EXTENSIONS
+            self.__type = DEFAULT_PLUGIN_TYPE
         self.__type = str(self.__type).lower()
         if self.__type not in PLUGINS_TYPES:
             raise PluginError("Unknown plugin type '%s'" % self.__type)
@@ -427,6 +427,17 @@ name differ from the one found in plugin's init file"
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
+    ##@brief Attempt to read plugin discover cache
+    #@note If no cache yet make a discover with default plugin directory
+    #@return a dict (see @ref _discover() )
+    @classmethod
+    def plugin_cache(cls):
+        if not os.path.isfile(DISCOVER_CACHE_FILENAME):
+            cls.discover()
+        with open(DISCOVER_CACHE_FILENAME) as pdcache_fd:
+            res = json.load(pdcache_fd)
+        return res
+
     ##@brief Register a new plugin
     # 
     #@param plugin_name str : The plugin name
@@ -434,11 +445,23 @@ name differ from the one found in plugin's init file"
     #@throw PluginError
     @classmethod
     def register(cls, plugin_name):
+        from .datasource_plugin import DatasourcePlugin
         if plugin_name in cls._plugin_instances:
             msg = "Plugin allready registered with same name %s"
             msg %= plugin_name
             raise PluginError(msg)
-        plugin = cls(plugin_name)
+        #Here we check that previous discover found a plugin with that name
+        pdcache = cls.plugin_cache()
+        if plugin_name not in pdcache['plugins']:
+            raise PluginError("No plugin named %s found" % plugin_name)
+        pinfos = pdcache['plugins'][plugin_name]
+        ptype = pinfos['type']
+        if ptype == 'datasource':
+            pcls = DatasourcePlugin
+        else:
+            pcls = cls
+        print(plugin_name, ptype, pcls)
+        plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
         logger.debug("Plugin %s available." % plugin)
         return plugin
@@ -531,8 +554,7 @@ name differ from the one found in plugin's init file"
         result = dict()
         for pinfos in tmp_res:
             pname = pinfos['name']
-            if (
-                    pname in result 
+            if (    pname in result 
                     and pinfos['version'] > result[pname]['version'])\
                 or pname not in result:
                 result[pname] = pinfos
@@ -618,16 +640,23 @@ name differ from the one found in plugin's init file"
                 log_msg %= (attr_name, INIT_FILENAME)
                 logger.debug(log_msg)
                 return False
+        #Fetching plugin's version
         try:
             pversion = getattr(initmod, PLUGIN_VERSION_VARNAME)
-        except PluginError as e:
+        except (NameError, AttributeError) as e:
             msg = "Invalid plugin version found in %s : %s"
             msg %= (path, e)
             raise PluginError(msg)
+        #Fetching plugin's type
+        try:
+            ptype = getattr(initmod, PLUGIN_TYPE_VARNAME)
+        except (NameError, AttributeError) as e:
+            ptype = DEFAULT_PLUGIN_TYPE
         pname = getattr(initmod, PLUGIN_NAME_VARNAME)
         return {'name': pname,
             'version': pversion,
-            'path': path}
+            'path': path,
+            'type': ptype}
     
     ##@brief Import init file from a plugin path
     #@param path str : Directory path
