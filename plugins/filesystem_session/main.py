@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-from lodel.auth.exceptions import AuthenticationError
 from lodel.plugin import LodelHook
 
 from .filesystem_session_store import FileSystemSession
@@ -10,33 +8,37 @@ from .filesystem_session_store import FileSystemSession
 # @param caller *
 # @param payload dict
 # @return str
-@LodelHook('session_start')
-def start_session(caller, payload):
-    new_session = FileSystemSession(content=payload)
+def start_session():
+    new_session = FileSystemSession()
     return new_session.sid
 
-'''
 ## @brief destroys a session
 # @param caller *
 # @param sid str : session id
-@LodelHook('session_destroy')
-def stop_session(caller, sid):
+def destroy_session(sid):
     FileSystemSession.destroy(sid)
-'''
 
 ## @brief reads a session content
 # @param caller *
 # @param sid str: session id
 # @return FileSystemSession
-@LodelHook('session_load')
-def read_session(caller, sid):
+def restore_session(sid):
     return FileSystemSession.load(sid)
 
-'''
-## @brief destroys all the old sessions (expired ones)
-# @param caller *
-@LodelHook('session_clean')
-def clean_sessions(caller):
-    FileSystemSession.clean()
-'''
-"""
+##@brief Set a session value
+#@param name str : session variable name
+#@param value mixed : session variable value
+def set_value(name, value):
+    pass
+
+##@brief Get a session value
+#@param name str : the session variable name
+#@return the value
+def get_value(name):
+    pass
+
+##@brief Delete a session value
+#@param name str : the session variable name
+def del_value(name):
+    pass
+    

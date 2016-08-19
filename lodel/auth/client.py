@@ -5,6 +5,7 @@ import copy
 from lodel.settings import Settings
 from lodel import logger
 from lodel.plugin.hooks import LodelHook
+from lodel.plugin import SessionHandlerPlugin as SessionHandler
 
 ##@brief Client metaclass designed to implements container accessor on 
 #Client Class
@@ -23,7 +24,7 @@ class ClientMetaclass(type):
 
     def __setitem__(self, key, value):
         if SESSION_ID_NAME not in self.__session:
-            self.__session[SESSION_ID_NAME] = generate_token()
+            self.__session[SESSION_ID_NAME] = SessionHandler.start_session()
         self.__session[key] = value
     
     ##@brief Return a copy of sessions infos
@@ -77,7 +78,6 @@ class Client(object, metaclass = ClientMetaclass):
         ##@brief Stores infos for authenticated users (None == anonymous)
         self.__user = None
         ##@brief Stores the session handler
-        self._session_handler = 
         Client._instance = self
         logger.debug("New client : %s" % self)
     

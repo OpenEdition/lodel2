@@ -5,7 +5,7 @@ from uuid import uuid1
 
 from werkzeug.contrib.sessions import generate_key, Session
 
-from lodel.auth.exceptions import AuthenticationError
+#from lodel.auth.exceptions import AuthenticationError
 from lodel.utils.datetime import get_utc_timestamp
 
 
@@ -123,7 +123,7 @@ class LodelSession(ABC):
     ## @brief deletes a given key in the session
     # @param key str
     def delete_key(self, key):
-        delattr(p_object=self, key)
+        delattr(self, key)
         self.save()
 
     ## @brief lists all the sessions in the session store
