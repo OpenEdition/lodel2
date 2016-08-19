@@ -56,7 +56,6 @@ if __name__ == '__main__':
         loader = unittest.TestLoader()
         test_dir = os.path.join(LODEL2_LIB_ABS_PATH, 'tests')
         suite = loader.discover(test_dir)
-        print("DEBUG  : failfast  = ", '-f' in sys.argv, sys.argv)
         runner = unittest.TextTestRunner(
             failfast = '-f' in sys.argv,
             verbosity = 2 if '-v' in sys.argv else 1)
