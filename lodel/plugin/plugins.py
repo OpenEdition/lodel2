@@ -430,6 +430,21 @@ name differ from the one found in plugin's init file"
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
+    ##@brief Retrieves plugin list confspecs
+    #
+    #This method ask for each Plugin child class the confspecs specifying where
+    #the wanted plugin list is stored. (For example DatasourcePlugin expect
+    #that a list of ds plugin to load stored in lodel2 section, datasources key
+    # etc...
+    @classmethod
+    def plugin_list_confspec(cls):
+        from lodel.settings.validator import confspec_append
+        res = dict()
+        for pcls in cls.plugin_types():
+            plcs = pcls.plist_confspec()
+            confspec_append(res, plcs)
+        return res
+
     ##@brief Attempt to read plugin discover cache
     #@note If no cache yet make a discover with default plugin directory
     #@return a dict (see @ref _discover() )

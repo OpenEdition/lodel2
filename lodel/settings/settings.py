@@ -128,7 +128,7 @@ class Settings(object, metaclass=MetaSettings):
         confkey=confname.rpartition('.')
         loader.setoption(confkey[0], confkey[2], confvalue, validator)
 
-    ##@brief This method handlers Settings instance bootstraping
+    ##@brief This method handles Settings instance bootstraping
     def __bootstrap(self):
         logger.debug("Settings bootstraping")
         lodel2_specs = LODEL2_CONF_SPECS

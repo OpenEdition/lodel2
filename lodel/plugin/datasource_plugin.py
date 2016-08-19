@@ -1,5 +1,6 @@
 from .plugins import Plugin
 from .exceptions import *
+from lodel.settings.validator import SettingValidator
 
 ##@brief Designed to handles datasources plugins
 #
@@ -9,6 +10,13 @@ from .exceptions import *
 #priority and not with a convenience priority.
 #@todo Refactor and rewrite lodel2 datasource handling
 class DatasourcePlugin(Plugin):
+    
+    ##@brief Stores confspecs indicating where DatasourcePlugin list is stored
+    _plist_confspecs = {
+        'section': 'lodel2',
+        'key': 'datasources',
+        'default': None,
+        'validator': SettingValidator('list', none_is_valid = False) }
     
     def __init__(self, name):
         super().__init__(name)
@@ -21,6 +29,10 @@ class DatasourcePlugin(Plugin):
 
     def migration_handler(self):
         return self.loader_module().migration_handler_class()
+
+    @classmethod
+    def plist_confspec(cls):
+        return copy.copy(cls._plist_confspecs)
 
     ##@brief Return an initialized Datasource instance
     #@param ds_name str : The name of the datasource to instanciate
