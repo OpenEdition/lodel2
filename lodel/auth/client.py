@@ -1,14 +1,123 @@
 #-*- Coding: utf-8 -*-
 
 import copy
+import sys
+import warnings
 
 from lodel.settings import Settings
 from lodel import logger
 from lodel.plugin.hooks import LodelHook
 from lodel.plugin import SessionHandlerPlugin as SessionHandler
 
+##@brief Class designed to handle sessions and its datas
+class LodelSession(object):
+    
+    ##@brief Try to restore or to create a session
+    #@param token None | mixed : If None no session will be loaded nor created
+    #restore an existing session
+    #@throw  ClientAuthenticationFailure if a session restore fails
+    def __init__(self, token = None):
+        ##@brief Stores the session token
+        self.__token = token
+        ##@brief Stores the session datas
+        self.__datas = dict()
+        if token is not None:
+            self.restore(token)
+    
+    ##@brief A token reference checker to ensure token deletion at the end of
+    #a session
+    #@warning Cause maybe a performance issue !
+    def __token_checker(self):
+        refcount = sys.getrefcount(self.__token)
+        if refcount > 1:
+            warnings.warn("More than one reference to the session token \
+exists !")
+
+    ##@brief Property. Equals True if a session is started else False
+    @property
+    def started(self):
+        res = self.__token is None
+        if res:
+            self.__token_checker()
+        return res
+    
+    ##@brief Property that ensure ro acces to sessions datas
+    @property
+    def datas(self):
+        return copy.copy(self.__datas)
+    
+    ##@brief Return the session token
+    def retrieve_token(self):
+        # DO NOT COPY THE TOKEN TO ENSURE THAT NOT MORE THAN ONE REFERENCE TO
+        # IT EXISTS
+        return self.__token
+
+    ##@brief Late restore of a session
+    #@param token mixed : the session token
+    #@throw ClientAuthenticationError if a session was allready started
+    #@throw ClientAuthenticationFailure if no session exists with this token
+    def restore(self, token):
+        if self.started:
+            raise ClientAuthenticationError("Trying to restore a session, but \
+a session is allready started !!!")
+        self.__datas = SessionHandler.restore(token)
+        return self.datas
+
+    ##@brief Save the current session state
+    def save(self):
+        if not self.started:
+            raise ClientAuthenticationError(
+                "Trying to save a non started session")
+        SessionHandler.save(self.__token)
+    
+    ##@brief Destroy a session
+    def destroy(self):
+        if not self.started:
+            logger.debug("Destroying a session that is not started")
+        SessionHandler.destroy(self.__token)
+        self.__token = None
+        self.__datas = dict()
+    
+    ##@brief Destructor
+    def __del__(self):
+        del(self.__token)
+        del(self.__datas)
+
+    ##@brief Implements setter for dict access to instance
+    #@todo Custom exception throwing
+    def __setitem__(self, key, value):
+        self.__init_session() #Start the sesssion
+        self.__datas[key] = value
+    
+    ##@brief Implements destructor for dict access to instance
+    #@todo Custom exception throwing
+    def __delitem__(self, key):
+        if not self.started:
+            raise ClientAuthenticationError(
+                "Data read access to a non started session is not possible")
+        del(self.__datas[key])
+    
+    ##@brief Implements getter for dict acces to instance
+    #@todo Custom exception throwing
+    def __getitem__(self, key):
+        if not self.started:
+            raise ClientAuthenticationError(
+                "Data read access to a non started session is not possible")
+        return self.__datas[key]
+
+    ##@brief Start a new session
+    #@note start a new session only if no session started yet
+    def __init_session(self):
+        if self.__token is not None:
+            return
+        self.__token = SessionHandler.start()
+            
+        
+
 ##@brief Client metaclass designed to implements container accessor on 
 #Client Class
+#
+#@todo Maybe we can delete this metaclass....
 class ClientMetaclass(type):
     
     SESSION_ID_NAME = '__SESSION_ID__'
@@ -27,11 +136,14 @@ class ClientMetaclass(type):
             self.__session[SESSION_ID_NAME] = SessionHandler.start_session()
         self.__session[key] = value
     
+    def __token(self):
+        return None if SESSION_ID_NAME not in self.__sessions else self.__session[SESSION_ID_NAME]
+
     ##@brief Return a copy of sessions infos
     def session_dump(self): 
+        #first set all sessions values
+        SessionHandler.save_session(self.__session)
         return copy.copy(self.__session)
-        
-            
 
 
 ##@brief Abstract singleton class designed to handle client informations
@@ -54,6 +166,10 @@ class Client(object, metaclass = ClientMetaclass):
     # login LeObject and password LeObject
     #- password typle contains (LeObjectChild, FieldName)
     _infos_fields = None
+    
+    ##@brief Constant that stores the session key that stores authentication
+    #informations
+    _AUTH_DATANAME = '__auth_user_infos'
     
 
     ##@brief Constructor
@@ -79,6 +195,8 @@ class Client(object, metaclass = ClientMetaclass):
         self.__user = None
         ##@brief Stores the session handler
         Client._instance = self
+        ##@brief Stores LodelSession instance
+        self.__session = LodelSession(token)
         logger.debug("New client : %s" % self)
     
     ##@brief Attempt to restore a session given a session token
@@ -87,11 +205,13 @@ class Client(object, metaclass = ClientMetaclass):
     #@throw ClientAuthenticationFailure if token is not valid or not
     #existing
     def _restore_session(self, token):
-        res = self._session_handler.restore_session(token)
-        if res is False:
-            raise ClientAuthenticationFailure(client = self,
-                msg = "Invalid or not existing session token provided")
-        pass
+        return self.__session.restore(token)
+    
+    ##@brief Return the current session token or None
+    #@return A session token or None
+    @classmethod
+    def session_token(cls):
+        return self.__session.retrieve_token()
 
     ##@brief Try to authenticate a user with a login and a password
     #@param login str : provided login
@@ -216,5 +336,7 @@ login EmClass '%s' and password EmClass '%s'. Abording..." % (
     #@return None
     def __set_authenticated(self, leo, uid):
         self.__user = {'classname': leo.__name__, 'uid': uid, 'leoclass': leo}
+        #Store auth infos in session
+        self.__session[self.__class__._AUTH_DATANAME] = copy.copy(self.__user)
         
     

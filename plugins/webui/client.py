@@ -1,4 +1,4 @@
-from lodel.auth.auth import Client
+from lodel.auth.client import Client
 
 class WebUiClient(Client):
     
