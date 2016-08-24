@@ -142,19 +142,23 @@ def main_run():
     if len(sys.argv) == 1:
         default_parser.print_help()
         exit(1)
-    args = default_parser.parse_args()
-    if args.list_actions:
-        print("Available actions :")
-        for sname in sorted(__registered_scripts.keys()):
-            print("\t- %s" % __registered_scripts[sname])
-        exit(0)
     #preparing sys.argv (deleting action)
     action = sys.argv[1].lower()
-    del(sys.argv[1])
     if action not in __registered_scripts:
+        #Trying to parse argument with default parser
+        print("PASSAGE")
+        args = default_parser.parse_args()
+        if args.list_actions:
+            print("Available actions :")
+            for sname in sorted(__registered_scripts.keys()):
+                print("\t- %s" % __registered_scripts[sname])
+            exit(0)
+
         print("Unknow action '%s'\n" % action, file=sys.stderr)
         default_parser.print_help()
         exit(1)
+    #OK action is known, preparing argv to pass it to the action script
+    del(sys.argv[1])
     script = __registered_scripts[action]
     ret = script._run()
     ret = 0 if ret is None else ret

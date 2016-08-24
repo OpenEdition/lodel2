@@ -25,3 +25,10 @@ I'm a custom method on an instance of class %s" % self.__class__)
 def dummy_instance_method(self):
     print("Hello world !\
 I'm a custom method on class %s" % self.__class__)
+
+
+@LodelHook('lodel2_loader_main')
+def foofun(hname, caller, payload):
+    from lodel import dyncode
+    print("Hello world ! I read dyncode from lodel.dyncode : ",
+        dyncode.dynclasses)
