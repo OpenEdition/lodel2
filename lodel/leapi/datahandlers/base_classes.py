@@ -146,15 +146,15 @@ class DataHandler(object):
     ##@brief given a field type name, returns the associated python class
     # @param fieldtype_name str : A field type name (not case sensitive)
     # @return DataField child class
-    # @todo implements custom handlers fetch
     # @note To access custom data handlers it can be cool to prefix the handler name by plugin name for example ? (to ensure name unicity)
     @classmethod
     def from_name(cls, name):
         cls.load_base_handlers()
+        all_handlers = dict(cls._base_handlers, **cls.__custom_handlers)
         name = name.lower()
-        if name not in cls._base_handlers:
+        if name not in all_handlers:
             raise NameError("No data handlers named '%s'" % (name,))
-        return cls._base_handlers[name]
+        return all_handlers[name]
  
     ##@brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name
