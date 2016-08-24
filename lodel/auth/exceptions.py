@@ -1,9 +1,10 @@
 from lodel import logger
+from lodel.plugin.hooks import LodelHook
 
 ##@brief Handles common errors with a Client
 class ClientError(Exception):
     ##@brief The logger function to use to log the error message
-    _loglvl = logger.warning
+    _loglvl = 'warning'
     ##@brief Error str
     _err_str = "Error"
     ##@brief the hook name to trigger with error
@@ -17,8 +18,9 @@ class ClientError(Exception):
     #"<client infos> : <_err_str>[ : <msg>]"
     def __init__(self, client, msg = ""):
         msg = self.build_message(client, msg)
-        if cls._loglvl is not None:
-            cls._loglvl(msg)
+        if self._loglvl is not None:
+            logfun = getattr(logger, self._loglvl)
+            logfun(msg)
         super().__init__(msg)
         if self._action is not None:
             LodelHook.call_hook(self._action, self, self._payload)
@@ -32,21 +34,21 @@ class ClientError(Exception):
 
 ##@brief Handles authentication failure errors
 class ClientAuthenticationFailure(ClientError):
-    _loglvl = logger.security
+    _loglvl = 'security'
     _err_str = 'Authentication failure'
     _action = 'lodel2_ui_authentication_failure'
 
 
 ##@brief Handles permission denied errors
 class ClientPermissionDenied(ClientError):
-    _loglvl = logger.security
+    _loglvl = 'security'
     _err_str = 'Permission denied'
     _action = 'lodel2_ui_permission_denied'
     
 
 ##@brief Handles common errors on authentication
 class ClientAuthenticationError(ClientError):
-    _loglvl = logger.error
+    _loglvl = 'error'
     _err_str = 'Authentication error'
     _action = 'lodel2_ui_error'
 
