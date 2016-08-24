@@ -7,7 +7,6 @@ import socket
 import inspect
 import copy
 
-from lodel.plugin.hooks import LodelHook
 
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
@@ -220,6 +219,7 @@ def host_val(value):
         raise SettingsValidationError(msg % value)
 
 def emfield_val(value):
+    from lodel.plugin.hooks import LodelHook
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
@@ -240,6 +240,7 @@ def emfield_val(value):
     return value
 
 def plugin_val(value):
+    from lodel.plugin.hooks import LodelHook
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
@@ -369,10 +370,6 @@ LODEL2_CONF_SPECS = {
     'lodel2': {
         'debug': (  True,
                     SettingValidator('bool')),
-        'plugins_path': (   None,
-                            SettingValidator('list')),
-        'plugins': (    "",
-                        SettingValidator('list')),
         'sitename': (   'noname',
                         SettingValidator('strip')),
         'runtest': (    False,

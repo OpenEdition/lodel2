@@ -9,7 +9,6 @@ import types # for dynamic bindings
 from collections import namedtuple
 
 from lodel import logger
-from lodel.plugin.plugins import Plugin, PluginError
 from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS, \
     confspec_append
@@ -131,6 +130,7 @@ class Settings(object, metaclass=MetaSettings):
 
     ##@brief This method handles Settings instance bootstraping
     def __bootstrap(self):
+        from lodel.plugin.plugins import Plugin, PluginError
         logger.debug("Settings bootstraping")
         lodel2_specs = LODEL2_CONF_SPECS
         loader = SettingsLoader(self.__conf_dir) 
@@ -161,6 +161,7 @@ class Settings(object, metaclass=MetaSettings):
 
         # Starting the Plugins class
         logger.debug("Starting lodel.plugin.Plugin class")
+        print("DEBUG : plugin list : ", plugin_list)
         Plugin.start(plugin_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
