@@ -30,3 +30,8 @@ class DataHandlerTestCase(unittest.TestCase):
             DataHandler.register_new_handler('testvarchar', Exception)
         except Exception as err:
             self.assertEqual(ValueError, type(err))
+
+    def test_from_name(self):
+        DataHandler.register_new_handler('test_varchar', Varchar)
+        self.assertEqual(DataHandler.from_name('test_varchar'), Varchar)
+
