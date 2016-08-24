@@ -43,20 +43,30 @@ class List(MultipleRef):
         if isinstance(cur_value, str):
             value = cur_value.split(',')
             l_value = [uidtype.cast_type(uid) for uid in value]
-            #l_value = [int(uid) for uid in value]
-
-            return l_value
         elif isinstance(cur_value, list):
             l_value = list()
-            
             for value in cur_value:
                 if isinstance(value,uidtype):
                     l_value.append(value)
                 else:
                     raise ValueError("The items must be of the same type, string or %s" % (ecomponent.__name__))
-            return l_value
         else:
-            return None
+            l_value = None
+           
+        if l_value is not None:
+            br_class = self.back_reference()[0]
+            for br_id in l_value:
+                query_filters = list()
+                query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
+                br_obj = br_class.get(query_filters)
+                if len(br_obj) == 0:
+                    raise ValueError("Not existing instance of class %s in back_reference" % br_class.__name__)
+                br_list = br_obj.data(self.back_reference()[1])
+                if br_id not in br_list:
+                    br_list.append(br_id)
+                    br_obj.set_data(self.back_reference()[1], br_list)
+                    br_obj.update()
+        return l_value
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):

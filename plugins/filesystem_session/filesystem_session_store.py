@@ -4,7 +4,7 @@ import os
 import pickle
 import re
 
-from lodel.auth.session import LodelSession
+from lodel.auth.client import LodelSession
 from lodel.settings import Settings
 
 
