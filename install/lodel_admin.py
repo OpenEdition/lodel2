@@ -65,6 +65,7 @@ def init_all_dbs():
     import loader
     loader.start()
     import leapi_dyncode as dyncode
+    from lodel.plugin.datasource_plugin import DatasourcePlugin
     from lodel.settings.utils import SettingsError
     from lodel.leapi.leobject import LeObject
     from lodel.plugin import Plugin
@@ -78,36 +79,11 @@ def init_all_dbs():
         else:
             ds_cls[ds].append(cls)
     
-    for ds_name in ds_cls:  
-        # Fetching datasource plugin name and datasource connection 
-        # identifier
-        try:
-            plugin_name, ds_identifier = LeObject._get_ds_plugin_name(
-                ds_name, False)
-        except (NameError, ValueError, RuntimeError):
-            raise SettingsError("Datasource configuration error")
-        # Fetching datasource connection option
-        con_conf=LeObject._get_ds_connection_conf(ds_identifier, plugin_name)
-        # Fetching migration handler class from plugin
-        plugin_module = Plugin.get(plugin_name).loader_module()
-        try:
-            mh_cls = plugin_module.migration_handler_class()
-        except NameError as e:
-            raise RuntimeError("Malformed plugin '%s'. Missing \
-migration_handler_class() function in loader file" % ds_name)
-        #Instanciate the migrationhandler and start db initialisation
-        if con_conf['read_only'] is True:
-            raise SettingsError("Trying to instanciate a migration handler \
-with a read only datasource")
-        try:
-            if 'read_only' in con_conf:
-                del(con_conf['read_only'])
-            mh = mh_cls(**con_conf)
-        except Exception as e:
-            msg = "Migration failed for datasource %s(%s.%s) at migration \
-handler instanciation : %s"
-            msg %= (ds_name, plugin_name, ds_identifier, e)
-            raise RuntimeError(msg)
+    for ds_name in ds_cls:
+        mh = DatasourcePlugin.init_migration_handler(ds_name)
+        #Retrieve plugin_name & ds_identifier for logging purpose
+        plugin_name, ds_identifier = DatasourcePlugin.plugin_name(
+            ds_name, False)
         try:
             mh.init_db(ds_cls[ds_name])
         except Exception as e:

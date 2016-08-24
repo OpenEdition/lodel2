@@ -27,7 +27,7 @@ class DatasourcePlugin(Plugin):
             self.__datasource_cls = self.loader_module().Datasource
         return self.__datasource_cls
 
-    def migration_handler(self):
+    def migration_handler_cls(self):
         return self.loader_module().migration_handler_class()
 
     ##@brief Return an initialized Datasource instance
@@ -42,6 +42,22 @@ class DatasourcePlugin(Plugin):
         ds_conf = cls._get_ds_connection_conf(ds_identifier, plugin_name)
         ds_cls = cls.get_datasource(plugin_name)
         return ds_cls(**ds_conf)
+    
+    ##@brief Return an initialized MigrationHandler instance
+    #@param ds_name str : The datasource name
+    #@return A properly initialized MigrationHandler instance
+    @classmethod
+    def init_migration_handler(cls, ds_name):
+        plugin_name, ds_identifier = cls.plugin_name(ds_name, False)
+        ds_conf = cls._get_ds_connection_conf(ds_identifier, plugin_name)
+        mh_cls = cls.get_migration_handler(plugin_name)
+        if 'read_only' in ds_conf:
+            if ds_conf['read_only']:
+                raise PluginError("A read only datasource was given to \
+migration handler !!!")
+            del(ds_conf['read_only'])
+        return mh_cls(**ds_conf)
+
 
     ##@brief Given a datasource name returns a DatasourcePlugin name
     #@param ds_name str : datasource name
@@ -125,5 +141,5 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
 
     @classmethod
     def get_migration_handler(cls, ds_plugin_name):
-        return cls.get(ds_plugin_name).migration_handler_class()
+        return cls.get(ds_plugin_name).migration_handler_cls()
  
