@@ -75,7 +75,7 @@ class MongoDbDatasource(object):
     #@warning multiple UID broken by this method
     #@return an integer
     def new_numeric_id(self, emcomp):
-        target = emcomp #.uid_source()
+        target = emcomp.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
             target, field_list = [tuid], filters = [], 
@@ -104,6 +104,7 @@ class MongoDbDatasource(object):
             results =  self.__act_on_abstract(target, filters,
                 relational_filters, self.select, field_list = field_list,
                 order = order, group = group, limit = limit)
+            
             #Here we may implement the group
             #If sorted query we have to sort again
             if order is not None:
@@ -115,7 +116,7 @@ class MongoDbDatasource(object):
                 results = list()
             else:
                 if limit is not None:
-                    if limit + offset >= len(results):
+                    if limit + offset > len(results):
                         limit = len(results)-offset-1
                     results = results[offset:offset+limit]
             return results
