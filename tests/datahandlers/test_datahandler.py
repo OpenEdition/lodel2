@@ -35,3 +35,10 @@ class DataHandlerTestCase(unittest.TestCase):
         DataHandler.register_new_handler('test_varchar', Varchar)
         self.assertEqual(DataHandler.from_name('test_varchar'), Varchar)
 
+    def test_from_missing_name(self):
+        DataHandler.register_new_handler('test_varchar1', Varchar)
+        DataHandler.register_new_handler('test_varchar2', Varchar)
+        try:
+            DataHandler.from_name('test_varchar3')
+        except Exception as err:
+            self.assertEqual(NameError, type(err))
