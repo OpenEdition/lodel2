@@ -29,14 +29,14 @@ class LodelSession(object):
     #@warning Cause maybe a performance issue !
     def __token_checker(self):
         refcount = sys.getrefcount(self.__token)
-        if refcount > 1:
+        if self.__token is not None and refcount > 1:
             warnings.warn("More than one reference to the session token \
-exists !")
+exists ! (exactly %d)" % refcount)
 
     ##@brief Property. Equals True if a session is started else False
     @property
     def started(self):
-        res = self.__token is None
+        res = self.__token is not None
         if res:
             self.__token_checker()
         return res
@@ -74,7 +74,8 @@ a session is allready started !!!")
     def destroy(self):
         if not self.started:
             logger.debug("Destroying a session that is not started")
-        SessionHandler.destroy(self.__token)
+        else:
+            SessionHandler.destroy(self.__token)
         self.__token = None
         self.__datas = dict()
     
@@ -173,10 +174,8 @@ class Client(object, metaclass = ClientMetaclass):
     
 
     ##@brief Constructor
-    #@param ui_instance Lodel2Ui child class instance
-    #@param client_infos mixed : Depends on UI implemetation
     #@param session_token mixed : Session token provided by client to interface
-    def __init__(self,ui_instance, client_infos, session_token = None):
+    def __init__(self,session_token = None):
         if self.__class__ == Client:
             raise NotImplementedError("Abstract class")
         logger.debug("New instance of Client child class %s" %
@@ -189,14 +188,12 @@ class Client(object, metaclass = ClientMetaclass):
         else:
             #first instanciation, fetching settings
             self.fetch_settings()
-        ##@brief Stores instance of UI
-        self.__ui_instance = ui_instance
         ##@brief Stores infos for authenticated users (None == anonymous)
         self.__user = None
         ##@brief Stores the session handler
         Client._instance = self
         ##@brief Stores LodelSession instance
-        self.__session = LodelSession(token)
+        self.__session = LodelSession(session_token)
         logger.debug("New client : %s" % self)
     
     ##@brief Attempt to restore a session given a session token
@@ -248,6 +245,11 @@ class Client(object, metaclass = ClientMetaclass):
                 break
         if self.is_anon():
             self.fail() #Security logging
+
+    @classmethod
+    def destroy(cls):
+        cls._assert_instance()
+        cls._instance.__session.destroy()
 
     ##@brief Test wether a client is anonymous or logged in
     #@return True if client is anonymous

@@ -43,9 +43,7 @@ DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
 MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME, 
     PLUGIN_VERSION_VARNAME]
 
-DEFAULT_PLUGIN_TYPE = 'extension'
-PLUGINS_TYPES = [DEFAULT_PLUGIN_TYPE, 'datasource', 'session_handler', 'ui']
-
+DEFAULT_PLUGIN_TYPE = 'extension' #Value found in lodel/plugin/extensions.py::Extensions._type_conf_name
 
 ##@brief Describe and handle version numbers
 class PluginVersion(object):
@@ -149,37 +147,38 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
         return {'major': self.major, 'minor': self.minor,
             'revision': self.revision}
 
-##@brief Stores plugin class registered
-__all_ptypes = list()
-
 ##@brief Plugin metaclass that allows to "catch" child class
 #declaration
 #
 #Automatic script registration on child class declaration
 class MetaPlugType(type):
-    
+        
+    ##@brief Dict storing all plugin types
+    #
+    #key is the _type_conf_name and value is the class
+    _all_ptypes = dict()
+
     def __init__(self, name, bases, attrs):
         #Here we can store all child classes of Plugin
         super().__init__(name, bases, attrs)
         if len(bases) == 1 and bases[0] == object:
             return
-        self.__register_types()
-        #list_name= [cls.__name__ for cls in __all_ptypes] 
-        #if self.name in list_name:
-        #    return
-        #else:
-        #    plug_type_register(self)
+        #Regitering a new plugin type
+        MetaPlugType._all_ptypes[self._type_conf_name] = self
 
-    def __register_types(self):
-        plug_type_register(self)
+    @classmethod
+    def all_types(cls):
+        return copy.copy(cls._all_ptypes)
 
-def plug_type_register(cls):
-    __all_ptypes.append(cls)
-    logger.info("New child class registered : %s" % cls.__name__)
+    @classmethod
+    def all_ptype_names(cls):
+        return list(cls._all_ptypes.keys())
 
-def all_types():
-    return copy.copy(__all_ptypes)
-
+    @classmethod
+    def type_from_name(cls, ptype_name):
+        if ptype_name not in cls._all_ptypes:
+            raise PluginError("Unknown plugin type '%s'" % ptype_name)
+        return cls._all_ptypes[ptype_name]
 
 ##@brief Handle plugins
 #
@@ -211,6 +210,11 @@ class Plugin(object, metaclass=MetaPlugType):
     #@brief Designed to store, in child classes, the confspec indicating \
     #where plugin list is stored
     _plist_confspecs = None
+
+    ##@brief The name of the plugin type in the confguration
+    #
+    #None in abstract classes and implemented by child classes
+    _type_conf_name = None
 
     ##@brief Plugin class constructor
     #
@@ -290,7 +294,8 @@ class Plugin(object, metaclass=MetaPlugType):
         except AttributeError:
             self.__type = DEFAULT_PLUGIN_TYPE
         self.__type = str(self.__type).lower()
-        if self.__type not in PLUGINS_TYPES:
+        if self.__type not in MetaPlugType.all_ptype_names():
+            print("FUCK : ", MetaPlugType.all_ptype_names())
             raise PluginError("Unknown plugin type '%s'" % self.__type)
         # Load plugin name from init file (just for checking)
         try:
@@ -427,6 +432,9 @@ name differ from the one found in plugin's init file"
         logger.debug("Plugin '%s' loaded" % self.name)
         self.loaded = True
     
+    ##@brief Returns the loader module
+    #
+    #Accessor for the __loader__ python module
     def loader_module(self):
         if not self.loaded:
             raise RuntimeError("Plugin %s not loaded yet."%self.name)
@@ -535,10 +543,10 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             raise PluginError("No plugin named %s found" % plugin_name)
         pinfos = pdcache['plugins'][plugin_name]
         ptype = pinfos['type']
-        if ptype == 'datasource':
-            pcls = DatasourcePlugin
-        else:
-            pcls = cls
+        if ptype not in MetaPlugType.all_ptype_names():
+            raise PluginError("Unknown plugin type '%s'" % ptype)
+        pcls = MetaPlugType.type_from_name(ptype)
+        print("\n\n\nINSTANCIATING : ", pcls, " from name : ", ptype)
         plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
         logger.debug("Plugin %s available." % plugin)
@@ -655,7 +663,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Return a list of child Class Plugin
     @classmethod
     def plugin_types(cls):
-        return all_types()
+        return MetaPlugType.all_types()
 
     ##@brief Attempt to open and load plugin discover cache
     #@return discover cache

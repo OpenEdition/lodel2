@@ -17,6 +17,7 @@ class DatasourcePlugin(Plugin):
         'key': 'datasource_connectors',
         'default': None,
         'validator': SettingValidator('strip', none_is_valid = False) }
+    _type_conf_name = 'datasource'
     
     def __init__(self, name):
         super().__init__(name)

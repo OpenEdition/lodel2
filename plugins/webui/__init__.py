@@ -1,5 +1,5 @@
 __plugin_name__ = 'webui'
 __version__ = '0.0.1'
-__type__ = 'ui'
+__plugin_type__ = 'ui'
 __loader__ = 'main.py'
 __confspec__ = 'confspec.py'

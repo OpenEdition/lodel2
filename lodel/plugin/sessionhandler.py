@@ -17,14 +17,19 @@ class SessionPluginWrapper(MetaPlugType):
 
     def __init__(self, name, bases, attrs):
         super().__init__(name, bases, attrs)
+        self._instance = None
         
     ##@brief Handles wrapper between class method and plugin loader functions
-    def __get_attribute__(self, name):
-        if name in SessionPluginWrapper._Actions:
+    def __getattribute__(self, name):
+        instance = super().__getattribute__('_instance')
+        if name in SessionPluginWrapper._ACTIONS:
+            if instance is None:
+                raise PluginError("Trying to access to SessionHandler \
+functions, but no session handler initialized")
             return getattr(
-                self._instance.loader_module(),
-                SessionPluginWrapper._Actions[name])
-        return super().__get_attribute__(name)
+                instance.loader_module(),
+                SessionPluginWrapper._ACTIONS[name])
+        return super().__getattribute__(name)
 
 
 ##@page lodel2_plugins Lodel2 plugins system
@@ -45,10 +50,12 @@ class SessionHandlerPlugin(Plugin, metaclass=SessionPluginWrapper):
         'key': 'session_handler',
         'default': None,
         'validator': SettingValidator('string', none_is_valid=False)}
+
+    _type_conf_name = 'session_handler'
             
     def __init__(self, plugin_name):
         if self._instance is None:
-            super(Plugin, self).__init__(plugin_name)
-            self._instance = self
+            super().__init__(plugin_name)
+            self.__class__._instance = self
         else:
             raise RuntimeError("A SessionHandler Plugin is already plug")

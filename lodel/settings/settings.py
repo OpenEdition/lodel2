@@ -135,7 +135,7 @@ class Settings(object, metaclass=MetaSettings):
         lodel2_specs = LODEL2_CONF_SPECS
         loader = SettingsLoader(self.__conf_dir) 
         plugin_list = []
-        for ptype in Plugin.plugin_types():
+        for ptype_name,ptype in Plugin.plugin_types().items():
             pls = ptype.plist_confspecs()
             lodel2_specs = confspec_append(lodel2_specs, **pls)
             cur_list = loader.getoption(
@@ -161,7 +161,6 @@ class Settings(object, metaclass=MetaSettings):
 
         # Starting the Plugins class
         logger.debug("Starting lodel.plugin.Plugin class")
-        print("DEBUG : plugin list : ", plugin_list)
         Plugin.start(plugin_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]

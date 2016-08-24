@@ -10,3 +10,5 @@ class Extension(Plugin):
         'default': [],
         'validator': SettingValidator('list', none_is_valid = False)}
 
+    _type_conf_name = 'extension'
+

@@ -12,6 +12,8 @@ class InterfacePlugin(Plugin):
         'key': 'interface',
         'default': None,
         'validator': SettingValidator('strip', none_is_valid = True)}
+
+    _type_conf_name = 'ui'
     
     def __init__(self, name):
         if InterfacePlugin._instance is not None:
