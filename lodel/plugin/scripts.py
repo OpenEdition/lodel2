@@ -146,7 +146,6 @@ def main_run():
     action = sys.argv[1].lower()
     if action not in __registered_scripts:
         #Trying to parse argument with default parser
-        print("PASSAGE")
         args = default_parser.parse_args()
         if args.list_actions:
             print("Available actions :")
