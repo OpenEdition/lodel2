@@ -8,6 +8,7 @@ from lodel.settings import Settings
 from lodel import logger
 from lodel.plugin.hooks import LodelHook
 from lodel.plugin import SessionHandlerPlugin as SessionHandler
+from .exceptions import *
 
 ##@brief Class designed to handle sessions and its datas
 class LodelSession(object):
@@ -61,6 +62,7 @@ exists ! (exactly %d)" % refcount)
             raise ClientAuthenticationError("Trying to restore a session, but \
 a session is allready started !!!")
         self.__datas = SessionHandler.restore(token)
+        self.__token = token
         return self.datas
 
     ##@brief Save the current session state
@@ -68,7 +70,7 @@ a session is allready started !!!")
         if not self.started:
             raise ClientAuthenticationError(
                 "Trying to save a non started session")
-        SessionHandler.save(self.__token)
+        SessionHandler.save(self.__token, self.__datas)
     
     ##@brief Destroy a session
     def destroy(self):
@@ -185,6 +187,9 @@ class Client(object, metaclass = ClientMetaclass):
         self.__session = LodelSession(session_token)
         logger.debug("New client : %s" % self)
     
+    def __del__(self):
+        del(self.__session)
+
     ##@brief Try to authenticate a user with a login and a password
     #@param login str : provided login
     #@param password str : provided password (hash)
@@ -227,27 +232,37 @@ class Client(object, metaclass = ClientMetaclass):
     #@throw ClientAuthenticationFailure if token is not valid or not
     #existing
     @classmethod
-    def restore_session(self, token):
+    def restore_session(cls, token):
         cls._assert_instance()
-        return self.__session.restore(token)
+        return Client._instance.__session.restore(token)
     
     ##@brief Return the current session token or None
     #@return A session token or None
     @classmethod
     def session_token(cls):
         cls._assert_instance()
-        return cls._instance.__session.retrieve_token()
+        return Client._instance.__session.retrieve_token()
 
     @classmethod
     def session(cls):
         cls._assert_instance()
-        return cls._instance.__session
-
+        return Client._instance.__session
+    
+    ##@brief Delete current session
     @classmethod
     def destroy(cls):
         cls._assert_instance()
-        cls._instance.__session.destroy()
-
+        Client._instance.__session.destroy()
+    
+    ##@brief Delete current client and save its session
+    @classmethod
+    def clean(cls):
+        if Client._instance.__session.started:
+            Client._instance.__session.save()
+        if Client._instance is not None:
+            del(Client._instance)
+        Client._instance = None
+    
     ##@brief Test wether a client is anonymous or logged in
     #@return True if client is anonymous
     @classmethod

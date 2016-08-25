@@ -10,6 +10,6 @@ __fullname__ = "RAM Session Store Plugin"
 CONFSPEC = {
     'lodel2.sessions':{
         'expiration': (900, SettingValidator('int')),
-        'token_size': (512, SettingValidator('int')),
+        'tokensize': (512, SettingValidator('int')),
     }
 }
