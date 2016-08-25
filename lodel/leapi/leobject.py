@@ -490,6 +490,11 @@ construction and consitency when datas are not complete\n")
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
     
+    ## @brief Check datas consistency
+    # 
+    # @warning assert that datas is complete
+    # @param cls
+    # @param datas dict : Datas that have been returned by LeCrud.prepare_datas() method
     @classmethod
     def make_consistency(cls, datas):
         for fname, dh in cls._fields.items():

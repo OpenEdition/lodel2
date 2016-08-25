@@ -351,6 +351,10 @@ class MultipleRef(Reference):
                             logger.info('The referenced object has to be updated')
         return l_value
     
+    ## @brief Checks the backreference, updates it if it is not complete
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname : the field name
+    # @param datas dict : dict storing fields values
     def make_consistency(self, emcomponent, fname, datas):
         dh = emcomponent.field(fname)
 

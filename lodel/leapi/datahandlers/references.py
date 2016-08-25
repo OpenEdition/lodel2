@@ -116,6 +116,7 @@ class Map(MultipleRef):
                             br_list.append(br_id)
                             logger.info('The referenced object has to be updated')
         return l_value
+    
 ##@brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
     
