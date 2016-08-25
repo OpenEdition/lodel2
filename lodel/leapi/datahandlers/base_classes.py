@@ -121,7 +121,16 @@ class DataHandler(object):
     # @todo A implémenter
     def check_data_consistency(self, emcomponent, fname, datas):
         return True
-
+ 
+    ##@brief make consistency after a query
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname : the field name
+    # @param datas dict : dict storing fields values
+    # @return an Exception instance if fails else True
+    # @todo A implémenter   
+    def make_consistency(self, emcomponent, fname, datas):
+        pass
+    
     ##@brief This method is use by plugins to register new data handlers
     @classmethod
     def register_new_handler(cls, name, data_handler):
@@ -201,6 +210,7 @@ class Reference(DataHandler):
             #if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0]) or not isinstance(back_reference[1], str):
             #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
+        self.back_ref = back_reference
 
         super().__init__(internal=internal, **kwargs)
     
@@ -232,6 +242,31 @@ class Reference(DataHandler):
                     return None, FieldValidationError("Some element of this references are not valids (don't fit with allowed_classes")
         return value
 
+    ##@brief Check datas consistency
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname : the field name
+    # @param datas dict : dict storing fields values
+    # @return an Exception instance if fails else True
+    # @todo A implémenter
+    def check_data_consistency(self, emcomponent, fname, datas):
+        dh = emcomponent.field(fname)
+        logger.debug(dh)
+        logger.info('Warning : multiple uid capabilities are broken here')
+        uid = datas[emcomponent.uid_fieldname()[0]]
+        target_class = self.back_ref[0]
+        target_field = self.back_ref[1]
+        target_uidfield = traget_class.uid_fieldname()[0]
+        value = datas[emcomponent.data(fname)]
+        
+        obj = target_class.get((target_uidfield , '=', value))
+        
+        if len(obj) == 0:
+            logger.warning('Object referenced does not exist')
+            return False
+        
+        obj.set_data(target_field, uid)
+        obj.update()
+        return True
 
 ##@brief This class represent a data_handler for single reference to another object
 #
@@ -277,6 +312,73 @@ class MultipleRef(Reference):
     def check_data_consistency(self, emcomponent, fname, datas):
         return True
     
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        if cur_value == 'None' or cur_value is None or cur_value == '':
+            return None
+        emcomponent_fields = emcomponent.fields()
+        data_handler = None
+        if fname in emcomponent_fields:
+            data_handler = emcomponent_fields[fname]
+        u_fname = emcomponent.uid_fieldname()
+        uidtype = emcomponent.field(u_fname[0]) if isinstance(u_fname, list) else emcomponent.field(u_fname)
+
+        if isinstance(cur_value, str):
+            value = cur_value.split(',')
+            l_value = [uidtype.cast_type(uid) for uid in value]
+        elif isinstance(cur_value, list):
+            l_value = list()
+            for value in cur_value:
+                if isinstance(value,uidtype.cast_type):
+                    l_value.append(value)
+                else:
+                    raise ValueError("The items must be of the same type, string or %s" % (emcomponent.__name__))
+        else:
+            l_value = None
+
+        if l_value is not None:
+            if self.back_ref is not None:
+                br_class = self.back_ref[0]
+                for br_id in l_value:
+                    query_filters = list()
+                    query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
+                    br_obj = br_class.get(query_filters)
+                    if len(br_obj) != 0:
+                        br_list = br_obj[0].data(self.back_ref[1])
+                        if br_list is None:
+                            br_list = list()
+                        if br_id not in br_list:
+                            br_list.append(br_id)
+                            logger.info('The referenced object has to be updated')
+        return l_value
+    
+    def make_consistency(self, emcomponent, fname, datas):
+        dh = emcomponent.field(fname)
+
+        logger.info('Warning : multiple uid capabilities are broken here')
+        uid = datas[emcomponent.uid_fieldname()[0]]
+        if self.back_ref is not None:
+            target_class = self.back_ref[0]
+            target_field = self.back_ref[1]
+            target_uidfield = target_class.uid_fieldname()[0]
+
+            l_value = datas[fname]
+
+            if l_value is not None:
+                for value in l_value:
+                    query_filters = list()
+                    query_filters.append((target_uidfield , '=', value))
+                    obj = target_class.get(query_filters)
+                    if len(obj) == 0:
+                        logger.warning('Object referenced does not exist')
+                        return False
+                    l_uids_ref = obj[0].data(target_field)
+                    if l_uids_ref is None:
+                        l_uids_ref = list()
+                    if uid not in l_uids_ref:
+                        l_uids_ref.append(uid)
+                        obj[0].set_data(target_field, l_uids_ref)
+                        obj[0].update()
+                
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #
 # This class is designed to allow automatic scheduling of construct_data calls. 

@@ -471,7 +471,7 @@ construction and consitency when datas are not complete\n")
                 if not ftype.is_internal() or ftype.internal != 'autosql'
         }
         return ret
-
+    
     ## @brief Check datas consistency
     # 
     # @warning assert that datas is complete
@@ -490,6 +490,11 @@ construction and consitency when datas are not complete\n")
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
     
+    @classmethod
+    def make_consistency(cls, datas):
+        for fname, dh in cls._fields.items():
+            ret = dh.make_consistency(cls, fname, datas)
+            
     ## @brief Add a new instance of LeObject
     # @return a new uid en case of success, False otherwise
     @classmethod
