@@ -2,6 +2,7 @@
 import os
 import copy
 
+from lodel import logger
 from lodel.settings import Settings
 from lodel.auth.exceptions import *
 
@@ -24,6 +25,7 @@ def destroy_session(token):
 
 def restore_session(token):
     _check_token(token)
+    logger.debug("Restoring session : %s" %__sessions[token])
     return __sessions[token]
 
 def save_session(token, datas):

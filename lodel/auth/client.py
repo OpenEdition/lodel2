@@ -121,31 +121,20 @@ a session is allready started !!!")
 #@todo Maybe we can delete this metaclass....
 class ClientMetaclass(type):
     
-    SESSION_ID_NAME = '__SESSION_ID__'
-
     def __init__(self, name, bases, attrs):
-        self.__session = dict()
         return super(ClientMetaclass, self).__init__(name, bases, attrs)
 
     def __getitem__(self, key):
-        if key not in self.__session:
-            raise KeyError("This client instance does not have a '%s' data" % key)
-        return self.__session[key]
+        return self.session()[key]
+
+    def __delitem__(self, key):
+        del(self.session()[key])
 
     def __setitem__(self, key, value):
-        if SESSION_ID_NAME not in self.__session:
-            self.__session[SESSION_ID_NAME] = SessionHandler.start_session()
-        self.__session[key] = value
-    
-    def __token(self):
-        return None if SESSION_ID_NAME not in self.__sessions else self.__session[SESSION_ID_NAME]
+        self.session()[key] = value
 
-    ##@brief Return a copy of sessions infos
-    def session_dump(self): 
-        #first set all sessions values
-        SessionHandler.save_session(self.__session)
-        return copy.copy(self.__session)
-
+    def __str__(self):
+        return str(self._instance)
 
 ##@brief Abstract singleton class designed to handle client informations
 #
@@ -196,20 +185,6 @@ class Client(object, metaclass = ClientMetaclass):
         self.__session = LodelSession(session_token)
         logger.debug("New client : %s" % self)
     
-    ##@brief Attempt to restore a session given a session token
-    #@param token mixed : a session token
-    #@return Session datas (a dict)
-    #@throw ClientAuthenticationFailure if token is not valid or not
-    #existing
-    def _restore_session(self, token):
-        return self.__session.restore(token)
-    
-    ##@brief Return the current session token or None
-    #@return A session token or None
-    @classmethod
-    def session_token(cls):
-        return self.__session.retrieve_token()
-
     ##@brief Try to authenticate a user with a login and a password
     #@param login str : provided login
     #@param password str : provided password (hash)
@@ -245,6 +220,28 @@ class Client(object, metaclass = ClientMetaclass):
                 break
         if self.is_anon():
             self.fail() #Security logging
+    
+    ##@brief Attempt to restore a session given a session token
+    #@param token mixed : a session token
+    #@return Session datas (a dict)
+    #@throw ClientAuthenticationFailure if token is not valid or not
+    #existing
+    @classmethod
+    def restore_session(self, token):
+        cls._assert_instance()
+        return self.__session.restore(token)
+    
+    ##@brief Return the current session token or None
+    #@return A session token or None
+    @classmethod
+    def session_token(cls):
+        cls._assert_instance()
+        return cls._instance.__session.retrieve_token()
+
+    @classmethod
+    def session(cls):
+        cls._assert_instance()
+        return cls._instance.__session
 
     @classmethod
     def destroy(cls):

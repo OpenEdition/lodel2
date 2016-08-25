@@ -2,14 +2,19 @@
 import loader # Lodel2 loader
 
 import os
+import hashlib
+import time
+
 from werkzeug.contrib.sessions import FilesystemSessionStore
 from werkzeug.wrappers import Response
+from werkzeug.contrib.securecookie import SecureCookie
 
 from lodel.settings import Settings
 from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest
 from .exceptions import *
 from .client import WebUiClient
+from lodel.auth.exceptions import *
 from lodel.utils.datetime import get_utc_timestamp
 from lodel.plugin.hooks import LodelHook
 
@@ -18,6 +23,48 @@ SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
 SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
 session_store = FilesystemSessionStore(path=SESSION_FILES_BASE_DIR, filename_template=SESSION_FILES_TEMPLATE)
+
+COOKIE_SESSION_ID = 'toktoken'
+COOKIE_SESSION_HASH = 'nekotkot'
+COOKIE_SESSION_HASH_SALT = [ os.urandom(32) for _ in range(2) ] #Before and after salt (maybe useless)
+COOKIE_SESSION_HASH_ALGO = hashlib.sha512
+
+##@brief Return a salted hash of a cookie
+def cookie_hash(token):
+    return COOKIE_SESSION_HASH_ALGO(
+        COOKIE_SESSION_HASH_SALT[0]+token+COOKIE_SESSION_HASH_SALT[1]).hexdigest()
+    
+
+##@brief Load cookie from request
+#@note Can produce security warning logs
+#@param request
+#@return None or a session token
+def load_cookie(request):
+    token = request.cookies.get(COOKIE_SESSION_ID)
+    if token is None and token != '':
+        return None
+    token = bytes(token, 'utf-8')
+    hashtok = request.cookies.get(COOKIE_SESSION_HASH)
+    if hashtok is None:
+        raise ClientAuthenticationFailure(
+            WebUiClient, 'Bad cookies : no hash provided')
+    if cookie_hash(token) != hashtok:
+        raise ClientAuthenticationFailure(
+            WebUiClient, 'Bad cookies : hash mismatch')
+    return token
+
+##@brief Properly set cookies and hash given a token
+#@param response
+#@param token str : the session token
+def save_cookie(response, token):
+    response.set_cookie(COOKIE_SESSION_ID, token)
+    response.set_cookie(COOKIE_SESSION_HASH, cookie_hash(token))
+
+def empty_cookie(response):
+    response.set_cookie(COOKIE_SESSION_ID, '')
+    response.set_cookie(COOKIE_SESSION_HASH, '')
+    
+
 
 #Starting instance
 loader.start()
@@ -49,38 +96,46 @@ def is_session_file_expired(timestamp_now, sid):
 
 # WSGI Application
 def application(env, start_response):
-    WebUiClient(env['REMOTE_ADDR'], env['HTTP_USER_AGENT'])
-    current_timestamp = get_utc_timestamp()
-    delete_old_session_files(current_timestamp)
     request = LodelRequest(env)
-    sid = request.cookies.get('sid')
-    if sid is None or sid not in session_store.list():
-        request.session = session_store.new()
-        request.session['last_accessed'] = current_timestamp
-    else:
-        request.session = session_store.get(sid)
-        if is_session_file_expired(current_timestamp, sid):
-            session_store.delete(request.session)
-            request.session = session_store.new()
-            request.session['user_context'] = None
-        request.session['last_accessed'] = current_timestamp
-    
+    session_token = None
     try:
-        controller = get_controller(request)
-        response = controller(request)
-    except HttpException as e:
+        #We have to create the client before restoring cookie in order to be able
+        #to log messages with client infos
+        client = WebUiClient(env['REMOTE_ADDR'], env['HTTP_USER_AGENT'], None)
+        session_token = load_cookie(request)
+
+        if session_token is not None:
+            WebClient.restore_session(token)
+        session_token = None
+        #test
+        WebUiClient['last_request'] = time.time()
         try:
-            response = e.render(request)
-        except Exception as eb:
-            res = Response()
-            res.status_code = 500
-            return res
-        
-        
-    if request.session.should_save:
-        session_store.save(request.session)
-        response.set_cookie('sid', request.session.sid)
-    
+            controller = get_controller(request)
+            response = controller(request)
+        except HttpException as e:
+            try:
+                response = e.render(request)
+            except Exception as eb:
+                raise eb
+                res = Response()
+                res.status_code = 500
+                return res
+        session_token = WebUiClient.session_token()
+        if session_token is not None:
+            save_cookie(response,session_token)
+        session_token = None
+            
+
+    except (ClientError, ClientAuthenticationError):
+        response = HttpException(400).render(request)
+        empty_cookie(response)
+    except ClientAuthenticationFailure:
+        response = HttpException(401).render(request)
+        empty_cookie(response)
+    except Exception as e:
+        raise e
+
     res = response(env, start_response)
+
     WebUiClient.destroy()
     return res
