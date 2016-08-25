@@ -116,7 +116,7 @@ class LeObject(object):
     #   Fields datas handling methods   #
     #-----------------------------------#
 
-    ##@brief @property True if LeObject is initialized else False
+    ##@brief Property method True if LeObject is initialized else False
     @property
     def initialized(self):
         return self.__is_initialized

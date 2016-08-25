@@ -5,6 +5,7 @@ from lodel.settings.validator import SettingValidator
 ##@brief SessionHandlerPlugin metaclass designed to implements a wrapper
 #between SessionHandlerPlugin classmethod and plugin loader functions
 class SessionPluginWrapper(MetaPlugType):
+
     ##@brief Constant that stores all possible session actions
     #
     #Key is the SessionHandlerPlugin method name and value is SessionHandler
@@ -32,15 +33,10 @@ functions, but no session handler initialized")
         return super().__getattribute__(name)
 
 
-##@page lodel2_plugins Lodel2 plugins system
+##@brief Singleton class designed to handle session handler plugin
 #
-# @par Plugin structure
-#A plugin is  a package (a folder containing, at least, an __init__.py file.
-#This file should expose multiple things :
-# - a CONFSPEC variable containing configuration specifications
-# - an _activate() method that returns True if the plugin can be activated (
-# optionnal)
-#
+#@note This class is a singleton because only one session handler can be
+#loaded by instance
 class SessionHandlerPlugin(Plugin, metaclass=SessionPluginWrapper): 
     ##@brief Stores the singleton instance
     _instance = None

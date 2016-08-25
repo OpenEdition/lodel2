@@ -1,5 +1,9 @@
 #-*- coding: utf-8 -*-
 
+##@package lodel.editorial_model.components
+#@brief Defines all @ref lodel2_em "EM" components
+#@ingroup lodel2_em
+
 import itertools
 import warnings
 import copy
@@ -14,6 +18,7 @@ from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 ##@brief Abstract class to represent editorial model components
 # @see EmClass EmField
 # @todo forbid '.' in uid
+#@ingroup lodel2_em
 class EmComponent(object):
     
     ##@brief Instanciate an EmComponent
@@ -46,6 +51,7 @@ class EmComponent(object):
 
 
 ##@brief Handles editorial model objects classes
+#@ingroup lodel2_em
 class EmClass(EmComponent):
     
     ##@brief Instanciate a new EmClass
@@ -206,6 +212,7 @@ class EmClass(EmComponent):
 
 
 ##@brief Handles editorial model classes fields
+#@ingroup lodel2_em
 class EmField(EmComponent):
 
     ##@brief Instanciate a new EmField
@@ -259,6 +266,7 @@ class EmField(EmComponent):
         ).digest(), byteorder='big')
 
 ##@brief Handles functionnal group of EmComponents
+#@ingroup lodel2_em
 class EmGroup(object):
         
     ##@brief Create a new EmGroup

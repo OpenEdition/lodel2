@@ -1,8 +1,16 @@
 import lodel.plugin.scripts as lodel_script
 
+##@package lodel.plugin.core_scripts
+#@brief Lodel2 internal scripts declaration
+#@ingroup lodel2_plugins
+#@ingroup lodel2_script
+
+
 ##@brief Implements lodel_admin.py discover-plugin action
+#@ingroup lodel2_plugins
+#@ingroup lodel2_script
 #
-#In depth directory scan to find plugins.
+#In depth directory scan to find plugins in order to build a plugin list.
 class DiscoverPlugin(lodel_script.LodelScript):
     _action = 'discover-plugin'
     _description = 'Walk through given folders looking for plugins'

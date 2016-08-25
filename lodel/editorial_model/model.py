@@ -13,6 +13,7 @@ from lodel.editorial_model.exceptions import *
 from lodel.editorial_model.components import EmClass, EmField, EmGroup
 
 ##@brief Describe an editorial model
+#@ingroup lodel2_em
 class EditorialModel(object):
     
     ##@brief Create a new editorial model
