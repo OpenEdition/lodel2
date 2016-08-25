@@ -101,10 +101,13 @@ class DateTime(DataField):
 
     def _check_data_value(self, value):
         error = None
-        try:
-            datetime_value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
-        except ValueError:
-            error = ValueError("The value '%s' cannot be converted as a datetime" % value)
+        if isinstance(value,str):
+            try:
+                datetime_value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
+            except ValueError:
+                error = ValueError("The value '%s' cannot be converted as a datetime" % value)
+        elif not isinstance(value, datetime.datetime):
+            error = ValueError("Tue value has to be a string or a datetime")
         return value, error
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
