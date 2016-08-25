@@ -59,6 +59,7 @@ class List(MultipleRef):
                 query_filters = list()
                 query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
                 br_obj = br_class.get(query_filters)
+                # if br_obj.__class__ not in 
                 if len(br_obj) == 0:
                     raise ValueError("Not existing instance of class %s in back_reference" % br_class.__name__)
                 br_list = br_obj.data(self.back_reference()[1])
