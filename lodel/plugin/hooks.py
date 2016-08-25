@@ -27,6 +27,7 @@ class DecoratedWrapper(object):
             self._hook.__name__, self._priority)
 
 ##@brief Decorator designed to register hook's callbacks
+#@ingroup lodel2_plugins
 #
 # @note Decorated functions are expected to take 3 arguments :
 #  - hook_name : the called hook name

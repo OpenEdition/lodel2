@@ -14,6 +14,7 @@ from .exceptions import *
 from lodel.exceptions import *
 
 ## @package lodel.plugins Lodel2 plugins management
+#@ingroup lodel2_plugins
 #
 # Lodel2 plugins are stored in directories
 # A typicall lodel2 plugin directory structure looks like :
@@ -21,7 +22,8 @@ from lodel.exceptions import *
 # - main.py containing hooks registration etc
 # - confspec.py containing a configuration specification dictionary named CONFSPEC
 
-## @defgroup plugin_init_specs Plugins <code>__init__.py</code> specifications
+##@defgroup plugin_init_specs Plugins __init__.py specifications
+#@ingroup lodel2_plugins
 #@{
 
 ##@brief The package in which we will load plugins modules
@@ -62,6 +64,7 @@ DEFAULT_PLUGIN_TYPE = 'extension' #Value found in lodel/plugin/extensions.py::Ex
 ## @}
 
 ##@brief Describe and handle version numbers
+#@ingroup lodel2_plugins
 #
 #A version number can be represented by a string like MAJOR.MINOR.PATCH
 #or by a list [MAJOR, MINOR,PATCH ].
@@ -172,6 +175,7 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
             'revision': self.revision}
 
 ##@brief Plugin metaclass that allows to "catch" child class declaration
+#@ingroup lodel2_plugins
 #
 #Automatic script registration on child class declaration
 class MetaPlugType(type):
@@ -214,6 +218,7 @@ class MetaPlugType(type):
         return cls._all_ptypes[ptype_name]
 
 ##@brief Handle plugins
+#@ingroup lodel2_plugins
 #
 # An instance represent a loaded plugin. Class methods allow to load/preload
 # plugins.
@@ -824,6 +829,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
 
 ##@brief Decorator class designed to allow plugins to add custom methods
 #to LeObject childs (dyncode objects)
+#@ingroup lodel2_plugins
 #
 class CustomMethod(object):
     ##@brief Stores registered custom methods

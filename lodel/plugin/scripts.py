@@ -4,11 +4,22 @@ import sys
 from lodel import logger
 from lodel.exceptions import *
 
+##@defgroup lodel2_script Administration scripts
+#@ingroup lodel2_plugins
+
+##@package lodel.plugin.script
+#@brief Lodel2 utility for writting administration scripts
+#@ingroup lodel2_plugins
+#@ingroup lodel2_script
+
 ##@brief Stores registered scripts
+#@todo store it in MetaLodelScript
 __registered_scripts = dict()
 
 ##@brief LodelScript metaclass that allows to "catch" child class
 #declaration
+#@ingroup lodel2_script
+#@ingroup lodel2_plugins
 #
 #Automatic script registration on child class declaration
 class MetaLodelScript(type):
@@ -48,6 +59,10 @@ action identifier" % name)
     def __str__(self):
         return '%s : %s' % (self._action, self._description)
 
+
+##@brief Class designed to facilitate custom script writting
+#@ingroup lodel2_plugins
+#@ingroup lodel2_script
 class LodelScript(object, metaclass=MetaLodelScript):
     
     ##@brief A string to identify the action

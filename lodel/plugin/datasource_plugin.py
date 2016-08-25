@@ -6,9 +6,14 @@ from lodel.settings.validator import SettingValidator
 #
 #A datasource provide data access to LeAPI typically a connector on a DB
 #or an API
+#
+#Provide methods to initialize datasource attribute in LeAPI LeObject child
+#classes (see @ref leapi.leobject.LeObject._init_datasources() )
+#
 #@note For the moment implementation is done with a retro-compatibilities
 #priority and not with a convenience priority.
 #@todo Refactor and rewrite lodel2 datasource handling
+#@todo Write abstract classes for Datasource and MigrationHandler !!!
 class DatasourcePlugin(Plugin):
     
     ##@brief Stores confspecs indicating where DatasourcePlugin list is stored
@@ -18,16 +23,23 @@ class DatasourcePlugin(Plugin):
         'default': None,
         'validator': SettingValidator('strip', none_is_valid = False) }
     _type_conf_name = 'datasource'
-    
+ 
+    ##@brief Construct a DatasourcePlugin 
+    #@param name str : plugin name
+    #@see plugins.Plugin
     def __init__(self, name):
         super().__init__(name)
         self.__datasource_cls = None
-
+    
+    ##@brief Accessor to the datasource class
+    #@return A python datasource class
     def datasource_cls(self):
         if self.__datasource_cls is None:
             self.__datasource_cls = self.loader_module().Datasource
         return self.__datasource_cls
-
+    
+    ##@brief Accessor to migration handler class
+    #@return A python migration handler class
     def migration_handler_cls(self):
         return self.loader_module().migration_handler_class()
 
@@ -139,8 +151,87 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
     @classmethod
     def get_datasource(cls, ds_plugin_name):
         return cls.get(ds_plugin_name).datasource_cls()
-
+    
+    ##@brief Given a plugin name returns a migration handler class
+    #@param ds_plugin_name str : a datasource plugin name
     @classmethod
     def get_migration_handler(cls, ds_plugin_name):
         return cls.get(ds_plugin_name).migration_handler_cls()
- 
+
+##@page lodel2_datasources Lodel2 datasources
+#
+#@par lodel2_datasources_intro Intro
+# A single lodel2 website can interact with multiple datasources. This page
+# aims to describe configuration & organisation of datasources in lodel2.
+# Each object is attached to a datasource. This association is done in the
+# editorial model, the datasource is identified by a name.
+#
+#@par Datasources declaration
+# To define a datasource you have to write something like this in confs file :
+#<pre>
+#[lodel2.datasources.DATASOURCE_NAME]
+#identifier = DATASOURCE_FAMILY.SOURCE_NAME
+#</pre>
+# See below for DATASOURCE_FAMILY & SOURCE_NAME
+#
+#@par Datasources plugins
+# Each datasource family is a plugin ( 
+#@ref plugin_doc "More informations on plugins" ). For example mysql or a 
+#mongodb plugins. Here is the CONFSPEC variable templates for datasources 
+#plugin
+#<pre>
+#CONFSPEC = {
+#                'lodel2.datasource.example.*' : {
+#                    'conf1' : VALIDATOR_OPTS,
+#                    'conf2' : VALIDATOR_OPTS,
+#                    ...
+#                }
+#}
+#</pre>
+#MySQL example
+#<pre>
+#CONFSPEC = {
+#                'lodel2.datasource.mysql.*' : {
+#                    'host': (   'localhost',
+#                                SettingValidator('host')),
+#                    'db_name': (    'lodel',
+#                                    SettingValidator('string')),
+#                    'username': (   None,
+#                                    SettingValidator('string')),
+#                    'password': (   None,
+#                                    SettingValidator('string')),
+#                }
+#}
+#</pre>
+#
+#@par Configuration example
+#<pre>
+# [lodel2.datasources.main]
+# identifier = mysql.Core
+# [lodel2.datasources.revues_write]
+# identifier = mysql.Revues
+# [lodel2.datasources.revues_read]
+# identifier = mysql.Revues
+# [lodel2.datasources.annuaire_persons]
+# identifier = persons_web_api.example
+# ;
+# ; Then, in the editorial model you are able to use "main", "revues_write", 
+# ; etc as datasource
+# ;
+# ; Here comes the datasources declarations
+# [lodel2.datasource.mysql.Core]
+# host = db.core.labocleo.org
+# db_name = core
+# username = foo
+# password = bar
+# ;
+# [lodel2.datasource.mysql.Revues]
+# host = revues.org
+# db_name = RO
+# username = foo
+# password = bar
+# ;
+# [lodel2.datasource.persons_web_api.example]
+# host = foo.bar
+# username = cleo
+#</pre>

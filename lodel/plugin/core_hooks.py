@@ -6,6 +6,7 @@ from lodel import logger
 
 ##@package lodel.plugin.core_hooks
 #@brief Lodel2 internal hooks declaration
+#@ingroup lodel2_plugins
 
 ##@brief Bootstrap hook to check datasources configuration
 @LodelHook('lodel2_bootstraped')
