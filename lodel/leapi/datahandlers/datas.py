@@ -21,7 +21,7 @@ build its content'
         self._format_string = format_string
         super().__init__(internal='automatic',**kwargs)
 
-    def construct_data(self, emcomponent, fname, datas, cur_value):
+    def _construct_data(self, emcomponent, fname, datas, cur_value):
         ret = self._format_string % tuple(
             datas[fname] for fname in self._field_list)
         if len(ret) > self.max_length:
