@@ -3,62 +3,62 @@
 import unittest
 
 from lodel.plugin.plugins import Plugin, PluginError
+from lodel.plugin.datasource_plugin import DatasourcePlugin
+from lodel.plugin.sessionhandler import SessionHandlerPlugin
+from lodel.plugin.interface import InterfacePlugin
+from lodel.plugin.extensions import Extension
 from lodel.settings.settings import Settings
 import tests.loader_utils
 
 class PluginTestCase(unittest.TestCase):
+    """ Test case grouping all tests on Plugin class init procedures """
 
-    def test_plugin_init_right_name(self):
-        Plugin.start(['/home/helene/lodel2/plugins'],['dummy'])
+    def setUp(self):
         Plugin.clear()
-        
-    # With a wrong plugin name, a NameError Exception has to be raised at line 318 of plugin.py
-    def test_plugin_init_wrong_name(self):
-        with self.assertRaises(NameError):
-            Plugin.start(['/home/helene/lodel2/plugins', '/home/helene/lodel2/tests/tests_plugins' ],['wrong_plugin_name'])
-        Plugin.clear()
-        
-    # With a wrong plugin name, a NameError Exception has to be raised at line 318 of plugin.py
-    def test_plugin_init_right_wrong_name(self):
-        with self.assertRaises(NameError):
-            Plugin.start(['/home/helene/lodel2/plugins', '/home/helene/lodel2/tests/tests_plugins'],['dummy', 'wrong_plugin_name'])
-        Plugin.clear()
-    
-    def test_plugin_started(self):
-        with self.assertRaises(RuntimeError):
-            Plugin.started()
-            
-    def test_plugin_plugin_path(self):
-        Plugin.start(['/home/helene/lodel2/plugins', '/home/helene/lodel2/tests/tests_plugins'],['dummy'])
-        self.assertEqual(Plugin.plugin_path('dummy'), '/home/helene/lodel2/plugins/dummy/')
-        Plugin.clear()
-        
-    def test_plugin_get(self):
-        Plugin.start(['/home/helene/lodel2/plugins', '/home/helene/lodel2/tests/tests_plugins'],['dummy'])
+
+    def test_start(self):
+        """ Testing plugin registration with a valid list of plugins name """
+        Plugin.start(['dummy', 'dummy_datasource'])
+
+    def test_double_start(self):
+        """ Testing clas behavior when starting it twice """
+        Plugin.start(['dummy', 'dummy_datasource'])
         with self.assertRaises(PluginError):
-            Plugin.get('wrong_plugin_name')
-        self.assertTrue(isinstance(Plugin.get('dummy'), Plugin))
+            Plugin.start(['dummy', 'dummy_datasource'])
+
+    def test_clear(self):
+        """ Testing that clear allow to start again Plugin """
+        Plugin.start(['dummy', 'dummy_datasource'])
         Plugin.clear()
-        
-    def test_plugin_register(self):
-        with self.assertRaises(RuntimeError):
-            Plugin.register('dummy')
-        Plugin.start(['/home/helene/lodel2/plugins'],['dummy'])
+        Plugin.start(['dummy', 'dummy_datasource'])
+
+class PluginStartedTestCase(unittest.TestCase):
+    """ Test case grouping all tests on a started Plugin class """
+
+    @classmethod
+    def setUpClass(cls):
+        Plugin.clear()
+        Plugin.start(['dummy', 'dummy_datasource', 'webui', 'ram_session'])
+
+    @classmethod
+    def tearDownClass(cls):
+        Plugin.clear()
+
+    def test_construct(self):
+        """ Testing plugin instanciation """
+        pname_type = {
+            'dummy': Extension,
+            'dummy_datasource': DatasourcePlugin,
+            #'webui': InterfacePlugin, #singleton, cannot reinstanciate
+            #'ram_session': SessionHandlerPlugin, #singleton, cannot resintanciate
+            }
+        for pname, ptype in pname_type.items():
+            pinstance = Plugin.get(pname)
+            self.assertIsInstance(pinstance, ptype, "Expected plugin '%s' \
+to be in an %s instance but found an %s instance" % (
+                pname, ptype, pinstance.__class__))
+
+    def test_construct_invalid(self):
+        """ Testing plugin instanciation with a non existing name """
         with self.assertRaises(PluginError):
-            Plugin.register('dummy')
-        Plugin.clear()
-        
-    def test_plugin_load_all(self):
-        #Plugin.start(['/home/helene/lodel2/plugins'],['dummynotactivable'])
-        #Plugin.load_all()
-        pass
-        
-    
-     
-        
-        
-        
-        
-        
-        
-        
+            Plugin.get("fljkhsfh")
