@@ -40,4 +40,24 @@ class HookTestCase(unittest.TestCase):
         #Checks call
         mmock.assert_called_once_with(testhook, 'Caller', 'payload')
 
+    def test_priority_call(self):
+        """ Testing priority to ensure a call order """
+        @LodelHook(testhook, 1)
+        def stage_1_hook(name, caller, payload):
+            return '4'+payload
+
+        @LodelHook(testhook, 10)
+        def stage_1_hook(name, caller, payload):
+            return '3'+payload
+
+        @LodelHook(testhook, 20)
+        def stage_1_hook(name, caller, payload):
+            return '1'+payload
+
+        @LodelHook(testhook, 15)
+        def stage_1_hook(name, caller, payload):
+            return '2'+payload
+
+        result = LodelHook.call_hook(testhook, 'me', 'WootWoot')
+        self.assertEqual(result, '1234WootWoot')
 
