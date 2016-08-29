@@ -21,7 +21,7 @@ __registered_scripts = dict()
 #@ingroup lodel2_script
 #@ingroup lodel2_plugins
 #
-#Automatic script registration on child class declaration
+#Automatic action registration on child class declaration
 class MetaLodelScript(type):
     
     def __init__(self, name, bases, attrs):
@@ -177,3 +177,44 @@ def main_run():
     ret = script._run()
     ret = 0 if ret is None else ret
     exit(ret)
+
+##@page lodel2_script_doc Lodel2 scripting
+#@ingroup lodel2_script
+#
+#@section lodel2_script_adm Lodel2 instance administration scripts
+#
+#Lodel2 provides instance administration operation using Makefiles or 
+#lodel_admin.py script ( see @ref lodel2_instance_admin ).
+#
+#The lodel_admin.py script take as first option an action. Each action
+#correspond to a sub-script with it's own options etc. To get a list
+#of all available action run <code>python3 lodel_admin.py -L</code>.
+#
+#@section lodel2_script_action lodel_admin.py actions
+#
+#Action implementation is done by class inheritance. To create a new action
+#write a @ref lodel.plugin.scripts.LodelScript "LodelScript" derived class (
+#see @ref lodel.plugin.core_scripts "core_scripts.py" file as example )
+#
+#@subsection lodel2_script_inheritance LodelScript inheritance
+#
+#In order to implement properly a new action you have to write a new 
+#@ref lodel.plugin.scripts.LodelScript "LodelScript" derivated class.
+#Some methods and attributes are mandatory to write a fully functionnal
+#derivated class. Here is a list :
+#
+#- mandatory methods
+# - @ref plugin.scripts.LodelScript.argparser_config() "argparser_config()" :
+#(classmethod) initialize argparse.Parser
+# - @ref plugin.scripts.LodelScript.run() "run()" : (classmethod) contains the
+#code that runs to perform the action
+#- mandatory attributes
+# - @ref plugin.scripts.LodelScript::_action "_action" : (class attribute)
+#stores action name
+# - @ref plugin.scripts.LodelScript::_description "_description" : (class 
+#attribute) sotres a short action description
+#
+#@note On script's action registration : once child class is written you only
+#need to import it to trigger script's action registration (see
+#@ref plugin.scripts.MetaLodelScript )
+#

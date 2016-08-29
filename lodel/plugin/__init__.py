@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 ##@defgroup lodel2_plugins Plugins
+#@ingroup lodel2_leapi
 #
 #Groups all stuff that concerns plugins
 

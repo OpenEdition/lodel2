@@ -11,5 +11,5 @@ init_db: dyncode
 list_hooks: dyncode
 	$(python) -c 'import lodel_admin; lodel_admin.list_registered_hooks()'
 
-discover_plugins:
+refresh_plugins:
 	$(python) -c 'import lodel_admin; lodel_admin.update_plugin_discover_cache()'
