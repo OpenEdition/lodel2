@@ -10,6 +10,7 @@ from lodel.plugin.extensions import Extension
 from lodel.settings.settings import Settings
 import tests.loader_utils
 
+##@todo write tests about discovering
 class PluginTestCase(unittest.TestCase):
     """ Test case grouping all tests on Plugin class init procedures """
 
