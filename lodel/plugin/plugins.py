@@ -216,6 +216,13 @@ class MetaPlugType(type):
         if ptype_name not in cls._all_ptypes:
             raise PluginError("Unknown plugin type '%s'" % ptype_name)
         return cls._all_ptypes[ptype_name]
+    
+    ##@brief Call the clear classmethod on each child classes
+    @classmethod
+    def clear_cls(cls):
+        for pcls in cls._all_ptypes.values():
+            pcls.clear_cls()
+        
 
 ##@brief Handle plugins
 #@ingroup lodel2_plugins
@@ -253,6 +260,12 @@ class Plugin(object, metaclass=MetaPlugType):
     #
     #None in abstract classes and implemented by child classes
     _type_conf_name = None
+
+    ##@brief Stores virtual modules uniq key
+    #@note When testing if a dir contains a plugin, if we reimport the __init__
+    #in a module with the same name, all non existing value (plugin_type for
+    #example) are replaced by previous plugin values
+    _mod_cnt = 0
 
     ##@brief Plugin class constructor
     #
@@ -656,6 +669,12 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             cls._plugin_instances = dict()
         if cls._load_called != []:
             cls._load_called = []
+        MetaPlugType.clear_cls()
+    
+    ##@brief Designed to be implemented by child classes
+    @classmethod
+    def clear_cls(cls):
+        pass
     
     ##@brief Reccursively walk throught paths to find plugin, then stores
     #found plugin in a file...
@@ -684,6 +703,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                 #dropped
                 pass
         result = {'path_list': paths, 'plugins': result}
+        print("DEUG ",result['plugins'])
         #Writing to cache
         if not no_cache:
             with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
@@ -789,11 +809,12 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
     @classmethod
-    def import_init(self, path):
+    def import_init(cls, path):
+        cls._mod_cnt += 1 # in order to ensure module name unicity
         init_source = os.path.join(path, INIT_FILENAME)
-        temp_module = '%s.%s.%s' % (
+        temp_module = '%s.%s.%s%d' % (
             VIRTUAL_TEMP_PACKAGE_NAME, os.path.basename(os.path.dirname(path)),
-            'test_init')
+            'test_init', cls._mod_cnt)
         try:
             loader = SourceFileLoader(temp_module, init_source)
         except (ImportError, FileNotFoundError) as e:
