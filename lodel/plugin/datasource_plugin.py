@@ -2,6 +2,8 @@ from .plugins import Plugin
 from .exceptions import *
 from lodel.settings.validator import SettingValidator
 
+
+_glob_typename = 'datasource'
 ##@brief Designed to handles datasources plugins
 #
 #A datasource provide data access to LeAPI typically a connector on a DB
@@ -16,13 +18,15 @@ from lodel.settings.validator import SettingValidator
 #@todo Write abstract classes for Datasource and MigrationHandler !!!
 class DatasourcePlugin(Plugin):
     
+    _type_conf_name = _glob_typename
     ##@brief Stores confspecs indicating where DatasourcePlugin list is stored
     _plist_confspecs = {
         'section': 'lodel2',
         'key': 'datasource_connectors',
         'default': None,
-        'validator': SettingValidator('strip', none_is_valid = False) }
-    _type_conf_name = 'datasource'
+        'validator': SettingValidator(
+            'plugin', none_is_valid = False,
+            ptype = _glob_typename) }
  
     ##@brief Construct a DatasourcePlugin 
     #@param name str : plugin name
