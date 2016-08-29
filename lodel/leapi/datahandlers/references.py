@@ -21,7 +21,6 @@ class List(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        print("LIST check_datavalue")
         if isinstance(value, list) or isinstance(value, str):
             val, expt = super()._check_data_value(value)
         else:

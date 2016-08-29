@@ -279,7 +279,6 @@ class Reference(DataHandler):
     #@return tuple(value, exception)
     #@todo implement the check when we have LeObject to check value
     def check_data_value(self, value):
-        print('REFERENCE check_data value')
         return super().check_data_value(value)
 
 

@@ -260,7 +260,6 @@ def plugin_validator(value, ptype = None):
             msg = "No plugin named %s found"
             msg %= value
             raise SettingsValidationError(msg)
-        print("HOOKED CHECK : ", plugin._type_conf_name.lower(), ptype.lower())
         if plugin._type_conf_name.lower() != ptype.lower():
             msg = "A plugin of type '%s' was expected but found a plugin \
 named  '%s' that is a '%s' plugin"
