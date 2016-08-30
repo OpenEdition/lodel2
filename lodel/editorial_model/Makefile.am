@@ -2,4 +2,4 @@ SUBDIRS=translator
 
 em_PYTHON=*.py
 
-emdir=$(pythondir)/lodel/editorial_model
+emdir=$(pkgpythondir)/editorial_model

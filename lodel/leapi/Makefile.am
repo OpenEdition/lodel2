@@ -1,4 +1,4 @@
 SUBDIRS=datahandlers
 
 leapi_PYTHON= *.py
-leapidir=$(pythondir)/lodel/leapi
+leapidir=$(pkgpythondir)/leapi

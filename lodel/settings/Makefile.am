@@ -1,2 +1,2 @@
 settings_PYTHON=*.py
-settingsdir=$(pythondir)/lodel/settings
+settingsdir=$(pkgpythondir)/settings

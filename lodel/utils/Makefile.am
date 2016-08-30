@@ -1,2 +1,2 @@
 utils_PYTHON=*.py
-utilsdir=$(pkgpythondir)
+utilsdir=$(pkgpythondir)/utils

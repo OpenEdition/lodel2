@@ -1,3 +1,3 @@
 translator_PYTHON=*.py
 
-translatordir=$(pythondir)/editorial_model/translator
+translatordir=$(pkgpythondir)/editorial_model/translator

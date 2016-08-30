@@ -1,0 +1,24 @@
+--- /usr/share/aclocal-1.14/python.m4	2014-10-27 05:45:43.000000000 +0100
++++ python.m4	2016-08-30 17:20:03.690623000 +0200
+@@ -111,6 +111,7 @@ AC_DEFUN([AM_PATH_PYTHON],
+ import sys
+ # Prefer sysconfig over distutils.sysconfig, for better compatibility
+ # with python 3.x.  See automake bug#10227.
++# But not see <https://bugs.launchpad.net/ubuntu/+source/python3-defaults/+bug/1408092>
+ try:
+     import sysconfig
+ except ImportError:
+@@ -119,9 +120,12 @@ else:
+     can_use_sysconfig = 1
+ # Can't use sysconfig in CPython 2.7, since it's broken in virtualenvs:
+ # <https://github.com/pypa/virtualenv/issues/118>
++# Can't use sysconfig in CPython > 3.0 in debian since it's broken :
++# <https://bugs.launchpad.net/ubuntu/+source/python3-defaults/+bug/1408092>
+ try:
+     from platform import python_implementation
+-    if python_implementation() == 'CPython' and sys.version[[:3]] == '2.7':
++    if python_implementation() == 'CPython' and ( \
++            float(sys.version[[:3]]) > 3.0 or sys.version[[:3]] == '2.7'):
+         can_use_sysconfig = 0
+ except ImportError:
+     pass"

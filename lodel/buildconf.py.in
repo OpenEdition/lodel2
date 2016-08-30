@@ -2,3 +2,4 @@
 #@note Populated by ./configure
 
 PYMONGO=@MONGODB@
+WEBUI=@WEBUI@
