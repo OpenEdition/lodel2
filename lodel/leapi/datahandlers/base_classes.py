@@ -83,12 +83,12 @@ class DataHandler(object):
         if value is None:
             if not self.nullable:
                 return None, TypeError("'None' value but field is not nullable")
-
             return None, None
         return self._check_data_value(value)
     
     ##@brief Designed to be implemented in child classes
     def _check_data_value(self, value):
+        
         return value, None
 
     ##@brief checks if this class can override the given data handler
@@ -289,19 +289,16 @@ expected but got '%s'" % back_reference)
     #@return tuple(value, exception)
     #@todo implement the check when we have LeObject to check value
     def check_data_value(self, value):
-        return super().check_data_value(value)
+        for elt in self.__allowed_classes:
+            for k, v in elt.fields().items():
+            # k is a fieldname and v is a datahandler instance
+                if v.check_data_value(value)[0] is not None:
+                    return value, None
+
+    def construct_data(self, emcomponent, fname, datas, cur_value)
+        super().construct_data(self, emcomponent, fname, datas, cur_value)
 
 
-
-        if isinstance(value, lodel.editorial_model.components.EmClass):
-            value = [value]
-        for elt in value:
-            if not issubclass(elt.__class__, EmClass):
-                return None, FieldValidationError("Some elements of this references are not EmClass instances")
-            if self.__allowed_classes is not None:
-                if not isinstance(elt, self.__allowed_classes):
-                    return None, FieldValidationError("Some element of this references are not valids (don't fit with allowed_classes")
-        return value
 
     ##@brief Check datas consistency
     #@param emcomponent EmComponent : An EmComponent child class instance
