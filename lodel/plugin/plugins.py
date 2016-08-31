@@ -7,7 +7,6 @@ import copy
 import json
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
-import plugins
 from lodel import logger
 from lodel.settings.utils import SettingsError
 from .exceptions import *

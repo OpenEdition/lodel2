@@ -17,4 +17,5 @@ __fullname__ = "MongoDB plugin"
 #
 # @return bool|str : True if all the checks are OK, an error message if not
 def _activate():
-    return True
+    from lodel import buildconf
+    return buildconf.PYMONGO

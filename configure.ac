@@ -44,10 +44,10 @@ PC_PYTHON_CHECK_MODULE([werkzeug], ,
 	AC_MSG_WARN([Module werkzeug not found but mandatory for default web interface])
 	AC_SUBST([WEBUI], 'False'))
 #Mongo datasource deps
-AC_SUBST([MONGODB], 'True') #Can be found in lodel/buildconf.py
+AC_SUBST([PYMONGO], 'True') #Can be found in lodel/buildconf.py
 PC_PYTHON_CHECK_MODULE([pymongo], ,
 	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
-	AC_SUBST([MONGODB], 'False'))
+	AC_SUBST([PYMONGO], 'False'))
 
 #Documentation checks
 AC_SUBST([DOCOK], 'OK')

@@ -1,5 +1,5 @@
 ##@brief Stores constant evaluated at build time
 #@note Populated by ./configure
 
-PYMONGO=@MONGODB@
+PYMONGO=@PYMONGO@
 WEBUI=@WEBUI@
