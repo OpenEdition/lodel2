@@ -474,8 +474,6 @@ class LeInsertQuery(LeQuery):
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
         id_inserted = self._rw_datasource.insert(self._target_class,datas)
-        # To put in a hook ??
-        self._target_class.make_consistency(datas=res_datas)
         return id_inserted
     """
     ## @brief Implements an insert query operation, with multiple insertions
@@ -566,8 +564,6 @@ target to LeUpdateQuery constructor"
                 res = self._rw_datasource.update(
                     self._target_class, filters, [],
                     res_datas)
-        # To put in a hook ??
-        self._target_class.make_consistency(datas=res_datas)
         return res
     
     ## @brief Execute the update query
