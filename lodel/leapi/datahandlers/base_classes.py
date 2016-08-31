@@ -348,14 +348,14 @@ class MultipleRef(Reference):
                             br_list = list()
                         if br_id not in br_list:
                             br_list.append(br_id)
-                            logger.info('The referenced object has to be updated')
         return l_value
     
     ## @brief Checks the backreference, updates it if it is not complete
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
-    def make_consistency(self, emcomponent, fname, datas):
+    # @note Not done in case of delete
+    def make_consistency(self, emcomponent, fname, datas, type_query):
         dh = emcomponent.field(fname)
 
         logger.info('Warning : multiple uid capabilities are broken here')
@@ -364,7 +364,6 @@ class MultipleRef(Reference):
             target_class = self.back_ref[0]
             target_field = self.back_ref[1]
             target_uidfield = target_class.uid_fieldname()[0]
-
             l_value = datas[fname]
 
             if l_value is not None:
@@ -382,6 +381,20 @@ class MultipleRef(Reference):
                         l_uids_ref.append(uid)
                         obj[0].set_data(target_field, l_uids_ref)
                         obj[0].update()
+           
+            if type_query == 'update':
+                query_filters = list()
+                query_filters.append((uid, ' in ', target_field))
+                objects = target_class.get(query_filters)
+                if l_value is None:
+                    l_value = list()
+                if len(objects) != len(l_value):
+                    for obj in objects:
+                        l_uids_ref = obj.data(target_field)
+                        if obj.data(target_uidfield) not in l_value:
+                            l_uids_ref.remove(uid)
+                            obj.set_data(target_field, l_uids_ref)
+                            obj.update()
                 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #
