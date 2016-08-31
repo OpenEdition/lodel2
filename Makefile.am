@@ -35,4 +35,7 @@ clean-local: cleandoc
 cleandoc:
 	-rm $(dyncode_filename)
 
+distclean-local:
+	-rm -R Makefile Makefile.in autom4te.cache/ aclocal.m4 install-sh missing py-compile configure
+
 .PHONY: cleandoc tests doc

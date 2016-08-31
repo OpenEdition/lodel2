@@ -4,3 +4,6 @@ lodel_PYTHON = *.py
 
 lodeldir=$(pkgpythondir)/
 
+distclean-local:
+	-rm Makefile Makefile.in
+

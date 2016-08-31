@@ -6,7 +6,7 @@ import lodel.plugin.scripts as lodel_script
 #@ingroup lodel2_script
 
 
-##@brief Implements lodel_admin.py discover-plugin action
+##@brief Implements lodel_admin.py **discover-plugin** action
 #@ingroup lodel2_plugins
 #@ingroup lodel2_script
 #
@@ -38,4 +38,31 @@ without modifying existing cache")
             print("\t- %s(%s) in %s" % (
                 pname, pinfos['version'], pinfos['path']))
             
+##@brief Implements lodel_admin.py **hooks-list** action
+#@ingroup lodel2_script
+#@ingroup lodel2_hooks
+class ListHooks(lodel_script.LodelScript):
+    _action = 'hooks-list'
+    _description = 'Generate a list of registered hooks once instance started'
+
+    @classmethod
+    def argparser_config(cls, parser):
+        pass
+
+    @classmethod
+    def run(cls, args):
+        import loader
+        loader.start()
+        from lodel.plugin.hooks import LodelHook
+        hlist = LodelHook.hook_list()
+        print("Registered hooks : ")
+        for name in sorted(hlist.keys()):
+            print("\t- %s is registered by :" % name)
+            for hfun, priority in hlist[name]:
+                msg = "\t\t- {modname}.{funname} with priority : {priority}"
+                print(msg.format(
+                    modname = hfun.__module__,
+                    funname = hfun.__name__,
+                    priority = priority))
+            print("\n")
 
