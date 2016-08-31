@@ -7,6 +7,7 @@ __confspec__ = "confspec.py"
 __author__ = "Lodel2 dev team"
 __fullname__ = "Dummy plugin"
 __name__ = 'yweber.dummy'
+__plugin_type__ = 'extension'
 
 
 ##@brief This methods allow plugin writter to write some checks
