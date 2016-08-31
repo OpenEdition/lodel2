@@ -419,13 +419,9 @@ class MultipleRef(Reference):
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
-<<<<<<< HEAD
     # @note Not done in case of delete
     def make_consistency(self, emcomponent, fname, datas, type_query):
-=======
-    """
-    def make_consistency(self, emcomponent, fname, datas):
->>>>>>> 4acd6f8fbeff935cfb6ba072c9fec31ccb3bbb93
+
         dh = emcomponent.field(fname)
 
         logger.info('Warning : multiple uid capabilities are broken here')
@@ -451,7 +447,6 @@ class MultipleRef(Reference):
                         l_uids_ref.append(uid)
                         obj[0].set_data(target_field, l_uids_ref)
                         obj[0].update()
-<<<<<<< HEAD
            
             if type_query == 'update':
                 query_filters = list()
@@ -466,9 +461,7 @@ class MultipleRef(Reference):
                             l_uids_ref.remove(uid)
                             obj.set_data(target_field, l_uids_ref)
                             obj.update()
-=======
-    """
->>>>>>> 4acd6f8fbeff935cfb6ba072c9fec31ccb3bbb93
+
                 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #@ingroup lodel2_datahandlers
