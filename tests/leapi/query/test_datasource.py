@@ -105,7 +105,8 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
             [(('alias', {cls: 'firstname'}), '=', 'foo')])
         self.check_nocall(read = False, exclude = ['delete'])
         self.check_nocall(read = True)
-
+    
+    @unittest.skip("Waiting references checks stack implementation")
     def test_insert(self):
         """ Testing LeInsertQuery mocking datasource """
         cls = self.dyncode['Person']

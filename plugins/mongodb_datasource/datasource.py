@@ -216,6 +216,7 @@ class MongoDbDatasource(object):
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update(mongo_filters, upd_datas)
+        target.make_consistency(datas=upd_datas, type_query='update')
         return res['n']
 
     ## @brief Inserts a record in a given collection
@@ -224,6 +225,7 @@ class MongoDbDatasource(object):
     # @return the inserted uid
     def insert(self, target, new_datas):
         res = self.__collection(target).insert(new_datas)
+        target.make_consistency(datas=new_datas)
         return str(res)
 
     ## @brief Inserts a list of records in a given collection
@@ -232,6 +234,8 @@ class MongoDbDatasource(object):
     # @return list : list of the inserted records' ids
     def insert_multi(self, target, datas_list):
         res = self.__collection(target).insert_many(datas_list)
+        for new_datas in datas_list:
+            target.make_consistency(datas=new_datas)
         return list(res.inserted_ids)
     
     ##@brief Act on abstract LeObject child

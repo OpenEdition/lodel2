@@ -16,6 +16,7 @@ class FieldValidationError(Exception):
     pass
 
 ##@brief Base class for all data handlers
+#@ingroup lodel2_datahandlers
 class DataHandler(object):
     
     _HANDLERS_MODULES = ('datas_base', 'datas', 'references')
@@ -75,7 +76,10 @@ class DataHandler(object):
         return self.internal is not False
 
     ##@brief calls the data_field defined _check_data_value() method
-    # @return tuple (value, error|None)
+    #@ingroup lodel2_dh_checks
+    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
+    #@ref _construct_data() and @ref lodel2_dh_check_impl )
+    #@return tuple (value, error|None)
     def check_data_value(self, value):
         if value is None:
             if not self.nullable:
@@ -83,6 +87,10 @@ class DataHandler(object):
 
             return None, None
         return self._check_data_value(value)
+    
+    ##@brief Designed to be implemented in child classes
+    def _check_data_value(self, value):
+        return value, None
 
     ##@brief checks if this class can override the given data handler
     # @param data_handler DataHandler
@@ -93,35 +101,66 @@ class DataHandler(object):
         return True
 
     ##@brief Build field value
-    # @param emcomponent EmComponent : An EmComponent child class instance
-    # @param fname str : The field name
-    # @param datas dict : dict storing fields values (from the component)
-    # @param cur_value : the value from the current field (identified by fieldname)
-    # @return the value
-    # @throw RunTimeError if data construction fails
+    #@ingroup lodel2_dh_checks
+    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
+    #@ref _construct_data() and @ref lodel2_dh_check_impl )
+    #@param emcomponent EmComponent : An EmComponent child class instance
+    #@param fname str : The field name
+    #@param datas dict : dict storing fields values (from the component)
+    #@param cur_value : the value from the current field (identified by fieldname)
+    #@return the value
+    #@throw RunTimeError if data construction fails
+    #@todo raise something else
     def construct_data(self, emcomponent, fname, datas, cur_value):
         emcomponent_fields = emcomponent.fields()
         data_handler = None
         if fname in emcomponent_fields:
             data_handler = emcomponent_fields[fname]
-
+        
+        new_val = cur_value
         if fname in datas.keys():
-            return cur_value
+            pass
         elif data_handler is not None and hasattr(data_handler, 'default'):
-                return data_handler.default
+            new_val = data_handler.default
         elif data_handler is not None and data_handler.nullable:
-                return None
+            new_val = None
+        return self._construct_data(emcomponent, fname, datas, new_val)
+    
+    ##@brief Designed to be reimplemented by child classes
+    #@param emcomponent EmComponent : An EmComponent child class instance
+    #@param fname str : The field name
+    #@param datas dict : dict storing fields values (from the component)
+    #@param cur_value : the value from the current field (identified by fieldname)
+    #@return the value
+    #@see construct_data() lodel2_dh_check_impl
+    def _construct_data(self, empcomponent, fname, datas, cur_value):
         return cur_value
+        
 
     ##@brief Check datas consistency
-    # @param emcomponent EmComponent : An EmComponent child class instance
-    # @param fname : the field name
-    # @param datas dict : dict storing fields values
-    # @return an Exception instance if fails else True
-    # @todo A implémenter
+    #@ingroup lodel2_dh_checks
+    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
+    #@ref _construct_data() and @ref lodel2_dh_check_impl )
+    #@warning the datas argument looks like a dict but is not a dict
+    #see @ref base_classes.DatasConstructor "DatasConstructor" and
+    #@ref lodel2_dh_datas_construction "Datas construction section"
+    #@param emcomponent EmComponent : An EmComponent child class instance
+    #@param fname : the field name
+    #@param datas dict : dict storing fields values
+    #@return an Exception instance if fails else True
+    #@todo A implémenter
     def check_data_consistency(self, emcomponent, fname, datas):
+        return self._check_data_consistency(emcomponent, fname, datas)
+    
+    ##@brief Designed to be reimplemented by child classes
+    #@param emcomponent EmComponent : An EmComponent child class instance
+    #@param fname : the field name
+    #@param datas dict : dict storing fields values
+    #@return an Exception instance if fails else True
+    #@see check_data_consistency() lodel2_dh_check_impl
+    def _check_data_consistency(self, emcomponent, fname, datas):
         return True
- 
+
     ##@brief make consistency after a query
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
@@ -139,7 +178,8 @@ class DataHandler(object):
         if not issubclass(data_handler, DataHandler):
             raise ValueError("A data handler HAS TO be a child class of DataHandler")
         cls.__custom_handlers[name] = data_handler
-
+    
+    ##@brief Load all datahandlers
     @classmethod
     def load_base_handlers(cls):
         if cls._base_handlers is None:
@@ -185,13 +225,23 @@ class DataHandler(object):
         return hash(tuple(hash_dats))
 
 ##@brief Base class for datas data handler (by opposition with references)
+#@ingroup lodel2_datahandlers
 class DataField(DataHandler):
     pass
 
 ##@brief Abstract class for all references
+#@ingroup lodel2_datahandlers
 #
 # References are fields that stores a reference to another
 # editorial object
+#
+#
+#@todo Check data implementation : check_data = is value an UID or an
+#LeObject child instance
+#@todo Construct data implementation : transform the data into a LeObject
+#instance
+#@todo Check data consistency implementation : check that LeObject instance
+#is from an allowed class
 class Reference(DataHandler):
     base_type="ref"
 
@@ -210,8 +260,6 @@ class Reference(DataHandler):
             #if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0]) or not isinstance(back_reference[1], str):
             #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
-        self.back_ref = back_reference
-
         super().__init__(internal=internal, **kwargs)
     
     @property
@@ -227,11 +275,14 @@ class Reference(DataHandler):
         self.__back_reference = back_reference
 
     ##@brief Check value
-    # @param value *
-    # @return tuple(value, exception)
-    # @todo implement the check when we have LeObject to check value
-    def _check_data_value(self, value):
-        return value, None
+    #@param value *
+    #@return tuple(value, exception)
+    #@todo implement the check when we have LeObject to check value
+    def check_data_value(self, value):
+        return super().check_data_value(value)
+
+
+
         if isinstance(value, lodel.editorial_model.components.EmClass):
             value = [value]
         for elt in value:
@@ -243,29 +294,36 @@ class Reference(DataHandler):
         return value
 
     ##@brief Check datas consistency
-    # @param emcomponent EmComponent : An EmComponent child class instance
-    # @param fname : the field name
-    # @param datas dict : dict storing fields values
-    # @return an Exception instance if fails else True
-    # @todo A implémenter
+    #@param emcomponent EmComponent : An EmComponent child class instance
+    #@param fname : the field name
+    #@param datas dict : dict storing fields values
+    #@return an Exception instance if fails else True
+    #@todo check for performance issue and check logics
+    #@todo Implements consistency checking on value : Check that the given value
+    #points onto an allowed class
+    #@warning composed uid capabilities broken here
     def check_data_consistency(self, emcomponent, fname, datas):
+        rep = super().check_data_consistency(emcomponent, fname, datas)
+        if isinstance(rep, Exception):
+            return rep
+        if self.back_reference is None:
+            return True
+        #Checking back reference consistency
+
+        # !! Reimplement instance fetching in construct data !!
         dh = emcomponent.field(fname)
-        logger.debug(dh)
-        logger.info('Warning : multiple uid capabilities are broken here')
-        uid = datas[emcomponent.uid_fieldname()[0]]
-        target_class = self.back_ref[0]
-        target_field = self.back_ref[1]
-        target_uidfield = traget_class.uid_fieldname()[0]
-        value = datas[emcomponent.data(fname)]
+        uid = datas[emcomponent.uid_fieldname()[0]] #multi uid broken here
+        target_class = self.back_reference[0]
+        target_field = self.back_reference[1]
+        target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
+        value = datas[fname]
         
-        obj = target_class.get((target_uidfield , '=', value))
+        obj = target_class.get([(target_uidfield , '=', value)])
         
         if len(obj) == 0:
             logger.warning('Object referenced does not exist')
             return False
         
-        obj.set_data(target_field, uid)
-        obj.update()
         return True
 
 ##@brief This class represent a data_handler for single reference to another object
@@ -285,6 +343,7 @@ class SingleRef(Reference):
 
 
 ##@brief This class represent a data_handler for multiple references to another object
+#@ingroup lodel2_datahandlers
 #
 # The fields using this data handlers are like SingleRef but can store multiple references in one field
 # @note for the moment split on ',' chars
@@ -297,22 +356,28 @@ class MultipleRef(Reference):
         super().__init__(**kwargs)
 
         
-    def _check_data_value(self, value):
+    def check_data_value(self, value):
+        value, expt = super().check_data_value(value)
+        if expt is not None:
+            #error in parent
+            return value, expt
+        elif value is None:
+            #none value
+            return value, expt
+
         expt = None
      
         if isinstance(value, str):
             value, expt = super()._check_data_value(value)
         elif not hasattr(value, '__iter__'):
-            return None, FieldValidationError("MultipleRef has to be an iterable or a string")
+            return None, FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
             if self.max_item < len(value):
                 return None, FieldValidationError("Too many items")
         return value, expt
 
-    def check_data_consistency(self, emcomponent, fname, datas):
-        return True
-    
     def construct_data(self, emcomponent, fname, datas, cur_value):
+        cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
         if cur_value == 'None' or cur_value is None or cur_value == '':
             return None
         emcomponent_fields = emcomponent.fields()
@@ -336,14 +401,14 @@ class MultipleRef(Reference):
             l_value = None
 
         if l_value is not None:
-            if self.back_ref is not None:
-                br_class = self.back_ref[0]
+            if self.back_reference is not None:
+                br_class = self.back_reference[0]
                 for br_id in l_value:
                     query_filters = list()
                     query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
                     br_obj = br_class.get(query_filters)
                     if len(br_obj) != 0:
-                        br_list = br_obj[0].data(self.back_ref[1])
+                        br_list = br_obj[0].data(self.back_reference[1])
                         if br_list is None:
                             br_list = list()
                         if br_id not in br_list:
@@ -354,15 +419,20 @@ class MultipleRef(Reference):
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
+<<<<<<< HEAD
     # @note Not done in case of delete
     def make_consistency(self, emcomponent, fname, datas, type_query):
+=======
+    """
+    def make_consistency(self, emcomponent, fname, datas):
+>>>>>>> 4acd6f8fbeff935cfb6ba072c9fec31ccb3bbb93
         dh = emcomponent.field(fname)
 
         logger.info('Warning : multiple uid capabilities are broken here')
         uid = datas[emcomponent.uid_fieldname()[0]]
-        if self.back_ref is not None:
-            target_class = self.back_ref[0]
-            target_field = self.back_ref[1]
+        if self.back_reference is not None:
+            target_class = self.back_reference[0]
+            target_field = self.back_reference[1]
             target_uidfield = target_class.uid_fieldname()[0]
             l_value = datas[fname]
 
@@ -381,6 +451,7 @@ class MultipleRef(Reference):
                         l_uids_ref.append(uid)
                         obj[0].set_data(target_field, l_uids_ref)
                         obj[0].update()
+<<<<<<< HEAD
            
             if type_query == 'update':
                 query_filters = list()
@@ -395,8 +466,12 @@ class MultipleRef(Reference):
                             l_uids_ref.remove(uid)
                             obj.set_data(target_field, l_uids_ref)
                             obj.update()
+=======
+    """
+>>>>>>> 4acd6f8fbeff935cfb6ba072c9fec31ccb3bbb93
                 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
+#@ingroup lodel2_datahandlers
 #
 # This class is designed to allow automatic scheduling of construct_data calls. 
 #

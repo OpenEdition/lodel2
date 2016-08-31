@@ -33,6 +33,7 @@ functions, but no session handler initialized")
         return super().__getattribute__(name)
 
 
+_glob_typename = 'session_handler'
 ##@brief Singleton class designed to handle session handler plugin
 #
 #@note This class is a singleton because only one session handler can be
@@ -45,9 +46,10 @@ class SessionHandlerPlugin(Plugin, metaclass=SessionPluginWrapper):
         'section': 'lodel2',
         'key': 'session_handler',
         'default': None,
-        'validator': SettingValidator('string', none_is_valid=False)}
+        'validator': SettingValidator(
+            'plugin', none_is_valid=False,ptype = _glob_typename)}
 
-    _type_conf_name = 'session_handler'
+    _type_conf_name = _glob_typename
             
     def __init__(self, plugin_name):
         if self._instance is None:

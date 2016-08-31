@@ -496,9 +496,9 @@ construction and consitency when datas are not complete\n")
     # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.prepare_datas() method
     @classmethod
-    def make_consistency(cls, datas):
+    def make_consistency(cls, datas, type_query = 'insert'):
         for fname, dh in cls._fields.items():
-            ret = dh.make_consistency(cls, fname, datas)
+            ret = dh.make_consistency(cls, fname, datas, type_query)
             
     ## @brief Add a new instance of LeObject
     # @return a new uid en case of success, False otherwise

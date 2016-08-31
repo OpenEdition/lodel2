@@ -7,7 +7,6 @@ import socket
 import inspect
 import copy
 
-
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
 # Validator are registered in the SettingValidator class.
@@ -29,11 +28,15 @@ class SettingValidator(object):
     _description = dict()
     
     ##@brief Instanciate a validator
-    def __init__(self, name, none_is_valid = False):
+    #@param name str : validator name
+    #@param none_is_valid bool : if True None will be validated
+    #@param **kwargs : more arguement for the validator
+    def __init__(self, name, none_is_valid = False, **kwargs):
         if name is not None and name not in self._validators:
             raise NameError("No validator named '%s'" % name)
         self.__none_is_valid = none_is_valid
         self.__name = name
+        self._opt_args = kwargs
 
     ##@brief Call the validator
     # @param value *
@@ -45,7 +48,7 @@ class SettingValidator(object):
         if self.__none_is_valid and value is None:
             return None
         try:
-            return self._validators[self.__name](value)
+            return self._validators[self.__name](value, **self._opt_args)
         except Exception as e:
             raise SettingsValidationError(e)
     
@@ -218,6 +221,9 @@ def host_val(value):
         msg = "The value '%s' is not a valid host"
         raise SettingsValidationError(msg % value)
 
+##@brief Validator for Editorial model component
+#
+# Designed to validate a conf that indicate a class.field in an EM
 def emfield_val(value):
     from lodel.plugin.hooks import LodelHook
     spl = value.split('.')
@@ -239,25 +245,28 @@ def emfield_val(value):
             raise SettingsValidationError(msg % value)
     return value
 
-def plugin_val(value):
+##@brief Validator for plugin name & optionnaly type
+#
+#Able to check that the value is a plugin and if it is of a specific type
+def plugin_validator(value, ptype = None):
     from lodel.plugin.hooks import LodelHook
-    spl = value.split('.')
-    if len(spl) != 2:
-        msg = "Expected a value in the form PLUGIN.TYPE but got : %s"
-        raise SettingsValidationError(msg % value)
-    value = tuple(spl)
-    #Late validation hook
     @LodelHook('lodel2_dyncode_bootstraped')
-    def type_check(hookname, caller, payload):
-        from lodel import plugin
-        typesname = { cls.__name__.lower():cls for cls in plugin.PLUGINS_TYPE}
-        if value[1].lower() not in typesname:
-            msg = "Following plugin type do not exist in plugin list %s : %s"
-            raise SettingsValidationError(msg % value)
-        return value
-    plug_type_val = plugin_val(value)
-    return plug_type_val
-
+    def plugin_type_checker(hookname, caller, payload):
+        from lodel.plugin.plugins import Plugin
+        from lodel.plugin.exceptions import PluginError
+        try:
+            plugin = Plugin.get(value)
+        except PluginError:
+            msg = "No plugin named %s found"
+            msg %= value
+            raise SettingsValidationError(msg)
+        if plugin._type_conf_name.lower() != ptype.lower():
+            msg = "A plugin of type '%s' was expected but found a plugin \
+named  '%s' that is a '%s' plugin"
+            msg %= (ptype, value, plugin._type_conf_name)
+            raise SettingsValidationError(msg)
+    return value
+        
 
 #
 #   Default validators registration
@@ -265,8 +274,8 @@ def plugin_val(value):
 
 SettingValidator.register_validator(
     'plugin',
-    plugin_val,
-    'plugin validator')
+    plugin_validator,
+    'plugin name & type validator')
 
 SettingValidator.register_validator(
     'dummy',

@@ -2,10 +2,9 @@
 {% block title %}- Index{% endblock %}
 {% block body %}
 <h1>{{settings.sitename}} administration</h1>
-{{url('admin')}}
 <ul>
-    <li><a href="classes_admin">Edit object</a></li>
-    <li><a href="object_create">Create object</a></li>
+    <li><a href="admin/classes_admin">Edit object</a></li>
+    <li><a href="admin/object_create">Create object</a></li>
 </ul>
 
 {% endblock %}

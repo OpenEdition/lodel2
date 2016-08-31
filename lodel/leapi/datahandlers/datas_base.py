@@ -110,7 +110,7 @@ class DateTime(DataField):
             error = ValueError("Tue value has to be a string or a datetime")
         return value, error
 
-    def construct_data(self, emcomponent, fname, datas, cur_value):
+    def _construct_data(self, emcomponent, fname, datas, cur_value):
         if (self.now_on_create and cur_value is None) or self.now_on_update:
             return datetime.datetime.now()
         return cur_value
