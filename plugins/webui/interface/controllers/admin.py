@@ -6,7 +6,6 @@ from lodel import logger
 
 import leapi_dyncode as dyncode
 import warnings
-from lodel import logger
 
 def index_admin(request):
     return get_response('admin/admin.html')
@@ -14,7 +13,6 @@ def index_admin(request):
 def admin_update(request):
     msg=''
     if request.method == 'POST':
-
         error = None
         datas = list()
         classname = request.form['classname']

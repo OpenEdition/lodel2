@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - List of Classes{% endblock %}
 {% block content %} 
-<h1>Lodel 2 - List of Classes</h1>
+<h1>All types</h1>
 <ul>
 {% for classe in my_classes %}
     {% if classe.is_abstract() and allclasses == 1 %}
-        {% set abst = ' - Abstract class ' %}
+        {% set abst = ' - Abstract type ' %}
         <li> <a href="show_class?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
     {% elif not classe.is_abstract() %}
         {% set abst = ' - ' ~ classe.get(None)|length %}

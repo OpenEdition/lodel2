@@ -7,9 +7,15 @@
 {% set classname = obj.data('classname') %}
 {% set my_class = my_class.name2class(classname) %}
 {% endif %}
-{% block title %}Lodel 2 - Object {{ lodel_id }} {% endblock %}
+{% block title %}Object {{ lodel_id }} {% endblock %}
 {% import "components/components.html" as components %}
 {% block content %}
+<ol class="breadcrumb">
+  <li><a href="/lodel_i/">Home</a></li>
+  <li><a href="/lodel_i/list_classes">Types</a></li>
+  <li><a href="/lodel_i/show_class?classname={{ classname }}">{{ classname }}</a></li>
+  <li class="active">{{ lodel_id }}</li>
+</ol>
 <h1>Lodel 2 - {{ classname }} with uid {{ lodel_id }}</h1>
     
 <ul>

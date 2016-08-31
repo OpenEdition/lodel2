@@ -3,21 +3,30 @@
 {% set objects = target.get(('lodel_id = %s') % (lodel_id)) %}
 {% set objects = target.get(('%s = %s') % (uidfield, lodel_id)) %}
 {% set obj = objects.pop() %}
-{% block title %}- Edit Object{% endblock %}
+{% block title %}Edit Object{% endblock %}
 {% block body %}
+<ol class="breadcrumb">
+  <li><a href="/lodel_i/admin">Home</a></li>
+  <li><a href="/lodel_i/admin/classes_admin">Edition</a></li>
+  <li><a href="/lodel_i/admin/class_admin?classname={{ target.__name__ }}">{{ target.__name__ }}</a></li>
+  <li class="active">Edit</li>
+</ol>
 {% if msg is not none %}
 {% block msg %} <p style="color:red; font-size:20pt; font-weight:bold">{{ msg }}</p> {% endblock %}
 {% endif %}
-<h1>Lodel 2 - Edit {{ target.__name__ }} with uid {{ lodel_id }} </h1>
-    <form action="" method ="post">
+<h1 style="padding-bottom:30px;">Lodel 2 - Edit {{ target.__name__ }} with uid {{ lodel_id }} </h1>
+    <form class="form-horizontal" action="" method ="post">
     <input type="hidden" name="uid" value="{{ lodel_id}}" />
     <input type="hidden" name="classname" value={{ target.__name__ }} />
     {% for fieldname, fieldvalue in obj.fields().items() %}
-       <div style="padding-bottom:15px;"> {{edit.input(fieldname, fieldvalue, obj.data(fieldname)) }} </div>
+        <div class="form-group">
+        <div style="padding-bottom:15px;"> {{edit.input(fieldname, fieldvalue, obj.data(fieldname)) }} </div>
+        </div>
     {% endfor %}
-     <input type="submit" value="Save">
+     <button type="submit" class="btn btn-primary">Save</button>
+     <a class="btn btn-default" href="classes_admin">Return</a>
     </form>
 <div>
-    <a href="classes_admin">Return</a>
+    
 </div>
 {% endblock %}

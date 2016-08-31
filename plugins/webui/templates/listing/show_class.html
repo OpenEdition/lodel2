@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - Class {{ classname }} {% endblock %}
 {% block content %} 
-<h1>Lodel 2 - Class {{ classname }} </h1>
+<ol class="breadcrumb">
+  <li><a href="/lodel_i/">Home</a></li>
+  <li><a href="/lodel_i/list_classes">Types</a></li>
+  <li class="active">{{ classname }}</li>
+</ol>
+<h1>Type {{ classname }} </h1>
  {% set my_class  = leapi.name2class(classname) %}
  {% if my_class.child_classes()|length >0 %}
-     <h2> Childs classes</h2>
+     <h2> Childs types</h2>
      <ul>
      {% for child in my_class.child_classes() %}
          {% if child.is_abstract() %}
@@ -17,6 +22,7 @@
      </ul>
   {% endif %}
  {% if not my_class.is_abstract() %}
+<h2>Instances</h2>
     {% set uid_f = my_class.uid_fieldname() %}
     {% set objects = my_class.get(None) %}
     <ul>
