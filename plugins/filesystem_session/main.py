@@ -59,20 +59,6 @@ def _get_token_from_session_filename(filename):
     return None
 
 
-## @brief Defines a session file name from a token
-# @param token str
-# @return str
-def _generate_filename_from_token(token):
-    return Settings.sessions.file_template % token
-
-
-## @brief Defines a session file path from a token
-# @param token str
-# @return str
-def _generate_filepath_from_token(token):
-    return os.path.join(Settings.sessions.directory, Settings.sessions.file_template) % token
-
-
 ## @brief Returns the session's last modification timestamp
 # @param token str
 # @return float
@@ -86,7 +72,7 @@ def _get_session_last_modified(token):
 ## @brief Registers the session in the active sessions' list
 # @param session LodelSession
 def _register_session(token):
-    __sessions[token] = os.path.join(Settings.sessions.directory, _generate_filename_from_token(token))
+    __sessions[token] = os.path.join(Settings.sessions.directory, Settings.sessions.file_template % token)
     
     
 ## @brief Session store's garbage collector
