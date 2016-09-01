@@ -498,7 +498,7 @@ construction and consitency when datas are not complete\n")
     @classmethod
     def make_consistency(cls, datas, type_query = 'insert'):
         for fname, dh in cls._fields.items():
-            ret = dh.make_consistency(cls, fname, datas, type_query)
+            ret = dh.make_consistency(fname, datas, type_query)
             
     ## @brief Add a new instance of LeObject
     # @return a new uid en case of success, False otherwise

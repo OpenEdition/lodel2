@@ -116,8 +116,10 @@ def application(env, start_response):
         session_token = None
         #next line is for testing purpose
         WebUiClient['last_request'] = time.time()
+        
         try:
             controller = get_controller(request)
+            logger.debug(controller)
             response = controller(request)
         except HttpException as e:
             try:

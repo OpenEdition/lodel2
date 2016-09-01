@@ -59,12 +59,13 @@ def admin_update(request):
         logger.warning('Composed uids broken here')
         uid_field = target_leo.uid_fieldname()[0]
 
-    test_valid = uid_field in request.GET \
-        and len(request.GET[uid_field]) == 1
+    test_valid = 'lodel_id' in request.GET \
+        and len(request.GET['lodel_id']) == 1
 
     if test_valid:
         try:
-            lodel_id = request.GET[uid_field][0]
+            dh = target_leo.field(uid_field)
+            lodel_id = dh.cast_type(request.GET['lodel_id'][0])
         except (ValueError, TypeError):
             test_valid = False
 
@@ -73,11 +74,10 @@ def admin_update(request):
     else:
         query_filters = list()
         query_filters.append((uid_field,'=',lodel_id))
-        obj = dyncode.Object.get(query_filters)
+        obj = target_leo.get(query_filters)
         if len(obj) == 0:
             raise HttpException(404)
-
-    return get_response('admin/admin_edit.html', target=target_leo, uidfield = uid_field, lodel_id =lodel_id)
+    return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
 
 def admin_create(request):
     classname = None

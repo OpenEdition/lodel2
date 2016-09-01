@@ -114,4 +114,5 @@ class Concat(FormatString):
 
 class Password(Varchar):
     help = 'Handle passwords'
+    base_type = 'password'
     pass

@@ -400,7 +400,7 @@ user.new_field(
 
 user.new_field(
     'login', display_name = 'user login', help_text = 'login',
-    group = user_group, data_handler = 'varchar', uniq = True, internal = True)
+    group = user_group, data_handler = 'varchar', uniq = True, internal = False)
 
 user.new_field(
     'password', display_name = 'Password',

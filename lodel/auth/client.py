@@ -3,12 +3,14 @@
 import copy
 import sys
 import warnings
+import inspect
 
 from lodel.settings import Settings
 from lodel import logger
 from lodel.plugin.hooks import LodelHook
 from lodel.plugin import SessionHandlerPlugin as SessionHandler
 from .exceptions import *
+from ..leapi.query import LeGetQuery
 
 ##@brief Class designed to handle sessions and its datas
 class LodelSession(object):
@@ -201,18 +203,19 @@ class Client(object, metaclass = ClientMetaclass):
     def authenticate(self, login = None, password = None):
         #Authenticate
         for infos in self._infos_fields:
+            logger.debug(self._infos_fields)
             login_cls = infos['login'][0]
-            pass_cls = infos['pass'][0]
+            pass_cls = infos['password'][0]
             qfilter = "{passfname} = {passhash}"
             uid_fname = login_cls.uid_fieldname()[0] #COMPOSED UID BROKEN
             if login_cls == pass_cls:
                 #Same EmClass for login & pass
                 qfilter = qfilter.format(
-                    passfname = infos['pass'][1],
+                    passfname = infos['password'][1],
                     passhash = password)
             else:
                 #Different EmClass, building a relational filter
-                passfname = "%s.%s" % (infos['login'][2], infos['pass'][1])
+                passfname = "%s.%s" % (infos['login'][2], infos['password'][1])
                 qfilter = qfilter.format(
                     passfname = passfname,
                     passhash = password)
@@ -220,11 +223,10 @@ class Client(object, metaclass = ClientMetaclass):
                 field_list = [uid_fname], limit = 1)
             req = getq.execute()
             if len(req) == 1:
-                #Authenticated
-                self.__set_authenticated(infos['login'][0], req[uid_fname])
+                self.__set_authenticated(infos['login'][0],req[0][uid_fname])
                 break
-        if self.is_anon():
-            self.fail() #Security logging
+        if self.is_anonymous():
+            self.authentication_failure() #Security logging
     
     ##@brief Attempt to restore a session given a session token
     #@param token mixed : a session token
@@ -267,8 +269,8 @@ class Client(object, metaclass = ClientMetaclass):
     #@return True if client is anonymous
     @classmethod
     def is_anonymous(cls):
-        cls._assert_instance()
-        return Client._instance
+        return cls._assert_instance()
+        #return Client._instance
 
     ##@brief Method to call on authentication failure
     #@throw ClientAuthenticationFailure
@@ -348,9 +350,10 @@ login EmClass '%s' and password EmClass '%s'. Abording..." % (
     #@param leo LeObject child class : the LeObject the user is stored in
     #@param uid str : uniq id (in leo)
     #@return None
+    @classmethod
     def __set_authenticated(self, leo, uid):
         self.__user = {'classname': leo.__name__, 'uid': uid, 'leoclass': leo}
         #Store auth infos in session
-        self.__session[self.__class__._AUTH_DATANAME] = copy.copy(self.__user)
+        self._instance.__session[self._instance.__class__._AUTH_DATANAME] = copy.copy(self.__user)
         
     

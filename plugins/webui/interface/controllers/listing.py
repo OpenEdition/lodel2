@@ -40,13 +40,14 @@ def show_object(request):
     
     logger.warning('Composed uids broken here')
     uid_field = target_leo.uid_fieldname()[0]
-    
-    test_valid = uid_field in request.GET \
-        and len(request.GET[uid_field]) == 1
+
+    test_valid = 'lodel_id' in request.GET \
+        and len(request.GET['lodel_id']) == 1
 
     if test_valid:
         try:
-            lodel_id = int(request.GET[uid_field][0])
+            dh = target_leo.field(uid_field)
+            lodel_id = dh.cast_type(request.GET['lodel_id'][0])
         except (ValueError, TypeError):
             test_valid = False
 
@@ -55,8 +56,8 @@ def show_object(request):
     else:
         query_filters = list()
         query_filters.append((uid_field,'=',lodel_id))
-        obj = dyncode.Object.get(query_filters)
+        obj = target_leo.get(query_filters)
         if len(obj) == 0:
             raise HttpException(404)
 
-    return get_response('listing/show_object.html', lodel_id=lodel_id, uidfield = uid_field, classname=classname)
+    return get_response('listing/show_object.html', lodel_id=lodel_id, classname=classname)

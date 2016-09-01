@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import 'components/components.html' as components %}
 {% set my_class = leapi.name2class(classname) %}
+{% set uidfield = my_class.uid_fieldname()[0] %}
 {% set objects = my_class.get(('%s = %s') % (uidfield, lodel_id)) %}
 {% set obj = objects.pop() %}
 {% if my_class.is_abstract() %}
@@ -28,7 +29,6 @@
                     {% set l_classe = fieldvalue.allowed_classes[0] %}
                         <ul>
                     {% for rel in obj.data(fieldname) %}
-                            <!-- Uid for linked_classes is casted to int....not good...but for a while.... -->
                             {% set casttype = l_classe.data_handler(l_classe.uid_fieldname()[0]).cast_type %}
                             {% set rel2 = casttype(rel) %}
                             <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" target="_blank">{{ rel2 }}</a></li>
