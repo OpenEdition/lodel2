@@ -49,6 +49,18 @@ PC_PYTHON_CHECK_MODULE([pymongo], ,
 	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
 	AC_SUBST([PYMONGO], 'False'))
 
+#
+#BEIGN
+#
+PC_PYTHON_CHECK_MODULE_VERSION([pymongo], [2.7.1], ,
+	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
+	AC_SUBST([PYMONGO], 'False')
+)
+
+#
+# STOPE
+#
+
 #Documentation checks
 AC_SUBST([DOCOK], 'OK')
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
@@ -78,4 +90,8 @@ fi
 
 if test "$WEBUI" = 'False';
 	then AC_MSG_WARN([Mandatory components are missing for running default web UI. See up for reasons])
+fi
+
+if test "$PYMONGO" = 'False';
+	then AC_MSG_WARN([You will not be able to user mongodb datasource. See up for reasons])
 fi

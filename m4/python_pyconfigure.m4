@@ -647,3 +647,43 @@ m4_ifnblank([$1], [
     ])
 AS_IF([test "$[pc_cv_python_func_]pc_python_safe_mod[_$2]" = "no"], [$5], [$4])
 ])# PC_PYTHON_CHECK_FUNC
+
+# PC_PYTHON_CHECK_MODULE_VERSION(LIBRARY, VERSION, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND)
+# -------------------------------------------------
+# Macro for checking if a Python library with this version is installed
+#
+AC_DEFUN([PC_PYTHON_CHECK_MODULE_VERSION],
+[AC_REQUIRE([PC_PROG_PYTHON])[]dnl
+m4_define([pc_python_safe_mod], m4_bpatsubsts($1, [\.], [_]))
+AC_CACHE_CHECK([for Python '$1' library version '$2'],
+    [[pc_cv_python_module_version]pc_python_safe_mod],
+    [AC_LANG_PUSH(Python)[]dnl
+     AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([dnl
+import sys
+try:
+    import $1
+except:
+    version='no'
+else:
+    for vers_attr in ('__version__', 'version', 'version_info'):
+        if hasattr($1, vers_attr):
+            version = getattr($1, vers_attr)
+            break
+    else:
+        version = 'unknown'
+sys.stdout.write(version)
+], [])], 
+	[[pc_cv_python_module_version]pc_python_safe_mod=`./conftest`],
+	[AC_MSG_FAILURE([failed to run Python program])])
+	AC_LANG_POP(Python)[]dnl
+	])
+
+AS_IF([test "x$[pc_cv_python_module_version]pc_python_safe_mod" = "x$2" ],
+	[$3],
+	[	AS_IF(
+			[test "x$[pc_cv_python_module_version]pc_python_safe_mod" = 'unknown'],
+			AC_MSG_WARN([Unable to fetch version of Python module $1]))
+		[$4]
+	])
+])# PC_PYTHON_CHECK_MODULE_VERSION
