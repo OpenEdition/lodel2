@@ -74,7 +74,6 @@ class Map(MultipleRef):
 ##@brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
     
-    directly_editable = False
     ##@brief Instanciate a data handler handling hierarchical relation with constraints
     # @param back_reference tuple : Here it is mandatory to have a back ref (like a parent field)
     # @param max_depth int | None :  limit of depth
@@ -91,3 +90,4 @@ class Hierarch(MultipleRef):
         else:
             return None, FieldValidationError("Set or string expected for a set field")
         return val, expt
+

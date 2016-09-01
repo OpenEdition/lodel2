@@ -31,7 +31,6 @@ class DataHandler(object):
     ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
     
-    directly_editable = True
     ##@brief constructor
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
@@ -251,15 +250,11 @@ class Reference(DataHandler):
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
+        ##@brief set of allowed LeObject child classes
         self.__allowed_classes = set() if allowed_classes is None else set(allowed_classes)
-        self.allowed_classes = list() if allowed_classes is None else allowed_classes
-        
-        if back_reference is not None:
-            if len(back_reference) != 2:
-                raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
-            #if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0]) or not isinstance(back_reference[1], str):
-            #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
-        self.__back_reference = back_reference
+        ##@brief Stores back references informations
+        self.__back_reference = None
+        self.__set_back_reference(back_reference)
         super().__init__(internal=internal, **kwargs)
     
     @property
@@ -271,7 +266,13 @@ class Reference(DataHandler):
         return copy.copy(self.__allowed_classes)
 
     ##@brief Set the back reference for this field.
-    def _set_back_reference(self, back_reference):
+    def __set_back_reference(self, back_reference):
+        if back_reference is None:
+            return
+        if len(back_reference) != 2:
+            raise LodelDataHandlerException("A tuple(LeObjectChild, fieldname) \
+expected but got '%s'" % back_reference)
+        
         self.__back_reference = back_reference
 
     ##@brief Check value
