@@ -37,29 +37,18 @@ PC_PYTHON_CHECK_MODULE([lxml], ,
 	AC_MSG_ERROR([Module lxml not found but mandatory for lodel2]))
 #Webui deps
 AC_SUBST([WEBUI], 'True')
-PC_PYTHON_CHECK_MODULE([jinja2], ,
+PC_PYTHON_CHECK_MODULE_VERSION([jinja2], [2.7.3], [], ,
 	AC_MSG_WARN([Module jinja2 not found but mandatory for default web interface])
 	AC_SUBST([WEBUI], 'False'))
-PC_PYTHON_CHECK_MODULE([werkzeug], ,
+PC_PYTHON_CHECK_MODULE_VERSION([werkzeug], [0.9], [], , 
 	AC_MSG_WARN([Module werkzeug not found but mandatory for default web interface])
 	AC_SUBST([WEBUI], 'False'))
 #Mongo datasource deps
 AC_SUBST([PYMONGO], 'True') #Can be found in lodel/buildconf.py
-PC_PYTHON_CHECK_MODULE([pymongo], ,
-	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
-	AC_SUBST([PYMONGO], 'False'))
-
-#
-#BEIGN
-#
-PC_PYTHON_CHECK_MODULE_VERSION([pymongo], [2.7.1], ,
+PC_PYTHON_CHECK_MODULE_VERSION([pymongo], [2.7], [2.8], ,
 	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
 	AC_SUBST([PYMONGO], 'False')
 )
-
-#
-# STOPE
-#
 
 #Documentation checks
 AC_SUBST([DOCOK], 'OK')
