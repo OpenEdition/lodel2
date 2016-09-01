@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef, FieldValidationError
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef, FieldValidationError, DataNoneValid
 
 from lodel import logger
 
@@ -21,14 +21,9 @@ class List(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        if isinstance(value, list) or isinstance(value, str):
-            val, expt = super()._check_data_value(value)
-        else:
-            return None, FieldValidationError("List or string expected for a list field")
-        #if not isinstance(expt, Exception):
-        #    val = list(val)
-
-        return val, expt
+        super()._check_data_value(value)
+        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
+            raise FieldValidationError("List or string expected for a set field")
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):
@@ -44,11 +39,9 @@ class Set(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        if isinstance(value, set) or isinstance(value, str):
-            val, expt = super()._check_data_value(value)
-        else:
-            return None, FieldValidationError("Set or string expected for a set field")
-        return val, expt
+        super()._check_data_value(value)
+        if (expt is None and not (isinstance(val, set) or isinstance(val, str))):
+            raise FieldValidationError("Set or string expected for a set field")
     
 ##@brief Child class of MultipleRef where references are represented in the form of a python dict
 class Map(MultipleRef):
@@ -64,16 +57,14 @@ class Map(MultipleRef):
     # @param value *
     # @return tuple(value, exception)
     def _check_data_value(self, value):
-        val, expt = super()._check_data_value(value)
-        if not isinstance(value, dict):
-            return None, FieldValidationError("Values for dict fields should be dict")
-        return (
-                None if isinstance(expt, Exception) else value,
-                expt)
+        super()._check_data_value(value)
+        if (expt is None and not isinstance(val, dict)):
+            raise FieldValidationError("Values for dict fields should be dict")
 
 ##@brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
     
+    directly_editable = False
     ##@brief Instanciate a data handler handling hierarchical relation with constraints
     # @param back_reference tuple : Here it is mandatory to have a back ref (like a parent field)
     # @param max_depth int | None :  limit of depth
@@ -85,9 +76,6 @@ class Hierarch(MultipleRef):
                             **kwargs)
 
     def _check_data_value(self, value):
-        if isinstance(value, list) or isinstance(value, str):
-            val, expt = super()._check_data_value(value)
-        else:
-            return None, FieldValidationError("Set or string expected for a set field")
-        return val, expt
-
+        super()._check_data_value(value)
+        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
+            raise FieldValidationError("List or string expected for a set field")

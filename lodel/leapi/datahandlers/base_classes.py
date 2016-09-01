@@ -8,9 +8,11 @@ import copy
 import importlib
 import inspect
 import warnings
-
+from lodel.exceptions import *
 from lodel import logger
 
+class DataNoneValid(Exception):
+    pass
 
 class FieldValidationError(Exception):
     pass
@@ -31,6 +33,7 @@ class DataHandler(object):
     ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
     
+    directly_editable = True
     ##@brief constructor
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
@@ -53,7 +56,6 @@ class DataHandler(object):
             if error:
                 raise error
             del(kwargs['default'])
-
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
 
@@ -74,23 +76,32 @@ class DataHandler(object):
     def is_internal(self):
         return self.internal is not False
 
-    ##@brief calls the data_field defined _check_data_value() method
-    #@ingroup lodel2_dh_checks
-    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
-    #@ref _construct_data() and @ref lodel2_dh_check_impl )
-    #@return tuple (value, error|None)
-    def check_data_value(self, value):
+
+    def _check_data_value(self, value):
         if value is None:
             if not self.nullable:
-                return None, TypeError("'None' value but field is not nullable")
-            return None, None
-        return self._check_data_value(value)
-    
-    ##@brief Designed to be implemented in child classes
-    def _check_data_value(self, value):
-        
+                print(LodelExeption)
+                raise LodelExceptions("None value is forbidden")
+            print(self.nullable, value)
+            raise DataNoneValid("None with a nullable. GOTO CHECK")
         return value, None
 
+#
+#    ##@brief calls the data_field defined _check_data_value() method
+#    #@ingroup lodel2_dh_checks
+#    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
+#    #@ref _construct_data() and @ref lodel2_dh_check_impl )
+#    #@return tuple (value, error|None)
+    def check_data_value(self, value):
+        try:
+            self._check_data_value(value)
+        except DataNoneValid as expt:
+            return value, None
+        except LodelExceptions as expt:
+            return None, expt
+        return value, None
+
+#
     ##@brief checks if this class can override the given data handler
     # @param data_handler DataHandler
     # @return bool
@@ -250,11 +261,15 @@ class Reference(DataHandler):
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
-        ##@brief set of allowed LeObject child classes
         self.__allowed_classes = set() if allowed_classes is None else set(allowed_classes)
-        ##@brief Stores back references informations
-        self.__back_reference = None
-        self.__set_back_reference(back_reference)
+        self.allowed_classes = list() if allowed_classes is None else allowed_classes
+        
+        if back_reference is not None:
+            if len(back_reference) != 2:
+                raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
+            #if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0]) or not isinstance(back_reference[1], str):
+            #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
+        self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
  
     ##@brief Property that takes value of a copy of the back_reference tuple
@@ -275,30 +290,22 @@ class Reference(DataHandler):
         return copy.copy(self.__allowed_classes)
 
     ##@brief Set the back reference for this field.
-    def __set_back_reference(self, back_reference):
-        if back_reference is None:
-            return
-        if len(back_reference) != 2:
-            raise LodelDataHandlerException("A tuple(LeObjectChild, fieldname) \
-expected but got '%s'" % back_reference)
-        
+    def _set_back_reference(self, back_reference):
         self.__back_reference = back_reference
 
     ##@brief Check value
     #@param value *
     #@return tuple(value, exception)
     #@todo implement the check when we have LeObject to check value
-    def check_data_value(self, value):
-        for elt in self.__allowed_classes:
-            for k, v in elt.fields().items():
-            # k is a fieldname and v is a datahandler instance
-                if v.check_data_value(value)[0] is not None:
-                    return value, None
+    def _check_data_value(self, value):
+        super()._check_data_value(value)
+        elt = self.__allowed_classes[0]
+        uid = elt.uid_fieldname()[0]# TODO multiple uid is broken
+        if (expt is None and not (isinstance(value, LeObject)) or (value is uid)):
+            raise FieldValidationError("LeObject instance or id exxpected for a reference field")
 
-    def construct_data(self, emcomponent, fname, datas, cur_value)
-        super().construct_data(self, emcomponent, fname, datas, cur_value)
-
-
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        super().construct_data(emcomponent, fname, datas, cur_value)
 
     ##@brief Check datas consistency
     #@param emcomponent EmComponent : An EmComponent child class instance
@@ -315,8 +322,7 @@ expected but got '%s'" % back_reference)
             return rep
         if self.back_reference is None:
             return True
-        #Checking back reference consistency
-
+        
         # !! Reimplement instance fetching in construct data !!
         dh = emcomponent.field(fname)
         uid = datas[emcomponent.uid_fieldname()[0]] #multi uid broken here
@@ -341,12 +347,11 @@ class SingleRef(Reference):
     def __init__(self, allowed_classes = None, **kwargs):
         super().__init__(allowed_classes = allowed_classes)
  
-    def _check_data_value(self, value):
-        val, expt = super()._check_data_value(value)
-        if not isinstance(expt, Exception):
-            if len(val) > 1:
-                return None, FieldValidationError("Only single values are allowed for SingleRef fields")
-        return val, expt
+    def check_data_value(self, value):
+        super()._check_data_value(value)
+        if (expt is None and (len(val)>1)):
+            raise FieldValidationError("List or string expected for a set field")
+
 
 
 ##@brief This class represent a data_handler for multiple references to another object
@@ -363,25 +368,16 @@ class MultipleRef(Reference):
         super().__init__(**kwargs)
 
         
-    def check_data_value(self, value):
-        value, expt = super().check_data_value(value)
-        if expt is not None:
-            #error in parent
-            return value, expt
-        elif value is None:
-            #none value
-            return value, expt
-
-        expt = None
-     
-        if isinstance(value, str):
-            value, expt = super()._check_data_value(value)
-        elif not hasattr(value, '__iter__'):
-            return None, FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
+    def _check_data_value(self, value):
+        super()._check_data_value(value)
+        if not hasattr(value, '__iter__'):
+            raise FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
             if self.max_item < len(value):
-                return None, FieldValidationError("Too many items")
-        return value, expt
+                raise FieldValidationError("Too many items")
+        ref_list = []
+        for v in value.items():
+            ref_list.append(super()._check_data_value(v))
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
         cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
