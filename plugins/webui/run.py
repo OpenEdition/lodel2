@@ -44,9 +44,9 @@ def cookie_hash(token):
 #@return None or a session token
 def load_cookie(request):
     token = request.cookies.get(COOKIE_SESSION_ID)
-    token=token.encode()
     if token is None or len(token) == 0:
         return None
+    token=token.encode()
     hashtok = request.cookies.get(COOKIE_SESSION_HASH)
     if hashtok is None:
         raise ClientAuthenticationFailure(
