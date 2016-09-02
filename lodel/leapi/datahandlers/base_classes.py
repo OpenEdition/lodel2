@@ -77,6 +77,11 @@ class DataHandler(object):
     def is_internal(self):
         return self.internal is not False
 
+    ##brief check if a value can be nullable
+    #@param value *
+    #@throw DataNoneValid if value is None and nullable. LodelExceptions if not nullable 
+    #@return value (if not None)
+    # @return value
     def _check_data_value(self, value):
         if value is None:
             if not self.nullable:
@@ -84,12 +89,13 @@ class DataHandler(object):
             raise DataNoneValid("None with a nullable. GOTO CHECK")
         return value
 
-#
-#    ##@brief calls the data_field defined _check_data_value() method
-#    #@ingroup lodel2_dh_checks
-#    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
-#    #@ref _construct_data() and @ref lodel2_dh_check_impl )
-#    #@return tuple (value, error|None)
+
+    ##@brief calls the data_field defined _check_data_value() method
+    #@ingroup lodel2_dh_checks
+    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
+    #@ref _construct_data() and @ref lodel2_dh_check_impl)
+
+    #@return tuple (value, Exceptions)
     def check_data_value(self, value):
         try:
             value = self._check_data_value(value)
@@ -98,7 +104,7 @@ class DataHandler(object):
         except (LodelExceptions, FieldValidationError) as expt:
             return None, expt
         return value, None
-#
+
     ##@brief checks if this class can override the given data handler
     # @param data_handler DataHandler
     # @return bool
@@ -290,16 +296,17 @@ class Reference(DataHandler):
     def _set_back_reference(self, back_reference):
         self.__back_reference = back_reference
 
-    ##@brief Check value
+    ##@brief Check and cast value in appropriate type
     #@param value *
-    #@return tuple(value, exception)
-    #@todo implement the check when we have LeObject to check value
+    #@throw FieldValidationError if value is an appropriate type 
+    #@return value
+    #@todo implement the check when we have LeObject uid check value
     def _check_data_value(self, value):
         value= super()._check_data_value(value)
         elt = self.__allowed_classes[0]
         uid = elt.uid_fieldname()[0]# TODO multiple uid is broken
         if (expt is None and not (isinstance(value, LeObject)) or (value is uid)):
-            raise FieldValidationError("LeObject instance or id exxpected for a reference field")
+            raise FieldValidationError("LeObject instance or id expected for a reference field")
         return value
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
@@ -345,6 +352,10 @@ class SingleRef(Reference):
     def __init__(self, allowed_classes = None, **kwargs):
         super().__init__(allowed_classes = allowed_classes)
  
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if (expt is None and (len(val)>1)):
@@ -366,7 +377,11 @@ class MultipleRef(Reference):
         self.max_item = max_item
         super().__init__(**kwargs)
 
-       #@TODO  checkig one by one and put error in a list
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
+    #@TODO  checkig one by one and put error in a list
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if not hasattr(value, '__iter__'):

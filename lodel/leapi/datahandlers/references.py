@@ -17,9 +17,10 @@ class List(MultipleRef):
     def __init__(self, max_length = None, **kwargs):
         super().__init__(**kwargs)
 
-    ##@brief Check value
-    # @param value *
-    # @return tuple(value, exception)
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         super()._check_data_value(value)
         if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
@@ -35,9 +36,10 @@ class Set(MultipleRef):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    ##@brief Check value
-    # @param value *
-    # @return tuple(value, exception)
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         super()._check_data_value(value)
         if (expt is None and not (isinstance(val, set) or isinstance(val, str))):
@@ -53,9 +55,10 @@ class Map(MultipleRef):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    ##@brief Check value
-    # @param value *
-    # @return tuple(value, exception)
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         super()._check_data_value(value)
         if (expt is None and not isinstance(val, dict)):
@@ -75,6 +78,10 @@ class Hierarch(MultipleRef):
                             max_childs = max_childs,
                             **kwargs)
 
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         super()._check_data_value(value)
         if (expt is None and not (isinstance(val, list) or isinstance(val, str))):

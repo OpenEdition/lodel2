@@ -46,6 +46,10 @@ max_length and regex'
         self.compiled_re = re.compile(regex)#trigger an error if invalid regex
         super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if not self.compiled_re.match(value) or len(value) > self.max_length:
