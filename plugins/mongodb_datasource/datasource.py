@@ -11,14 +11,18 @@ from pymongo.errors import BulkWriteError
 
 from lodel import logger
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef
+from lodel.exceptions import LodelException, LodelFatalError
 
 from . import utils
+from .exceptions import *
 from .utils import object_collection_name, collection_name, \
     MONGODB_SORT_OPERATORS_MAP, connection_string, mongo_fieldname
 
-class MongoDbDataSourceError(Exception):
-    pass
 
+##@brief Datasource class
+#@ingroup plugin_mongodb_datasource
+#@todo Make it inherit from an abstract datasource !
 class MongoDbDatasource(object):
 
     ##@brief Stores existing connections
@@ -238,6 +242,276 @@ class MongoDbDatasource(object):
             target.make_consistency(datas=new_datas)
         return list(res.inserted_ids)
     
+    ##@brief Update back references of an object
+    #@ingroup plugin_mongodb_bref_op
+    #
+    #old_datas and new_datas arguments are set to None to indicate 
+    #insertion or deletion. Calls examples :
+    #@par LeObject insert __update backref call
+    #<pre>
+    #Insert(datas):
+    #  self.make_insert(datas)
+    #  self.__update_backref(self.__class__, None, datas)
+    #</pre>
+    #@par LeObject delete __update backref call
+    #Delete()
+    #  old_datas = self.datas()
+    #  self.make_delete()
+    #  self.__update_backref(self.__class__, old_datas, None)
+    #@par LeObject update __update_backref call
+    #<pre>
+    #Update(new_datas):
+    #  old_datas = self.datas()
+    #  self.make_udpdate(new_datas)
+    #  self.__update_backref(self.__class__, old_datas, new_datas)
+    #</pre>
+    #
+    #@param target LeObject child class
+    #@param old_datas dict : datas state before update
+    #@param new_datas dict : datas state after the update process
+    #retun None
+    def __update_backref(self, target, old_datas, new_datas):
+        #upd_dict is the dict that will allow to run updates in an optimized
+        #way (or try to help doing it)
+        #
+        #It's struct looks like :
+        # { LeoCLASS : {
+        #       UID1: (
+        #           LeoINSTANCE,
+        #           { fname1 : value, fname2: value }),
+        #       UID2 (LeoINSTANCE, {fname...}),
+        #       },
+        #   LeoClass2: {...
+        #
+        upd_dict = {}
+        for fname, fdh in target.reference_handlers():
+            oldd = fname in old_datas
+            newd = fname in new_datas
+            if (oldd and newd and old_datas[fname] == new_datas[fname])\
+                    or not(oldd or newd):
+                #No changes or not concerned
+                continue
+            bref_cls = fdh.data_handler[0]
+            bref_fname = fdh.data_handler[1]
+            if issubclass(fdh, MultipleRef):
+                #fdh is a multiple ref. So the update preparation will be
+                #divided into two loops :
+                #- one loop for deleting old datas
+                #- one loop for inserting updated datas
+                #
+                #Preparing the list of values to delete or to add
+                if newd and oldd:
+                    old_values = old_datas[fname]
+                    new_values = new_datas[fname]
+                    to_del = [  val
+                                for val in old_values
+                                if val not in new_values]
+                    to_add = [  val
+                                for val in new_values
+                                if val not in old_values]
+                elif oldd and not newdd:
+                    to_del = old_datas[fname]
+                    to_add = []
+                elif not oldd and newdd:
+                    to_del = []
+                    to_add = new_datas[fname]
+                #Calling __back_ref_upd_one_value() with good arguments
+                for vtype, vlist in [('old',to_del), ('new', to_add)]:
+                    for value in vlist:
+                        #fetching backref infos
+                        bref_infos = self.__bref_get_check(
+                            bref_cls, value, bref_fname)
+                        #preparing the upd_dict
+                        upd_dict = self.__update_backref_upd_dict_prepare(
+                            upd_dict, bref_infos)
+                        #preparing updated bref_infos
+                        bref_cls, bref_leo, bref_dh, bref_value = bref_infos
+                        bref_infos = tuple(bref_cls, bref_leo, bref_dh,
+                            upd_dict[bref_cls][uid_val][1][bref_fname])
+                        vdict = {vtype: value}
+                        #fetch and store updated value
+                        new_bref_val = self.__back_ref_upd_one_value(
+                            fname, fdh, bref_infos, **vdict)
+                        upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
+            else:
+                #fdh is a single ref so the process is simpler, we do not have
+                #to loop and we may do an update in only one
+                #__back_ref_upd_one_value() call by giving both old and new
+                #value
+                vdict = {}
+                if oldd:
+                    vdict['old'] = new_datas[fname]
+                    uid_val = vdict['old']
+                if newd:
+                    vdict['new'] = new_datas[fname]
+                    if not oldd:
+                        uid_val = vdict['new']
+                #Fetching back ref infos
+                bref_infos = self.__bref_get_check(
+                    bref_cls, uid_val, bref_fname)
+                #prepare the upd_dict
+                upd_dict = self.__update_backref_upd_dict_prepare(
+                    upd_dict, bref_infos)
+                #forging update bref_infos
+                bref_cls, bref_leo, bref_dh, bref_value = bref_infos
+                bref_infos = tuple(bref_cls, bref_leo, bref_dh,
+                        upd_dict[bref_cls][uid_val][1][bref_fname])
+                #fetche and store updated value
+                new_bref_val = self.__back_ref_upd_one_value(
+                    fname, fdh , **vdict)
+                upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
+        #Now we've got our upd_dict ready.
+        #running the updates
+        for bref_cls, uid_dict in upd_dict.items():
+            for uidval, (leo, datas) in uid_dict.items():
+                leo.update(datas)
+    
+    ##@brief Utility function designed to handle the upd_dict of 
+    #__update_backref()
+    #
+    #@param upd_dict dict : in & out args modified by reference
+    #@param bref_infos tuple : as returned by __bref_get_check()
+    #@return the updated version of upd_dict
+    @staticmethod
+    def __update_backref_upd_dict_prepare(upd_dict,bref_infos):
+        bref_cls, bref_leo, bref_dh, bref_value = bref_infos
+        if bref_cls not in upd_dict:
+            upd_dict[bref_cls] = {}
+        if uid_val not in upd_dict[bref_cls]:
+            upd_dict[bref_cls][uid_val] = tuple(bref_leo, {})
+        if bref_fname not in upd_dict[bref_cls][uid_val]:
+            upd_dict[bref_cls][uid_val][1][bref_fname] = bref_value
+        return upd_dict
+        
+        
+    ##@brief Prepare a one value back reference update
+    #@param fname str : the source Reference field name
+    #@param fdh DataHandler : the source Reference DataHandler
+    #@param bref_infos tuple : as returned by __bref_get_check() method
+    #@param old mixed : (optional **values) the old value
+    #@param new mixed : (optional **values) the new value
+    #@return the new back reference field value
+    def __back_ref_upd_one_value(self, fname, fdh, bref_infos, **values):
+        bref_cls, bref_leo, bref_dh, bref_val = bref_infos
+        oldd = 'old' in values
+        newd = 'new' in values
+        if oldd:
+            #
+            # We got an old value. It can be an update or a delete
+            #
+            old_value = old_datas[fname]
+            bref_cls, bref_leo, bref_dh, bref_val = self.__bref_get_check(
+                bref_cls, old_value, bref_fname)
+            if issubclass(bref_dh, MultipleRef):
+                #
+                # Multiple ref update (iterable)
+                if old_value not in bref_val:
+                    raise MongodbConsistencyError("The value we want to \
+replace in this back reference update was not found in the back referenced \
+object : %s field %s" % (bref_leo, ref_fname))
+                if isinstance(old_value, set):
+                    #Specific handling for set (values are not indexed)
+                    bref_val -= set([old_value])
+                    if newd:
+                        # update value
+                        bref_val |= set([new_datas[fname]])
+                else:
+                    # Assert that we can handles all other iterable this 
+                    #way
+                    for ki, val in bref_val:
+                        if val == old_value:
+                            if newd:
+                                #Update
+                                bref_val[ki] = new_datas[fname]
+                            else:
+                                #Deletion
+                                del(bref_val[ki])
+                            break
+                    else:
+                        raise LodelFatalError("This error should never be \
+raised ! We just checked that oldv is in bref_val...")
+            else:
+                #Single ref handling
+                if bref_val != old_value:
+                    raise MongoDbConsistencyError("The value we wanted to \
+update do not match excpected value during aback reference  singleReference \
+update : expected value was '%s' but found '%s' in field '%s' of leo %s" % (
+                    old_value, bref_val, ref_fname, bref_leo))
+                
+                if newd:
+                    #update
+                    bref_val = new_datas[fname]
+                else:
+                    #delete
+                    if not hasattr(bref_dh, "default"): 
+                        raise MongoDbConsistencyError("Unable to delete a \
+value for a back reference update. The concerned field don't have a default \
+value : in %s field %s" % (bref_leo, ref_fname))
+                    bref_val = getattr(bref_dh, "default")
+        elif newd:
+            #It's an "insert"
+            new_value = new_datas[fname]
+            if issubclass(bref_dh, MultipleRef):
+                if isinstance(bref_val, set):
+                    bref_val |= set([new_value])
+                else:
+                    bref_val.append(new_value)
+            else:
+                bref_val = new_value
+        return bref_val
+
+        
+    
+    ##@brief Fetch back reference informations
+    #@param bref_cls LeObject child class : __back_reference[0]
+    #@param uidv mixed : UID value (the content of the reference field)
+    #@param bref_fname str : the name of the back_reference field
+    #@return tuple(bref_class, bref_LeObect_instance, bref_datahandler,
+    #bref_value)
+    #@throw MongoDbConsistencyError when LeObject instance not found given
+    #uidv
+    #@throw LodelFatalError if the back reference field is not a Reference
+    #subclass (major failure)
+    def __bref_get_check(self, bref_cls, uidv, bref_fname):
+        bref_leo = bref_cls.get_from_uid(old_datas[fname])
+        if len(bref_leo) == 0:
+            raise MongoDbConsistencyError("Unable to get the object we make \
+reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
+        bref_dh = bref_leo.data_handler(bref_fname)
+        if not isinstance(bref_leo, Reference):
+            raise LodelFatalError("Found a back reference field that \
+is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
+        bref_val = bref_leo.data(bref_fname)
+        return (bref_leo.__class__, bref_leo, bref_dh, bref_val)
+            
+
+        
+    
+    ##@defgroup plugin_mongodb_bref_op BackReferences operations
+    #@brief Contains back_reference operations
+    #@ingroup plugin_mongodb_datasource
+    #
+    #Back reference operations are implemented by privates functions 
+    # - __bref_op_update()
+    # - __bref_op_delete()
+    # - __bref_op_add()
+    #
+    #This 3 methods returns the same thing, a dict containing the field
+    #name to update associated with the new value of this field.
+    #
+    #This 3 methods also expect that the following tests was done :
+    # - the datahandler pointed by the back reference is a child class of
+    #base_classes.Reference
+    # - the value of this field contains or is the given old value (not for
+    #the __bref_op_add() method)
+    #
+    #All this methods asserts that we allready checks that the given LeObject
+    #instance concerned field (the one stored as back reference) is a child
+    #class of base_classes.Reference
+    #
+    #@todo factorise __bref_op_update() and __bref_op_delete() and update this
+    #comment
+
     ##@brief Act on abstract LeObject child
     #
     #This method is designed to be called by insert, select and delete method

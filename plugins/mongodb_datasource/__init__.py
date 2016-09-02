@@ -19,3 +19,11 @@ __fullname__ = "MongoDB plugin"
 def _activate():
     from lodel import buildconf
     return buildconf.PYMONGO
+
+#
+#   Doxygen comments
+#
+
+##@defgroup plugin_mongodb_datasource MongoDB datasource plugin
+#@brief Doc about mongodb datasource
+

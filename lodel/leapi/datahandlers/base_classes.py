@@ -256,10 +256,19 @@ class Reference(DataHandler):
         self.__back_reference = None
         self.__set_back_reference(back_reference)
         super().__init__(internal=internal, **kwargs)
-    
+ 
+    ##@brief Property that takes value of a copy of the back_reference tuple
     @property
     def back_reference(self):
         return copy.copy(self.__back_reference)
+    
+    ##@brief Property that takes value of datahandler of the backreference or 
+    #None
+    @property
+    def back_ref_datahandler(self):
+        if self.__back_reference is None:
+            return None
+        return self.__back_reference[0].data_handler(self.__back_reference[1])
 
     @property
     def linked_classes(self):

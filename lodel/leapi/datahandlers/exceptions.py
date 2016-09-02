@@ -1,0 +1,2 @@
+def LodelDataHandlerException(Exception):
+    pass

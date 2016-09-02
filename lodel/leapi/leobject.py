@@ -13,6 +13,7 @@ from lodel.plugin.exceptions import *
 from lodel.plugin.hooks import LodelHook
 from lodel.plugin import Plugin, DatasourcePlugin
 from lodel.leapi.datahandlers.base_classes import DatasConstructor
+from lodel.leapi.datahandlers.base_classes import Reference
 
 ##@brief Stores the name of the field present in each LeObject that indicates
 #the name of LeObject subclass represented by this object
@@ -148,6 +149,16 @@ class LeObject(object):
         if not fieldname in cls._fields:
             raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
         return cls._fields[fieldname]
+    
+    ##@brief Getter for references datahandlers
+    #@param with_backref bool : if true return only references with back_references
+    #@return <code>{'fieldname': datahandler, ...}</code>
+    @classmethod
+    def reference_handlers(cls, with_backref = True):
+        return {    fname: fdh 
+                    for fname, fdh in cls.fields(True)
+                    if issubclass(fdh, Reference) and \
+                        (not with_backref or fdh.backreference is not None)}
     
     ##@brief Return a LeObject child class from a name
     # @warning This method has to be called from dynamically generated LeObjects
@@ -604,7 +615,16 @@ construction and consitency when datas are not complete\n")
         
         return objects
     
-
+    ##@brief Retrieve an object given an UID
+    #@todo broken multiple UID
+    @classmethod
+    def get_from_uid(cls, uid):
+        uidname = cls.uid_fieldname()[0] #Brokes composed UID
+        res = cls.get([(uidname,'=', uid)])
+        if len(res) > 1:
+            raise LodelFatalError("Get from uid returned more than one \
+object ! For class %s with uid value = %s" % (cls, uid))
+        return res
 
         
         

@@ -2,6 +2,10 @@
 
 from lodel.settings.validator import SettingValidator
 
+##@brief Mongodb datasource plugin confspec
+#@ingroup plugin_mongodb_datasource
+#
+#Describe mongodb plugin configuration. Keys are :
 CONFSPEC = {
     'lodel2.datasource.mongodb_datasource.*':{
         'read_only': (False, SettingValidator('bool')),

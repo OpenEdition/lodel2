@@ -8,14 +8,8 @@ from lodel.leapi.datahandlers.base_classes import DataHandler
 from lodel.plugin import LodelHook
 from leapi_dyncode import *
 from .datasource import MongoDbDatasource
+from .exceptions import *
 from lodel import logger
-
-class MigrationHandlerChangeError(Exception):
-    pass
-
-
-class MigrationHandlerError(Exception):
-    pass
 
 class MigrationHandler(object):
 
