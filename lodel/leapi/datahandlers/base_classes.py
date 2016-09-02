@@ -85,17 +85,14 @@ class DataHandler(object):
     def _check_data_value(self, value):
         if value is None:
             if not self.nullable:
-                raise LodelExceptions("None value is forbidden")
-            raise DataNoneValid("None with a nullable. GOTO CHECK")
+                raise LodelExceptions("None value is forbidden for this data field")
+            raise DataNoneValid("None with a nullable. This exeption is allowed")
         return value
 
 
-    ##@brief calls the data_field defined _check_data_value() method
-    #@ingroup lodel2_dh_checks
-    #@warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
-    #@ref _construct_data() and @ref lodel2_dh_check_impl)
-
-    #@return tuple (value, Exceptions)
+    ##@brief calls the data_field (defined in derived class) _check_data_value() method
+    #@param value *
+    #@return tuple (value|None, None|error) value can be cast if NoneError
     def check_data_value(self, value):
         try:
             value = self._check_data_value(value)
@@ -353,7 +350,7 @@ class SingleRef(Reference):
         super().__init__(allowed_classes = allowed_classes)
  
     ##@brief Check and cast value in appropriate type
-    #@param value *
+    #@param value: *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
@@ -389,10 +386,13 @@ class MultipleRef(Reference):
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
-        ref_list = []
-        #Checked reference value one by one . 
+        error_list = []
         for v in value.items():
-            ref_list.append(super()._check_data_value(v))
+            val, error = super()._check_data_value(v)
+            if error:
+                error_list.append(val, error)
+        if len(error_list) >0:
+            raise FieldValidationError("MultipleRef have for error :", error_list)
         return value
 
     def construct_data(self, emcomponent, fname, datas, cur_value):

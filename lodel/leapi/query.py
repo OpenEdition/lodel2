@@ -335,7 +335,6 @@ field to use for the relational filter"
                 else:
                     rel_filters.append((ret, operator, value))
             else:
-                # Casting value given datahandler
                 value_orig = value
                 value, error = field_datahandler.check_data_value(value)
                 if isinstance(error, Exception):
