@@ -54,6 +54,7 @@ cp -R tests $testdir
 cd $testdir
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
+make refresh_plugins
 python3 loader.py $@
 
 rm -Rf $testdir

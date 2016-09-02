@@ -25,3 +25,12 @@ class InterfacePlugin(Plugin):
             raise PluginError("Maximum one interface allowed")
         super().__init__(name)
         self._instance = self
+
+    ##@brief Clear class
+    #@see plugins.Plugin::clear()
+    @classmethod
+    def clear_cls(cls):
+        if cls._instance is not None:
+            inst = cls._instance
+            cls._instance = None
+            del(inst)

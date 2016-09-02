@@ -1,6 +1,15 @@
 Dependencies :
-	with pip : see requirements.txt
-	debian stable : python3 python3-lxml python3-jinja2 python3-werkzeug python3-pymongo uwsgi-plugin-python3 mongodbd
+	lodel2 :
+		with pip : see requirements.txt
+		debian stable : python3 python3-lxml python3-jinja2 python3-werkzeug python3-pymongo uwsgi-plugin-python3 mongodbd
+	build & install :
+		debian stable : autoconf automake make
+
+Build & install :
+	./bootstrap.sh
+	./configure
+	make
+	make install
 
 Doxygen documentation generation :
 	dependencies: doxypy doxygen graphviz

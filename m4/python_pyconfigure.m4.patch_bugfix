@@ -1,0 +1,14 @@
+--- /usr/share/pyconfigure/m4/python.m4	2016-04-27 05:19:12.000000000 +0200
++++ python_pyconfigure.m4	2016-08-30 17:21:56.810623000 +0200
+@@ -475,7 +475,10 @@ except:
+ else:
+     can_use_sysconfig = True
+ if can_use_sysconfig:
+-    if python_implementation() == "CPython" and sys.version[[:3]] == '2.7':
++    # Can't use sysconfig in CPython > 3.0 in debian since it's broken :
++    # <https://bugs.launchpad.net/ubuntu/+source/python3-defaults/+bug/1408092>
++    if python_implementation() == "CPython" (
++            float(sys.version[[:3]]) > 3.0 or sys.version[[:3]] == '2.7'):
+         can_use_sysconfig = False
+ if not can_use_sysconfig:        
+     from distutils import sysconfig
