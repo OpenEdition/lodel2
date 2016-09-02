@@ -11,11 +11,6 @@ import warnings
 from lodel.exceptions import *
 from lodel import logger
 
-class DataNoneValid(Exception):
-    pass
-
-class FieldValidationError(Exception):
-    pass
 
 ##@brief Base class for all data handlers
 #@ingroup lodel2_datahandlers
@@ -378,7 +373,7 @@ class MultipleRef(Reference):
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
-    #@TODO  checkig one by one and put error in a list
+    #@TODO  Writing test error for errors when stored multiple references in one field
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if not hasattr(value, '__iter__'):

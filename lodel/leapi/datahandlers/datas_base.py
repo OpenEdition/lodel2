@@ -4,7 +4,9 @@ import datetime
 import time
 import os
 
-from lodel.leapi.datahandlers.base_classes import DataField, FieldValidationError
+from lodel.leapi.datahandlers.base_classes import DataField
+from lodel.exceptions import *
+
 
 ##@brief Data field designed to handle boolean values
 class Boolean(DataField):
@@ -18,6 +20,10 @@ class Boolean(DataField):
         #    kwargs['check_data_value'] = self._check_data_value
         super().__init__(ftype='bool', **kwargs)
 
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, bool):
@@ -34,6 +40,10 @@ class Integer(DataField):
     def __init__(self, **kwargs):
         super().__init__( **kwargs)
 
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value, strict = False):
         value = super()._check_data_value(value)
         if (strict and isinstance(value, int)):
@@ -68,6 +78,10 @@ class Varchar(DataField):
             return False
         return True
     
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, str):
@@ -75,6 +89,7 @@ class Varchar(DataField):
         if len(value) > self.max_length:
              raise FieldValidationError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
         return value
+
 ##@brief Data field designed to handle date & time 
 class DateTime(DataField):
 
@@ -91,6 +106,10 @@ class DateTime(DataField):
         self.datetime_format = '%Y-%m-%d' if 'format' not in kwargs else kwargs['format']
         super().__init__(**kwargs)
 
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if isinstance(value,str):
@@ -116,6 +135,10 @@ class Text(DataField):
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__(ftype='text', **kwargs)
     
+    ##@brief Check and cast value in appropriate type
+    #@param value *
+    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, str):

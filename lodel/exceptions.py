@@ -30,3 +30,15 @@ class LodelExceptions(LodelException):
 #@note Designed to be raised in dramatic case
 class LodelFatalError(Exception):
     pass
+
+##@brief Designed to be a catched exception.
+#
+#@note Designed to be raised in DataHandler
+class DataNoneValid(Exception):
+    pass
+    
+##@brief Designed to be a catched exception.
+#
+#@note Designed to be raised in DataHandler
+class FieldValidationError(Exception):
+    pass

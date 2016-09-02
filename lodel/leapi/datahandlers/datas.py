@@ -2,7 +2,7 @@
 import warnings
 import inspect
 from lodel.leapi.datahandlers.datas_base import *
-from lodel.leapi.datahandlers.base_classes import FieldValidationError
+from lodel.exceptions import *
 import re
 
 ##@brief Data field designed to handle formated strings

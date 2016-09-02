@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef, FieldValidationError, DataNoneValid
-
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef
+from lodel.exceptions import *
 from lodel import logger
 
 class Link(SingleRef):
