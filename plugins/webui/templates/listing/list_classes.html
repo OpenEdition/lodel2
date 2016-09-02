@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - List of Classes{% endblock %}
 {% block content %} 
-<h1>All types</h1>
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/">Home</a></li>
+  <li class="active">Types</li>
+</ol>
+<h1 class="h1_lodel">All types</h1>
 <ul>
 {% for classe in my_classes %}
     {% if classe.is_abstract() and allclasses == 1 %}

@@ -2,11 +2,11 @@
 {% block title %}Lodel 2 - Admin - Class {{ target.__name__ }} {% endblock %}
 {% block body %} 
 <ol class="breadcrumb">
-  <li><a href="/lodel_i/admin">Home</a></li>
-  <li><a href="/lodel_i/admin/classes_admin">Edition</a></li>
+  <li><a href="/{{ root_url }}/admin">Home</a></li>
+  <li><a href="/{{ root_url }}/admin/classes_admin">Edition</a></li>
   <li class="active">{{target.__name__  }}</li>
 </ol>
-<h1>Edition - {{target.__name__  }} </h1>
+<h1 class="h1_lodel">Edition - {{target.__name__  }} </h1>
 
  {% if not target.is_abstract() %}
     {% set objects = target.get(None) %}

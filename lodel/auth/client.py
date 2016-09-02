@@ -271,6 +271,13 @@ class Client(object, metaclass = ClientMetaclass):
     def is_anonymous(cls):
         return cls._assert_instance()
         #return Client._instance
+        
+    ##@brief Test wether a client is guest or logged in
+    #@return True if client is anonymous
+    #@ TODO : to be improved
+    @classmethod
+    def is_guest(cls):
+        return len(cls._instance.__session.datas) == 1
 
     ##@brief Method to call on authentication failure
     #@throw ClientAuthenticationFailure

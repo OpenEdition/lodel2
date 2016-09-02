@@ -2,11 +2,11 @@
 {% block title %}Lodel 2 - Class {{ classname }} {% endblock %}
 {% block content %} 
 <ol class="breadcrumb">
-  <li><a href="/lodel_i/">Home</a></li>
-  <li><a href="/lodel_i/list_classes">Types</a></li>
+  <li><a href="/{{ root_url }}/">Home</a></li>
+  <li><a href="/{{ root_url }}/list_classes">Types</a></li>
   <li class="active">{{ classname }}</li>
 </ol>
-<h1>Type {{ classname }} </h1>
+<h1 class="h1_lodel">Type {{ classname }} </h1>
  {% set my_class  = leapi.name2class(classname) %}
  {% if my_class.child_classes()|length >0 %}
      <h2> Childs types</h2>

@@ -1,7 +1,10 @@
 {% extends "base_backend.html" %}
 {% block title %}- Index{% endblock %}
 {% block body %}
-<h1>{{settings.sitename}} administration</h1>
+<ol class="breadcrumb">
+  <li class="active">Home</li>
+</ol>
+<h1 class="h1_lodel">{{settings.sitename}} administration</h1>
 <ul>
     <li><a href="admin/classes_admin">Edit object</a></li>
     <li><a href="admin/object_create">Create object</a></li>

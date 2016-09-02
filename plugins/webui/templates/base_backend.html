@@ -25,13 +25,14 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="/lodel_i/admin">Home</a></li>
-            <li><a href="/lodel_i/admin/object_create">Create</a></li>
-            <li><a href="/lodel_i/admin/classes_admin">Edit</a></li>
+            <li class="active"><a href="/{{ root_url }}/admin">Home</a></li>
+            <li><a href="/{{ root_url }}/admin/object_create">Create</a></li>
+            <li><a href="/{{ root_url }}/admin/classes_admin">Edit</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/lodel_i/">Front-End</a></li>
-            <li id="signin-nav"><a href="/lodel_i/signin">Sign In</a></li>
+            <li><a href="/{{ root_url }}/">Front-End</a></li>
+            <li id="signout-nav"><a href="signout">Logout</a>
+            <li id="signin-nav"><a href="/{{ root_url }}/signin">Sign In</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
