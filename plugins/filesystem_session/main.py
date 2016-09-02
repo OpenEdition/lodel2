@@ -123,18 +123,18 @@ def gc():
                 destroy_session(token)
 
 
-def set_value(token, key, value):
+def set_session_value(token, key, value):
     session = restore_session(token)
     session[key] = value
     save_session(token, session)
 
 
-def get_value(token, key):
+def get_session_value(token, key):
     session = restore_session(token)
     return session[key]
 
 
-def del_value(token, key):
+def del_session_value(token, key):
     session = restore_session(token)
     if key in session:
         del(session[key])
