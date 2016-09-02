@@ -1,7 +1,7 @@
 import unittest
 
 from lodel.leapi.datahandlers.datas import Varchar, Integer
-
+from lodel.leapi.datahandlers.base_classes import FieldValidationError
 
 class VarcharTestCase(unittest.TestCase):
 
@@ -16,7 +16,7 @@ class VarcharTestCase(unittest.TestCase):
 
         _, error = test_varchar.check_data_value("c" * 11)
         self.assertIsNotNone(error)
-        self.assertIsInstance(error, ValueError)
+        self.assertIsInstance(error, FieldValidationError)
 
     def test_can_override(self):
         test_varchar1 = Varchar()

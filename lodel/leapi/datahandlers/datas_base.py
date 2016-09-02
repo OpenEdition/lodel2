@@ -4,7 +4,7 @@ import datetime
 import time
 import os
 
-from lodel.leapi.datahandlers.base_classes import DataField
+from lodel.leapi.datahandlers.base_classes import DataField, FieldValidationError
 
 ##@brief Data field designed to handle boolean values
 class Boolean(DataField):
@@ -14,18 +14,15 @@ class Boolean(DataField):
 
     ##@brief A boolean field
     def __init__(self, **kwargs):
-        if 'check_data_value' not in kwargs:
-            kwargs['check_data_value'] = self.check_data_value
+        #if 'check_data_value' not in kwargs:
+        #    kwargs['check_data_value'] = self._check_data_value
         super().__init__(ftype='bool', **kwargs)
 
     def _check_data_value(self, value):
-        error = None
-        try:
-            if type(value) != bool:
-                raise TypeError()
-        except(ValueError, TypeError):
-            error = TypeError("The value '%s' is not, and will never, be a boolean" % value)
-        return value, error
+        value = super()._check_data_value(value)   
+        if not isinstance(value, bool):
+            raise FieldValidationError("The value '%s' is not, and will never, be a boolean" % value)
+        return value
 
 ##@brief Data field designed to handle integer values
 class Integer(DataField):
@@ -37,17 +34,17 @@ class Integer(DataField):
     def __init__(self, **kwargs):
         super().__init__( **kwargs)
 
-    def _check_data_value(self, value):
-        error = None
+    def _check_data_value(self, value, strict = False):
+        value = super()._check_data_value(value)
+        if (strict and isinstance(value, int)):
+            raise FieldValidationError("The value '%s' is not a python type integer" % value)
         try:
             value = float(value)
-            if value % 1 == 0:
-                value = int(value)
-            else:
+            if value != int(value):
                 raise TypeError()
         except(ValueError, TypeError):
-            error = TypeError("The value '%s' is not, and will never, be an integer" % value)
-        return value, error
+            raise FieldValidationError("The value '%s' is not, and will never, be an integer" % value)
+        return value
 
 ##@brief Data field designed to handle string
 class Varchar(DataField):
@@ -72,17 +69,12 @@ class Varchar(DataField):
         return True
     
     def _check_data_value(self, value):
-        error = None
-        try:
-            value = str(value)
-            if len(value) > self.max_length:
-                raise ValueError
-        except TypeError:
-            error = TypeError("The value '%s' can't be a str" % value)
-        except ValueError:
-            error = ValueError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
-        return value, error
-
+        value = super()._check_data_value(value)   
+        if not isinstance(value, str):
+            raise FieldValidationError("The value '%s' can't be a str" % value)
+        if len(value) > self.max_length:
+             raise FieldValidationError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
+        return value
 ##@brief Data field designed to handle date & time 
 class DateTime(DataField):
 
@@ -100,15 +92,16 @@ class DateTime(DataField):
         super().__init__(**kwargs)
 
     def _check_data_value(self, value):
-        error = None
+        value = super()._check_data_value(value)
         if isinstance(value,str):
             try:
                 datetime_value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
-            except ValueError:
-                error = ValueError("The value '%s' cannot be converted as a datetime" % value)
+            except ValueError: 
+                raise FieldValidationError("The value '%s' cannot be converted as a datetime" % value)
         elif not isinstance(value, datetime.datetime):
-            error = ValueError("Tue value has to be a string or a datetime")
-        return value, error
+            raise FieldValidationError("Tue value has to be a string or a datetime")
+        else:
+            return value
 
     def _construct_data(self, emcomponent, fname, datas, cur_value):
         if (self.now_on_create and cur_value is None) or self.now_on_update:
@@ -124,12 +117,10 @@ class Text(DataField):
         super(self.__class__, self).__init__(ftype='text', **kwargs)
     
     def _check_data_value(self, value):
-        error = None
-        try:
-            value = str(value)
-        except (ValueError, TypeError):
-            error = ValueError("The content passed to this Text field is not a convertible to a string")
-        return value, error
+        value = super()._check_data_value(value)   
+        if not isinstance(value, str):
+            raise FieldValidationError("The content passed to this Text field is not a convertible to a string")
+        return value
 
 ##@brief Data field designed to handle Files
 class File(DataField):
@@ -145,6 +136,5 @@ class File(DataField):
 
     # @todo Add here a check for the validity of the given value (should have a correct path syntax)
     def _check_data_value(self, value):
-        error = None
-        return value, error
+        return super()._check_data_value(value)   
 

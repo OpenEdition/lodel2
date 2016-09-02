@@ -336,9 +336,11 @@ field to use for the relational filter"
                     rel_filters.append((ret, operator, value))
             else:
                 # Casting value given datahandler
-                value, error = field_datahandler._check_data_value(value)
+                value_orig = value
+                value, error = field_datahandler.check_data_value(value)
+                if isinstance(error, Exception):
+                    value = value_orig
                 res_filters.append((field,operator, value))
-        
         if len(err_l) > 0:
             raise LeApiDataCheckErrors(
                                         "Error while preparing filters : ",

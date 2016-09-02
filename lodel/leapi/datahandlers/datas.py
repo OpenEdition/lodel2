@@ -2,6 +2,7 @@
 import warnings
 import inspect
 from lodel.leapi.datahandlers.datas_base import *
+from lodel.leapi.datahandlers.base_classes import FieldValidationError
 import re
 
 ##@brief Data field designed to handle formated strings
@@ -46,12 +47,11 @@ max_length and regex'
         super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
     def _check_data_value(self, value):
-        error = None
+        value = super()._check_data_value(value)
         if not self.compiled_re.match(value) or len(value) > self.max_length:
-            value = ''
             msg = '"%s" doesn\'t match the regex "%s"' % (value, self.regex)
-            error = TypeError(msg)
-        return value, error
+            raise FieldValidationError(msg)
+        return value
 
     def can_override(self, data_handler):
         if not super().can_override(data_handler):

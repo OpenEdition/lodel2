@@ -18,7 +18,7 @@ class RegexTestCase(unittest.TestCase):
                            max_length=15)
         for test_value in ['800.9.10.5', 'test_string_value', '999.999.999.999']:
             value, error = test_regex.check_data_value(test_value)
-            self.assertEqual(value, '')
+            self.assertEqual(value, None)
             self.assertIsNotNone(error)
 
     def test_check_max_length(self):
@@ -27,7 +27,7 @@ class RegexTestCase(unittest.TestCase):
         for test_value in ['cccccc8', 'ccccccccccccccccccccccccccccccccc8']:
             value, error = test_regex.check_data_value(test_value)
             if len(test_value)>test_max_length:
-                self.assertEqual(value, '')
+                self.assertEqual(value, None)
                 self.assertIsNotNone(error)
             else:
                 self.assertIsNone(error)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- co:ding: utf-8 -*-
 
 ## @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
 #
@@ -71,20 +71,18 @@ class DataHandler(object):
     def is_primary_key(self):
         return self.primary_key
 
+
     ##@brief checks if a fieldtype is internal
     # @return bool
     def is_internal(self):
         return self.internal is not False
 
-
     def _check_data_value(self, value):
         if value is None:
             if not self.nullable:
-                print(LodelExeption)
                 raise LodelExceptions("None value is forbidden")
-            print(self.nullable, value)
             raise DataNoneValid("None with a nullable. GOTO CHECK")
-        return value, None
+        return value
 
 #
 #    ##@brief calls the data_field defined _check_data_value() method
@@ -94,13 +92,12 @@ class DataHandler(object):
 #    #@return tuple (value, error|None)
     def check_data_value(self, value):
         try:
-            self._check_data_value(value)
+            value = self._check_data_value(value)
         except DataNoneValid as expt:
             return value, None
-        except LodelExceptions as expt:
+        except (LodelExceptions, FieldValidationError) as expt:
             return None, expt
         return value, None
-
 #
     ##@brief checks if this class can override the given data handler
     # @param data_handler DataHandler
@@ -298,11 +295,12 @@ class Reference(DataHandler):
     #@return tuple(value, exception)
     #@todo implement the check when we have LeObject to check value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
+        value= super()._check_data_value(value)
         elt = self.__allowed_classes[0]
         uid = elt.uid_fieldname()[0]# TODO multiple uid is broken
         if (expt is None and not (isinstance(value, LeObject)) or (value is uid)):
             raise FieldValidationError("LeObject instance or id exxpected for a reference field")
+        return value
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
         super().construct_data(emcomponent, fname, datas, cur_value)
@@ -347,10 +345,11 @@ class SingleRef(Reference):
     def __init__(self, allowed_classes = None, **kwargs):
         super().__init__(allowed_classes = allowed_classes)
  
-    def check_data_value(self, value):
-        super()._check_data_value(value)
+    def _check_data_value(self, value):
+        value = super()._check_data_value(value)
         if (expt is None and (len(val)>1)):
             raise FieldValidationError("List or string expected for a set field")
+        return value
 
 
 
@@ -367,17 +366,19 @@ class MultipleRef(Reference):
         self.max_item = max_item
         super().__init__(**kwargs)
 
-        
+       #@TODO  checkig one by one and put error in a list
     def _check_data_value(self, value):
-        super()._check_data_value(value)
+        value = super()._check_data_value(value)
         if not hasattr(value, '__iter__'):
             raise FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
         ref_list = []
+        #Checked reference value one by one . 
         for v in value.items():
             ref_list.append(super()._check_data_value(v))
+        return value
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
         cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
