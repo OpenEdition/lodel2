@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
 import binascii
-import copy
 import datetime
 import os
 import pickle
@@ -9,128 +7,134 @@ import re
 import time
 
 from lodel import logger
-from lodel.settings import Settings
 from lodel.auth.exceptions import ClientAuthenticationFailure
+from lodel.settings import Settings
 
 from .filesystem_session import FileSystemSession
 
-## @brief lists the active sessions in a dict
-# Its keys are the session tokens and its values are the file paths of session 
-# files.
 __sessions = dict()
 
-# ====== UTILS ====== # 
 
-## @brief Generates a session token
+## @brief generates a new session token
 # @return str
-def __generate_token():
-    new_token = binascii.hexlify(os.urandom(Settings.sessions.tokensize//2))
-    if new_token in __sessions.keys():
-        new_token = __generate_token()
-    return new_token
+def generate_token():
+    token = binascii.hexlify(os.urandom(Settings.sessions.tokensize//2))
+    if token in __sessions.keys():
+        token = generate_token()
+    return token
 
-## @brief Checks if a token is valid and matchs with a registered session
+
+## @brief checks the validity of a given session token
 # @param token str
 # @raise ClientAuthenticationFailure for invalid or not found session token
-def _check_token(token):
-    # Bad length
+def check_token(token):
     if len(token) != Settings.sessions.tokensize:
-        raise ClientAuthenticationFailure("Malformed session token")
-    # Not found
-    if token not in __sessions:
-        raise ClientAuthenticationFailure("No session found with this token")
+        raise ClientAuthenticationFailure("Invalid token string")
+    if token not in __sessions.keys():
+        raise ClientAuthenticationFailure("No session found for this token")
 
 
-## @brief Lists all the session files' paths
-# @return list
-def _list_all_sessions():
-    session_files_directory = os.abspath(Settings.sessions.directory)
-    return [file_path for file_path in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_path))]
+def generate_file_path(token):
+    return os.abspath(os.path.join(Settings.sessions.directory, Settings.sessions.file_template) % token)
 
 
-## @brief Returns the token from a session file's name
-# @param filename str
-# @return str
-def _get_token_from_session_filename(filename):
-    token_regex = re.compile(Settings.sessions.file_template % '(?P<token>.*)')
-    token_searching_result = token_regex.match(filename)
-    if token_searching_result is not None:
-        return token_searching_result.groupdict()['token']
+def get_token_from_filepath(filepath):
+    token_regex = re.compile(os.abspath(os.path.join(Settings.sessions.directory, Settings.sessions.file_template % '(?P<token>.*)')))
+    token_search_result = token_regex.match(filepath)
+    if token_search_result is not None:
+        return token_search_result.groupdict()['token']
     return None
 
 
-## @brief Returns the session's last modification timestamp
+## @brief returns the session's last modification timestamp
 # @param token str
 # @return float
-def _get_session_last_modified(token):
-    if token in __sessions.keys():
+# @raise ValueError if the given token doesn't match with an existing session
+def get_session_last_modified(token):
+    if token in __sessions[token]:
         return os.stat(__sessions[token]).st_mtime
     else:
         raise ValueError("The given token %s doesn't match with an existing session")
 
-# ====== SESSION MANAGEMENT ====== #
-## @brief Registers the session in the active sessions' list
-# @param session LodelSession
-def _register_session(token):
-    __sessions[token] = os.path.join(Settings.sessions.directory, Settings.sessions.file_template % token)
-    
-    
-## @brief Session store's garbage collector
-def gc():
-    # unregistered files in the session directory
-    sessions_dir_files = _list_all_sessions()
-    for sessions_dir_file in sessions_dir_files:
-        token = _get_token_from_session_filename(sessions_dir_file)
-        if token is None or token not in __sessions.keys():
-            os.unlink(sessions_dir_file)
-    
-    # expired registered sessions
-    for token in __sessions.keys():
-        if os.path.isfile(__sessions[token]):
-            now_timestamp = time.mktime(datetime.datetime.now().timetuple())
-            if now_timestamp - _get_session_last_modified(token) > Settings.sessions.expiration:
-                destroy_session(token)
 
-
-## @brief starts a new session and returns its token
+## @brief returns the token of a new session
 # @return str
 def start_session():
-    new_token = __generate_token()
-    new_session = FileSystemSession(new_token)
-    new_session.save()
-    _register_session(new_token)
-    _check_token(new_token)
+    session = FileSystemSession(generate_token())
+    session.path = generate_file_path()
+    with open(session.path, 'wb') as session_file:
+        pickle.dump(session, session_file)
+    __sessions[session.token] = session.path
     logger.debug("New session created")
-    return new_token
+    return session.token
 
 
-## @brief destroys a session defined by its token
+## @brief destroys a session given its token
 # @param token str
 def destroy_session(token):
-    _check_token(token)
+    check_token(token)
     if os.path.isfile(__sessions[token]):
         os.unlink(__sessions[token])
+        logger.debug("Session file for %s destroyed" % token)
     del(__sessions[token])
-    logger.debug("Session %s destroyed" % token)
+    logger.debug("Session %s unregistered" % token)
 
 
-## @brief restores a session's content
-# @param token str
-# @return FileSystemSession
 def restore_session(token):
-    _check_token(token)
+    check_token(token)
     logger.debug("Restoring session : %s" % token)
     if os.path.isfile(__sessions[token]):
         with open(__sessions[token], 'rb') as session_file:
             session = pickle.load(session_file)
         return session
-    return None
+    else:
+        raise FileNotFoundError("Session file not foudn for the token %s" % token)
 
 
-def save_session(token, datas=None):
-    _check_token(token)
-    session = restore_session(token)
-    session.datas = copy.copy(datas)
+def save_session(token, datas):
+    session = datas
+    if not isinstance(datas, FileSystemSession):
+        session = FileSystemSession(token)
+        session.path = generate_file_path(token)
+        session.update(datas)
+
     with open(__sessions[token], 'wb') as session_file:
         pickle.dump(session, session_file)
+
+    if token not in __sessions.keys():
+        __sessions[token] = session.path
+
     logger.debug("Session %s saved" % token)
+
+
+def gc():
+    # Unregistered files in the session directory
+    session_files_directory = os.abspath(Settings.sessions.directory)
+    for session_file_path in [file_path for file_path in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_path))]:
+        token = get_token_from_filepath(session_file_path)
+        if token is None or token not in __sessions.keys():
+            os.unlink(session_file_path)
+
+    # Expired registered sessions
+    for token in __sessions.keys():
+        if os.path.isfile(__sessions[token]):
+            now_timestamp = time.mktime(datetime.datetime.now().timetuple())
+            if now_timestamp - get_session_last_modified(token) > Settings.sessions.expiration:
+                destroy_session(token)
+
+
+def set_value(token, key, value):
+    session = restore_session(token)
+    session[key] = value
+    save_session(token, session)
+
+
+def get_value(token, key):
+    session = restore_session(token)
+    return session[key]
+
+
+def del_value(token, key):
+    session = restore_session(token)
+    if key in session:
+        del(session[key])

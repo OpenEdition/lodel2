@@ -14,7 +14,10 @@ class SessionPluginWrapper(MetaPlugType):
         'start': 'start_session',
         'destroy': 'destroy_session', 
         'restore': 'restore_session',
-        'save': 'save_session'}
+        'save': 'save_session',
+        'set': 'set_session_value',
+        'get': 'get_session_value',
+        'del': 'del_session_value'}
 
     def __init__(self, name, bases, attrs):
         super().__init__(name, bases, attrs)
