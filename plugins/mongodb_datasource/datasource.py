@@ -202,6 +202,9 @@ class MongoDbDatasource(object):
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
+        #Updating backref before deletion
+        self.__update_backref_filtered(target, filters, relational_filters,
+            None)
         res = self.__collection(target).delete_many(mongo_filters)
         return res.deleted_count
 
@@ -220,7 +223,8 @@ class MongoDbDatasource(object):
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update(mongo_filters, upd_datas)
-        target.make_consistency(datas=upd_datas, type_query='update')
+        self.__update_backref_filtered(target, filters, relational_filters,
+            upd_datas)
         return res['n']
 
     ## @brief Inserts a record in a given collection
@@ -229,7 +233,7 @@ class MongoDbDatasource(object):
     # @return the inserted uid
     def insert(self, target, new_datas):
         res = self.__collection(target).insert(new_datas)
-        target.make_consistency(datas=new_datas)
+        self.__update_backref(target, None, new_datas) 
         return str(res)
 
     ## @brief Inserts a list of records in a given collection
@@ -239,9 +243,23 @@ class MongoDbDatasource(object):
     def insert_multi(self, target, datas_list):
         res = self.__collection(target).insert_many(datas_list)
         for new_datas in datas_list:
+            self.__update_backref(target, None, new_datas) 
             target.make_consistency(datas=new_datas)
         return list(res.inserted_ids)
     
+    ##@brief Update backref giving an action
+    #@param target leObject child class
+    #@param filters
+    #@param relational_filters,
+    #@param datas None | dict : optional new datas if None mean we are deleting
+    #@return nothing (for the moment
+    def __update_backref_filtered(self, target, act,
+            filters, relational_filters, datas = None):
+        #gathering datas
+        old_datas_l = target.select(target, None, filters, relational_filters)
+        for old_datas in old_datas_l:
+            self.__update_backref(target, old_datas, datas)
+
     ##@brief Update back references of an object
     #@ingroup plugin_mongodb_bref_op
     #
@@ -284,16 +302,18 @@ class MongoDbDatasource(object):
         #   LeoClass2: {...
         #
         upd_dict = {}
-        for fname, fdh in target.reference_handlers():
-            oldd = fname in old_datas
-            newd = fname in new_datas
+        for fname, fdh in target.reference_handlers().items():
+            oldd = old_datas is not None and fname in old_datas and \
+                hasattr(fdh, 'default') and old_datas[fname] != fdh.default
+            newd = new_datas is not None and fname in new_datas and \
+                hasattr(fdh, 'default') and new_datas[fname] != fdh.default
             if (oldd and newd and old_datas[fname] == new_datas[fname])\
                     or not(oldd or newd):
                 #No changes or not concerned
                 continue
-            bref_cls = fdh.data_handler[0]
-            bref_fname = fdh.data_handler[1]
-            if issubclass(fdh, MultipleRef):
+            bref_cls = fdh.back_reference[0]
+            bref_fname = fdh.back_reference[1]
+            if issubclass(fdh.__class__, MultipleRef):
                 #fdh is a multiple ref. So the update preparation will be
                 #divided into two loops :
                 #- one loop for deleting old datas
@@ -309,12 +329,12 @@ class MongoDbDatasource(object):
                     to_add = [  val
                                 for val in new_values
                                 if val not in old_values]
-                elif oldd and not newdd:
-                    to_del = old_datas[fname]
+                elif oldd and not newd:
+                    to_del = [old_datas[fname]]
                     to_add = []
-                elif not oldd and newdd:
+                elif not oldd and newd:
                     to_del = []
-                    to_add = new_datas[fname]
+                    to_add = [new_datas[fname]]
                 #Calling __back_ref_upd_one_value() with good arguments
                 for vtype, vlist in [('old',to_del), ('new', to_add)]:
                     for value in vlist:
@@ -402,7 +422,7 @@ class MongoDbDatasource(object):
             old_value = old_datas[fname]
             bref_cls, bref_leo, bref_dh, bref_val = self.__bref_get_check(
                 bref_cls, old_value, bref_fname)
-            if issubclass(bref_dh, MultipleRef):
+            if issubclass(bref_dh.__class__, MultipleRef):
                 #
                 # Multiple ref update (iterable)
                 if old_value not in bref_val:
@@ -451,7 +471,7 @@ value : in %s field %s" % (bref_leo, ref_fname))
         elif newd:
             #It's an "insert"
             new_value = new_datas[fname]
-            if issubclass(bref_dh, MultipleRef):
+            if issubclass(bref_dh.__class__, MultipleRef):
                 if isinstance(bref_val, set):
                     bref_val |= set([new_value])
                 else:
@@ -463,6 +483,7 @@ value : in %s field %s" % (bref_leo, ref_fname))
         
     
     ##@brief Fetch back reference informations
+    #@warning thank's to __update_backref_act() this method is useless
     #@param bref_cls LeObject child class : __back_reference[0]
     #@param uidv mixed : UID value (the content of the reference field)
     #@param bref_fname str : the name of the back_reference field
@@ -473,7 +494,7 @@ value : in %s field %s" % (bref_leo, ref_fname))
     #@throw LodelFatalError if the back reference field is not a Reference
     #subclass (major failure)
     def __bref_get_check(self, bref_cls, uidv, bref_fname):
-        bref_leo = bref_cls.get_from_uid(old_datas[fname])
+        bref_leo = bref_cls.get_from_uid(uidv)
         if len(bref_leo) == 0:
             raise MongoDbConsistencyError("Unable to get the object we make \
 reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
@@ -483,34 +504,6 @@ reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
 is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
         bref_val = bref_leo.data(bref_fname)
         return (bref_leo.__class__, bref_leo, bref_dh, bref_val)
-            
-
-        
-    
-    ##@defgroup plugin_mongodb_bref_op BackReferences operations
-    #@brief Contains back_reference operations
-    #@ingroup plugin_mongodb_datasource
-    #
-    #Back reference operations are implemented by privates functions 
-    # - __bref_op_update()
-    # - __bref_op_delete()
-    # - __bref_op_add()
-    #
-    #This 3 methods returns the same thing, a dict containing the field
-    #name to update associated with the new value of this field.
-    #
-    #This 3 methods also expect that the following tests was done :
-    # - the datahandler pointed by the back reference is a child class of
-    #base_classes.Reference
-    # - the value of this field contains or is the given old value (not for
-    #the __bref_op_add() method)
-    #
-    #All this methods asserts that we allready checks that the given LeObject
-    #instance concerned field (the one stored as back reference) is a child
-    #class of base_classes.Reference
-    #
-    #@todo factorise __bref_op_update() and __bref_op_delete() and update this
-    #comment
 
     ##@brief Act on abstract LeObject child
     #
@@ -522,6 +515,7 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
     #@param act function : the caller method
     #@param **kwargs other arguments
     #@return sum of results (if it's an array it will result in a concat)
+    #@todo optimization implementing a cache for __bref_get_check()
     def __act_on_abstract(self,
         target, filters, relational_filters, act, **kwargs):
 

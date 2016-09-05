@@ -156,9 +156,9 @@ class LeObject(object):
     @classmethod
     def reference_handlers(cls, with_backref = True):
         return {    fname: fdh 
-                    for fname, fdh in cls.fields(True)
-                    if issubclass(fdh, Reference) and \
-                        (not with_backref or fdh.backreference is not None)}
+                    for fname, fdh in cls.fields(True).items()
+                    if issubclass(fdh.__class__, Reference) and \
+                        (not with_backref or fdh.back_reference is not None)}
     
     ##@brief Return a LeObject child class from a name
     # @warning This method has to be called from dynamically generated LeObjects

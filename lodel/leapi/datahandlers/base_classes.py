@@ -294,10 +294,11 @@ class Reference(DataHandler):
     #@return value
     #@todo implement the check when we have LeObject uid check value
     def _check_data_value(self, value):
-        value= super()._check_data_value(value)
-        elt = self.__allowed_classes[0]
+        from lodel.leapi.leobject import LeObject
+        value = super()._check_data_value(value)
+        elt = list(self.__allowed_classes)[0]
         uid = elt.uid_fieldname()[0]# TODO multiple uid is broken
-        if (expt is None and not (isinstance(value, LeObject)) or (value is uid)):
+        if not (hasattr(value, '__class__') and issubclass(value.__class__, LeObject)) or (value is uid):
             raise FieldValidationError("LeObject instance or id expected for a reference field")
         return value
 
