@@ -10,8 +10,8 @@ def signin(request):
     msg=''
     if request.method == 'POST':
         WebUiClient.authenticate(request.form['inputLogin'], request.form['inputPassword'])
-        uid=WebUiClient.session().datas['__auth_user_infos']['uid']
-        leoclass=WebUiClient.session().datas['__auth_user_infos']['leoclass']
+        uid=WebUiClient['__auth_user_infos']['uid']
+        leoclass=WebUiClient['__auth_user_infos']['leoclass']
         query_filter=list()
         query_filter.append((leoclass.uid_fieldname()[0],'=', uid))
         user = leoclass.get(query_filter)
