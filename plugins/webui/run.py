@@ -26,12 +26,20 @@ from werkzeug.contrib.securecookie import SecureCookie
 
 def load_cookie(request):
     datas = request.cookies.get(COOKIE_SESSION_ID)
+
     if not datas:
         return None
+
     cookie_content = SecureCookie.unserialize(datas, COOKIE_SECRET_KEY)
+
+    if 'token' not in cookie_content:
+        return None
+
     token = cookie_content['token']
+
     if token is None or len(token) == 0:
         return None
+
     return token
 
 
