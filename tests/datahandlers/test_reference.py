@@ -1,7 +1,7 @@
 
 import unittest
 
-from lodel.leapi.datahandlers.base_classes import Reference
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef
 from leapi.query.utils import init_dyncode
 from lodel.exceptions import *
 from lodel.leapi.leobject import LeObject
@@ -44,11 +44,11 @@ class ReferenceTestCase(unittest.TestCase):
             self.assertEqual(test_value, value)
 
 
-class MultipleRefTestCase(unnittest.case):
+class MultipleRefTestCase(unittest.TestCase):
 
     def test_multiref_check_data_value_not_iter(self):
-        multiref = MultipleRef(3)
-        for test_value in [obj3, 15]:
-            value = test_ref._check_data_value(test_value)
+        test_multiref = MultipleRef(3)
+        for test_value in [(obj3, 15)]:
+            value = test_multiref._check_data_value(test_value)
             self.assertEqual(test_value, value)
 

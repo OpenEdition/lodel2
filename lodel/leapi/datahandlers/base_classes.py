@@ -399,6 +399,7 @@ class MultipleRef(Reference):
         for i,v in enumerate(s_value):
             new_val = super()._check_data_value(v)
             value[i]=new_val
+            error_list[i]=new_val
         logger.debug(value)
         if len(error_list) >0:
             raise FieldValidationError("MultipleRef have for error :", error_list)
