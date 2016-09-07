@@ -22,9 +22,10 @@ class List(MultipleRef):
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
+        value = super()._check_data_value(value)
+        if not(isinstance(value, list) or isinstance(value, str)):
             raise FieldValidationError("List or string expected for a set field")
+        return value
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):
@@ -41,9 +42,10 @@ class Set(MultipleRef):
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, set) or isinstance(val, str))):
+        value = super()._check_data_value(value)
+        if not (isinstance(value, set) or isinstance(value, str)):
             raise FieldValidationError("Set or string expected for a set field")
+        return value
     
 ##@brief Child class of MultipleRef where references are represented in the form of a python dict
 class Map(MultipleRef):
@@ -60,9 +62,10 @@ class Map(MultipleRef):
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not isinstance(val, dict)):
+        value = super()._check_data_value(value)
+        if not isinstance(value, dict):
             raise FieldValidationError("Values for dict fields should be dict")
+        return value
 
 ##@brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
@@ -83,6 +86,8 @@ class Hierarch(MultipleRef):
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
-            raise FieldValidationError("List or string expected for a set field")
+        value = super()._check_data_value(value)
+        if  not (isinstance(value, list) or isinstance(value, str)):
+            raise FieldValidationError(
+                "List or string expected for a set field")
+        return value

@@ -304,9 +304,6 @@ class Reference(DataHandler):
             uiddh._check_data_value(value)
         return value
 
-    def construct_data(self, emcomponent, fname, datas, cur_value):
-        super().construct_data(emcomponent, fname, datas, cur_value)
-
     ##@brief Check datas consistency
     #@param emcomponent EmComponent : An EmComponent child class instance
     #@param fname : the field name
@@ -378,17 +375,16 @@ class MultipleRef(Reference):
     #@return value
     #@TODO  Writing test error for errors when stored multiple references in one field
     def _check_data_value(self, value):
-        value = super()._check_data_value(value)
+        value = DataHandler._check_data_value(self,value)
         if not hasattr(value, '__iter__'):
             raise FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
         error_list = []
-        for v in value.items():
-            val, error = super()._check_data_value(v)
-            if error:
-                error_list.append(val, error)
+        for i,v in enumerate(value):
+            new_val = super()._check_data_value(v)
+            value[i]=v
         if len(error_list) >0:
             raise FieldValidationError("MultipleRef have for error :", error_list)
         return value
