@@ -199,9 +199,13 @@ class MongoDbDatasource(object):
     #@return int : number of deleted records
     def delete(self, target, filters, relational_filters):
         if target.is_abstract():
+            logger.debug("Delete called on %s filtered by (%s,%s). Target is \
+abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             #Deletion with abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.delete)
+        logger.debug("Delete called on %s filtered by (%s,%s)." % (
+            target, filters, relational_filters))
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
@@ -218,7 +222,7 @@ class MongoDbDatasource(object):
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
-        res = self.__upodate_no_backref(target, filters, relational_filters,
+        res = self.__update_no_backref(target, filters, relational_filters,
             upd_datas)
         self.__update_backref_filtered(target, filters, relational_filters,
             upd_datas)
@@ -229,6 +233,8 @@ class MongoDbDatasource(object):
     #@see update()
     def __update_no_backref(self, target, filters, relational_filters,
             upd_datas):
+        logger.debug("Update called on %s filtered by (%s,%s) with datas \
+%s" % (target, filters, relational_filters, upd_datas))
         if target.is_abstract():
             #Update using abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
@@ -236,7 +242,8 @@ class MongoDbDatasource(object):
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
-        res = self.__collection(target).update(mongo_filters, upd_datas)
+        mongo_arg = {'$set': upd_datas }
+        res = self.__collection(target).update(mongo_filters, mongo_arg)
         return res['n']
 
         
@@ -246,8 +253,12 @@ class MongoDbDatasource(object):
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
+        logger.debug("Insert called on %s with datas : %s"% (
+            target, new_datas))
         res = self.__collection(target).insert(new_datas)
-        self.__update_backref(target, None, new_datas) 
+        uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
+        leores = list(self.__collection(target).find({'_id':res}))[0]
+        self.__update_backref(target, leores[uidname], None, new_datas) 
         return str(res)
 
     ## @brief Inserts a list of records in a given collection
@@ -298,11 +309,13 @@ class MongoDbDatasource(object):
     #  self.__update_backref(self.__class__, old_datas, new_datas)
     #</pre>
     #
-    #@param target LeObject child class
+    #@param target LeObject child classa
+    #@param tuid mixed : The target UID (the value that will be inserted in
+    #back references)
     #@param old_datas dict : datas state before update
     #@param new_datas dict : datas state after the update process
     #retun None
-    def __update_backref(self, target, old_datas, new_datas):
+    def __update_backref(self, target, tuid, old_datas, new_datas):
         #upd_dict is the dict that will allow to run updates in an optimized
         #way (or try to help doing it)
         #
@@ -365,7 +378,7 @@ class MongoDbDatasource(object):
                         vdict = {vtype: value}
                         #fetch and store updated value
                         new_bref_val = self.__back_ref_upd_one_value(
-                            fname, fdh, bref_infos, **vdict)
+                            fname, fdh, tuid, bref_infos, **vdict)
                         upd_dict[bref_cls][value][1][bref_fname] = new_bref_val
             else:
                 #fdh is a single ref so the process is simpler, we do not have
@@ -392,7 +405,7 @@ class MongoDbDatasource(object):
                         upd_dict[bref_cls][uid_val][1][bref_fname])
                 #fetche and store updated value
                 new_bref_val = self.__back_ref_upd_one_value(
-                    fname, fdh , **vdict)
+                    fname, fdh, tuid, **vdict)
                 upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
         #Now we've got our upd_dict ready.
         #running the updates
@@ -429,82 +442,62 @@ class MongoDbDatasource(object):
     ##@brief Prepare a one value back reference update
     #@param fname str : the source Reference field name
     #@param fdh DataHandler : the source Reference DataHandler
+    #@param tuid mixed : the uid of the Leo that make reference to the backref
     #@param bref_infos tuple : as returned by __bref_get_check() method
     #@param old mixed : (optional **values) the old value
     #@param new mixed : (optional **values) the new value
     #@return the new back reference field value
-    def __back_ref_upd_one_value(self, fname, fdh, bref_infos, **values):
+    def __back_ref_upd_one_value(self, fname, fdh, tuid, bref_infos, **values):
         bref_cls, bref_leo, bref_dh, bref_val = bref_infos
         oldd = 'old' in values
-        newd = 'new' in values
-        if oldd:
-            #
-            # We got an old value. It can be an update or a delete
-            #
-            old_value = values['old']
-            bref_cls, bref_leo, bref_dh, bref_val = self.__bref_get_check(
-                bref_cls, old_value, bref_fname)
-            if issubclass(bref_dh.__class__, MultipleRef):
-                #
-                # Multiple ref update (iterable)
-                if old_value not in bref_val:
+        newdd = 'new' in values
+        if bref_val is None:
+            bref_val = bref_dh.empty()
+        if issubclass(bref_dh.__class__, MultipleRef):
+            if oldd and newdd:
+                if tuid not in bref_val:
                     raise MongodbConsistencyError("The value we want to \
-replace in this back reference update was not found in the back referenced \
-object : %s field %s" % (bref_leo, ref_fname))
-                if isinstance(old_value, set):
-                    #Specific handling for set (values are not indexed)
-                    bref_val -= set([old_value])
-                    if newd:
-                        # update value
-                        bref_val |= set([new_datas[fname]])
+delete in this back reference update was not found in the back referenced \
+object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+                return bref_val
+            elif oldd and not newdd:
+                #deletion
+                old_value = values['old']
+                if tuid not in bref_val:
+                    raise MongodbConsistencyError("The value we want to \
+delete in this back reference update was not found in the back referenced \
+object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+                if isinstance(bref_val, set):
+                    bref_val -= set([tuid])
                 else:
-                    # Assert that we can handles all other iterable this 
-                    #way
-                    for ki, val in bref_val:
-                        if val == old_value:
-                            if newd:
-                                #Update
-                                bref_val[ki] = values['new']
-                            else:
-                                #Deletion
-                                del(bref_val[ki])
-                            break
-                    else:
-                        raise LodelFatalError("This error should never be \
-raised ! We just checked that oldv is in bref_val...")
-            else:
-                #Single ref handling
-                if bref_val != values['old']:
-                    raise MongoDbConsistencyError("The value we wanted to \
-update do not match excpected value during aback reference  singleReference \
-update : expected value was '%s' but found '%s' in field '%s' of leo %s" % (
-                    old_value, bref_val, ref_fname, bref_leo))
-                
-                if newd:
-                    #update
-                    bref_val = values['new']
+                    del(bref_val[bref_val.index(tuid)])
+            elif not oldd and newdd:
+                if tuid in bref_val:
+                    raise MongodbConsistencyError("The value we want to \
+add in this back reference update was found in the back referenced \
+object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+                if isinstance(bref_val, set):
+                    bref_val |= set([tuid])
                 else:
-                    #delete
-                    if not hasattr(bref_dh, "default"): 
-                        raise MongoDbConsistencyError("Unable to delete a \
+                    bref_val.append(tuid)
+        else:
+            #Single value backref
+            if oldd and newdd:
+                if bref_val != tuid:
+                    raise MongodbConsistencyError("The backreference doesn't \
+have expected value. Expected was %s but found %s in '%s' field of %s" % (
+                        tuid, bref_val, bref_fname, bref_leo))
+                return bref_val
+            elif oldd and not newdd:
+                #deletion
+                if not hasattr(bref_dh, "default"): 
+                    raise MongoDbConsistencyError("Unable to delete a \
 value for a back reference update. The concerned field don't have a default \
 value : in %s field %s" % (bref_leo, ref_fname))
-                    bref_val = getattr(bref_dh, "default")
-        elif newd:
-            #It's an "insert"
-            new_value = values['new']
-            if issubclass(bref_dh.__class__, MultipleRef):
-                if bref_val is None:
-                    bref_val = bref_dh.empty()
-                if isinstance(bref_val, set):
-                    bref_val |= set([new_value])
-                else:
-                    bref_val.append(new_value)
-            else:
-                bref_val = new_value
+                bref_val = getattr(bref_dh, "default")
+            elif not oldd and newdd:
+                bref_val = tuid
         return bref_val
-
-        
     
     ##@brief Fetch back reference informations
     #@warning thank's to __update_backref_act() this method is useless

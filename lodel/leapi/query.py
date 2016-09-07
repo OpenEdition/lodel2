@@ -477,6 +477,9 @@ class LeInsertQuery(LeQuery):
     _data_check_args = { 'complete': True, 'allow_internal': False }
 
     def __init__(self, target_class):
+        if target_class.is_abstract():
+            raise LeApiQueryError("Trying to create an insert query on an \
+abstract LeObject : %s" % target_class )
         super().__init__(target_class)
     
     ## @brief Implements an insert query operation, with only one insertion
