@@ -45,7 +45,14 @@
 #
 # https://docs.python.org/3.4/library/unittest.html
 #
+if test ! -f lodel/buildconf.py
+then
+	echo "You have to build the project before running the tests"
+	echo "See README"
+	exit 1
+fi
 
+PYTHON='env python3'
 testdir=$(mktemp -d)
 rmdir $testdir
 ./scripts/create_instance.sh test_instance $testdir &>/dev/null
@@ -55,6 +62,6 @@ cd $testdir
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
 make refresh_plugins
-python3 loader.py $@
+$PYTHON loader.py $@
 
 rm -Rf $testdir
