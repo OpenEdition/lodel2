@@ -1,0 +1,124 @@
+--- /usr/share/pyconfigure/m4/python.m4	2016-04-27 05:19:12.000000000 +0200
++++ python_pyconfigure.m4	2016-09-01 11:59:49.690623000 +0200
+@@ -475,7 +475,10 @@ except:
+ else:
+     can_use_sysconfig = True
+ if can_use_sysconfig:
+-    if python_implementation() == "CPython" and sys.version[[:3]] == '2.7':
++    # Can't use sysconfig in CPython > 3.0 in debian since it's broken :
++    # <https://bugs.launchpad.net/ubuntu/+source/python3-defaults/+bug/1408092>
++    if python_implementation() == "CPython" (
++            float(sys.version[[:3]]) > 3.0 or sys.version[[:3]] == '2.7'):
+         can_use_sysconfig = False
+ if not can_use_sysconfig:        
+     from distutils import sysconfig
+@@ -644,3 +647,109 @@ m4_ifnblank([$1], [
+     ])
+ AS_IF([test "$[pc_cv_python_func_]pc_python_safe_mod[_$2]" = "no"], [$5], [$4])
+ ])# PC_PYTHON_CHECK_FUNC
++
++# PC_PYTHON_CHECK_MODULE_MATCH_VERSION(LIBRARY, VERSION, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND)
++# -------------------------------------------------
++# Macro for checking if a Python library with this version is installed
++#
++AC_DEFUN([PC_PYTHON_CHECK_MODULE_MATCH_VERSION],
++[AC_REQUIRE([PC_PROG_PYTHON])[]dnl
++m4_define([pc_python_safe_mod], m4_bpatsubsts($1, [\.], [_]))
++AC_CACHE_CHECK([for Python '$1' library version '$2'],
++    [[pc_cv_python_module_version]pc_python_safe_mod],
++    [AC_LANG_PUSH(Python)[]dnl
++     AC_LINK_IFELSE(
++	[AC_LANG_PROGRAM([dnl
++import sys
++try:
++    import $1
++except:
++    version='no'
++else:
++    for vers_attr in ('__version__', 'version', 'version_info'):
++        if hasattr($1, vers_attr):
++            version = getattr($1, vers_attr)
++            break
++    else:
++        version = 'unknown'
++sys.stdout.write(version)
++], [])], 
++	[[pc_cv_python_module_version]pc_python_safe_mod=`./conftest`],
++	[AC_MSG_FAILURE([failed to run Python program])])
++	AC_LANG_POP(Python)[]dnl
++	])
++
++AS_IF([test "x$[pc_cv_python_module_version]pc_python_safe_mod" = "x$2" ],
++	[$3],
++	[	AS_IF(
++			[test "x$[pc_cv_python_module_version]pc_python_safe_mod" = 'unknown'],
++			AC_MSG_WARN([Unable to fetch version of Python module $1]))
++		[$4]
++	])
++])# PC_PYTHON_CHECK_MODULE_VERSION
++
++
++# PC_PYTHON_CHECK_MODULE_VERSION(LIBRARY, MIN-VERSION, MAX-VERSION, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND)
++# -------------------------------------------------
++# Macro for checking if a Python library with this version is installed
++#
++AC_DEFUN([PC_PYTHON_CHECK_MODULE_VERSION],
++[AC_REQUIRE([PC_PROG_PYTHON])[]dnl
++m4_define([pc_python_safe_mod], m4_bpatsubsts($1, [\.], [_]))
++m4_append([pc_python_safe_mod], m4_bpatsubsts($2, [\.], [_]))
++m4_append([pc_python_safe_mod], m4_bpatsubsts($3, [\.], [_]))
++AC_CACHE_CHECK(
++    [for Python '$1' library m4_ifnblank([$2],['$2' <= ]) version m4_ifnblank([$3], [<= '$3'])],
++    [[pc_cv_python_module_version]pc_python_safe_mod],
++    [AC_LANG_PUSH(Python)[]dnl
++     AC_LINK_IFELSE(
++	[AC_LANG_PROGRAM([dnl
++import sys
++def cmp_vers(v1,v2):
++    v1 = v1.split('.')
++    v2 = v2.split('.')
++    for i in range(max([len](v1), [len](v2))):
++        v1v = int(v1[[i]] if i < [len](v1) else 0)
++        v2v = int(v2[[i]] if i < [len](v2) else 0)
++        if v1v > v2v:
++            return 1
++        if v1v < v2v:
++            return -1
++    return 0
++try:
++    import $1
++except:
++    result='not found'
++else:
++    result='yes'
++    vmin = '$2'
++    vmax = '$3'
++    for vers_attr in ('__version__', 'version', 'version_info'):
++        if hasattr($1, vers_attr):
++            version = getattr($1, vers_attr)
++            break
++    else:
++        result = 'unknown'
++    if version not in ('unknonwn', 'no'):
++        failmsg = "but "+ version + " found"
++        if [len](vmin) > 0:
++            if cmp_vers(version, vmin) < 0:
++                result = failmsg
++        if [len](vmax) > 0:
++            if cmp_vers(version, vmax) > 0:
++                result = failmsg
++
++sys.stdout.write(result)
++], [])], 
++	[[pc_cv_python_module_version]pc_python_safe_mod=`./conftest`],
++	[AC_MSG_FAILURE([failed to run Python program])])
++	AC_LANG_POP(Python)[]dnl
++	])
++AS_IF(	[test "$[pc_cv_python_module_version]pc_python_safe_mod" = "yes"],
++	[$4],
++	[	AS_IF(
++			[test "x$[pc_cv_python_module_version]pc_python_safe_mod" = 'unknown'],
++			AC_MSG_WARN([Unable to fetch version of Python module $1]))
++		[$5]
++	])
++])# PC_PYTHON_CHECK_MODULE_VERSION
