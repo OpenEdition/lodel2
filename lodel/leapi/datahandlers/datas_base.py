@@ -46,6 +46,8 @@ class Integer(DataField):
     #@return value
     def _check_data_value(self, value, strict = False):
         value = super()._check_data_value(value)
+        if (strict and not isinstance(value, int)):
+            raise FieldValidationError("The value '%s' is not a python type integer" % value)
         try:
             if strict:
                 if float(value) != int(value):
