@@ -301,7 +301,7 @@ class Reference(DataHandler):
             rcls = list(self.__allowed_classes)[0]
             uidname = rcls.uid_fieldname()[0]# TODO multiple uid is broken
             uiddh = rcls.data_handler(uidname)
-            uiddh._check_data_value(value)
+            value = uiddh._check_data_value(value)
         return value
 
     ##@brief Check datas consistency
