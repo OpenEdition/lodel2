@@ -117,13 +117,12 @@ class DateTime(DataField):
         value = super()._check_data_value(value)
         if isinstance(value,str):
             try:
-                datetime_value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
-            except ValueError: 
+                value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
+            except ValueError:
                 raise FieldValidationError("The value '%s' cannot be converted as a datetime" % value)
-        elif not isinstance(value, datetime.datetime):
+        if not isinstance(value, datetime.datetime):
             raise FieldValidationError("Tue value has to be a string or a datetime")
-        else:
-            return value
+        return value
 
     def _construct_data(self, emcomponent, fname, datas, cur_value):
         if (self.now_on_create and cur_value is None) or self.now_on_update:
