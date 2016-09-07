@@ -11,6 +11,8 @@ CONFSPEC = {
         'virtualenv': (None,
                        SettingValidator('path', none_is_valid=True)),
         'uwsgicmd': ('uwsgi_python3', SettingValidator('dummy')),
+        'cookie_secret_key': ('ConfigureYourOwnCookieSecretKey', SettingValidator('dummy')),
+        'cookie_session_id': ('lodel', SettingValidator('dummy'))
     },
     'lodel2.webui.sessions': {
         'directory': (  '/tmp',

@@ -18,54 +18,29 @@ SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
 SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
 SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
-# TODO Add these informations to the configuration options (lodel2.webui.cookies)
-COOKIE_SESSION_ID = 'toktoken'
-COOKIE_SESSION_HASH = 'nekotkot'
-COOKIE_SESSION_HASH_SALT = ['salt1', 'salt2']
-COOKIE_SESSION_HASH_ALGO = hashlib.sha512
 
+COOKIE_SECRET_KEY = bytes(Settings.webui.cookie_secret_key, 'utf-8') # b"This is a secret key"  # TODO config param to put in webui.cookies.secret_key
+COOKIE_SESSION_ID = Settings.webui.cookie_session_id  # TODO config param to put in webui.cookies.session_id
 
-##@brief Return a salted hash of a cookie
-def cookie_hash(token):
-    token = str(token)
-    return COOKIE_SESSION_HASH_ALGO(token.encode()).hexdigest()
-    return COOKIE_SESSION_HASH_ALGO(
-        (COOKIE_SESSION_HASH_SALT[0]+token+COOKIE_SESSION_HASH_SALT[1]).encode()).hexdigest()
-    
+from werkzeug.contrib.securecookie import SecureCookie
 
-##@brief Load cookie from request
-#@note Can produce security warning logs
-#@param request
-#@return None or a session token
 def load_cookie(request):
-    token = request.cookies.get(COOKIE_SESSION_ID)
-
+    datas = request.cookies.get(COOKIE_SESSION_ID)
+    if not datas:
+        return None
+    cookie_content = SecureCookie.unserialize(datas, COOKIE_SECRET_KEY)
+    token = cookie_content['token']
     if token is None or len(token) == 0:
         return None
-    token=token.encode()
-
-    hashtok = request.cookies.get(COOKIE_SESSION_HASH)
-    if hashtok is None:
-        raise ClientAuthenticationFailure(
-            WebUiClient, 'Bad cookies : no hash provided')
-    if cookie_hash(token) != hashtok:
-        raise ClientAuthenticationFailure(
-            WebUiClient, 'Bad cookies : hash mismatch')
     return token
 
 
-##@brief Properly set cookies and hash given a token
-#@param response
-#@param token str : the session token
 def save_cookie(response, token):
-    response.set_cookie(COOKIE_SESSION_ID, token)
-    response.set_cookie(COOKIE_SESSION_HASH, cookie_hash(token))
+    response.set_cookie(COOKIE_SESSION_ID, SecureCookie({'token': token}, COOKIE_SECRET_KEY).serialize())
 
 
 def empty_cookie(response):
     response.set_cookie(COOKIE_SESSION_ID, '')
-    response.set_cookie(COOKIE_SESSION_HASH, '')
-
 
 #Starting instance
 loader.start()
