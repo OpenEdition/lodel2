@@ -7,6 +7,8 @@ import socket
 import inspect
 import copy
 
+from lodel.exceptions import *
+
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
 # Validator are registered in the SettingValidator class.
@@ -33,7 +35,7 @@ class SettingValidator(object):
     #@param **kwargs : more arguement for the validator
     def __init__(self, name, none_is_valid = False, **kwargs):
         if name is not None and name not in self._validators:
-            raise NameError("No validator named '%s'" % name)
+            raise LodelFatalError("No validator named '%s'" % name)
         self.__none_is_valid = none_is_valid
         self.__name = name
         self._opt_args = kwargs
@@ -43,8 +45,6 @@ class SettingValidator(object):
     # @return properly casted value
     # @throw SettingsValidationError
     def __call__(self, value):
-        if self.__name is None:
-            return value
         if self.__none_is_valid and value is None:
             return None
         try:
