@@ -19,8 +19,8 @@ SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
 SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
 
-COOKIE_SECRET_KEY = bytes(Settings.webui.cookie_secret_key, 'utf-8') # b"This is a secret key"  # TODO config param to put in webui.cookies.secret_key
-COOKIE_SESSION_ID = Settings.webui.cookie_session_id  # TODO config param to put in webui.cookies.session_id
+COOKIE_SECRET_KEY = bytes(Settings.webui.cookie_secret_key, 'utf-8')
+COOKIE_SESSION_ID = Settings.webui.cookie_session_id
 
 from werkzeug.contrib.securecookie import SecureCookie
 
