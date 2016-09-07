@@ -1,5 +1,6 @@
 from .plugins import Plugin
 from .exceptions import *
+from lodel.exceptions import *
 from lodel.settings.validator import SettingValidator
 
 
@@ -161,6 +162,71 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
     @classmethod
     def get_migration_handler(cls, ds_plugin_name):
         return cls.get(ds_plugin_name).migration_handler_cls()
+
+class AbstractDatasource(object):
+    
+    ##@brief Trigger LodelFatalError when abtract method called
+    @staticmethod
+    def _abs_err():
+        raise LodelFatalError("This method is abstract and HAVE TO be \
+reimplemented by plugin datasource child class")
+    
+    ##@brief The constructor
+    def __init__(self, *conn_args, **conn_kwargs):
+        self._abs_err()
+
+    ##@brief Provide a new uniq numeric ID
+    #@param emcomp LeObject subclass (not instance) : To know on wich things we
+    #have to be uniq
+    #@return an integer
+    def new_numeric_id(self, emcomp):
+        self._abs_err()
+
+    ##@brief returns a selection of documents from the datasource
+    #@param target_cls Emclass
+    #@param field_list list
+    #@param filters list : List of filters
+    #@param rel_filters list : List of relational filters
+    #@param order list : List of column to order. ex: order = [('title', 'ASC'),]
+    #@param group list : List of tupple representing the column to group together. ex: group = [('title', 'ASC'),]
+    #@param limit int : Number of records to be returned
+    #@param offset int: used with limit to choose the start record
+    #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
+    #@return list
+    def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0,
+               instanciate=True):
+        self._abs_err()
+
+    ##@brief Deletes records according to given filters
+    #@param target Emclass : class of the record to delete
+    #@param filters list : List of filters
+    #@param relational_filters list : List of relational filters
+    #@return int : number of deleted records
+    def delete(self, target, filters, relational_filters):
+        self._abs_err()
+
+    ## @brief updates records according to given filters
+    #@param target Emclass : class of the object to insert
+    #@param filters list : List of filters
+    #@param relational_filters list : List of relational filters
+    #@param upd_datas dict : datas to update (new values)
+    #@return int : Number of updated records
+    def update(self, target, filters, relational_filters, upd_datas):
+        self._abs_err()
+
+    ## @brief Inserts a record in a given collection
+    # @param target Emclass : class of the object to insert
+    # @param new_datas dict : datas to insert
+    # @return the inserted uid
+    def insert(self, target, new_datas):
+        self._abs_err()
+
+    ## @brief Inserts a list of records in a given collection
+    # @param target Emclass : class of the objects inserted
+    # @param datas_list list : list of dict
+    # @return list : list of the inserted records' ids
+    def insert_multi(self, target, datas_list):
+        self._abs_err()
 
 ##@page lodel2_datasources Lodel2 datasources
 #

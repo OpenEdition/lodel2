@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 
-class DummyDatasource(object):
+from lodel.plugin.datasource_plugin import AbstractDatasource
+
+class DummyDatasource(AbstractDatasource):
     
     def __init__(self, *conn_args, **conn_kwargs):
         self.conn_args = conn_args

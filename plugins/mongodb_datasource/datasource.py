@@ -13,6 +13,7 @@ from lodel import logger
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef
 from lodel.exceptions import LodelException, LodelFatalError
+from lodel.plugin.datasource_plugin import AbstractDatasource
 
 from . import utils
 from .exceptions import *
@@ -22,8 +23,7 @@ from .utils import object_collection_name, collection_name, \
 
 ##@brief Datasource class
 #@ingroup plugin_mongodb_datasource
-#@todo Make it inherit from an abstract datasource !
-class MongoDbDatasource(object):
+class MongoDbDatasource(AbstractDatasource):
 
     ##@brief Stores existing connections
     #
