@@ -1,5 +1,5 @@
 import unittest
-
+from lodel.exceptions import *
 from lodel.leapi.datahandlers.datas import Regex, Varchar, Integer
 
 
@@ -9,29 +9,36 @@ class RegexTestCase(unittest.TestCase):
         test_value = '126.205.255.12'
         test_regex = Regex('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
                            max_length=100)
-        value, error = test_regex.check_data_value(test_value)
-        self.assertIsNone(error)
+        value = test_regex._check_data_value(test_value)
         self.assertEqual(value, test_value)
 
     def test_check_bad_data_value(self):
         test_regex = Regex('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
                            max_length=15)
         for test_value in ['800.9.10.5', 'test_string_value', '999.999.999.999']:
-            value, error = test_regex.check_data_value(test_value)
-            self.assertEqual(value, None)
-            self.assertIsNotNone(error)
+            with self.assertRaises(FieldValidationError):
+                test_regex._check_data_value(test_value)
 
-    def test_check_max_length(self):
+    def test_check_bad_compile_regex(self):
+        test_max_length = 15
+        test_regex = Regex('^\d[a-z]+8?', max_length=15)
+        for test_value in ['cccc8']:
+            with self.assertRaises(FieldValidationError):
+                test_regex._check_data_value(test_value)
+
+    def test_check_bad_max_length(self):
         test_max_length = 15
         test_regex = Regex('[a-z]+8?', max_length=15)
-        for test_value in ['cccccc8', 'ccccccccccccccccccccccccccccccccc8']:
-            value, error = test_regex.check_data_value(test_value)
-            if len(test_value)>test_max_length:
-                self.assertEqual(value, None)
-                self.assertIsNotNone(error)
-            else:
-                self.assertIsNone(error)
-                self.assertEqual(value, test_value)
+        for test_value in ['ccccccccccccccccccccccccccccccccc8']:
+            with self.assertRaises(FieldValidationError):
+                test_regex._check_data_value(test_value)
+            
+    def test_check_good_max_length(self):
+        test_max_length = 15
+        test_regex = Regex('^\d[a-z]+8?', max_length=15)
+        for test_value in ['3ccccccccc8']:
+            value = test_regex._check_data_value(test_value)
+            self.assertEqual(value, test_value)
 
     def test_can_override(self):
         test_regex = Regex('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
