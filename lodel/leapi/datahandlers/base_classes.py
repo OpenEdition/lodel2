@@ -388,9 +388,18 @@ class MultipleRef(Reference):
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
         error_list = []
-        for i,v in enumerate(value):
+        # if we have got a str
+        # right place to test this ?
+        
+        if isinstance(value, str):
+            value.replace(" ","")
+            s_value=value.split(',')
+            value=list(s_value)
+        logger.debug(value)
+        for i,v in enumerate(s_value):
             new_val = super()._check_data_value(v)
-            value[i]=v
+            value[i]=new_val
+        logger.debug(value)
         if len(error_list) >0:
             raise FieldValidationError("MultipleRef have for error :", error_list)
         return value
@@ -412,7 +421,9 @@ class MultipleRef(Reference):
         elif isinstance(cur_value, list):
             l_value = list()
             for value in cur_value:
-                if isinstance(value,uidtype.cast_type):
+                if isinstance(value,str):
+                    l_value.append(uidtype.cast_type(value))
+                elif isinstance(value,uidtype.cast_type):
                     l_value.append(value)
                 else:
                     raise ValueError("The items must be of the same type, string or %s" % (emcomponent.__name__))

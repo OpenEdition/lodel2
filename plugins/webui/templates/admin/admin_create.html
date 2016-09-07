@@ -6,7 +6,7 @@
 <ol class="breadcrumb">
   <li><a href="/{{ root_url }}/admin">Home</a></li>
   <li><a href="/{{ root_url }}/admin/object_create">Creation</a></li>
-  <li class="active">Edit</li>
+  <li class="active">{{target.__name__}}</li>
 </ol>
 {% if msg is not none %}
 {% block msg %} <p style="color:red; font-size:20pt; font-weight:bold">{{ msg }}</p> {% endblock %}
