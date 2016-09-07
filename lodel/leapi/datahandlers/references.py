@@ -17,6 +17,10 @@ class List(MultipleRef):
     def __init__(self, max_length = None, **kwargs):
         super().__init__(**kwargs)
 
+    @classmethod
+    def empty(cls):
+        return list()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
@@ -37,6 +41,10 @@ class Set(MultipleRef):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    @classmethod
+    def empty(cls):
+        return set()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
@@ -56,6 +64,10 @@ class Map(MultipleRef):
     # @param kwargs : Other named arguments
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    @classmethod
+    def empty(cls):
+        return dict()
 
     ##@brief Check and cast value in appropriate type
     #@param value *
@@ -80,6 +92,10 @@ class Hierarch(MultipleRef):
                             max_depth = max_depth,
                             max_childs = max_childs,
                             **kwargs)
+
+    @classmethod
+    def empty(cls):
+        return tuple()
 
     ##@brief Check and cast value in appropriate type
     #@param value *

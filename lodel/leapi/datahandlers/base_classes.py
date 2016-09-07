@@ -368,6 +368,12 @@ class MultipleRef(Reference):
     def __init__(self, max_item = None, **kwargs):
         self.max_item = max_item
         super().__init__(**kwargs)
+    
+    ##@brief Method designed to return an empty value for this kind of 
+    #multipleref
+    @classmethod
+    def empty(cls):
+        return None
 
     ##@brief Check and cast value in appropriate type
     #@param value *
