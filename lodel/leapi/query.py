@@ -508,7 +508,7 @@ class LeInsertQuery(LeQuery):
 class LeUpdateQuery(LeFilteredQuery):
     
     _hook_prefix = 'leapi_update_'
-    _data_check_args = { 'complete': True, 'allow_internal': False }
+    _data_check_args = { 'complete': False, 'allow_internal': False }
     
     ##@brief Instanciate an update query
     #
