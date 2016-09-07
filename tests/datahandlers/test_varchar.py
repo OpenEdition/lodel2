@@ -1,22 +1,20 @@
 import unittest
-
 from lodel.leapi.datahandlers.datas import Varchar, Integer
 from lodel.leapi.datahandlers.base_classes import FieldValidationError
+from lodel.exceptions import *
 
+test_varchar = Varchar(max_length=10)
 class VarcharTestCase(unittest.TestCase):
 
-    def test_check_data_value(self):
-        test_varchar = Varchar(max_length=10)
+    def test_check_good_data_value(self):
+        for test_value in ["c" * 10, "c" * 9]:
+            value = test_varchar._check_data_value(test_value)
+            self.assertEqual(value, test_value)
 
-        _, error = test_varchar.check_data_value("c" * 10)
-        self.assertIsNone(error)
-
-        _, error = test_varchar.check_data_value("c" * 9)
-        self.assertIsNone(error)
-
-        _, error = test_varchar.check_data_value("c" * 11)
-        self.assertIsNotNone(error)
-        self.assertIsInstance(error, FieldValidationError)
+    def test_check_bad_data_value(self):
+        for test_value in ["c" * 11]:
+            with self.assertRaises(FieldValidationError):
+                value = test_varchar._check_data_value(test_value)
 
     def test_can_override(self):
         test_varchar1 = Varchar()

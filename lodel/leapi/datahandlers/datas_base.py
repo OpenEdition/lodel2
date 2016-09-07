@@ -50,14 +50,12 @@ class Integer(DataField):
             raise FieldValidationError("The value '%s' is not a python type integer" % value)
         try:
             if strict:
-                if float(value) != int(value):
-                    raise FieldValidationError("The value '%s' is castable \
-into integer. But the DataHandler is strict and there is a floating part")
-            else:
                 value = int(value)
+            else:
+                value = int(float(value))
         except(ValueError, TypeError):
             raise FieldValidationError("The value '%s' is not, and will never, be an integer" % value)
-        return int(value)
+        return value
 
 ##@brief Data field designed to handle string
 class Varchar(DataField):
