@@ -212,8 +212,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         #Updating backref before deletion
         self.__update_backref_filtered(target, filters, relational_filters,
             None)
-        res = self.__collection(target).delete_many(mongo_filters)
-        return res.deleted_count
+        res = self.__collection(target).remove(mongo_filters)
+        return res['n']
 
     ##@brief updates records according to given filters
     #@param target Emclass : class of the object to insert
@@ -246,8 +246,6 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         res = self.__collection(target).update(mongo_filters, mongo_arg)
         return res['n']
 
-        
-
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
     # @param new_datas dict : datas to insert
@@ -255,10 +253,12 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     def insert(self, target, new_datas):
         logger.debug("Insert called on %s with datas : %s"% (
             target, new_datas))
-        res = self.__collection(target).insert(new_datas)
         uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
-        leores = list(self.__collection(target).find({'_id':res}))[0]
-        self.__update_backref(target, leores[uidname], None, new_datas) 
+        if uidname not in new_datas:
+            raise MongoDataSourceError("Missing UID data will inserting a new \
+%s" % target.__class__)
+        res = self.__collection(target).insert(new_datas)
+        self.__update_backref(target, new_datas[uidname], None, new_datas) 
         return str(res)
 
     ## @brief Inserts a list of records in a given collection
@@ -276,14 +276,21 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param target leObject child class
     #@param filters
     #@param relational_filters,
-    #@param datas None | dict : optional new datas if None mean we are deleting
+    #@param new_datas None | dict : optional new datas if None mean we are deleting
     #@return nothing (for the moment
-    def __update_backref_filtered(self, target, act,
-            filters, relational_filters, datas = None):
-        #gathering datas
-        old_datas_l = target.get(target, None, filters, relational_filters)
+    def __update_backref_filtered(self, target,
+            filters, relational_filters, new_datas = None):
+        #Getting all the UID of the object that will be deleted in order
+        #to update back_references
+        mongo_filters = self.__process_filters(
+            target, filters, relational_filters)
+        old_datas_l = self.__collection(target).find(
+            mongo_filters)
+        old_datas_l = list(old_datas_l)
+        uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
         for old_datas in old_datas_l:
-            self.__update_backref(target, old_datas, datas)
+            self.__update_backref(
+                target, old_datas[uidname], old_datas, new_datas)
 
     ##@brief Update back references of an object
     #@ingroup plugin_mongodb_bref_op
@@ -357,7 +364,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                                 for val in new_values
                                 if val not in old_values]
                 elif oldd and not newd:
-                    to_del = [old_datas[fname]]
+                    to_del = old_datas[fname]
                     to_add = []
                 elif not oldd and newd:
                     to_del = []
@@ -456,26 +463,26 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         if issubclass(bref_dh.__class__, MultipleRef):
             if oldd and newdd:
                 if tuid not in bref_val:
-                    raise MongodbConsistencyError("The value we want to \
+                    raise MongoDbConsistencyError("The value we want to \
 delete in this back reference update was not found in the back referenced \
-object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+object : %s. Value was : '%s'" % (bref_leo, tuid))
                 return bref_val
             elif oldd and not newdd:
                 #deletion
                 old_value = values['old']
                 if tuid not in bref_val:
-                    raise MongodbConsistencyError("The value we want to \
+                    raise MongoDbConsistencyError("The value we want to \
 delete in this back reference update was not found in the back referenced \
-object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+object : %s. Value was : '%s'" % (bref_leo, tuid))
                 if isinstance(bref_val, set):
                     bref_val -= set([tuid])
                 else:
                     del(bref_val[bref_val.index(tuid)])
             elif not oldd and newdd:
                 if tuid in bref_val:
-                    raise MongodbConsistencyError("The value we want to \
+                    raise MongoDbConsistencyError("The value we want to \
 add in this back reference update was found in the back referenced \
-object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
+object : %s. Value was : '%s'" % (bref_leo, tuid))
                 if isinstance(bref_val, set):
                     bref_val |= set([tuid])
                 else:
@@ -484,16 +491,16 @@ object : %s field %s. Value was : '%s'" % (bref_leo, ref_fname, tuid))
             #Single value backref
             if oldd and newdd:
                 if bref_val != tuid:
-                    raise MongodbConsistencyError("The backreference doesn't \
-have expected value. Expected was %s but found %s in '%s' field of %s" % (
-                        tuid, bref_val, bref_fname, bref_leo))
+                    raise MongoDbConsistencyError("The backreference doesn't \
+have expected value. Expected was %s but found %s in %s" % (
+                        tuid, bref_val, bref_leo))
                 return bref_val
             elif oldd and not newdd:
                 #deletion
                 if not hasattr(bref_dh, "default"): 
                     raise MongoDbConsistencyError("Unable to delete a \
 value for a back reference update. The concerned field don't have a default \
-value : in %s field %s" % (bref_leo, ref_fname))
+value : in %s field %s" % (bref_leo, bref_fname))
                 bref_val = getattr(bref_dh, "default")
             elif not oldd and newdd:
                 bref_val = tuid
@@ -708,6 +715,8 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
         # We are going to regroup relationnal filters by reference field
         # then by collection
         rfilters = dict()
+        if relational_filters is None:
+            relational_filters = []
         for (fname, rfields), op, value in relational_filters:
             if fname not in rfilters:
                 rfilters[fname] = dict()
