@@ -46,15 +46,16 @@ class Integer(DataField):
     #@return value
     def _check_data_value(self, value, strict = False):
         value = super()._check_data_value(value)
-        if (strict and isinstance(value, int)):
-            raise FieldValidationError("The value '%s' is not a python type integer" % value)
         try:
-            value = float(value)
-            if value != int(value):
-                raise TypeError()
+            if strict:
+                if float(value) != int(value):
+                    raise FieldValidationError("The value '%s' is castable \
+into integer. But the DataHandler is strict and there is a floating part")
+            else:
+                value = int(value)
         except(ValueError, TypeError):
             raise FieldValidationError("The value '%s' is not, and will never, be an integer" % value)
-        return value
+        return int(value)
 
 ##@brief Data field designed to handle string
 class Varchar(DataField):

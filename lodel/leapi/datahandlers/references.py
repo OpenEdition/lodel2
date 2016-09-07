@@ -17,14 +17,19 @@ class List(MultipleRef):
     def __init__(self, max_length = None, **kwargs):
         super().__init__(**kwargs)
 
+    @classmethod
+    def empty(cls):
+        return list()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
+        value = super()._check_data_value(value)
+        if not(isinstance(value, list) or isinstance(value, str)):
             raise FieldValidationError("List or string expected for a set field")
+        return value
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):
@@ -36,14 +41,19 @@ class Set(MultipleRef):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    @classmethod
+    def empty(cls):
+        return set()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, set) or isinstance(val, str))):
+        value = super()._check_data_value(value)
+        if not (isinstance(value, set) or isinstance(value, str)):
             raise FieldValidationError("Set or string expected for a set field")
+        return value
     
 ##@brief Child class of MultipleRef where references are represented in the form of a python dict
 class Map(MultipleRef):
@@ -55,14 +65,19 @@ class Map(MultipleRef):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    @classmethod
+    def empty(cls):
+        return dict()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not isinstance(val, dict)):
+        value = super()._check_data_value(value)
+        if not isinstance(value, dict):
             raise FieldValidationError("Values for dict fields should be dict")
+        return value
 
 ##@brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
@@ -78,11 +93,17 @@ class Hierarch(MultipleRef):
                             max_childs = max_childs,
                             **kwargs)
 
+    @classmethod
+    def empty(cls):
+        return tuple()
+
     ##@brief Check and cast value in appropriate type
     #@param value *
     #@throw FieldValidationError if value is unappropriate or can not be cast 
     #@return value
     def _check_data_value(self, value):
-        super()._check_data_value(value)
-        if (expt is None and not (isinstance(val, list) or isinstance(val, str))):
-            raise FieldValidationError("List or string expected for a set field")
+        value = super()._check_data_value(value)
+        if  not (isinstance(value, list) or isinstance(value, str)):
+            raise FieldValidationError(
+                "List or string expected for a set field")
+        return value

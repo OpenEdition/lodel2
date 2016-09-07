@@ -188,9 +188,18 @@ class LeFilteredQuery(LeQuery):
                 other_ds_filters[cur_ds].append(
                     ((rfield, ref_dict), op, value))
         #deduplication of std filters
+        filters_cp = set()
         if not isinstance(filters_orig, set):
-            filters_orig = set(filters_orig)
-        filters_orig = list(filters_orig)
+            for i, cfilt in enumerate(filters_orig):
+                a,b,c = cfilt
+                if isinstance(c, list): #list are not hashable
+                    newc = tuple(c)
+                else:
+                    newc = c
+                old_len = len(filters_cp)
+                filters_cp |= set((a,b,newc))
+                if len(filters_cp) == old_len:
+                    del(filters_orig[i])
         # Sets _query_filter attribute of self query
         self._query_filter = (filters_orig, result_rel_filters)
 
@@ -499,7 +508,7 @@ class LeInsertQuery(LeQuery):
 class LeUpdateQuery(LeFilteredQuery):
     
     _hook_prefix = 'leapi_update_'
-    _data_check_args = { 'complete': True, 'allow_internal': False }
+    _data_check_args = { 'complete': False, 'allow_internal': False }
     
     ##@brief Instanciate an update query
     #

@@ -101,8 +101,11 @@ class MongoDbDatasource(object):
     #@param offset int: used with limit to choose the start record
     #@return list
     #@todo Implement group for abstract LeObject childs
-    def select(self, target, field_list, filters = None,
-        relational_filters=None, order=None, group=None, limit=None, offset=0):
+    def select(self, target, field_list, filters = None, 
+            relational_filters=None, order=None, group=None, limit=None, 
+            offset=0):
+        logger.debug("Select %s on %s filtered by %s and %s " % (
+            field_list, target, filters, relational_filters))
         if target.is_abstract():
             #Reccursiv calls for abstract LeObject child
             results =  self.__act_on_abstract(target, filters,
@@ -208,13 +211,24 @@ class MongoDbDatasource(object):
         res = self.__collection(target).delete_many(mongo_filters)
         return res.deleted_count
 
-    ## @brief updates records according to given filters
+    ##@brief updates records according to given filters
     #@param target Emclass : class of the object to insert
     #@param filters list : List of filters
     #@param relational_filters list : List of relational filters
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
+        res = self.__upodate_no_backref(target, filters, relational_filters,
+            upd_datas)
+        self.__update_backref_filtered(target, filters, relational_filters,
+            upd_datas)
+        return res
+    
+    ##@brief Designed to be called by backref update in order to avoid
+    #infinite updates between back references
+    #@see update()
+    def __update_no_backref(self, target, filters, relational_filters,
+            upd_datas):
         if target.is_abstract():
             #Update using abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
@@ -223,9 +237,9 @@ class MongoDbDatasource(object):
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
         res = self.__collection(target).update(mongo_filters, upd_datas)
-        self.__update_backref_filtered(target, filters, relational_filters,
-            upd_datas)
         return res['n']
+
+        
 
     ## @brief Inserts a record in a given collection
     # @param target Emclass : class of the object to insert
@@ -256,7 +270,7 @@ class MongoDbDatasource(object):
     def __update_backref_filtered(self, target, act,
             filters, relational_filters, datas = None):
         #gathering datas
-        old_datas_l = target.select(target, None, filters, relational_filters)
+        old_datas_l = target.get(target, None, filters, relational_filters)
         for old_datas in old_datas_l:
             self.__update_backref(target, old_datas, datas)
 
@@ -334,7 +348,7 @@ class MongoDbDatasource(object):
                     to_add = []
                 elif not oldd and newd:
                     to_del = []
-                    to_add = [new_datas[fname]]
+                    to_add = new_datas[fname]
                 #Calling __back_ref_upd_one_value() with good arguments
                 for vtype, vlist in [('old',to_del), ('new', to_add)]:
                     for value in vlist:
@@ -343,16 +357,16 @@ class MongoDbDatasource(object):
                             bref_cls, value, bref_fname)
                         #preparing the upd_dict
                         upd_dict = self.__update_backref_upd_dict_prepare(
-                            upd_dict, bref_infos)
+                            upd_dict, bref_infos, bref_fname, value)
                         #preparing updated bref_infos
                         bref_cls, bref_leo, bref_dh, bref_value = bref_infos
-                        bref_infos = tuple(bref_cls, bref_leo, bref_dh,
-                            upd_dict[bref_cls][uid_val][1][bref_fname])
+                        bref_infos = (bref_cls, bref_leo, bref_dh,
+                            upd_dict[bref_cls][value][1][bref_fname])
                         vdict = {vtype: value}
                         #fetch and store updated value
                         new_bref_val = self.__back_ref_upd_one_value(
                             fname, fdh, bref_infos, **vdict)
-                        upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
+                        upd_dict[bref_cls][value][1][bref_fname] = new_bref_val
             else:
                 #fdh is a single ref so the process is simpler, we do not have
                 #to loop and we may do an update in only one
@@ -371,7 +385,7 @@ class MongoDbDatasource(object):
                     bref_cls, uid_val, bref_fname)
                 #prepare the upd_dict
                 upd_dict = self.__update_backref_upd_dict_prepare(
-                    upd_dict, bref_infos)
+                    upd_dict, bref_infos, bref_fname, uid_val)
                 #forging update bref_infos
                 bref_cls, bref_leo, bref_dh, bref_value = bref_infos
                 bref_infos = tuple(bref_cls, bref_leo, bref_dh,
@@ -384,21 +398,29 @@ class MongoDbDatasource(object):
         #running the updates
         for bref_cls, uid_dict in upd_dict.items():
             for uidval, (leo, datas) in uid_dict.items():
-                leo.update(datas)
+                #MULTIPLE UID BROKEN 2 LINES BELOW
+                self.__update_no_backref(
+                    leo.__class__, [(leo.uid_fieldname()[0], '=', uidval)],
+                    [], datas)
     
     ##@brief Utility function designed to handle the upd_dict of 
     #__update_backref()
     #
+    #Basically checks if a key exists at some level, if not create it with
+    #the good default value (in most case dict())
     #@param upd_dict dict : in & out args modified by reference
     #@param bref_infos tuple : as returned by __bref_get_check()
+    #@param bref_fname str : name of the field in referenced class
+    #@param uid_val mixed : the UID of the referenced object
     #@return the updated version of upd_dict
     @staticmethod
-    def __update_backref_upd_dict_prepare(upd_dict,bref_infos):
+    def __update_backref_upd_dict_prepare(upd_dict,bref_infos, bref_fname, 
+            uid_val):
         bref_cls, bref_leo, bref_dh, bref_value = bref_infos
         if bref_cls not in upd_dict:
             upd_dict[bref_cls] = {}
         if uid_val not in upd_dict[bref_cls]:
-            upd_dict[bref_cls][uid_val] = tuple(bref_leo, {})
+            upd_dict[bref_cls][uid_val] = (bref_leo, {})
         if bref_fname not in upd_dict[bref_cls][uid_val]:
             upd_dict[bref_cls][uid_val][1][bref_fname] = bref_value
         return upd_dict
@@ -419,7 +441,7 @@ class MongoDbDatasource(object):
             #
             # We got an old value. It can be an update or a delete
             #
-            old_value = old_datas[fname]
+            old_value = values['old']
             bref_cls, bref_leo, bref_dh, bref_val = self.__bref_get_check(
                 bref_cls, old_value, bref_fname)
             if issubclass(bref_dh.__class__, MultipleRef):
@@ -442,7 +464,7 @@ object : %s field %s" % (bref_leo, ref_fname))
                         if val == old_value:
                             if newd:
                                 #Update
-                                bref_val[ki] = new_datas[fname]
+                                bref_val[ki] = values['new']
                             else:
                                 #Deletion
                                 del(bref_val[ki])
@@ -452,7 +474,7 @@ object : %s field %s" % (bref_leo, ref_fname))
 raised ! We just checked that oldv is in bref_val...")
             else:
                 #Single ref handling
-                if bref_val != old_value:
+                if bref_val != values['old']:
                     raise MongoDbConsistencyError("The value we wanted to \
 update do not match excpected value during aback reference  singleReference \
 update : expected value was '%s' but found '%s' in field '%s' of leo %s" % (
@@ -460,7 +482,7 @@ update : expected value was '%s' but found '%s' in field '%s' of leo %s" % (
                 
                 if newd:
                     #update
-                    bref_val = new_datas[fname]
+                    bref_val = values['new']
                 else:
                     #delete
                     if not hasattr(bref_dh, "default"): 
@@ -470,8 +492,10 @@ value : in %s field %s" % (bref_leo, ref_fname))
                     bref_val = getattr(bref_dh, "default")
         elif newd:
             #It's an "insert"
-            new_value = new_datas[fname]
+            new_value = values['new']
             if issubclass(bref_dh.__class__, MultipleRef):
+                if bref_val is None:
+                    bref_val = bref_dh.empty()
                 if isinstance(bref_val, set):
                     bref_val |= set([new_value])
                 else:
@@ -498,8 +522,12 @@ value : in %s field %s" % (bref_leo, ref_fname))
         if len(bref_leo) == 0:
             raise MongoDbConsistencyError("Unable to get the object we make \
 reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
+        if len(bref_leo) > 1:
+            raise MongoDbConsistencyFatalError("Will retrieving data with UID \
+as filter we got more than one result !!! Bailout !!!")
+        bref_leo = bref_leo[0]
         bref_dh = bref_leo.data_handler(bref_fname)
-        if not isinstance(bref_leo, Reference):
+        if not isinstance(bref_dh, Reference):
             raise LodelFatalError("Found a back reference field that \
 is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
         bref_val = bref_leo.data(bref_fname)
