@@ -296,10 +296,12 @@ class Reference(DataHandler):
     def _check_data_value(self, value):
         from lodel.leapi.leobject import LeObject
         value = super()._check_data_value(value)
-        elt = list(self.__allowed_classes)[0]
-        uid = elt.uid_fieldname()[0]# TODO multiple uid is broken
-        if not (hasattr(value, '__class__') and issubclass(value.__class__, LeObject)) or (value is uid):
-            raise FieldValidationError("LeObject instance or id expected for a reference field")
+        if not (hasattr(value, '__class__') and
+                issubclass(value.__class__, LeObject)):
+            rcls = list(self.__allowed_classes)[0]
+            uidname = rcls.uid_fieldname()[0]# TODO multiple uid is broken
+            uiddh = rcls.data_handler(uidname)
+            uiddh._check_data_value(value)
         return value
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
