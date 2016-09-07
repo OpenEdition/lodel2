@@ -4,13 +4,18 @@ from .base import get_response
 from lodel.leapi.exceptions import *
 from lodel import logger
 
+from ...client import WebUiClient
 import leapi_dyncode as dyncode
 import warnings
 
 def index_admin(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
 def admin_update(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     msg=''
     if request.method == 'POST':
         error = None
@@ -80,6 +85,8 @@ def admin_update(request):
     return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
 
 def admin_create(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     classname = None
 
     if request.method == 'POST':
@@ -124,12 +131,18 @@ def admin_create(request):
     return get_response('admin/admin_create.html', target=target_leo)
 
 def admin_classes(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     return get_response('admin/list_classes_admin.html', my_classes = dyncode.dynclasses)
 
 def create_object(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     return get_response('admin/list_classes_create.html', my_classes = dyncode.dynclasses)
     
 def admin_class(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     if 'classname' in request.GET:
         classname = request.GET['classname']
         if len(classname) > 1:
@@ -144,6 +157,8 @@ def admin_class(request):
     return get_response('admin/show_class_admin.html', target=target_leo)
    
 def admin(request):
+    if WebUiClient.is_anonymous():
+        return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
         
