@@ -8,9 +8,13 @@ class Extension(Plugin):
     _plist_confspecs = {
         'section': 'lodel2',
         'key': 'extensions',
-        'default': [],
+        'default': None,
         'validator': SettingValidator(
-            'plugin', none_is_valid = False, ptype = _glob_typename)}
+            'custom_list', none_is_valid = True,
+            validator_name = 'plugin', validator_kwargs = {
+                'ptype': _glob_typename,
+                'none_is_valid': False})
+        }
 
     _type_conf_name = _glob_typename
 

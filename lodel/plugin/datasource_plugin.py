@@ -95,8 +95,11 @@ class DatasourcePlugin(Plugin):
         'key': 'datasource_connectors',
         'default': None,
         'validator': SettingValidator(
-            'plugin', none_is_valid = False,
-            ptype = _glob_typename) }
+            'custom_list', none_is_valid = False,
+            validator_name = 'plugin', validator_kwargs = {
+                'ptype': _glob_typename,
+                'none_is_valid': False})
+        }
  
     ##@brief Construct a DatasourcePlugin 
     #@param name str : plugin name

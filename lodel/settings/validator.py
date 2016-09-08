@@ -48,7 +48,8 @@ class SettingValidator(object):
         if self.__none_is_valid and value is None:
             return None
         try:
-            return self._validators[self.__name](value, **self._opt_args)
+            ret = self._validators[self.__name](value, **self._opt_args)
+            return ret
         except Exception as e:
             raise SettingsValidationError(e)
     
@@ -250,10 +251,13 @@ def emfield_val(value):
 #Able to check that the value is a plugin and if it is of a specific type
 def plugin_validator(value, ptype = None):
     from lodel.plugin.hooks import LodelHook
+    value = copy.copy(value)
     @LodelHook('lodel2_dyncode_bootstraped')
     def plugin_type_checker(hookname, caller, payload):
         from lodel.plugin.plugins import Plugin
         from lodel.plugin.exceptions import PluginError
+        if value is None:
+            return
         try:
             plugin = Plugin.get(value)
         except PluginError:
@@ -266,7 +270,13 @@ named  '%s' that is a '%s' plugin"
             msg %= (ptype, value, plugin._type_conf_name)
             raise SettingsValidationError(msg)
     return value
-        
+
+def custom_list_validator(value, validator_name, validator_kwargs = None):
+    validator_kwargs = dict() if validator_kwargs is None else validator_kwargs
+    validator = SettingValidator(validator_name, **validator_kwargs)
+    for item in value.split():
+        validator(item)
+    return value.split()
 
 #
 #   Default validators registration
@@ -276,6 +286,11 @@ SettingValidator.register_validator(
     'plugin',
     plugin_validator,
     'plugin name & type validator')
+
+SettingValidator.register_validator(
+    'custom_list',
+    custom_list_validator,
+    'A list validator that takes a "validator_name" as argument')
 
 SettingValidator.register_validator(
     'dummy',
