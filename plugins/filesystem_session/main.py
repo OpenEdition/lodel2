@@ -16,6 +16,7 @@ __sessions = dict()
 
 SESSION_TOKENSIZE = 150
 
+
 ## @brief generates a new session token
 # @return str
 def generate_token():
@@ -34,7 +35,7 @@ def check_token(token):
     if token not in __sessions.keys():
         raise ClientAuthenticationFailure("No session found for this token")
 
-
+## @brief returns a session file path for a specific token
 def generate_file_path(token):
     return os.path.abspath(os.path.join(Settings.sessions.directory, Settings.sessions.file_template) % token)
 
@@ -81,6 +82,9 @@ def destroy_session(token):
     logger.debug("Session %s unregistered" % token)
 
 
+## @brief restores a session's content
+# @param token str
+# @return FileSystemSession|None
 def restore_session(token):
     gc()
     check_token(token)
@@ -93,6 +97,9 @@ def restore_session(token):
         return None  # raise FileNotFoundError("Session file not found for the token %s" % token)
 
 
+## @brief saves the session's content to a file
+# @param token str
+# @param datas dict
 def save_session(token, datas):
     session = datas
     if not isinstance(datas, FileSystemSession):
@@ -109,6 +116,7 @@ def save_session(token, datas):
     logger.debug("Session %s saved" % token)
 
 
+## @brief session store's garbage collector
 def gc():
     # Unregistered files in the session directory
     session_files_directory = os.path.abspath(Settings.sessions.directory)
