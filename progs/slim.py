@@ -15,7 +15,9 @@ import sys
 import shutil
 import argparse
 import logging
+import re
 import json
+import configparser
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,6 +49,40 @@ def run_make(target, names):
         os.system('make %s' % target)
     os.chdir(cwd)
             
+
+##@brief Set configuration given args
+#@param args as returned by argparse
+def set_conf(name, args):
+    validate_names([name])
+    conffile = get_conffile(name)
+    
+
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(conffile)
+
+
+    if args.interface is not None:
+        if args.interface not in ('web', 'python'):
+            raise TypeError("Interface can only be on of : 'web', 'python'")
+        config['lodel2']['interface'] = args.interface
+    interface = config['lodel2']['interface']
+    if interface == 'web':
+        if 'lodel.webui' not in config:
+            config['lodel.webui'] = dict()
+            config['lodel.webui']['standalone'] = 'True'
+        if args.listen_port is not None:
+            config['lodel.webui']['listen_port'] = str(args.listen_port)
+        if args.listen_address is not None:
+            config['lodel.webui']['listen_address'] = str(args.listen_address)
+    else: #interface is python
+        if args.listen_port is not None or args.listen_address is not None:
+            logging.error("Listen port and listen address will not being set. \
+Selected interface is not the web iterface")
+        if 'lodel.webui' in config:
+            del(config['lodel.webui'])
+    #Now config should be OK to be written again in conffile
+    with open(conffile, 'w+') as cfp:
+        config.write(cfp)
 
 ##@brief If the name is not valid raise
 def name_is_valid(name):
@@ -138,15 +174,29 @@ def get_conffile(name):
     return os.path.join(store_datas[name]['path'], CONFFILE)
 
 ##@brief Print the list of instances and exit
-def list_instances(verbosity):
+#@param verbosity int
+#@param batch bool : if true make simple output
+def list_instances(verbosity, batch):
     verbosity = 0 if verbosity is None else verbosity
     if not os.path.isfile(STORE_FILE):
         print("No store file, no instances are existing. Exiting...",
             file=sys.stderr)
         exit(0)
     store_datas = get_store_datas()
-    print('Instances list :')
+    if not batch:
+        print('Instances list :')
     for name in store_datas:
+        details_instance(name, verbosity, batch)
+    exit(0)
+
+##@brief Print instance informations and return (None)
+#@param name str : instance name
+#@param verbosity int
+#@param batch bool : if true make simple output
+def details_instance(name, verbosity, batch):
+    validate_names([name])
+    store_datas = get_store_datas()
+    if not batch:
         msg = "\t- '%s'" % name
         if verbosity > 0:
             msg += ' path = "%s"' % store_datas[name]['path']
@@ -159,19 +209,35 @@ def list_instances(verbosity):
             msg += "\t\t=========================\n"
 
         print(msg)
-    exit(0)
-
+    else:
+        msg = name
+        if verbosity > 0:
+            msg += "\t"+'"%s"' % store_datas[name]['path']
+        if verbosity > 1:
+            conffile = get_conffile(name)
+            msg += "\n\t#####"+conffile+"#####\n"
+            with open(conffile, 'r') as cfp:
+                for line in cfp:
+                    msg += "\t"+line
+            msg += "\n\t###########"
+        print(msg)
+    
 ##@brief Returns instanciated parser
 def get_parser():
     parser = argparse.ArgumentParser(
         description='SLIM (Simple Lodel Instance Manager.)')
     selector = parser.add_argument_group('Instances selectors')
     actions = parser.add_argument_group('Instances actions')
+    confs = parser.add_argument_group('Options (use with -c or -s)')
+
     parser.add_argument('-l', '--list', 
         help='list existing instances and exit', action='store_const',
         const=True, default=False)
     parser.add_argument('-v', '--verbose', action='count')
-
+    parser.add_argument('-b', '--batch', action='store_const',
+        default=False, const=True,
+        help="Format output (when possible) making it usable by POSIX scripts \
+(only implemented for -l for the moment)")
     selector.add_argument('-a', '--all', action='store_const',
         default=False, const=True,
         help='Select all instances')
@@ -184,6 +250,9 @@ def get_parser():
     actions.add_argument('-d', '--delete', action='store_const',
         default=False, const=True,
         help="Delete an instance with given name (see -n --name)")
+    actions.add_argument('-s', '--set-option', action='store_const',
+        default=False, const=True,
+        help="Use this flag to set options on instance")
     actions.add_argument('-e', '--edit-config', action='store_const',
         default=False, const=True,
         help='Edit configuration of specified instance')
@@ -197,14 +266,29 @@ def get_parser():
     actions.add_argument('-m', '--make', metavar='TARGET', type=str,
         nargs="?", default='not',
         help='Run make for selected instances')
+
+    confs.add_argument('--interface', type=str,
+        help="Select wich interface to run. Possible values are \
+'python' and 'web'")
+    confs.add_argument('--listen-port', type=int,
+        help="Select the port on wich the web interface will listen to")
+    confs.add_argument('--listen-address', type=str,
+        help="Select the address on wich the web interface will bind to")
     return parser
 
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
     if args.list:
-        list_instances(args.verbose)
+        # Instances list
+        if args.name is not None:
+            validate_names(args.name)
+            for name in args.name:
+                details_instance(name, args.verbose, args.batch)
+        else:
+            list_instances(args.verbose, args.batch)
     elif args.create:
+        #Instance creation
         if args.name is None:
             parser.print_help()
             print("\nAn instance name expected when creating an instance !",
@@ -213,6 +297,7 @@ if __name__ == '__main__':
         for name in args.name:
             new_instance(name)
     elif args.delete:
+        #Instance deletion
         if args.name is None:
             parser.print_help()
             print("\nAn instance name expected when creating an instance !",
@@ -222,6 +307,7 @@ if __name__ == '__main__':
         for name in args.name:
             delete_instance(name)
     elif args.make != 'not':
+        #Running make in instances
         if args.make is None:
             target = 'all'
         else:
@@ -234,6 +320,7 @@ instances, either by name using -n or all using -a")
             exit(1)
         run_make(target, names)
     elif args.edit_config:
+        #Edit configuration
         names = get_specified(args)
         if len(names) > 1:
             print("\n-e --edit-config option works only when 1 instance is \
@@ -245,10 +332,27 @@ specified")
         os.system('editor "%s"' % conffile)
         exit(0)
     elif args.interactive:
+        #Run loader.py in foreground
         if args.name is None or len(args.name) != 1:
             print("\n-i option only allowed with ONE instance name")
+            parser.print_help()
+            exit(1)
         validate_names(args.name)
         name = args.name[0]
         store_datas = get_store_datas()
         os.chdir(store_datas[name]['path'])
         os.execl('/usr/bin/env', '/usr/bin/env', 'python3', 'loader.py')
+    elif args.set_option:
+        names = None
+        if args.all:
+            names = list(get_store_datas().values())
+        elif args.name is not None:
+            names = args.name
+        if names is None:
+            print("\n-s option only allowed with instance specified (by name \
+or with -a)")
+            parser.print_help()
+            exit(1)
+        for name in names:
+            set_conf(name, args)
+        
