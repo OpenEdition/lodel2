@@ -1,6 +1,9 @@
 {% macro input(fieldname, field, value='') -%}
 	<label for="field_input_{{fieldname}}" class="col-sm-2 control-label">{{fieldname}}</label>
     <div class="col-xs-6">
+	{% if value == None %}
+		{% set value = '' %}
+	{% endif %}
 	{% if field.base_type == 'bool' %}
 		<input id="field_input_{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" >
 	{% elif field.base_type == 'password' %}
@@ -15,7 +18,7 @@
         {% endif %}
         {% if field.directly_editable %}
             <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
-            {% set l_classe = field.linked_classes %}
+            {% set l_classe = field.allowed_classes %}
             <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
         {% else %}
             <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" readonly >
