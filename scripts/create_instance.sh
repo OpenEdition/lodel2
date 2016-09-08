@@ -1,13 +1,13 @@
 #!/bin/bash
 
 usage() {
-	echo -e "Usage : $0 instance_name (instance_dir|-u) [lodel_libdir]" 1>&2
+	echo -e "Usage : $0 instance_name (instance_dir|-u) [install_tpl] [em_file]" 1>&2
 	echo -e "\n\tIf -u given as first argument update instance's loader.py" 1>&2
 	exit 1
 }
 
 cp_loader() {
-	cp -Rv $libdir/install/loader.py $instdir/
+	cp -Rv $install_tpl/loader.py $instdir/
 	# Adding lib path to loader
 	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$loader"
 }
@@ -24,8 +24,24 @@ fi
 name="$1"
 instdir="$2"
 
-libdir="$3"
-libdir="${libdir:=$(realpath $(dirname $0)/..)}/"
+
+libdir=$(realpath $(dirname $0))
+install_tpl="$3"
+install_tpl="${install_tpl:=$libdir/install}"
+em_file="$4"
+em_file="${em_file:=$libdir/examples/em_test.pickle}"
+
+libdir=$(realpath $libdir)
+install_tpl=$(realpath $install_tpl)
+em_file=$(realpath $em_file)
+
+
+if test ! -d $install_tpl
+then
+	echo "Install template directory '$install_tpl' not found"
+	echo ""
+	usage
+fi
 
 loader="$instdir/loader.py"
 conf="$instdir/conf.d/lodel2.ini"
@@ -48,11 +64,11 @@ mkdir -pv "$instdir"
 mkdir -pv "$instdir/sessions"
 chmod 700 "$instdir/sessions"
 
-#cp -Rv $libdir/install/* $instdir
-cp -Rv $libdir/install/conf.d $instdir/
-cp -Rv $libdir/examples/em_test.pickle $instdir/editorial_model.pickle
-ln -sv $libdir/install/Makefile $instdir/Makefile
-ln -sv $libdir/install/lodel_admin.py $instdir/lodel_admin.py
+#cp -Rv $install_tpl/* $instdir
+cp -Rv $install_tpl/conf.d $instdir/
+cp -Rv $em_file $instdir/editorial_model.pickle
+ln -sv $install_tpl/Makefile $instdir/Makefile
+ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
 ln -sv $libdir/plugins $instdir/plugins
 cp_loader
 # Adding instance name to conf
