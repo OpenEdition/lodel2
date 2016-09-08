@@ -70,26 +70,32 @@ class SettingsLoader(object):
             conf[section] = dict()
 
         sec = conf[section]
+        result = None
         if keyname in sec:
             result = sec[keyname]['value']
+            if result is not None:
+                result = result.strip()
+                if len(result) == 0:
+                    result = None
             try:
                 del self.__conf_sv[section + ':' + keyname]
             except KeyError: #allready fetched
                 pass
-        elif default_value is None and mandatory:
-            msg = "Default value mandatory for option %s" % keyname
-            expt = SettingsError(   msg = msg,
-                                    key_id = section+'.'+keyname,
-                                    filename = sec[keyname]['file'])
-            self.__errors_list.append(expt)
-            return
-        else:
-            sec[keyname]=dict()
-            sec[keyname]['value'] = default_value
-            sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
-            result = default_value
-            logger.debug("Using default value for configuration key %s:%s" % (
-                section, keyname))
+        if result is None:
+            if default_value is None and mandatory:
+                msg = "Default value mandatory for option %s" % keyname
+                expt = SettingsError(   msg = msg,
+                                        key_id = section+'.'+keyname,
+                                        filename = sec[keyname]['file'])
+                self.__errors_list.append(expt)
+                return
+            else:
+                sec[keyname]=dict()
+                sec[keyname]['value'] = default_value
+                sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
+                result = default_value
+                logger.debug("Using default value for configuration key %s:%s" % (
+                    section, keyname))
 
         try:
             return validator(result)
