@@ -25,7 +25,7 @@ name="$1"
 instdir="$2"
 
 
-libdir=$(realpath $(dirname $0))
+libdir=$(realpath $(dirname $0)/../)
 install_tpl="$3"
 install_tpl="${install_tpl:=$libdir/install}"
 em_file="$4"
