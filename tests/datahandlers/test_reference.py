@@ -48,7 +48,35 @@ class MultipleRefTestCase(unittest.TestCase):
 
     def test_multiref_check_data_value_not_iter(self):
         test_multiref = MultipleRef(3)
-        for test_value in [(obj3, 15)]:
-            value = test_multiref._check_data_value(test_value)
-            self.assertEqual(test_value, value)
+        for test_value in [obj3]:
+            with self.assertRaises(FieldValidationError):
+                test_multiref._check_data_value(test_value)
+    
+    def test_multiref_check_data_multi_bad_value_error(self):
+        test_multiref = MultipleRef(3)
+        for test_value in [(obj3, 15, 'toto')]:
+            with self.assertRaises(FieldValidationError) as cm:
+                test_multiref._check_data_value(test_value)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.args, ("MultipleRef have for invalid values [15,'toto']  :",))
+    
+    def test_multiref_check_data_too_max_lenght_iter_error(self):
+        test_multiref = MultipleRef(3)
+        for test_value in [(obj3, obj2, obj1, obj3)]:
+            with self.assertRaises(FieldValidationError):
+                test_multiref._check_data_value(test_value)
 
+
+    def test_multiref_check_data_uid_multi_bad_value_error(self):
+        test_multiref = MultipleRef(5, **{'allowed_classes' : [dyncode.Person, dyncode.Collection]})
+        for test_value in [(obj3, obj2, 1, 15, 'toto')]:
+            with self.assertRaises(FieldValidationError) as cm:
+                test_multiref._check_data_value(test_value)
+            the_exception = cm.exception
+            self.assertEqual(the_exception.args, ("MultipleRef have for invalid values ['toto']  :",))
+    
+    def test_multiref_check_data_object_uid_multi_good_value_error(self):
+        test_multiref = MultipleRef(5, **{'allowed_classes' : [dyncode.Person, dyncode.Collection]})
+        for test_value in [(obj3, obj2, 1.2, 15)]:
+                value = test_multiref._check_data_value(test_value)
+                self.assertEqual(value, [obj3, obj2, 1, 15])

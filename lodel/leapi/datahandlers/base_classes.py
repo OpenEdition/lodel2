@@ -298,10 +298,13 @@ class Reference(DataHandler):
         value = super()._check_data_value(value)
         if not (hasattr(value, '__class__') and
                 issubclass(value.__class__, LeObject)):
-            rcls = list(self.__allowed_classes)[0]
-            uidname = rcls.uid_fieldname()[0]# TODO multiple uid is broken
-            uiddh = rcls.data_handler(uidname)
-            value = uiddh._check_data_value(value)
+            if self.__allowed_classes:
+                rcls = list(self.__allowed_classes)[0]
+                uidname = rcls.uid_fieldname()[0]# TODO multiple uid is broken
+                uiddh = rcls.data_handler(uidname)
+                value = uiddh._check_data_value(value)
+            else:
+                raise FieldValidationError("Reference datahandler can not check this value %s if any allowed_class is allowed." % value)
         return value
 
     ##@brief Check datas consistency
@@ -387,23 +390,17 @@ class MultipleRef(Reference):
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
-        error_list = []
-        # if we have got a str
-        # right place to test this ?
-        
-        if isinstance(value, str):
-            value.replace(" ","")
-            s_value=value.split(',')
-            value=list(s_value)
-        logger.debug(value)
-        for i,v in enumerate(s_value):
-            new_val = super()._check_data_value(v)
-            value[i]=new_val
-            error_list[i]=new_val
-        logger.debug(value)
-        if len(error_list) >0:
-            raise FieldValidationError("MultipleRef have for error :", error_list)
-        return value
+        new_val = list() 
+        error_list = list()
+        for i,v in enumerate(value):
+            try:
+                v = super()._check_data_value(v)
+                new_val.append(v)
+            except (FieldValidationError) as f:
+                error_list.append(repr(v))
+        if error_list:
+            raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
+        return new_val
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
         cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
