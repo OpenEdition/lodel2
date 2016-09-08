@@ -8,6 +8,8 @@ CREATION_SCRIPT='../scripts/create_instance.sh'
 INSTALL_TPL = './slim_ressources/slim_install_model'
 EMFILE = './slim_ressources/emfile.pickle'
 
+CONFFILE='conf.d/lodel2.ini'
+
 import os, os.path
 import sys
 import shutil
@@ -129,13 +131,34 @@ def save_datas(datas):
     with open(STORE_FILE, 'w+') as sfp:
         json.dump(datas, sfp)
 
+##@return conffile path
+def get_conffile(name):
+    validate_names([name])
+    store_datas = get_store_datas()
+    return os.path.join(store_datas[name]['path'], CONFFILE)
+
 ##@brief Print the list of instances and exit
 def list_instances(verbosity):
+    verbosity = 0 if verbosity is None else verbosity
     if not os.path.isfile(STORE_FILE):
         print("No store file, no instances are existing. Exiting...",
             file=sys.stderr)
         exit(0)
+    store_datas = get_store_datas()
     print('Instances list :')
+    for name in store_datas:
+        msg = "\t- '%s'" % name
+        if verbosity > 0:
+            msg += ' path = "%s"' % store_datas[name]['path']
+        if verbosity > 1:
+            ruler = (''.join(['=' for _ in range(20)])) + "\n"
+            msg += "\n\t\t====conf.d/lodel2.ini====\n"
+            with open(get_conffile(name)) as cfp:
+                for line in cfp:
+                    msg += "\t\t"+line
+            msg += "\t\t=========================\n"
+
+        print(msg)
     exit(0)
 
 ##@brief Returns instanciated parser
@@ -148,6 +171,13 @@ def get_parser():
         help='list existing instances and exit', action='store_const',
         const=True, default=False)
     parser.add_argument('-v', '--verbose', action='count')
+
+    selector.add_argument('-a', '--all', action='store_const',
+        default=False, const=True,
+        help='Select all instances')
+    selector.add_argument('-n', '--name', metavar='NAME', type=str, nargs='*',
+        help="Specify an instance name")
+
     actions.add_argument('-c', '--create', action='store_const',
         default=False, const=True,
         help="Create a new instance with given name (see -n --name)")
@@ -157,11 +187,9 @@ def get_parser():
     actions.add_argument('-e', '--edit-config', action='store_const',
         default=False, const=True,
         help='Edit configuration of specified instance')
-    selector.add_argument('-a', '--all', action='store_const',
+    actions.add_argument('-i', '--interactive', action='store_const',
         default=False, const=True,
-        help='Select all instances')
-    selector.add_argument('-n', '--name', metavar='NAME', type=str, nargs='*',
-        help="Specify an instance name")
+        help='Run a loader.py from ONE instance in foreground')
     actions.add_argument('--stop', action='store_const', 
         default=False, const=True, help="Stop instances")
     actions.add_argument('--start', action='store_const', 
@@ -213,7 +241,14 @@ specified")
         validate_names(names)
         name = names[0]
         store_datas = get_store_datas()
-        conffile = os.path.join(store_datas[name]['path'], 'conf.d')
-        conffile = os.path.join(conffile, 'lodel2.ini')
+        conffile = get_conffile(name)
         os.system('editor "%s"' % conffile)
         exit(0)
+    elif args.interactive:
+        if args.name is None or len(args.name) != 1:
+            print("\n-i option only allowed with ONE instance name")
+        validate_names(args.name)
+        name = args.name[0]
+        store_datas = get_store_datas()
+        os.chdir(store_datas[name]['path'])
+        os.execl('/usr/bin/env', '/usr/bin/env', 'python3', 'loader.py')

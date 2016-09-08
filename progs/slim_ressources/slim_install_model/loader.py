@@ -15,7 +15,7 @@ if LODEL2_LIB_ABS_PATH is not None:
     if not os.path.isdir(LODEL2_LIB_ABS_PATH):
         print("FATAL ERROR : the LODEL2_LIB_ABS_PATH variable in loader.py is \
 not correct : '%s'" % LODEL2_LIB_ABS_PATH, file=sys.stderr)
-    sys.path.append(os.path.dirname(LODEL2_LIB_ABS_PATH))
+    sys.path.append(LODEL2_LIB_ABS_PATH)
 
 try:
     import lodel
