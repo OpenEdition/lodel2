@@ -4,6 +4,12 @@ from ...exceptions import *
 from lodel import logger
 import leapi_dyncode as dyncode
 
+##@brief These functions are called by the rules defined in ../urls.py
+## To browse the editorial model
+
+##@brief Controller's function to list all types (classes) of the editorial model
+# @param request : the request (get or post)
+# @note the response is given in a html page called in get_response_function
 def list_classes(request):
     if 'allclasses' in request.GET:
         allclasses = request.GET['allclasses']
@@ -11,6 +17,9 @@ def list_classes(request):
         allclasses = 1
     return get_response('listing/list_classes.html', my_classes=dyncode.dynclasses, allclasses = allclasses)
 
+##@brief Controller's function to display a type (class) of the editorial model
+# @param request : the request (get or post)
+# @note the response is given in a html page called in get_response_function
 def show_class(request):
     if 'classname' in request.GET:
         classname = request.GET['classname']
@@ -25,6 +34,9 @@ def show_class(request):
         raise HttpException(400)
     return get_response('listing/show_class.html', classname=classname)
 
+##@brief Controller's function to display an instance or a certain type
+# @param request : the request (get or post)
+# @note the response is given in a html page called in get_response_function
 def show_object(request):
     if 'classname' in request.GET:
         classname = request.GET['classname']
