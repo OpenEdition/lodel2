@@ -2,8 +2,8 @@ from lodel.settings.validator import SettingValidator
 
 CONFSPEC = {
     'lodel2.webui': {
-        'standalone': ( False,
-                        SettingValidator('bool')),
+        'standalone': ( 'False',
+                        SettingValidator('string')),
         'listen_address': ( '127.0.0.1',
                             SettingValidator('dummy')),
         'listen_port': (    '9090',

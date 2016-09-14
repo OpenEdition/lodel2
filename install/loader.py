@@ -17,6 +17,11 @@ if LODEL2_LIB_ABS_PATH is not None:
 not correct : '%s'" % LODEL2_LIB_ABS_PATH, file=sys.stderr)
     sys.path.append(LODEL2_LIB_ABS_PATH)
 
+#Set the cwd to the instance dir
+instance_dir = os.path.dirname(sys.argv[0])
+if len(instance_dir) > 0:
+    os.chdir(instance_dir)
+
 try:
     import lodel
 except ImportError as e:

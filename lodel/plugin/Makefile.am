@@ -1,5 +1,6 @@
 plugin_PYTHON=*.py
-plugindir=$(pkgythondir)/plugin
+
+plugindir=$(pkgpythondir)/plugin
 
 distclean-local:
 	-rm Makefile Makefile.in

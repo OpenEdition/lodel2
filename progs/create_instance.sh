@@ -25,11 +25,12 @@ name="$1"
 instdir="$2"
 
 
-libdir=$(realpath $(dirname $0)/../)
+libdir=[@]PKGPYTHONDIR[@]
 install_tpl="$3"
-install_tpl="${install_tpl:=$libdir/install}"
+[ -z "$install_tpl" ] && usage
 em_file="$4"
-em_file="${em_file:=$libdir/examples/em_test.pickle}"
+[ -z "$em_file" ] && usage
+
 
 libdir=$(realpath $libdir)
 install_tpl=$(realpath $install_tpl)

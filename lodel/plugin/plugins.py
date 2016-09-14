@@ -321,6 +321,9 @@ class Plugin(object, metaclass=MetaPlugType):
                     plugin = self.name,
                     expt = str(e))
                 raise PluginError(msg)
+            except Exception as e:
+                msg = "Plugin '%s' :"+str(e)
+                raise e.__class__(msg)
 
             try:
                 # loading confpsecs from file

@@ -2,14 +2,6 @@
 #-*- coding: utf-8 -*-
 
 
-INSTANCES_ABSPATH="/tmp/lodel2_instances"
-STORE_FILE='./instances.json'
-CREATION_SCRIPT='../scripts/create_instance.sh'
-INSTALL_TPL = './slim_ressources/slim_install_model'
-EMFILE = './slim_ressources/emfile.pickle'
-
-CONFFILE='conf.d/lodel2.ini'
-
 import os, os.path
 import sys
 import shutil
@@ -18,13 +10,32 @@ import logging
 import re
 import json
 import configparser
+import subprocess
 
 logging.basicConfig(level=logging.INFO)
 
-CREATION_SCRIPT=os.path.join(os.path.dirname(__file__), CREATION_SCRIPT)
-STORE_FILE=os.path.join(os.path.dirname(__file__), STORE_FILE)
-INSTALL_TPL=os.path.join(os.path.dirname(__file__), INSTALL_TPL)
-EMFILE=os.path.join(os.path.dirname(__file__), EMFILE)
+INSTANCES_ABSPATH="/tmp/lodel2_instances"
+CONFFILE='conf.d/lodel2.ini'
+try:
+    STORE_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances.json')
+    PID_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances_pid.json')
+    CREATION_SCRIPT = os.path.join("[@]LODEL2_PROGSDIR[@]", 'create_instance')
+    INSTALL_TPL = "[@]SLIM_INSTALLMODEL_DIR[@]"
+    EMFILE = os.path.join("[@]SLIM_DATADIR[@]", 'emfile.pickle')
+
+except SyntaxError:
+    STORE_FILE='./instances.json'
+    PID_FILE = './slim_instances_pid.json'
+    CREATION_SCRIPT='../scripts/create_instance.sh'
+    INSTALL_TPL = './slim_ressources/slim_install_model'
+    EMFILE = './slim_ressources/emfile.pickle'
+
+
+
+    CREATION_SCRIPT=os.path.join(os.path.dirname(__file__), CREATION_SCRIPT)
+    STORE_FILE=os.path.join(os.path.dirname(__file__), STORE_FILE)
+    INSTALL_TPL=os.path.join(os.path.dirname(__file__), INSTALL_TPL)
+    EMFILE=os.path.join(os.path.dirname(__file__), EMFILE)
 
 
 #STORE_FILE syntax :
@@ -125,6 +136,9 @@ def new_instance(name):
 ##@brief Delete an instance
 #@param name str : the instance name
 def delete_instance(name):
+    if get_pid(name) is not None:
+        logging.error("The instance '%s' is started. Stop it before deleting \
+it" % name)
     store_datas = get_store_datas()
     logging.warning("Deleting instance %s" % name)
     logging.info("Deleting instance folder %s" % store_datas[name]['path'])
@@ -135,7 +149,7 @@ def delete_instance(name):
 
 ##@brief returns stored datas
 def get_store_datas():
-    if not os.path.isfile(STORE_FILE):
+    if not os.path.isfile(STORE_FILE) or os.stat(STORE_FILE).st_size == 0:
         return dict()
     else:
         with open(STORE_FILE, 'r') as sfp:
@@ -151,6 +165,45 @@ def validate_names(names):
         for name in invalid:
             print("\t%s" % name, file=sys.stderr)
         exit(1)
+
+##@brief Returns the PID dict
+#@return a dict with instance name as key an PID as value
+def get_pids():
+    if not os.path.isfile(PID_FILE):
+        return dict()
+    with open(PID_FILE, 'r') as pdf:
+        return json.load(pfd)
+
+##@brief Save a dict of pid
+#@param pid_dict dict : key is instance name values are pid
+def save_pids(pid_dict):
+    with open(PID_FILE, 'w+') as pfd:
+        json.dump(pid_dict, pfd)
+
+##@brief Given an instance name returns its PID
+#@return False or an int
+def get_pid(name):
+    pid_datas = get_pids()
+    if name not in pid_datas:
+        return False
+    else:
+        return pid_datas[name]
+
+##@brief Start an instance
+#@param names list : instance name list
+def start_instance(names):
+    pids = get_pids()
+    store_datas = get_store_datas()
+    
+    for name in names:
+        if name in pids:
+            logging.warning("The instance %s is allready running" % name)
+            continue
+        os.chdir(store_datas[name]['path'])
+        args = [sys.executable, 'loader.py']
+        curexec = subprocess.Popen(args)
+        pids[name] = curexec.pid
+        logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
 
 ##@brief Check if instance are specified
 def get_specified(args):
@@ -355,4 +408,7 @@ or with -a)")
             exit(1)
         for name in names:
             set_conf(name, args)
+    elif args.start:
+        names = get_specified(args)
+        start_instance(names)
         

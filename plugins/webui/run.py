@@ -14,13 +14,17 @@ from .exceptions import *
 from .client import WebUiClient
 from lodel.auth.exceptions import *
 
-SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
-SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
-SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
+try:
+    SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
+    SESSION_FILES_TEMPLATE = Settings.webui.sessions.file_template
+    SESSION_EXPIRATION_LIMIT = Settings.webui.sessions.expiration
 
 
-COOKIE_SECRET_KEY = bytes(Settings.webui.cookie_secret_key, 'utf-8')
-COOKIE_SESSION_ID = Settings.webui.cookie_session_id
+    COOKIE_SECRET_KEY = bytes(Settings.webui.cookie_secret_key, 'utf-8')
+    COOKIE_SESSION_ID = Settings.webui.cookie_session_id
+except Exception as e:
+    print("Fails to start : ", e, file=sys.stderr)
+    exit(1)
 
 from werkzeug.contrib.securecookie import SecureCookie
 

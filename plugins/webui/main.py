@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import os, os.path
+import sys
 from lodel.plugin import LodelHook
 from lodel.settings import Settings
 
@@ -15,14 +16,26 @@ def root_url():
 ##@brief uwsgi startup demo
 @LodelHook('lodel2_loader_main')
 def uwsgi_fork(hook_name, caller, payload):
+    
+    standalone = Settings.webui.standalone
+    if standalone.lower() == 'false':
+        return
+    else:
+        if standalone.lower() == 'true':
+            cmd='{uwsgi} --http-socket {addr}:{port} --module plugins.webui.run'
+            cmd = cmd.format(
+                        addr = Settings.webui.listen_address,
+                        port = Settings.webui.listen_port,
+                        uwsgi= Settings.webui.uwsgicmd)
+            if Settings.webui.virtualenv is not None:
+                cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
-    if Settings.webui.standalone:
-        cmd='{uwsgi} --http-socket {addr}:{port} --module plugins.webui.run'
-        cmd = cmd.format(
-                    addr = Settings.webui.listen_address,
-                    port = Settings.webui.listen_port,
-                    uwsgi= Settings.webui.uwsgicmd)
-        if Settings.webui.virtualenv is not None:
-            cmd += " --virtualenv %s" % Settings.webui.virtualenv
-
-        exit(os.system(cmd))
+        elif Settings.webui.standalone == 'uwsgi':
+            cmd = '{uwsgi} --ini ./plugins/webui/uwsgi/uwsgi.ini'
+            cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd)
+        
+        try:
+            exit(os.system(cmd))
+        except Exception as e:
+            print("Webui plugin uwsgi fork fails : ", e, file=sys.stderr)
+            exit(1)

@@ -1,4 +1,9 @@
-SUBDIRS=lodel
+SUBDIRS=lodel progs plugins
+EXTRA_DIST=doc
+
+lodel2datadir=$(datadir)/lodel2
+lodel2_localstate_DATA =
+lodel2_localstatedir=$(localstatedir)/lodel2
 
 #python=/usr/bin/env python3
 python=@PYTHON@
