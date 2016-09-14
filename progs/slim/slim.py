@@ -10,6 +10,7 @@ import logging
 import re
 import json
 import configparser
+import signal
 import subprocess
 
 logging.basicConfig(level=logging.INFO)
@@ -176,7 +177,7 @@ def validate_names(names):
 def get_pids():
     if not os.path.isfile(PID_FILE):
         return dict()
-    with open(PID_FILE, 'r') as pdf:
+    with open(PID_FILE, 'r') as pfd:
         return json.load(pfd)
 
 ##@brief Save a dict of pid
@@ -196,7 +197,7 @@ def get_pid(name):
 
 ##@brief Start an instance
 #@param names list : instance name list
-def start_instance(names):
+def start_instances(names):
     pids = get_pids()
     store_datas = get_store_datas()
     
@@ -209,6 +210,17 @@ def start_instance(names):
         curexec = subprocess.Popen(args)
         pids[name] = curexec.pid
         logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
+    save_pids(pids)
+
+def stop_instances(names):
+    pids = get_pids()
+    store_datas = get_store_datas()
+    for name in names:
+        if name not in pids:
+            logging.warning("The instance %s is not running" % name)
+            continue
+        pid = pids[name]
+        os.kill(pid, signal.SIGINT)
 
 ##@brief Check if instance are specified
 def get_specified(args):
@@ -254,8 +266,11 @@ def list_instances(verbosity, batch):
 def details_instance(name, verbosity, batch):
     validate_names([name])
     store_datas = get_store_datas()
+    pids = get_pids()
     if not batch:
         msg = "\t- '%s'" % name
+        if name in pids:
+            msg += ' [Run PID %d] ' % pids[name]
         if verbosity > 0:
             msg += ' path = "%s"' % store_datas[name]['path']
         if verbosity > 1:
@@ -308,6 +323,9 @@ def get_parser():
     actions.add_argument('-d', '--delete', action='store_const',
         default=False, const=True,
         help="Delete an instance with given name (see -n --name)")
+    actions.add_argument('-p', '--purge', action='store_const',
+        default=False, const=True,
+        help="Delete ALL instances")
     actions.add_argument('-s', '--set-option', action='store_const',
         default=False, const=True,
         help="Use this flag to set options on instance")
@@ -354,8 +372,23 @@ if __name__ == '__main__':
             exit(1)
         for name in args.name:
             new_instance(name)
+    elif args.purge:
+        print("Are you sure ? Yes/no ",)
+        rep = sys.stdin.read()
+        if rep == 'Yes':
+            store = get_store_datas()
+            for name in store:
+                delete_instance(name)
+        elif rep.lower() != 'no':
+            print("Expect exactly 'Yes' to confirm...")
+        exit()
     elif args.delete:
         #Instance deletion
+        if args.all:
+            parser.print_help()
+            print("\n use -p --purge instead of --delete --all",
+                file=sys.stderr)
+            exit(1)
         if args.name is None:
             parser.print_help()
             print("\nAn instance name expected when creating an instance !",
@@ -415,5 +448,8 @@ or with -a)")
             set_conf(name, args)
     elif args.start:
         names = get_specified(args)
-        start_instance(names)
+        start_instances(names)
+    elif args.stop:
+        names = get_specified(args)
+        stop_instances(names)
         
