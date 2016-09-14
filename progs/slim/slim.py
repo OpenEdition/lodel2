@@ -73,24 +73,29 @@ def set_conf(name, args):
 
 
     if args.interface is not None:
-        if args.interface not in ('web', 'python'):
+        iarg = args.interface
+        if iarg not in ('web', 'python'):
             raise TypeError("Interface can only be on of : 'web', 'python'")
-        config['lodel2']['interface'] = args.interface
+        if iarg.lower() == 'web':
+            iarg = 'webui'
+        else:
+            iarg = ''
+        config['lodel2']['interface'] = iarg
     interface = config['lodel2']['interface']
-    if interface == 'web':
-        if 'lodel.webui' not in config:
-            config['lodel.webui'] = dict()
-            config['lodel.webui']['standalone'] = 'True'
+    if interface == 'webui':
+        if 'lodel2.webui' not in config:
+            config['lodel2.webui'] = dict()
+            config['lodel2.webui']['standalone'] = 'True'
         if args.listen_port is not None:
-            config['lodel.webui']['listen_port'] = str(args.listen_port)
+            config['lodel2.webui']['listen_port'] = str(args.listen_port)
         if args.listen_address is not None:
-            config['lodel.webui']['listen_address'] = str(args.listen_address)
+            config['lodel2.webui']['listen_address'] = str(args.listen_address)
     else: #interface is python
         if args.listen_port is not None or args.listen_address is not None:
             logging.error("Listen port and listen address will not being set. \
 Selected interface is not the web iterface")
         if 'lodel.webui' in config:
-            del(config['lodel.webui'])
+            del(config['lodel2.webui'])
     #Now config should be OK to be written again in conffile
     with open(conffile, 'w+') as cfp:
         config.write(cfp)
