@@ -3,7 +3,7 @@ AC_INIT([lodel], [0.1], [contact@openedition.org])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_FILES([Makefile \
-	lodel/buildconf.py \
+	lodel/buildconf.py.am \
 	lodel/Makefile \
 	lodel/auth/Makefile \
 	lodel/editorial_model/Makefile \

@@ -3,3 +3,5 @@
 
 PYMONGO=@PYMONGO@
 WEBUI=@WEBUI@
+#Populated by make
+LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
