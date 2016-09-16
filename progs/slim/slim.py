@@ -101,6 +101,46 @@ Selected interface is not the web iterface")
     with open(conffile, 'w+') as cfp:
         config.write(cfp)
 
+
+    if args.datasource_connectors is not None:
+        darg = args.datasource_connectors
+        if darg not in ('mongodb',):
+            raise TypeError("Datasource_connectors can only be of : 'mongodb'")
+        if darg.lower() == 'mongodb':
+            darg = 'mongodb_datasource'
+        else:
+            darg = ''
+        config['lodel2']['datasource_connectors'] = darg
+    datasource_connectors = config['lodel2']['datasource_connectors']
+    if datasource_connectors == 'mongodb_datasource':
+        if (('lodle2.datasources.default' not in config) or ('lodel2.datsources.dummy2' not in config)):
+            config['lodel2.datasources.default'] = dict()
+            config['lodel2.datasources.default']['identifier'] = 'mongodb_datasource.default'
+            config['lodel2.datasources.dummy2'] = dict()
+            config['lodel2.datasources.dummy2']['identifier'] = 'mongodb_datasource.default'
+        if 'lodel2.datasource.mongodb_datasource.default' not in config:
+                config['lodel2.datasource.mongodb_datasource.default'] = dict()
+                if args.host is not None:
+                    config['lodel2.datasource.mongodb_datasource.default']['host'] = str(args.host)
+                if args.user is not None:
+                    config['lodel2.datasource.mongodb_datasource.default']['username'] = str(args.user)
+                if args.password is not None:
+                    config['lodel2.datasource.mongodb_datasource.default']['password'] = str(args.password)
+                if args.db_name is not None:
+                    config['lodel2.datasource.mongodb_datasource.default']['db_name'] = str(args.db_name)
+    #if 'lodel2.datasource.mongodb_datasource.default' in config:
+    #        del(config['lodel2.datasource.mongodb_datasource.default'])
+    with open(conffile, 'w+') as cfp:
+        config.write(cfp)
+
+
+
+        
+        
+
+
+
+
 ##@brief If the name is not valid raise
 def name_is_valid(name):
     allowed_chars = [chr(i) for i in range(ord('a'), ord('z')+1)]
@@ -397,6 +437,18 @@ to 1 instance")
         help="Select the port on wich the web interface will listen to")
     confs.add_argument('--listen-address', type=str,
         help="Select the address on wich the web interface will bind to")
+    
+    confs.add_argument('--datasource_connectors', type=str,
+        help="Select wich datasource to connect. Possible values are \
+'mongodb' and 'mysql'")
+    confs.add_argument('--host', type=str,
+        help="Select the host on which the server DB listen to")
+    confs.add_argument('--user', type=str,
+        help="Select the user name to connect to the database")
+    confs.add_argument('--password', type=str,
+        help="Select the password name to connect the datasource")
+    confs.add_argument('--db_name', type=str,
+        help="Select the database name on which datasource will be connect")
     return parser
 
 if __name__ == '__main__':
