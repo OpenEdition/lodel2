@@ -12,6 +12,7 @@ import json
 import configparser
 import signal
 import subprocess
+from lodel import buildconf
 
 logging.basicConfig(level=logging.INFO)
 
@@ -247,7 +248,7 @@ def start_instances(names, foreground):
         os.chdir(store_datas[name]['path'])
         args = [sys.executable, 'loader.py']
         if foreground:
-            logging.info("Calling execl with : ", args)
+            logging.info("Calling execl with : %s" % args)
             os.execl(args[0], *args)
             return #only usefull if execl call fails (not usefull)
         else:
@@ -273,7 +274,7 @@ def stop_instances(names):
             os.kill(pid, signal.SIGINT)
         except ProcessLookupError:
             logging.warning("The instance %s seems to be in error, no process \
-with pid %d found" % (pids[name], name))
+with pid %d found" % (name, pids[name]))
         del(pids[name])
     save_pids(pids)
 
@@ -302,7 +303,7 @@ def get_specified(args):
         names = args.name
     else:
         names = None
-    return names
+    return sorted(names)
 
 ##@brief Saves store datas
 def save_datas(datas):
@@ -370,6 +371,28 @@ def details_instance(name, verbosity, batch):
                     msg += "\t"+line
             msg += "\n\t###########"
         print(msg)
+
+##@brief Given instance names generate nginx confs
+#@param names list : list of instance names
+def nginx_conf(names):
+    ret = """
+server {
+    listen 80;
+    server_name _;
+    include uwsgi_params;
+"""
+    for name in names:
+        name = name.replace('/', '_')
+        sockfile = os.path.join(buildconf.LODEL2VARDIR, 'uwsgi_sockets/')
+        sockfile = os.path.join(sockfile, name + '.sock')
+        ret += """
+    location /{instance_name}/ {{
+        uwsgi_pass unix://{sockfile};
+    }}""".format(instance_name =  name, sockfile = sockfile)
+    ret += """
+}
+"""
+    print(ret)
     
 ##@brief Returns instanciated parser
 def get_parser():
@@ -415,6 +438,9 @@ def get_parser():
     actions.add_argument('-m', '--make', metavar='TARGET', type=str,
         nargs="?", default='not',
         help='Run make for selected instances')
+    actions.add_argument('--nginx-conf', action='store_const',
+        default = False, const=True,
+        help="Output a conf for nginx given selected instances")
 
     startstop.add_argument('--stop', action='store_const', 
         default=False, const=True, help="Stop instances")
@@ -519,6 +545,13 @@ specified")
         conffile = get_conffile(name)
         os.system('editor "%s"' % conffile)
         exit(0)
+    elif args.nginx_conf:
+        names = get_specified(args)
+        if len(names) == 0:
+            parser.print_help()
+            print("\nSpecify at least 1 instance or use --all")
+            exit(1)
+        nginx_conf(names)
     elif args.interactive:
         #Run loader.py in foreground
         if args.name is None or len(args.name) != 1:

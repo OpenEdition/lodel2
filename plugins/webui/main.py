@@ -28,22 +28,27 @@ def uwsgi_fork(hook_name, caller, payload):
             os.mkdir(sockfile)
         sockfile = os.path.join(sockfile,
             Settings.sitename.replace('/','_') + '.sock')
+        logfile = os.path.join(
+            buildconf.LODEL2LOGDIR, 'uwsgi_%s.log' % (
+                Settings.sitename.replace('/', '_')))
+            
         if standalone.lower() == 'true':
             cmd='{uwsgi} --http-socket {addr}:{port} --module \
-plugins.webui.run --socket {sockfile}'
+plugins.webui.run --socket {sockfile} --logto {logfile}'
             cmd = cmd.format(
                         addr = Settings.webui.listen_address,
                         port = Settings.webui.listen_port,
                         uwsgi= Settings.webui.uwsgicmd,
-                        sockfile=sockfile)
+                        sockfile=sockfile,
+                        logfile = logfile)
             if Settings.webui.virtualenv is not None:
                 cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
         elif Settings.webui.standalone == 'uwsgi':
             cmd = '{uwsgi} --ini ./plugins/webui/uwsgi/uwsgi.ini \
---socket {sockfile}'
+--socket {sockfile} --logto {logfile}'
             cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd, 
-                sockfile = sockfile)
+                sockfile = sockfile, logfile = logfile)
         
         try:
             args = shlex.split(cmd)
