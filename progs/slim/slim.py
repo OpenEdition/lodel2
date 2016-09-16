@@ -113,7 +113,7 @@ Selected interface is not the web iterface")
         config['lodel2']['datasource_connectors'] = darg
     datasource_connectors = config['lodel2']['datasource_connectors']
     if datasource_connectors == 'mongodb_datasource':
-        if (('lodle2.datasources.default' not in config) or ('lodel2.datsources.dummy2' not in config)):
+        if (('lodle2.datasources.default' not in config) or ('lodel2.datasources.dummy2' not in config)):
             config['lodel2.datasources.default'] = dict()
             config['lodel2.datasources.default']['identifier'] = 'mongodb_datasource.default'
             config['lodel2.datasources.dummy2'] = dict()
