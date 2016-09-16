@@ -28,5 +28,6 @@ do
 	slim -n $iname -c
 	slim -n $iname -s --interface web
 	slim -n $iname -m
+	slim -n $iname -s --datasource_connectors mongodb --host localhost --user lodel2 --password lodel2 --db_name lodel2
 done
 

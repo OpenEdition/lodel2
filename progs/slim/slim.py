@@ -133,13 +133,7 @@ Selected interface is not the web iterface")
     with open(conffile, 'w+') as cfp:
         config.write(cfp)
 
-
-
         
-        
-
-
-
 
 ##@brief If the name is not valid raise
 def name_is_valid(name):
