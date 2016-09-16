@@ -86,7 +86,7 @@ def set_conf(name, args):
     if interface == 'webui':
         if 'lodel2.webui' not in config:
             config['lodel2.webui'] = dict()
-            config['lodel2.webui']['standalone'] = 'True'
+            config['lodel2.webui']['standalone'] = 'uwsgi'
         if args.listen_port is not None:
             config['lodel2.webui']['listen_port'] = str(args.listen_port)
         if args.listen_address is not None:
@@ -151,7 +151,7 @@ it" % name)
     logging.warning("Deleting instance %s" % name)
     logging.info("Deleting instance folder %s" % store_datas[name]['path'])
     shutil.rmtree(store_datas[name]['path'])
-    logging.info("Deleting instance from json store file")
+    logging.debug("Deleting instance from json store file")
     del(store_datas[name])
     save_datas(store_datas)
 
@@ -322,6 +322,10 @@ def details_instance(name, verbosity, batch):
         print(msg)
     else:
         msg = name
+        if name in pids and is_running(name, pids[name]):
+            msg += ' %d ' % pids[name]
+        else:
+            msg += ' stopped '
         if verbosity > 0:
             msg += "\t"+'"%s"' % store_datas[name]['path']
         if verbosity > 1:
@@ -418,10 +422,12 @@ if __name__ == '__main__':
         for name in args.name:
             new_instance(name)
     elif args.purge:
+        # SLIM Purge (stop & delete all)
         print("Do you really want to delete all the instances ? Yes/no ",)
         rep = sys.stdin.readline()
         if rep == "Yes\n":
             store = get_store_datas()
+            stop_instances(store.keys())
             for name in store:
                 delete_instance(name)
         elif rep.lower() != 'no':

@@ -5,6 +5,7 @@ import sys
 import shlex
 from lodel.plugin import LodelHook
 from lodel.settings import Settings
+from lodel import buildconf
 
 PLUGIN_PATH = os.path.dirname(__file__)
 
@@ -22,18 +23,27 @@ def uwsgi_fork(hook_name, caller, payload):
     if standalone.lower() == 'false':
         return
     else:
+        sockfile = os.path.join(buildconf.LODEL2VARDIR, 'uwsgi_sockets/')
+        if not os.path.isdir(sockfile):
+            os.mkdir(sockfile)
+        sockfile = os.path.join(sockfile,
+            Settings.sitename.replace('/','_') + '.sock')
         if standalone.lower() == 'true':
-            cmd='{uwsgi} --http-socket {addr}:{port} --module plugins.webui.run'
+            cmd='{uwsgi} --http-socket {addr}:{port} --module \
+plugins.webui.run --socket {sockfile}'
             cmd = cmd.format(
                         addr = Settings.webui.listen_address,
                         port = Settings.webui.listen_port,
-                        uwsgi= Settings.webui.uwsgicmd)
+                        uwsgi= Settings.webui.uwsgicmd,
+                        sockfile=sockfile)
             if Settings.webui.virtualenv is not None:
                 cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
         elif Settings.webui.standalone == 'uwsgi':
-            cmd = '{uwsgi} --ini ./plugins/webui/uwsgi/uwsgi.ini'
-            cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd)
+            cmd = '{uwsgi} --ini ./plugins/webui/uwsgi/uwsgi.ini \
+--socket {sockfile}'
+            cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd, 
+                sockfile = sockfile)
         
         try:
             args = shlex.split(cmd)
