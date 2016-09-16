@@ -239,10 +239,6 @@ class DataField(DataHandler):
 #
 # References are fields that stores a reference to another
 # editorial object
-#
-#
-#@todo Check data implementation : check_data = is value an UID or an
-#LeObject child instance
 #@todo Construct data implementation : transform the data into a LeObject
 #instance
 #@todo Check data consistency implementation : check that LeObject instance
