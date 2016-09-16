@@ -2,6 +2,7 @@
 
 import os, os.path
 import sys
+import shlex
 from lodel.plugin import LodelHook
 from lodel.settings import Settings
 
@@ -35,7 +36,9 @@ def uwsgi_fork(hook_name, caller, payload):
             cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd)
         
         try:
-            exit(os.system(cmd))
+            args = shlex.split(cmd)
+            exit(os.execl(args[0], *args))
         except Exception as e:
-            print("Webui plugin uwsgi fork fails : ", e, file=sys.stderr)
+            print("Webui plugin uwsgi execl fails cmd was '%s' error : " % cmd,
+                e, file=sys.stderr)
             exit(1)
