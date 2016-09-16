@@ -9,11 +9,13 @@
 <h2>Select a class</h2>
 <ul>
 {% for classe in my_classes %}
-    {% set abst = '' %}
+    {% set abst = ' - Abstract' %}
     {% if not classe.is_abstract() %}
     {% set abst = ' - ' ~ classe.get(None)|length %}
+    <li> <a href="/{{ root_url }}/admin/class_admin?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
+    {% else %}
+    <li> {{ classe.__name__ }} {{ abst }}</li>
     {% endif %}
-    <li> <a href="class_admin?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
     {% endfor %}
 </ul>
 <div>

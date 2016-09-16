@@ -17,7 +17,7 @@
             {% else %}
             {% set abst = ' - ' ~ child.get(None)|length %}
          {% endif %}
-     <li><a href="show_class?name={{ child.__name__ }}" target="_blank">{{ child.__name__ }}</a>{{ abst }}</li>
+     <li><a href="/{{ root_url }}/show_class?classname={{ child.__name__ }}" target="_blank">{{ child.__name__ }}</a>{{ abst }}</li>
      {% endfor %}
      </ul>
   {% endif %}
@@ -27,7 +27,7 @@
     {% set objects = my_class.get(None) %}
     <ul>
     {% for obj in objects %}
-        <li><a href="show_object?classname={{ classname }}&lodel_id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
+        <li><a href="/{{ root_url }}/show_object?classname={{ classname }}&lodel_id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
     {% endfor %}
     </ul>
  {% endif %}
