@@ -142,9 +142,11 @@ def new_instance(name):
 ##@brief Delete an instance
 #@param name str : the instance name
 def delete_instance(name):
-    if get_pid(name) is not None:
+    pids = get_pids()
+    if name in pids:
         logging.error("The instance '%s' is started. Stop it before deleting \
 it" % name)
+        return
     store_datas = get_store_datas()
     logging.warning("Deleting instance %s" % name)
     logging.info("Deleting instance folder %s" % store_datas[name]['path'])
@@ -175,7 +177,7 @@ def validate_names(names):
 ##@brief Returns the PID dict
 #@return a dict with instance name as key an PID as value
 def get_pids():
-    if not os.path.isfile(PID_FILE):
+    if not os.path.isfile(PID_FILE) or os.stat(PID_FILE).st_size == 0:
         return dict()
     with open(PID_FILE, 'r') as pfd:
         return json.load(pfd)
@@ -193,11 +195,14 @@ def get_pid(name):
     if name not in pid_datas:
         return False
     else:
-        return pid_datas[name]
+        pid = pid_datas[name]
+        if not is_running(name, pid):
+            return False
+        return pid
 
 ##@brief Start an instance
 #@param names list : instance name list
-def start_instances(names):
+def start_instances(names, foreground):
     pids = get_pids()
     store_datas = get_store_datas()
     
@@ -207,11 +212,21 @@ def start_instances(names):
             continue
         os.chdir(store_datas[name]['path'])
         args = [sys.executable, 'loader.py']
-        curexec = subprocess.Popen(args)
-        pids[name] = curexec.pid
-        logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
+        if foreground:
+            logging.info("Calling execl with : ", args)
+            os.execl(args[0], *args)
+            return #only usefull if execl call fails (not usefull)
+        else:
+            curexec = subprocess.Popen(args,
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, preexec_fn=os.setsid,
+                cwd = store_datas[name]['path'])
+            pids[name] = curexec.pid
+            logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
     save_pids(pids)
 
+##@brief Stop an instance given its name
+#@param names list : names list
 def stop_instances(names):
     pids = get_pids()
     store_datas = get_store_datas()
@@ -220,7 +235,30 @@ def stop_instances(names):
             logging.warning("The instance %s is not running" % name)
             continue
         pid = pids[name]
-        os.kill(pid, signal.SIGINT)
+        try:
+            os.kill(pid, signal.SIGINT)
+        except ProcessLookupError:
+            logging.warning("The instance %s seems to be in error, no process \
+with pid %d found" % (pids[name], name))
+        del(pids[name])
+    save_pids(pids)
+
+##@brief Checks that a process is running
+#
+#If not running clean the pid list
+#@return bool
+def is_running(name, pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except (OSError,ProcessLookupError):
+        pid_datas = get_pids()
+        logging.warning("Instance '%s' was marked as running, but not \
+process with pid %d found. Cleaning pid list" % (name, pid))
+        del(pid_datas[name])
+        save_pids(pid_datas)
+    return False
+        
 
 ##@brief Check if instance are specified
 def get_specified(args):
@@ -269,7 +307,7 @@ def details_instance(name, verbosity, batch):
     pids = get_pids()
     if not batch:
         msg = "\t- '%s'" % name
-        if name in pids:
+        if name in pids and is_running(name, pids[name]):
             msg += ' [Run PID %d] ' % pids[name]
         if verbosity > 0:
             msg += ' path = "%s"' % store_datas[name]['path']
@@ -302,6 +340,7 @@ def get_parser():
     selector = parser.add_argument_group('Instances selectors')
     actions = parser.add_argument_group('Instances actions')
     confs = parser.add_argument_group('Options (use with -c or -s)')
+    startstop = parser.add_argument_group('Start/stop options')
 
     parser.add_argument('-l', '--list', 
         help='list existing instances and exit', action='store_const',
@@ -335,13 +374,17 @@ def get_parser():
     actions.add_argument('-i', '--interactive', action='store_const',
         default=False, const=True,
         help='Run a loader.py from ONE instance in foreground')
-    actions.add_argument('--stop', action='store_const', 
-        default=False, const=True, help="Stop instances")
-    actions.add_argument('--start', action='store_const', 
-        default=False, const=True, help="Start instances")
     actions.add_argument('-m', '--make', metavar='TARGET', type=str,
         nargs="?", default='not',
         help='Run make for selected instances')
+
+    startstop.add_argument('--stop', action='store_const', 
+        default=False, const=True, help="Stop instances")
+    startstop.add_argument('--start', action='store_const', 
+        default=False, const=True, help="Start instances")
+    startstop.add_argument('-f', '--foreground', action='store_const',
+        default=False, const=True, help="Start in foreground (limited \
+to 1 instance")
 
     confs.add_argument('--interface', type=str,
         help="Select wich interface to run. Possible values are \
@@ -355,6 +398,8 @@ def get_parser():
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
+    if args.verbose is None:
+        args.verbose = 0
     if args.list:
         # Instances list
         if args.name is not None:
@@ -373,9 +418,9 @@ if __name__ == '__main__':
         for name in args.name:
             new_instance(name)
     elif args.purge:
-        print("Are you sure ? Yes/no ",)
-        rep = sys.stdin.read()
-        if rep == 'Yes':
+        print("Do you really want to delete all the instances ? Yes/no ",)
+        rep = sys.stdin.readline()
+        if rep == "Yes\n":
             store = get_store_datas()
             for name in store:
                 delete_instance(name)
@@ -440,15 +485,23 @@ specified")
         elif args.name is not None:
             names = args.name
         if names is None:
+            parser.print_help()
             print("\n-s option only allowed with instance specified (by name \
 or with -a)")
-            parser.print_help()
             exit(1)
         for name in names:
             set_conf(name, args)
     elif args.start:
         names = get_specified(args)
-        start_instances(names)
+        if names is None:
+            parser.print_help()
+            print("\nPlease specify at least 1 instance with the --start \
+option", file=sys.stderr)
+        elif args.foreground and len(names) > 1:
+            parser.prin_help()
+            print("\nOnly 1 instance allowed with the use of the --forground \
+argument")
+        start_instances(names, args.foreground)
     elif args.stop:
         names = get_specified(args)
         stop_instances(names)
