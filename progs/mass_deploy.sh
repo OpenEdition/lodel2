@@ -7,6 +7,14 @@ else
 	random_name=$RANDOM
 fi
 
+if hash mongo 2>/dev/null
+then
+	echo "Mongo found"
+else
+	echo "You need mongo on this host to do a mass deploy !" >&2
+	exit
+fi
+
 ninstance=$1
 instance=${ninstance:=50}
 
@@ -29,6 +37,6 @@ do
 	slim -n $iname -s --interface web
 	slim -n $iname -m
 	slim -n $iname -s --datasource_connectors mongodb --host localhost --user lodel2 --password lodel2 --db_name $iname
-	create_mongodb.sh localhost 27015 $iname lodel2 lodel2 config.cfg
+	[@]LODEL2_PROGSDIR[@]/create_mongodb.sh localhost 27015 $iname lodel2 lodel2 [@]LODEL2_CONFDIR[@]/create_mongodb_config.cfg
 done
 

@@ -7,7 +7,7 @@ Dependencies :
 
 Build & install :
 	./bootstrap.sh
-	./configure
+	./configure --sysconfdir=/etc --localstatedir=/var --prefix=/usr
 	make
 	make install
 
