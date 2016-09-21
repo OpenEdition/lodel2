@@ -59,7 +59,7 @@ class MongoDbDatasource(AbstractDatasource):
         self.__conn_hash= None
         ##@brief Stores the database cursor
         self.database = self.__connect(
-            username, password, ro = self.__read_only)
+            username, password, db_name, self.__read_only)
 
     ##@brief Destructor that attempt to close connection to DB
     #
@@ -578,13 +578,14 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
     #@param username str
     #@param password str
     #@param ro bool : If True the Datasource is for read only, else the
-    def __connect(self, username, password, ro):
+    def __connect(self, username, password, db_name, ro):
         conn_string = connection_string(
             username = username, password = password,
             host = self.__db_infos['host'],
-            port = self.__db_infos['port'])
-
-        conn_string += "__ReadOnly__:"+str(self.__read_only)
+            port = self.__db_infos['port'],
+            db_name = db_name,
+            ro = ro)
+        
         self.__conn_hash = conn_h = hash(conn_string)
         if conn_h in self._connections:
             self._connections[conn_h]['conn_count'] += 1
@@ -593,11 +594,7 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
             logger.info("Opening a new connection to database")
             self._connections[conn_h] = {
                 'conn_count': 1,
-                'db': utils.connection(
-                    host = self.__db_infos['host'],
-                    port = self.__db_infos['port'],
-                    username = username, 
-                    password = password)}
+                'db': utils.connect(conn_string)}
             return self._connections[conn_h]['db'][self.__db_infos['db_name']]
                     
 

@@ -2,9 +2,9 @@ SUBDIRS=slim
 
 lodel2_scripts_dir = $(datadir)/lodel2/scripts
 lodel2_scripts__DATA = create_instance mass_deploy create_mongodb.sh
-CLEANFILES = create_instance mass_deploy
+CLEANFILES = create_instance mass_deploy mass_deploy.cfg
 
-lodel2conf_DATA = ./create_mongodb_config.cfg
+lodel2conf_DATA = mass_deploy.cfg
 lodel2confdir=$(sysconfdir)/lodel2
 
 
@@ -18,7 +18,8 @@ mass_deploy: mass_deploy.sh
 	chmod +x mass_deploy
 
 create_mongodb.sh: ;
-create_mongodb_config.cfg: ;
+mass_deploy.cfg:
+	echo -e "#Uncomment following lines replacing values by your own\n#MONGODB_ADMIN_USER='admin'\n#MONGODB_ADMIN_PASSWORD='pass'\n#Following configurations are optional\nMONGODB_DB_PREFIX='lodel2'\n#You can give only an host or a HOSTNAME:PORT\n#WARNING !!! : mass_deploy script does not forward MONGODB_HOST in instances\n#configurations\n#MONGODB_HOST=''" > mass_deploy.cfg
 
 create_instance: create_instance.sh
 	$(do_subst) < $(srcdir)/create_instance.sh > create_instance

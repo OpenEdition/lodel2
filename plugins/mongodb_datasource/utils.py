@@ -4,6 +4,7 @@ import pymongo
 from pymongo import MongoClient
 
 from lodel.settings.settings import Settings as settings
+from lodel import logger
 
 common_collections = {
     'object': 'objects',
@@ -26,8 +27,17 @@ MANDATORY_CONNECTION_ARGS = ('host', 'port', 'login', 'password', 'dbname')
 class MongoDbConnectionError(Exception):
     pass
 
-
-def connection_string(host, port, username, password):
+##@brief Forge a mongodb uri connection string
+#@param host str : hostname
+#@param port int|str : port number
+#@param username str
+#@param password str
+#@param db_name str : the db to authenticate on (mongo as auth per db)
+#@param ro bool : if True open a read_only connection
+#@return a connection string
+#@see https://docs.mongodb.com/v2.4/reference/connection-string/#connection-string-options
+#@todo escape arguments
+def connection_string(host, port, username, password, db_name = None, ro = None):
     ret = 'mongodb://'
     if username != None:
         ret += username
@@ -40,28 +50,20 @@ def connection_string(host, port, username, password):
     ret += host
     if port is not None:
         ret += ':'+str(port)
+    if db_name is not None:
+        ret += '/'+db_name
+    else:
+        logger.warning("No database indicated. Huge chance for authentication \
+to fails")
+    if ro:
+        ret += '?readOnly='+str(bool(ro))
     return ret
 
-##@brief Return an instanciated MongoClient
-#@param host str : hostname or ip
-#@param port int : port
-#@param username str | None: username
-#@param password str|None : password
-def connection(host, port, username, password):
-    conn_str = connection_string(host, port, username, password)
-    return MongoClient(conn_str)
-
-##@brief Return a database cursor
-#@param host str : hostname or ip
-#@param port int : port
-#@param db_name str : database name
-#@param username str | None: username
-#@param password str|None : password
-def connect(host, port, db_name, username, password):
-    conn = connection(host, port, username, password)
-    database = conn[db_name]
-    return database
-
+##@brief Return an instanciated MongoClient from a connstring
+#@param connstring str : as returned by connection_string() method
+#@return A MongoClient instance
+def connect(connstring):
+    return MongoClient(connstring)
 
 ## @brief Returns a collection name given a EmClass
 # @param class_object EmClass
