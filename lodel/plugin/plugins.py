@@ -454,7 +454,7 @@ name differ from the one found in plugin's init file"
         if not(activable is True):
             msg = "Plugin %s is not activable : %s"
             msg %= (self.name, activable)
-            raise PluginError(activable)
+            raise PluginError(msg)
 
         #Circular dependencie detection
         if self.name in self._load_called:
