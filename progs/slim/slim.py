@@ -108,9 +108,9 @@ Selected interface is not the web iterface")
         if darg not in ('mongodb',):
             raise TypeError("Datasource_connectors can only be of : 'mongodb'")
         if darg.lower() == 'mongodb':
-            darg = 'mongodb_datasource'
+            darg = 'mongodb_datasource dummy_datasource'
         else:
-            darg = ''
+            darg = 'dummy_datasource'
         config['lodel2']['datasource_connectors'] = darg
     datasource_connectors = config['lodel2']['datasource_connectors']
     if datasource_connectors == 'mongodb_datasource':
