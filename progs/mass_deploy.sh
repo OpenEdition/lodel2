@@ -12,6 +12,13 @@ mongodb_connfail() {
 	exit 2
 }
 
+usage() {
+	echo -e "Usage : $0 (N|purgedb|-h|--help)
+\tWith :
+\t\t- N the number of instances to create
+\t\t- purgedb is to remove all created mongodb db\n"
+}
+
 test -f $conffile || badconf
 #Load conffile
 . $conffile
@@ -50,6 +57,32 @@ fi
 
 echo "exit" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin &>/dev/null || mongodb_connfail
 
+if [ "$1" == 'purgedb' ]
+then
+	if [ -z "$MONGODB_DB_PREFIX" ]
+	then
+		echo -e "MONGODB_DB_PREFIX not indicated in $conffile. Using purgedb without prefix is really a bad idea... It will result in a deletion of ALL db.\nexiting."
+		exit 3
+	fi
+	echo -n "Are you sure you want to delete all mongo database with name begining with '$MONGODB_DB_PREFIX' ? Y/n"
+	read rep
+	if [ "$rep" = "Y" ]
+	then
+		for dbname in $(echo "show dbs" | mongo -u admin -p pass admin  |grep "^$MONGODB_DB_PREFIX"|cut -f1)
+		do 
+			echo -e "use $dname\ndb.dropDatabase()\nexit\n" | mongo -u $MONGODB_ADMIN_USER -p $MONGODB_ADMIN_PASSWORD --quiet --authenticationDatabase admin $dbname && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
+		done
+		echo "Done."
+	else
+		echo "You didn't answer 'Y' (case matters), exiting"
+	fi
+	exit
+elif echo $1 | grep -E "[A-Za-z]" &>/dev/null
+then
+	usage
+	exit 0
+fi
+
 #Check for the presence of pwgen for password generation
 if hash pwgen 2>/dev/null
 then
@@ -70,7 +103,7 @@ then
 	echo "GO ! (you have 3 secs to cancel)"
 	sleep 3
 else
-	echo "You didn't answer 'Y' (yeah, case matter =P), exiting"
+	echo "You didn't answer 'Y' (case matters), exiting"
 	exit
 fi
 
