@@ -53,7 +53,9 @@ Lodel2 instance management utilities :
 			slim -n foo --start -f
 		start all instances :
 			slim -a --start
-		get some help :
+		generate a nginx conf for all instances :
+			slim -a --nginx-conf
+		get some help for more options & actions :
 			slim -h
 
 	mass_deploy.sh : use for easy mass deployment of instances with webui & uwsgi
