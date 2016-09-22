@@ -455,6 +455,9 @@ def get_parser():
     actions.add_argument('-m', '--make', metavar='TARGET', type=str,
         nargs="?", default='not',
         help='Run make for selected instances')
+    actions.add_arguments('-s', '--static_url', type=str, nargs="?", 
+	default='http://127.0.0.1/static/', metavar='static_url',
+	help='Set an url for static documents')
     actions.add_argument('--nginx-conf', action='store_const',
         default = False, const=True,
         help="Output a conf for nginx given selected instances")
