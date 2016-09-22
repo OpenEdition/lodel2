@@ -55,12 +55,11 @@ fi
 PYTHON='env python3'
 testdir=$(mktemp -d)
 rmdir $testdir
-./progs/create_instance test_instance $testdir ./tplinstall ./examples/em_file.pickle $(dirname $0)
+./progs/create_instance test_instance $testdir "[@]INSTALLMODEL_DIR[@]" ./examples/em_file.pickle $(dirname $0)
 cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir
-ls -la
-pwd
+chmod +x lodel_admin.py
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
 make refresh_plugins

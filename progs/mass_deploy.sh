@@ -64,7 +64,7 @@ then
 		echo -e "MONGODB_DB_PREFIX not indicated in $conffile. Using purgedb without prefix is really a bad idea... It will result in a deletion of ALL db.\nexiting."
 		exit 3
 	fi
-	echo -n "Are you sure you want to delete all mongo database with name begining with '$MONGODB_DB_PREFIX' ? Y/n"
+	echo -n "Are you sure you want to delete all mongo database with name begining with '$MONGODB_DB_PREFIX' ? Y/n "
 	read rep
 	if [ "$rep" = "Y" ]
 	then

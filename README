@@ -1,5 +1,8 @@
 Dependencies :
+==============
+
 	lodel2 components :
+	-------------------
 		core :
 			python3 python3-lxml
 
@@ -13,10 +16,13 @@ Dependencies :
 			python3-pymongo
 
 	lodel2 utils :
+	--------------
 		mass_deploy dependencies :
 			pwgen wamerican mongodb-clients
 
 Build & install :
+=================
+
 	./bootstrap.sh #generate the configure, refresh the Makefile.in files
 	#--prefix=/usr is mandatory on debian because of a python3.4.2 bug
 	./configure --sysconfdir=/etc --localstatedir=/var --prefix=/usr
@@ -28,55 +34,96 @@ Build & install :
 	make uninstall
 
 Other make targets :
+====================
+
 	Doxygen documentation generation :
+	----------------------------------
 		make doc #or simply run doxygen in the source dir
+
 	Run unit tests :
+	----------------
+
 		make check
 		#or
 		make unittest
 
 Lodel2 instance management utilities :
+======================================
+
 	SLIM : Simple Lodel Instance Manager
-		create a new instance named foo :
+	------------------------------------
+
+		- create a new instance named foo :
 			slim -n foo -c
-		list instances : 
+
+		- list instances : 
 			slim -l
-		list instances with details :
+
+		- list instances with details :
 			slim -lv[v[v]]
-		list instances with output formated for bash processing :
+
+		- list instances with output formated for bash processing :
 			slim -l -b [-v[v[v]]
-		run make all for instance foo :
+
+		- run make all for instance foo :
 			slim -n foo -m
-		run make for all existing instances :
+
+		- run make for all existing instances :
 			slim --all -m
-		start an instance in forground
+
+		- start an instance in forground
 			slim -n foo --start -f
-		start all instances :
+
+		- start all instances :
 			slim -a --start
-		generate a nginx conf for all instances :
+
+		- generate a nginx conf for all instances :
 			slim -a --nginx-conf
-		get some help for more options & actions :
+
+		- get some help for more options & actions :
 			slim -h
 
-	mass_deploy.sh : use for easy mass deployment of instances with webui & uwsgi
-		the script can be found in $prefix/share/lodel2/scripts/mass_deploy.sh
+	mass_deploy.sh :
+	----------------
+		Use for easy mass deployment of instances with webui & uwsgi
+		the script at $prefix/share/lodel2/scripts/mass_deploy.sh
 
 		Usage : mass_deploy.sh N #with N the number of instances to deploy
+		-------
 		
-		- configuration can be found in /etc/lodel2/mass_deploy.cfg (
-		  to indicate mongodb admin credentials)
+		Notes :
+		-------
+
+		- configuration can be found in /etc/lodel2/mass_deploy.cfg 
+		  to indicate mongodb admin credentials
+
 		- mass deploy create instances directories 
 		  in /tmp/lodel2_instances
 
 Instance operations :
-	A Makefile is written to allow running most of operations. Existing targets are for the moment :
+=====================
 
-	make dyncode # Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 instance root dir)
-	make init_db # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
-    make list_hooks # List all the hooks registered
+	- Two utils are available for instances operations :
+		* Make for op without parameters
+		* lodel_admin.py for op with parameters
+
+	- Makefile available target :
+		# Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 
+		#instance root dir)
+		make dyncode 
+
+		# Call migration handlers to tell them to init all needed 
+		#databases. (note : this target has dyncode as dependencie)
+		make init_db 
+		make list_hooks # List all the hooks registered
+
+	- lodel_admin.py : see lodel_admin.py -h
 
 
-#Following informations can be obsolete
+##########################################
+# Following informations can be obsolete #
+##########################################
+
 Dynamic code generation :
 	python3 scripts/refreshdyn.py examples/em_test.pickle OUTPUTFILE.py
 
@@ -89,3 +136,4 @@ Instance creation :
 Instance loader uppdate :
 	If the install/loader.py is updated you can update instance's loader.py using
 		scripts/create_instance.sh -u INSTANCE_PATH
+

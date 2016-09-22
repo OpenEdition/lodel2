@@ -22,7 +22,7 @@ try:
     STORE_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances.json')
     PID_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances_pid.json')
     CREATION_SCRIPT = os.path.join("[@]LODEL2_PROGSDIR[@]", 'create_instance')
-    INSTALL_TPL = "[@]SLIM_INSTALLMODEL_DIR[@]"
+    INSTALL_TPL = "[@]INSTALLMODEL_DIR[@]"
     EMFILE = os.path.join("[@]SLIM_DATADIR[@]", 'emfile.pickle')
 
 except SyntaxError:

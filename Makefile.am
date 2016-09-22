@@ -1,9 +1,12 @@
 SUBDIRS=lodel progs plugins
-EXTRA_DIST=doc plugins runtest tplinstall examples tests
+EXTRA_DIST=doc plugins runtest examples tests README
+CLEANFILES=runtest
 
-lodel2datadir=$(datadir)/lodel2
 lodel2_localstate_DATA =
 lodel2_localstatedir=$(localstatedir)/lodel2
+
+lodel2datadir=$(datadir)/lodel2
+install_model_dir = $(lodel2datadir)/install_model
 
 #python=/usr/bin/env python3
 python=@PYTHON@
@@ -18,6 +21,14 @@ generate-doc: clean doc_graphviz
 
 doc_graphviz:
 	cd doc/img/graphviz; make
+
+
+do_subst = sed -e 's,\[@\]INSTALLMODEL_DIR\[@\],$(install_model_dir),g' 
+
+runtest: runtest.sh
+	$(do_subst) < $(srcdir)/runtest.sh > runtest
+	chmod +x runtest
+	
 
 # Test em update ( examples/em_test.pickle )
 em_test: em_test.py
