@@ -382,6 +382,11 @@ server {
     listen 80;
     server_name _;
     include uwsgi_params;
+    
+    location /static/ {
+        uwsgi_pass unix:///lodel2/plugins/webui/templates/;
+    }
+
 """
     for name in names:
         name = name.replace('/', '_')
