@@ -33,7 +33,7 @@ Other make targets :
 	Run unit tests :
 		make check
 		#or
-		make tests
+		make unittest
 
 Lodel2 instance management utilities :
 	SLIM : Simple Lodel Instance Manager

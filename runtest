@@ -55,7 +55,7 @@ fi
 PYTHON='env python3'
 testdir=$(mktemp -d)
 rmdir $testdir
-./progs/create_instance test_instance $testdir ./install ./examples/em_file.pickle $(dirname $0)
+./progs/create_instance test_instance $testdir ./install-tpl ./examples/em_file.pickle $(dirname $0)
 cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir

@@ -1,5 +1,5 @@
 SUBDIRS=lodel progs plugins
-EXTRA_DIST=doc
+EXTRA_DIST=doc plugins runtest install-tpl examples tests
 
 lodel2datadir=$(datadir)/lodel2
 lodel2_localstate_DATA =
@@ -28,11 +28,10 @@ dyncode: examples/em_test.pickle
 	$(python) scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
 # run tests
-tests:
+check:
 	./runtest -v
 
-check: tests
-checks: tests
+unittest: check
 
 #Cleaning documentation and dyncode
 clean-local: cleandoc
