@@ -10,7 +10,7 @@ CONFSPEC = {
                             SettingValidator('int')),
         'virtualenv': (None,
                        SettingValidator('path', none_is_valid=True)),
-        'uwsgicmd': ('/usr/bin/uwsgi_python3', SettingValidator('dummy')),
+        'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
         'cookie_secret_key': ('ConfigureYourOwnCookieSecretKey', SettingValidator('dummy')),
         'cookie_session_id': ('lodel', SettingValidator('dummy')),
     },

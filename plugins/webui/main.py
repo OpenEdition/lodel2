@@ -33,7 +33,7 @@ def uwsgi_fork(hook_name, caller, payload):
                 Settings.sitename.replace('/', '_')))
             
         if standalone.lower() == 'true':
-            cmd='{uwsgi} --http-socket {addr}:{port} --module \
+            cmd='{uwsgi} --plugin python3 --http-socket {addr}:{port} --module \
 plugins.webui.run --socket {sockfile} --logto {logfile}'
             cmd = cmd.format(
                         addr = Settings.webui.listen_address,
@@ -45,7 +45,7 @@ plugins.webui.run --socket {sockfile} --logto {logfile}'
                 cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
         elif Settings.webui.standalone == 'uwsgi':
-            cmd = '{uwsgi} --ini ./plugins/webui/uwsgi/uwsgi.ini \
+            cmd = '{uwsgi} --plugin python3 --ini ./plugins/webui/uwsgi/uwsgi.ini \
 --socket {sockfile} --logto {logfile}'
             cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd, 
                 sockfile = sockfile, logfile = logfile)
