@@ -1,5 +1,5 @@
 SUBDIRS=lodel progs plugins
-EXTRA_DIST=doc plugins runtest install-tpl examples tests
+EXTRA_DIST=doc plugins runtest tplinstall examples tests
 
 lodel2datadir=$(datadir)/lodel2
 lodel2_localstate_DATA =
