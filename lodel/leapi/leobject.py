@@ -576,7 +576,6 @@ construction and consitency when datas are not complete\n")
     ## @brief Get instances of LeObject
     #
     #@param target_class LeObject : class of object the query is about
-    
     #@param query_filters dict : (filters, relational filters), with filters is a list of tuples : (FIELD, OPERATOR, VALUE) )
     #@param field_list list|None : list of string representing fields see 
     #@ref leobject_filters
