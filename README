@@ -1,20 +1,80 @@
 Dependencies :
-	lodel2 :
-		with pip : see requirements.txt
-		debian stable : python3 python3-lxml python3-jinja2 python3-werkzeug python3-pymongo uwsgi-plugin-python3 mongodbd
-	build & install :
-		debian stable : autoconf automake make
+	lodel2 components :
+		core :
+			python3 python3-lxml
+
+		build dependencies :
+			autoconf automake make
+
+		webui plugin :
+			python3-jinja2 python3-werkzeug uwsgi-plugin-python3
+
+		mongodb_datasource plugin :
+			python3-pymongo
+
+	lodel2 utils :
+		mass_deploy dependencies :
+			pwgen wamerican mongodb-clients
 
 Build & install :
-	./bootstrap.sh
+	./bootstrap.sh #generate the configure, refresh the Makefile.in files
+	#--prefix=/usr is mandatory on debian because of a python3.4.2 bug
 	./configure --sysconfdir=/etc --localstatedir=/var --prefix=/usr
+	#build lodel2 (actually substitute paths script and buildconf.py files)
 	make
+	#Install lodel2 on system
 	make install
+	#Uninstall lodel2
+	make uninstall
 
-Doxygen documentation generation :
-	dependencies: doxypy doxygen graphviz
-	doxygen
+Other make targets :
+	Doxygen documentation generation :
+		make doc #or simply run doxygen in the source dir
+	Run unit tests :
+		make check
+		#or
+		make tests
 
+Lodel2 instance management utilities :
+	SLIM : Simple Lodel Instance Manager
+		create a new instance named foo :
+			slim -n foo -c
+		list instances : 
+			slim -l
+		list instances with details :
+			slim -lv[v[v]]
+		list instances with output formated for bash processing :
+			slim -l -b [-v[v[v]]
+		run make all for instance foo :
+			slim -n foo -m
+		run make for all existing instances :
+			slim --all -m
+		start an instance in forground
+			slim -n foo --start -f
+		start all instances :
+			slim -a --start
+		get some help :
+			slim -h
+
+	mass_deploy.sh : use for easy mass deployment of instances with webui & uwsgi
+		the script can be found in $prefix/share/lodel2/scripts/mass_deploy.sh
+
+		Usage : mass_deploy.sh N #with N the number of instances to deploy
+		
+		- configuration can be found in /etc/lodel2/mass_deploy.cfg (
+		  to indicate mongodb admin credentials)
+		- mass deploy create instances directories 
+		  in /tmp/lodel2_instances
+
+Instance operations :
+	A Makefile is written to allow running most of operations. Existing targets are for the moment :
+
+	make dyncode # Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 instance root dir)
+	make init_db # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
+    make list_hooks # List all the hooks registered
+
+
+#Following informations can be obsolete
 Dynamic code generation :
 	python3 scripts/refreshdyn.py examples/em_test.pickle OUTPUTFILE.py
 
@@ -23,12 +83,6 @@ Instance creation :
 
 	Usage : scripts/create_instance.sh instance_name instance_dir [lodel_libdir]
 
-Instance operations :
-	A Makefile is written to allow running most of operations. Existing targets are for the moment :
-
-	make dyncode # Leapi dynamic code creation ( in leapi_dyncode.py in lodel2 instance root dir)
-	make init_db # Call migration handlers to tell them to init all needed databases. (note : this target has dyncode as dependencie)
-    make list_hooks # List all the hooks registered
 
 Instance loader uppdate :
 	If the install/loader.py is updated you can update instance's loader.py using
