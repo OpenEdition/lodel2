@@ -1,8 +1,8 @@
 #!/bin/bash
 
 usage() {
-	echo -e "Usage : $0 instance_name (instance_dir|-u) [install_tpl] [em_file]" 1>&2
-	echo -e "\n\tIf -u given as first argument update instance's loader.py" 1>&2
+	echo -e "Usage : $0 instance_name (instance_dir|-u) [install_tpl] [em_file] [lidir]" >&2
+	echo -e "\n\tIf -u given as first argument update instance's loader.py" >&2
 	exit 1
 }
 
@@ -15,7 +15,7 @@ cp_loader() {
 
 if [ $# -lt 2 ]
 then
-	echo "Not enough arguments" 1>&2
+	echo "Not enough arguments" >&2
 	usage
 fi
 
@@ -24,12 +24,21 @@ fi
 name="$1"
 instdir="$2"
 
-
-libdir=[@]PKGPYTHONDIR[@]
+libdir="$5"
+libdir=${libdir:=[@]PKGPYTHONDIR[@]}
 install_tpl="$3"
-[ -z "$install_tpl" ] && usage
+if [ -z "$install_tpl" ]
+then
+	echo -e "Install template $install_tpl not found.\n" >&2
+	usage
+fi
+
 em_file="$4"
-[ -z "$em_file" ] && usage
+if [ -z "$em_file" ]
+then
+	echo -e "Emfile $emfile not found.\n" >&2
+	usage
+fi
 
 
 libdir=$(realpath $libdir)
