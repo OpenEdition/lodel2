@@ -55,10 +55,12 @@ fi
 PYTHON='env python3'
 testdir=$(mktemp -d)
 rmdir $testdir
-./scripts/create_instance.sh test_instance $testdir &>/dev/null
+./progs/create_instance test_instance $testdir ./install ./examples/em_file.pickle $(dirname $0)
 cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir
+ls -la
+pwd
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
 make refresh_plugins
