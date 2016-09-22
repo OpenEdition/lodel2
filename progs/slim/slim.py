@@ -394,7 +394,7 @@ server {
     include uwsgi_params;
     
     location /static/ {
-        uwsgi_pass unix:///lodel2/plugins/webui/templates/;
+        alias /lodel2/plugins/webui/templates/
     }
 
 """
