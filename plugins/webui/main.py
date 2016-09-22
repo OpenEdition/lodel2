@@ -14,6 +14,8 @@ PLUGIN_PATH = os.path.dirname(__file__)
 def root_url():
     return Settings.sitename
 
+def static_url():
+    return Settings.webui.static_url
 
 ##@brief uwsgi startup demo
 @LodelHook('lodel2_loader_main')

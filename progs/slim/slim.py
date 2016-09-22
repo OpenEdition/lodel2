@@ -92,6 +92,8 @@ def set_conf(name, args):
             config['lodel2.webui']['listen_port'] = str(args.listen_port)
         if args.listen_address is not None:
             config['lodel2.webui']['listen_address'] = str(args.listen_address)
+        if args.static_url is not None:
+            config['lodel2.webui']['static_url'] = str(args.static_url)
     else: #interface is python
         if args.listen_port is not None or args.listen_address is not None:
             logging.error("Listen port and listen address will not being set. \
