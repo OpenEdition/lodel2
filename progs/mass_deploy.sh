@@ -117,11 +117,11 @@ do
 
 	#Mongo db database creation
 	dbname="${MONGODB_DB_PREFIX}_$iname"
-	dbuser="lodel2_$i"
+	dbuser="lodel2_$iname"
 	dbpass=$($rnd_pass_cmd)
 	mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin <<EOF
 use $dbname
-db.addUser('$dbname', '$dbpass', ['readWrite', '$dbname'])
+db.addUser('$dbuser', '$dbpass', ['readWrite', '$dbname'])
 exit
 EOF
 	#Append created db to instance conf

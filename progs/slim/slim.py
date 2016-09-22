@@ -100,41 +100,51 @@ def set_conf(name, args):
 Selected interface is not the web iterface")
         if 'lodel.webui' in config:
             del(config['lodel2.webui'])
+
+    if args.datasource_connectors is not None:
+        darg = args.datasource_connectors
+        if darg not in ('dummy', 'mongodb'):
+            raise ValueError("Allowed connectors are : 'dummy' and 'mongodb'")
+        if darg not in ('mongodb',):
+            raise TypeError("Datasource_connectors can only be of : 'mongodb'")
+        if darg.lower() == 'mongodb':
+            dconf = 'mongodb_datasource'
+            toadd = 'mongodb_datasource'
+            todel = 'dummy_datasource'
+        else:
+            dconf = 'dummy_datasource'
+            todel = 'mongodb_datasource'
+            toadd = 'dummy_datasource'
+        config['lodel2']['datasource_connectors'] = dconf
+        #Delete old default & dummy2 conn
+        kdel = 'lodel2.datasource.%s.%s' % (todel, 'default')
+        if kdel in config:
+            del(config[kdel])
+        #Add the new default & dummy2 conn
+        kadd = 'lodel2.datasource.%s.%s' % (toadd, 'default')
+        if kadd not in config:
+            config[kadd] = dict()
+        #Bind to current conn
+        for dsn in ('default', 'dummy2'):
+            config['lodel2.datasources.%s' %dsn ]= {
+                'identifier':'%s.default' % toadd}
+        #Set the conf for mongodb
+        if darg == 'mongodb':
+            dbconfname = 'lodel2.datasource.mongodb_datasource.default'
+            if args.host is not None:
+                config[dbconfname]['host'] = str(args.host)
+            if args.user is not None:
+                config[dbconfname]['username'] = str(args.user)
+            if args.password is not None:
+                config[dbconfname]['password'] = str(args.password)
+            if args.db_name is not None:
+                config[dbconfname]['db_name'] = str(args.db_name)
+        else:
+            config['lodel2.datasource.dummy_datasource.default'] = {'dummy':''}
     #Now config should be OK to be written again in conffile
     with open(conffile, 'w+') as cfp:
         config.write(cfp)
 
-
-    if args.datasource_connectors is not None:
-        darg = args.datasource_connectors
-        if darg not in ('mongodb',):
-            raise TypeError("Datasource_connectors can only be of : 'mongodb'")
-        if darg.lower() == 'mongodb':
-            darg = 'mongodb_datasource dummy_datasource'
-        else:
-            darg = 'dummy_datasource'
-        config['lodel2']['datasource_connectors'] = darg
-    datasource_connectors = config['lodel2']['datasource_connectors']
-    if datasource_connectors == 'mongodb_datasource':
-        if (('lodle2.datasources.default' not in config) or ('lodel2.datasources.dummy2' not in config)):
-            config['lodel2.datasources.default'] = dict()
-            config['lodel2.datasources.default']['identifier'] = 'mongodb_datasource.default'
-            config['lodel2.datasources.dummy2'] = dict()
-            config['lodel2.datasources.dummy2']['identifier'] = 'mongodb_datasource.default'
-        if 'lodel2.datasource.mongodb_datasource.default' not in config:
-                config['lodel2.datasource.mongodb_datasource.default'] = dict()
-                if args.host is not None:
-                    config['lodel2.datasource.mongodb_datasource.default']['host'] = str(args.host)
-                if args.user is not None:
-                    config['lodel2.datasource.mongodb_datasource.default']['username'] = str(args.user)
-                if args.password is not None:
-                    config['lodel2.datasource.mongodb_datasource.default']['password'] = str(args.password)
-                if args.db_name is not None:
-                    config['lodel2.datasource.mongodb_datasource.default']['db_name'] = str(args.db_name)
-    #if 'lodel2.datasource.mongodb_datasource.default' in config:
-    #        del(config['lodel2.datasource.mongodb_datasource.default'])
-    with open(conffile, 'w+') as cfp:
-        config.write(cfp)
 
         
 
