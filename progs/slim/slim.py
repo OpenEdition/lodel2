@@ -394,7 +394,7 @@ server {
     include uwsgi_params;
     
     location /static/ {
-        alias /lodel2/plugins/webui/templates/
+        alias /lodel2/plugins/webui/templates/;
     }
 
 """
@@ -455,9 +455,6 @@ def get_parser():
     actions.add_argument('-m', '--make', metavar='TARGET', type=str,
         nargs="?", default='not',
         help='Run make for selected instances')
-    actions.add_argument('-t', '--static_url', type=str, nargs="?", 
-	default='http://127.0.0.1/static/', metavar='static_url',
-	help='Set an url for static documents')
     actions.add_argument('--nginx-conf', action='store_const',
         default = False, const=True,
         help="Output a conf for nginx given selected instances")
@@ -473,6 +470,9 @@ to 1 instance")
     confs.add_argument('--interface', type=str,
         help="Select wich interface to run. Possible values are \
 'python' and 'web'")
+    confs.add_argument('-t', '--static-url', type=str, nargs="?", 
+	default='http://127.0.0.1/static/', metavar='URL',
+	help='Set an url for static documents')
     confs.add_argument('--listen-port', type=int,
         help="Select the port on wich the web interface will listen to")
     confs.add_argument('--listen-address', type=str,

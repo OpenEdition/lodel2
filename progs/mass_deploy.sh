@@ -112,7 +112,7 @@ for i in $(seq $ninstance)
 do
 	iname="${random_name}_$(printf "%05d" $i)"
 	slim -n $iname -c
-	slim -n $iname -s --interface web
+	slim -n $iname -s --interface web --static-url 'http://127.0.0.1/static'
 	slim -n $iname -m
 
 	#Mongo db database creation

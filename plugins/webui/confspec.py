@@ -8,6 +8,8 @@ CONFSPEC = {
                             SettingValidator('dummy')),
         'listen_port': (    '9090',
                             SettingValidator('int')),
+        'static_url': (     'http://127.0.0.1/static/',
+                            SettingValidator('regex', pattern =  r'^https?://[^/].*$')),
         'virtualenv': (None,
                        SettingValidator('path', none_is_valid=True)),
         'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),

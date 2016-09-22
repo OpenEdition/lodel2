@@ -171,12 +171,14 @@ def boolean_val(value):
         raise SettingsValidationError("A boolean was expected but got '%s' " % value)
     return bool(value)
 
+##@brief Validate a directory path
 def directory_val(value):
     res = SettingValidator('strip')(value)
     if not os.path.isdir(res):
         raise SettingsValidationError("Folowing path don't exists or is not a directory : '%s'"%res)
     return res
 
+##@brief Validate a loglevel value
 def loglevel_val(value):
     valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
@@ -184,23 +186,34 @@ def loglevel_val(value):
                 "The value '%s' is not a valid loglevel" % value)
     return value.upper()
 
+##@brief Validate a path
 def path_val(value):
     if value is None or not os.path.exists(value):
         raise SettingsValidationError(
                 "path '%s' doesn't exists" % value)
     return value
 
+##@brief Validate None
 def none_val(value):
     if value is None:
         return None
     raise SettingsValidationError("This settings cannot be set in configuration file")
 
+##@brief Validate a string
 def str_val(value):
     try:
         return str(value)
     except Exception as e:
         raise SettingsValidationError("Not able to convert value to string : " + str(e))
 
+##@brief Validate using a regex
+def regex_val(value, pattern):
+    if re.match(pattern, value) is None:
+        raise SettingsValidationError("The value '%s' is not validated by : \
+r\"%s\"" %(value, pattern))
+    return value
+
+##@brief Validate a hostname (ipv4 or ipv6)
 def host_val(value):
     if value == 'localhost':
         return value
@@ -351,6 +364,11 @@ SettingValidator.register_validator(
     'emfield',
     emfield_val,
     'EmField name validator')
+
+SettingValidator.register_validator(
+    'regex',
+    regex_val,
+    'RegEx name validator (take re as argument)')
 
 SettingValidator.create_list_validator(
     'list',
