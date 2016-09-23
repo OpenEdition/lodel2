@@ -117,12 +117,23 @@ Mass deployments tricks & tips:
 
 	Mass deployment on fresh install :
 	----------------------------------
-
-	#Add an admin user to mongodb and activate auth
+	
+	#Install nginx & mongodb
+	apt-get install nginx mongodb-server mongodb-clients
+	#choose your credential
+	export mongoadmin="admin"; export mongopass="pass";
+	#Disable auth to be able to connect to mongodb
+	sed -ie 's/^#noauth = /noauth = /' /etc/mongodb.conf
+	#Add an admin user to mongodb
+	echo -e "use admin\ndb.addUser('$mongoadmin', '$mongopass')\nexit\n"|mongo
+	#Reactivate auth
+	sed -i -e 's/^noauth = /#noauth =/' -e 's/^#auth = /auth =/'
+	#Test connection
+	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
+	#Indicate mongodb credentials to mass_deploy
+	echo -e "MONGODB_ADMIN_USER='$mongoadmin'\nMONGODB_ADMIN_PASSWORD='$mongopass'\n" >> /etc/lodel2/mass_deploy.cfg
 	#Deploying 50 instances
 	NINSTANCE=50
-	#Indicate mongodb credentials to mass_deploy
-	vim /etc/lodel2/mass_deploy.cfg
 	#Running mass_deploy
 	/usr/share/lodel2/scripts/mass_deploy $NINSTANCE
 	#Updating nginx conf (delete /etc/nginx/sites-enabled/default if exists)
