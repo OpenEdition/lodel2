@@ -15,6 +15,7 @@ CONFSPEC = {
         'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
         'cookie_secret_key': ('ConfigureYourOwnCookieSecretKey', SettingValidator('dummy')),
         'cookie_session_id': ('lodel', SettingValidator('dummy')),
+        'uwsgi_workers': (2, SettingValidator('int'))
     },
     'lodel2.webui.sessions': {
         'directory': (  '/tmp',

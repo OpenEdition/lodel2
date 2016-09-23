@@ -36,21 +36,22 @@ def uwsgi_fork(hook_name, caller, payload):
             
         if standalone.lower() == 'true':
             cmd='{uwsgi} --plugin python3 --http-socket {addr}:{port} --module \
-plugins.webui.run --socket {sockfile} --logto {logfile}'
+plugins.webui.run --socket {sockfile} --logto {logfile} -p {uwsgiworkers}'
             cmd = cmd.format(
                         addr = Settings.webui.listen_address,
                         port = Settings.webui.listen_port,
                         uwsgi= Settings.webui.uwsgicmd,
                         sockfile=sockfile,
-                        logfile = logfile)
+                        logfile = logfile,
+                        uwsgiworkers = Settings.webui.uwsgi_workers)
             if Settings.webui.virtualenv is not None:
                 cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
         elif Settings.webui.standalone == 'uwsgi':
             cmd = '{uwsgi} --plugin python3 --ini ./plugins/webui/uwsgi/uwsgi.ini \
---socket {sockfile} --logto {logfile}'
+--socket {sockfile} --logto {logfile} -p {uwsgiworkers}'
             cmd = cmd.format(uwsgi = Settings.webui.uwsgicmd, 
-                sockfile = sockfile, logfile = logfile)
+                sockfile = sockfile, logfile = logfile, uwsgiworkers=Settings.webui.uwsgi_workers)
         
         try:
             args = shlex.split(cmd)
