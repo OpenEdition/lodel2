@@ -94,14 +94,14 @@ def set_conf(name, args):
             config['lodel2.webui']['listen_address'] = str(args.listen_address)
         if args.static_url is not None:
             config['lodel2.webui']['static_url'] = str(args.static_url)
+        if args.uwsgi_workers is not None:
+            config['lodel2.webui']['uwsgi_workers'] = str(args.uwsgi_workers)
     else: #interface is python
         if args.listen_port is not None or args.listen_address is not None:
             logging.error("Listen port and listen address will not being set. \
 Selected interface is not the web iterface")
         if 'lodel.webui' in config:
             del(config['lodel2.webui'])
-        if args.uwsgi_workers is not None:
-            config['lodel2.webui']['uwsgi_workers'] = int(args.uwsgi_workers)
 
     if args.datasource_connectors is not None:
         darg = args.datasource_connectors
@@ -491,8 +491,8 @@ to 1 instance")
         help="Select the password name to connect the datasource")
     confs.add_argument('--db_name', type=str,
         help="Select the database name on which datasource will be connect")
-    confs.add_argument('-p', '--uwsgi-workers', type=str, default='2',
-                       help="Number of workers to spawn at the start of uwsgi")
+    confs.add_argument('--uwsgi-workers', type=int, default='2',
+        metavar = 'N', help="Number of workers to spawn at the start of uwsgi")
     return parser
 
 if __name__ == '__main__':

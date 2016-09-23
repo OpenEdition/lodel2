@@ -19,6 +19,16 @@ usage() {
 \t\t- purgedb is to remove all created mongodb db\n"
 }
 
+slim_fails() {
+	if [ -z "$1" ]
+	then
+		echo "SLIM fails for some reason. Abording..." >&2
+	else
+		echo "SLIM fails when $1. Abording...." >&2
+	fi
+	exit 1
+}
+
 test -f $conffile || badconf
 #Load conffile
 . $conffile
@@ -111,9 +121,9 @@ echo "Creating instances"
 for i in $(seq $ninstance)
 do
 	iname="${random_name}_$(printf "%05d" $i)"
-	slim -n $iname -c
-	slim -n $iname -s --interface web --static-url 'http://127.0.0.1/static' --uwsgi-workers 2
-	slim -n $iname -m
+	slim -n $iname -c || slim_fails "creating instance"
+	slim -n $iname -s --interface web --static-url 'http://127.0.0.1/static' --uwsgi-workers 2 || slim_fails "configuring instancee"
+	slim -n $iname -m || slim_fails "running make in instance"
 
 	#Mongo db database creation
 	dbname="${MONGODB_DB_PREFIX}_$iname"
@@ -125,7 +135,7 @@ db.addUser('$dbuser', '$dbpass', ['readWrite', '$dbname'])
 exit
 EOF
 	#Append created db to instance conf
-	slim -n $iname -s --datasource_connectors mongodb --host localhost --user $dbuser --password $dbpass --db_name $dbname
+	slim -n $iname -s --datasource_connectors mongodb --host localhost --user $dbuser --password $dbpass --db_name $dbname || slim_fails "configuring the instance's datasource"
 
 done
 
