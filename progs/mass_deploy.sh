@@ -101,7 +101,7 @@ then
 	rnd_pass_cmd='pwgen 25 1'
 else
 	echo "pwgen not found !!! Using \$RANDOM to generate passwords"
-	rnd_pass_cmd='$RANDOM'
+	rnd_pass_cmd='echo $RANDOM'
 fi
 
 ninstance=$1
