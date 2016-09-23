@@ -2,7 +2,7 @@ Source: lodel2
 Section: python
 Priority: optional
 Maintainer: lodel2 dev team
-Build-Depends: automake, autotools-dev, make
+Build-Depends: make, dpkg-dev, dh-make, python3, python3-lxml
 Standards-Version: 0.1.1
 
 Package: lodel2
