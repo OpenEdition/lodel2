@@ -1,5 +1,5 @@
 SUBDIRS = lodel progs plugins
-EXTRA_DIST = plugins runtest examples tests README runtest.sh debian
+EXTRA_DIST = plugins runtest examples tests runtest.sh debian
 CLEANFILES = runtest
 
 lodel2_localstate_DATA =
@@ -12,8 +12,10 @@ install_model_dir = $(lodel2datadir)/install_model
 python=@PYTHON@
 dyncode_filename='lodel/leapi/dyncode.py'
 
+docdir=${datarootdir}/doc/lodel2
+
 # Doxygen doc generation targets
-doc:
+doxygen:
 	test -z "@DOCOK@" && echo -e "\n\nUnable to generate documentation. See ./configure output for details\n\n" >&2 || make generate-doc
 
 generate-doc: clean doc_graphviz
@@ -31,7 +33,7 @@ runtest: runtest.sh
 
 #Adding logdir creation on install
 install-data-hook:
-	mkdir -p ${DESTDIR}$(lodel2_localstatedir)
+	mkdir -p ${DESTDIR}$(lodel2_localstatedir); mkdir -p ${DESTDIR}$(docdir); cp README ${DESTDIR}$(docdir);
 
 #Making debian package
 deb: dist

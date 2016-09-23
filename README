@@ -33,12 +33,17 @@ Build & install :
 	#Uninstall lodel2
 	make uninstall
 
+Creating debian package :
+=========================
+
+	make deb
+
 Other make targets :
 ====================
 
 	Doxygen documentation generation :
 	----------------------------------
-		make doc #or simply run doxygen in the source dir
+		make doxygen
 
 	Run unit tests :
 	----------------
@@ -46,6 +51,11 @@ Other make targets :
 		make check
 		#or
 		make unittest
+	
+	Cleaning to stop being annoyed when running git status :
+	--------------------------------------------------------
+		
+		make gitclean
 
 Lodel2 instance management utilities :
 ======================================
@@ -88,9 +98,11 @@ Lodel2 instance management utilities :
 		Use for easy mass deployment of instances with webui & uwsgi
 		the script at $prefix/share/lodel2/scripts/mass_deploy.sh
 
-		Usage : mass_deploy.sh N #with N the number of instances to deploy
+		Usage : 
 		-------
-		
+			#with N the number of instances to deploy
+			mass_deploy.sh N 		
+
 		Notes :
 		-------
 
@@ -99,6 +111,36 @@ Lodel2 instance management utilities :
 
 		- mass deploy create instances directories 
 		  in /tmp/lodel2_instances
+
+Mass deployments tricks & tips:
+===============================
+
+	Mass deployment on fresh install :
+	----------------------------------
+
+	#Add an admin user to mongodb and activate auth
+	#Deploying 50 instances
+	NINSTANCE=50
+	#Indicate mongodb credentials to mass_deploy
+	vim /etc/lodel2/mass_deploy.cfg
+	#Running mass_deploy
+	/usr/share/lodel2/scripts/mass_deploy $NINSTANCE
+	#Updating nginx conf (delete /etc/nginx/sites-enabled/default if exists)
+	slim --nginx-conf -a > /etc/nginx/sites-enabled/lodel2
+	/etc/init.d/nginx reload
+	#Start all instances and check if they managed to start
+	slim --start -a && sleep 2 && slim -l
+
+
+	Cleaning mongodb + instances :
+	------------------------------
+
+	slim --purge && /usr/share/lodel2/scripts/mass_deploy purgedb ; slim -l
+
+	Debuging an instance in foreground (if it didn't manage to start) :
+	-------------------------------------------------------------------
+
+	slim --start -f -n INSTANCE_NAME
 
 Instance operations :
 =====================
