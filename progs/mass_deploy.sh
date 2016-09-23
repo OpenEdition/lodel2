@@ -40,8 +40,10 @@ test -z "$MONGODB_ADMIN_PASSWORD" && badconf
 #Check for the presence of /usr/share/dict/words to generate random names
 if [ -f '/usr/share/dict/words' ]
 then
+	echo "/usr/share/dict/words found. Using this file as source for random names"
 	random_name=$(sed -nE 's/^([A-Za-z0-9]+)$/\1/p' /usr/share/dict/words |shuf|head -n1)
 else
+	echo -e "\n\n\tWarning... /usr/share/dict/words not found using \$RANDOM for random names generation"
 	random_name=$RANDOM
 fi
 
@@ -100,7 +102,7 @@ then
 	echo "Using pwgen to generate passwords"
 	rnd_pass_cmd='pwgen 25 1'
 else
-	echo "pwgen not found !!! Using \$RANDOM to generate passwords"
+	echo -e "\n\n\tpwgen not found... Using \$RANDOM to generate passwords\n\n"
 	rnd_pass_cmd='echo $RANDOM'
 fi
 
