@@ -26,6 +26,7 @@ slim_fails() {
 	else
 		echo "SLIM fails when $1. Abording...." >&2
 	fi
+	echo "It can be a good idea to run '$0 purgedb' and 'slim -p' now that mass_deploy just crashed. Those commands should be able to clean the mess ;)"
 	exit 1
 }
 

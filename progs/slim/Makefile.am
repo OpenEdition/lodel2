@@ -1,5 +1,5 @@
 bin_SCRIPTS = slim
-CLEANFILES = $(bin_SCRIPTS)
+CLEANFILES = $(bin_SCRIPTS) slim_instances.json slim_instances_pid.json
 EXTRA_DIST = slim.py install_model emfile.pickle
 
 lodel2_scripts_dir = $(datadir)/lodel2/scripts
@@ -36,5 +36,5 @@ slim: slim.py
 	chmod +x slim
 
 install-data-hook:
-	chmod +x $(install_model_dir)/lodel_admin.py
+	chmod +x ${DESTDIR}$(install_model_dir)/lodel_admin.py
 

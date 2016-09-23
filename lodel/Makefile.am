@@ -8,7 +8,7 @@ all-local: buildconf.py
 
 lodeldir=$(pkgpythondir)/
 
-distclean-local:
+gitclean:
 	-rm Makefile Makefile.in
 
 logdir = $(localstatedir)/log/lodel2/
@@ -18,10 +18,10 @@ do_subst = sed 	-e 's,\[@\]LODEL2_VARDIR\[@\],$(localstatedir)/lodel2/,g' \
 
 
 install-data-hook:
-	-mkdir -p $(logdir)
+	-mkdir -p ${DESTDIR}$(logdir)
 
 uninstall-hook:
-	-rmdir $(logdir)
+	-rmdir ${DESTDIR}$(logdir)
 
 buildconf.py: buildconf.py.am
 	$(do_subst) < $(srcdir)/buildconf.py.am > buildconf.py

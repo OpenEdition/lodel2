@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+# consulter debhelper(7) (décommenter lorsque nécessaire)
+# afficher chaque commande modifiant un fichier dans le système construit
+#DH_VERBOSE = 1
+
+# consulter EXAMPLES dans dpkg-buildflags(1) et lire /usr/share/dpkg/*
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/default.mk
+
+# consulter FEATURE AREAS dans dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# consulter ENVIRONMENT dans dpkg-buildflags(1)
+# mainteneurs de paquet à ajouter à CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# mainteneurs de paquet à ajouter à append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+# principal script d’empaquetage basé sur la syntaxe de dh7
+%:
+	dh $@ --with python3
+

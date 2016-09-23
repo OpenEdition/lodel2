@@ -1,0 +1,10 @@
+Package: lodel2
+Version: 0.1
+Architecture: amd64
+Maintainer: lodel2 dev team
+Installed-Size: 25
+Depends: python3, python3-lxml, python3-jinja2, python3-werkzeug, python3-pymongo, uwsgi-plugin-python3
+Suggests: pwgen, wamerican, mongodb-server
+Provides: lodel
+Section: python
+Priority: optional

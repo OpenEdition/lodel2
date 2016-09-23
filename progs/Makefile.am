@@ -26,4 +26,5 @@ create_instance: create_instance.sh
 	chmod +x create_instance
 
 install-data-hook:
-	chmod +x $(datadir)/lodel2/scripts/*
+	chmod +x ${DESTDIR}$(datadir)/lodel2/scripts/*
+

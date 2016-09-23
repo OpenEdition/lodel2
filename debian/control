@@ -1,0 +1,14 @@
+Source: lodel2
+Section: python
+Priority: optional
+Maintainer: lodel2 dev team
+Build-Depends: automake, autotools-dev, make
+Standards-Version: 0.1.1
+
+Package: lodel2
+Section: python
+Description: lodel2 debian package
+Architecture: any
+Depends: python3, python3-lxml, python3-jinja2, python3-werkzeug, python3-pymongo, uwsgi-plugin-python3
+Suggests: pwgen, wamerican, mongodb-server
+Provides: lodel
