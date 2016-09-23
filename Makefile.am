@@ -1,5 +1,5 @@
 SUBDIRS=lodel progs plugins
-EXTRA_DIST=doc plugins runtest examples tests README
+EXTRA_DIST=plugins runtest examples tests README
 CLEANFILES=runtest
 
 lodel2_localstate_DATA =
