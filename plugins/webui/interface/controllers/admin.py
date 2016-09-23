@@ -18,8 +18,8 @@ import warnings
 def index_admin(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive 
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
 ##@brief Controller's function to update an object of the editorial model 
@@ -28,8 +28,8 @@ def index_admin(request):
 def admin_update(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     msg=''
     
     # If the form has been submitted
@@ -123,8 +123,8 @@ def admin_update(request):
 def admin_create(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     classname = None
      # If the form has been submitted
     if request.method == 'POST':
@@ -179,8 +179,8 @@ def admin_create(request):
 def admin_delete(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     classname = None
 
     if 'classname' in request.GET:
@@ -229,29 +229,29 @@ def admin_delete(request):
 def admin_classes(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     return get_response('admin/list_classes_admin.html', my_classes = dyncode.dynclasses)
 
 def create_object(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     return get_response('admin/list_classes_create.html', my_classes = dyncode.dynclasses)
 
 def delete_object(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     return get_response('admin/list_classes_delete.html', my_classes = dyncode.dynclasses)
     
 def admin_class(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     # We need the class we'll list to select the object to edit
     if 'classname' in request.GET:
         classname = request.GET['classname']
@@ -269,8 +269,8 @@ def admin_class(request):
 def delete_in_class(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     # We need the class we'll list to select the object to delete
     if 'classname' in request.GET:
         classname = request.GET['classname']
@@ -288,8 +288,8 @@ def delete_in_class(request):
 def admin(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
-    if WebUiClient.is_anonymous():
-        return get_response('users/signin.html')
+    #if WebUiClient.is_anonymous():
+    #    return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
         
