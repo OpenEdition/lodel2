@@ -71,13 +71,9 @@ def application(env, start_response):
         #to log messages with client infos
         client = WebUiClient(env['REMOTE_ADDR'], env['HTTP_USER_AGENT'], None)
         session_token = load_cookie(request)
-        if session_token is not None:
+        if session_token is not None and len(session_token) > 0:
             WebUiClient.restore_session(session_token)
-            #next line is for testing purpose
-            print("ACCESS DATAS : ", WebUiClient['last_request'])
         session_token = None
-        #next line is for testing purpose
-        WebUiClient['last_request'] = time.time()
         
         try:
             controller = get_controller(request)

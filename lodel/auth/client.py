@@ -160,8 +160,11 @@ class Client(object, metaclass = ClientMetaclass):
         if cls._instance.__session_token is not None:
             raise ClientAuthenticationError("Trying to restore a session, but \
 a session is allready started !!!")
-        cls._instance.__datas = SessionHandler.restore(token)
-        cls._instance.__session_token = token
+        try:
+            cls._instance.__datas = SessionHandler.restore(token)
+            cls._instance.__session_token = token
+        except ClientAuthenticationFailure:
+            logger.warning("Session restoring fails")
         return copy.copy(cls._instance.datas)
     
     ##@brief Return the current session token or None
