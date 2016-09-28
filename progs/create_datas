@@ -86,5 +86,5 @@ do
     res=$(printf "use lodel2_$instance\n db.Collection.find({}, {lodel_id:1, _id:0}).limit\(1\)" | mongo  $HOSTDB/admin -u lodel2_admin -p lapwd  | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d")
     PUBCOLLS=$res
     curl -A "Mozilla/5.0" -L -s -d "field_input_linked_persons=$SSSECLP&field_input_subtitle=$SSSECST&field_input_parent=$SSSECPAR&field_input_indexes=$SSSECIND&field_input_title=$SSSECTTL&classname=Subsection" http://$host/$instance/admin/create?classname=Subsection
-curl -A "Mozilla/5.0" -L -s -d "field_input_collection=$PUBCOLLS&classname=Publication" http://$host/$instance/admin/create?classname=Publication
+    curl -A "Mozilla/5.0" -L -s -d "field_input_collection=$PUBCOLLS&classname=Publication" http://$host/$instance/admin/create?classname=Publication
 done

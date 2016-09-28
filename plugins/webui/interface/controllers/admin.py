@@ -147,9 +147,12 @@ def admin_create(request):
                 fields[in_put[12:]] = in_value
                 dhl = target_leo.data_handler(in_put[12:])
                 if dhl.is_reference() and in_value != '':
+                    logger.warning("Provisoire pour faire les tests, à fixer")
                     in_value.replace(" ","")
                     in_value=in_value.split(',')
-                    in_value=list(in_value)
+                    for i in in_value:
+                        l.append(int(i))
+                    in_value=list(l)
         # Insertion in the database of the values corresponding to a new object
         new_uid = target_leo.insert(fields)
         
