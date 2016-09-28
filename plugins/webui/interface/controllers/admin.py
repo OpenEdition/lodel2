@@ -142,11 +142,14 @@ def admin_create(request):
 
         for in_put, in_value in request.form.items():
             # The classname is handled by the datasource, we are not allowed to modify it
-            # uid is not a fieldname
             # both are hidden in the form, to identify the object here
-            if in_put != 'classname' and in_value != '':
+             if in_put != 'classname' and in_value != '':
                 fields[in_put[12:]] = in_value
-        
+                dhl = target_leo.data_handler(in_put[12:])
+                if dhl.is_reference() and in_value != '':
+                    in_value.replace(" ","")
+                    in_value=in_value.split(',')
+                    in_value=list(in_value)
         # Insertion in the database of the values corresponding to a new object
         new_uid = target_leo.insert(fields)
         
