@@ -134,7 +134,7 @@ do
 	dbpass=$($rnd_pass_cmd)
 	mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin <<EOF
 use $dbname
-db.addUser('$dbuser', '$dbpass', ['readWrite', '$dbname'])
+db.addUser({user:"$dbuser", pwd:"$dbpass", roles:["readWrite", "dbAdmin"]})
 exit
 EOF
 	#Append created db to instance conf
