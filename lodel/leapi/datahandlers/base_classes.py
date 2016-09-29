@@ -396,8 +396,8 @@ class MultipleRef(Reference):
             except (FieldValidationError) as f:
                 error_list.append(repr(v))
         logger.warning("Provisoire pour faire les tests, à fixer")
-        #if (len(error_list) > 0):
-        #    raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
+        if (len(error_list) > 0):
+            raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
         return new_val
 
     def construct_data(self, emcomponent, fname, datas, cur_value):

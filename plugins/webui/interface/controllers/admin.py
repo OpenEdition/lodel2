@@ -144,7 +144,6 @@ def admin_create(request):
             # The classname is handled by the datasource, we are not allowed to modify it
             # both are hidden in the form, to identify the object here
              if in_put != 'classname' and in_value != '':
-                fields[in_put[12:]] = in_value
                 dhl = target_leo.data_handler(in_put[12:])
                 if dhl.is_reference() and in_value != '':
                     logger.warning("Provisoire pour faire les tests, à fixer")
@@ -153,6 +152,8 @@ def admin_create(request):
                     for i in in_value:
                         l.append(int(i))
                     in_value=list(l)
+                fields[in_put[12:]] = in_value
+                
         # Insertion in the database of the values corresponding to a new object
         new_uid = target_leo.insert(fields)
         
