@@ -62,6 +62,10 @@ class DataHandler(object):
     @classmethod
     def is_reference(cls):
         return issubclass(cls, Reference)
+    
+    @classmethod
+    def is_singlereference(cls):
+        return issubclass(cls, SingleRef)
 
     def is_primary_key(self):
         return self.primary_key
