@@ -57,13 +57,15 @@ def admin_update(request):
                 dhl = target_leo.data_handler(in_put[12:])
                 # Here, in case of a Reference we transform the str 
                 # given by the form in a iterable (a list) 
-                if dhl.is_reference() and in_value != '':
+                if dhl.is_reference() and in_value != '' and not dhl.is_singlereference():
                     in_value.replace(" ","")
                     in_value=in_value.split(',')
                     in_value=list(in_value)
-                if in_value != '':
+                if in_value == '':
+                    fields[in_put[12:]] = None
+                else:
                     fields[in_put[12:]] = in_value
-
+                    
         # We retrieve the object to update
         filter_q = '%s = %s' % (uid_field, uid)
         obj = (target_leo.get((filter_q)))[0]
@@ -145,22 +147,15 @@ def admin_create(request):
             # both are hidden in the form, to identify the object here
             if in_put != 'classname' and in_value != '':
                 dhl = target_leo.data_handler(in_put[12:])
-                if dhl.is_singlereference():
-                    in_value=int(in_value)
-                elif dhl.is_reference() and in_value != '':
+                if dhl.is_reference() and in_value != '' and not dhl.is_singlereference():
                     logger.info(in_value)
                     in_value.replace(" ","")
                     in_value=in_value.split(',')
                     in_value=list(in_value)
-                    l=list()
-                    for i in in_value:
-                        l.append(int(i))
-                    in_value=l
-
                 fields[in_put[12:]] = in_value
             if in_value == '':
-                fields[in_put[12:]] = None
-                    
+                fields[in_put[12:]] = None             
+
         # Insertion in the database of the values corresponding to a new object
         new_uid = target_leo.insert(fields)
         
