@@ -9,6 +9,7 @@ import leapi_dyncode
 from .api import api_lodel_templates
 from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
 from ...main import root_url as root_url
+from ...main import root_url as root_url
 from ...main import PLUGIN_PATH
 TEMPLATE_PATH = os.path.realpath(os.path.join(PLUGIN_PATH, 'templates/'))
 
@@ -46,6 +47,7 @@ class TemplateLoader(object):
         template.globals['settings'] = Settings
         template.globals['client'] = WebUiClient
         template.globals['root_url'] = root_url()
+        template.globals['static_url'] = static_url()
         template.globals['url'] = lambda sufix='': root_url()\
             + ('' if sufix.startswith('/') else '/')\
             + sufix
