@@ -17,6 +17,7 @@ from lodel import buildconf
 logging.basicConfig(level=logging.INFO)
 
 INSTANCES_ABSPATH="/tmp/lodel2_instances"
+LODEL2_INSTALLDIR="/usr/lib/python3/dist-packages"
 CONFFILE='conf.d/lodel2.ini'
 try:
     STORE_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances.json')
@@ -396,7 +397,7 @@ server {
     include uwsgi_params;
     
     location /static/ {
-        alias /lodel2/plugins/webui/templates/;
+        alias """ + LODEL2_INSTALLDIR + """/lodel/plugins/webui/templates/;
     }
 
 """
