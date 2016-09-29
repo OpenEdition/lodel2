@@ -1,7 +1,69 @@
 #!/bin/bash
+#
+# CBL : Curl Benchmark on Lodel
+#
+# Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE]
+#
+# Instance_list_file is expected to be a file containing instances name (1 per
+# line). Uses by default /tmp/lodel2_instance_list.txt
+#
+# Instances base URL are generated given the current webui implementation :
+# http://HOST/INSTANCE_NAME/
+#
+#
+# Scenario description :
+#
+# mass_creation instance_name iteration_count :
+#	Create iteration_count time a random leobject in given instance_name
+#	note : do note create relation between objects, only populate content
+#	
+#	step 1 : fetch all non abstract class name
+# 	step 2 : loop on creation (using bash function curl_opt_create_CLSNAME)
+#		that return the POST fields (populated with random values)
+#
+# mass_deletion instance_name iteration_count :
+#	Foreach non asbtracty class delete iteration_count time an object of
+#	current class in current instance
+#
+#	step 1 : fetch all non abstract class name
+#	step 2 : loop on non abstract class name
+#	step 3 : loop iteration_count time on deletion
+#
+# mass_link_edit instance_name iteration_count :
+#	Foreach non abstract class make iteration_count time edition of an
+#	object in current class
+#	note : only implemented for Person for the moment
+#	note : can maybe ask for invalid modifications
+#
+#	step 1 : fetch all non abstract class name
+#	step 2 : loop on non abstract class name
+#	step 3 : depends on curent class :
+#		- fetch all existing id of current class
+#		- fetch all existing id in class that can be linked with
+#		  current class
+#	step 4 : loop iteration_count time :
+#		- choose a random id in current class
+#		- choose random ids from linkable classes
+#		- trigger edition using curl (with datas from the same
+#		  bash function than creation : curl_opt_create_CLSNAME)
+#
+# Current way to run scenarios :
+#
+# using the function run_bg_with_param FUNCTION_NAME INSTANCE_LIST_FILE *ARGS
+#
+# The function name can be one of the scenario functions
+# INSTANCE_LIST_FILE is the file containing instances list
+# *ARGS are args given as it to FUNCTION_NAME after the instance_name argument
+#
+# function call : FUN_NAME INSTANCE_NAME *ARGS
+#
+# The run_bg_with_param run a scenario in background for each instance allowing
+# to send a lot of request at the same time
+#
+#
 
 usage() {
-	echo "Usage : $0 [HOST] [INSTANCE_LIST_FILE]"
+	echo "Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE]"
 	exit
 }
 
@@ -19,8 +81,6 @@ then
 	sleep 3
 fi
 mkdir -p $logdir
-
-random_word_file="/usr/share/dict/words"
 
 #curl_options='--silent -o /dev/null -s -w %{http_code}:%{time_connect}:%{time_starttransfer}:%{time_total}\n'
 curl_options='--silent -o /dev/null -s -w %{url_effective};%{http_code};%{time_connect};%{time_starttransfer};%{time_total}\n'
