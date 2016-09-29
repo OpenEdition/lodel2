@@ -1,9 +1,22 @@
 #!/bin/bash
 
+usage() {
+	echo -e "Usage : $0 host_of_server instance_name host_of_db number_of_iterations >&2
+	echo -e "Example : create_datas locahost instance_00001 localhost:28015 1000"
+	echo -e "Example : create_datas locahost instance_00001 localhost 1000"
+	exit 1
+}
+
+if [ $# -lt 3 ]
+then
+	echo "Not enough arguments" >&2
+	usage
+fi
+
 host=$1
 instance=$2
-N=$3
-HOSTDB=localhost
+N=$4
+HOSTDB=$3
 
 M=$(expr $N / 10)
 for i in `eval echo {1..$M}`;
