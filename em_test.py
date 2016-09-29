@@ -177,12 +177,6 @@ collection.new_field(   'title',
                         group = editorial_group,
                         data_handler = 'varchar'
 )
-collection.new_field(   'publications',
-                        display_name = 'Publications',
-                        group = editorial_group,
-                        data_handler = 'list',
-                        allowed_classes = [publication],
-                        back_reference = ('publication', 'collection'))
 
 # Classe publication
 publication = em.new_class(  'publication',
@@ -196,6 +190,12 @@ publication.new_field(  'collection',
                         data_handler = 'link',
                         allowed_classes = [collection],
                         back_reference = ('collection', 'publications'))
+collection.new_field(   'publications',
+                        display_name = 'Publications',
+                        group = editorial_group,
+                        data_handler = 'list',
+                        allowed_classes = [publication],
+                        back_reference = ('publication', 'collection'))
 
 #########################
 #   Texte definition    #
