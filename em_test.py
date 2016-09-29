@@ -193,6 +193,7 @@ publication.new_field(  'collection',
                         display_name = 'Collection',
                         group = editorial_group,
                         data_handler = 'link',
+                        allowed_classes = [collection],
                         back_reference = ('collection', 'publications'))
 
 #########################
