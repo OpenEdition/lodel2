@@ -9,7 +9,7 @@ import leapi_dyncode
 from .api import api_lodel_templates
 from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError
 from ...main import root_url as root_url
-from ...main import root_url as root_url
+from ...main import static_url as static_url
 from ...main import PLUGIN_PATH
 TEMPLATE_PATH = os.path.realpath(os.path.join(PLUGIN_PATH, 'templates/'))
 
