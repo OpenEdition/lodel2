@@ -181,6 +181,7 @@ collection.new_field(   'publications',
                         display_name = 'Publications',
                         group = editorial_group,
                         data_handler = 'list',
+                        allowed_classes = [publication],
                         back_reference = ('publication', 'collection'))
 
 # Classe publication
