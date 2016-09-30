@@ -21,8 +21,7 @@
             {% set l_classe = field.allowed_classes %}
             <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
         {% else %}
-            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" readonly >
-            <p> If you want to update this field, please do it in child objects</p>
+            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}">
         {% endif %}
 	{% else %}
 		Unsupported base type "{{field.base_type}}" <br>
