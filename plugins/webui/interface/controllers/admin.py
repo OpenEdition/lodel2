@@ -8,6 +8,9 @@ from lodel import logger
 from ...client import WebUiClient
 import leapi_dyncode as dyncode
 import warnings
+from lodel.leapi.datahandlers.base_classes import MultipleRef
+
+LIST_SEPARATOR = ','
 
 ##@brief These functions are called by the rules defined in ../urls.py
 ## To administrate the instance of the editorial model
@@ -44,40 +47,44 @@ def admin_update(request):
         except LeApiError:
             classname = None
         if classname is None or target_leo.is_abstract():
-            raise HttpException(400)
+            raise HttpException(400, custom = "Bad classname given")
 
-        uid_field = target_leo.uid_fieldname()[0]
-        fields = dict()
-
-        for in_put, in_value in request.form.items():
-            # The classname is handled by the datasource, we are not allowed to modify it
-            # uid is not a fieldname
-            # both are hidden in the form, to identify the object here
-            if in_put != 'classname' and  in_put != 'uid':
-                dhl = target_leo.data_handler(in_put[12:])
-                # Here, in case of a Reference we transform the str 
-                # given by the form in a iterable (a list) 
-                if dhl.is_reference() and in_value != '' and not dhl.is_singlereference():
-                    in_value.replace(" ","")
-                    in_value=in_value.split(',')
-                    in_value=list(in_value)
-                if in_value == '':
-                    fields[in_put[12:]] = None
-                else:
-                    fields[in_put[12:]] = in_value
-                    
-        # We retrieve the object to update
-        filter_q = '%s = %s' % (uid_field, uid)
-        obj = (target_leo.get((filter_q)))[0]
+        leo_to_update = target_leo.get_from_uid(uid)
         
-        # and update it
-        inserted = obj.update(fields)
-        
-        if inserted==1:
-            msg = 'Successfully updated';
-        else:
-            msg = 'Oops something wrong happened...object not saved'
-        return get_response('admin/admin_edit.html', target=target_leo, uidfield = uid_field, lodel_id = uid, msg = msg)
+        errors = dict()
+        for fieldname, value in request.form.items():
+            #We want to drop 2 input named 'classname' and 'uid'
+            if len(fieldname) > 12:
+                #Other input names are : field_input_FIELDNAME
+                #Extract the fieldname
+                fieldname = fieldname[12:]
+                try:
+                    dh = leo_to_update.data_handler(fieldname)
+                except NameError as e:
+                    errors[fieldname] = e
+                    continue
+                #Multiple ref list preparation
+                if issubclass(dh.__class__, MultipleRef):
+                    value=[spl for spl in [
+                           v.strip() for v in value.split(LIST_SEPARATOR)]
+                        if len(spl) > 0]
+                try:
+                    leo_to_update.set_data(fieldname, value)
+                except Exception as e:
+                    errors[fieldname] = e
+                    continue
+        if len(errors) > 0:
+            custom_msg = '<h1>Errors in datas</h1><ul>'
+            for fname, error in errors.items():
+                custom_msg += '<li>%s : %s</li>' % (
+                    fname, error)
+            custom_msg += '</ul>'
+            raise HttpException(400, custom = custom_msg)
+        try:
+            leo_to_update.update()
+        except Exception as e:
+            raise HttpException(
+                500, custom = "Something goes wrong during update : %s" % e)
 
     # Display of the form with the object's values to be updated
     if 'classname' in request.GET:
