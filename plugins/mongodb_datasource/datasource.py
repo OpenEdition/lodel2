@@ -222,12 +222,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
-        for dname in upd_datas:
-            if isinstance(upd_datas[dname], set):
-                #pymongo raises :
-                #bson.errors.InvalidDocument: Cannot encode object: {...}
-                #with sets
-                upd_datas[dname] = list(upd_datas[dname])
+        self._data_cast(upd_datas)
         res = self.__update_no_backref(target, filters, relational_filters,
             upd_datas)
         self.__update_backref_filtered(target, filters, relational_filters,
@@ -257,6 +252,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     # @param new_datas dict : datas to insert
     # @return the inserted uid
     def insert(self, target, new_datas):
+        self._data_cast(new_datas)
         logger.debug("Insert called on %s with datas : %s"% (
             target, new_datas))
         uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
@@ -272,6 +268,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     # @param datas_list list : list of dict
     # @return list : list of the inserted records' ids
     def insert_multi(self, target, datas_list):
+        for datas in datas_list:
+            self._data_cast(datas)
         res = self.__collection(target).insert_many(datas_list)
         for new_datas in datas_list:
             self.__update_backref(target, None, new_datas) 
@@ -525,13 +523,9 @@ value : in %s field %s" % (bref_leo, bref_fname))
     #subclass (major failure)
     def __bref_get_check(self, bref_cls, uidv, bref_fname):
         bref_leo = bref_cls.get_from_uid(uidv)
-        if len(bref_leo) == 0:
+        if bref_leo is None:
             raise MongoDbConsistencyError("Unable to get the object we make \
 reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
-        if len(bref_leo) > 1:
-            raise MongoDbConsistencyFatalError("Will retrieving data with UID \
-as filter we got more than one result !!! Bailout !!!")
-        bref_leo = bref_leo[0]
         bref_dh = bref_leo.data_handler(bref_fname)
         if not isinstance(bref_dh, Reference):
             raise LodelFatalError("Found a back reference field that \
@@ -836,3 +830,18 @@ field/operator couple in a query. We will keep only the first one")
             1 if (a[fname]>b[fname] if cmpdir == 'ASC' else a[fname]<b[fname])\
             else -1)
 
+    
+    ##@brief Correct some datas before giving them to pymongo
+    #
+    #For example sets has to be casted to lise
+    #@param datas
+    #@return datas
+    @classmethod
+    def _data_cast(cls, datas):
+        for dname in datas:
+            if isinstance(datas[dname], set):
+                #pymongo raises :
+                #bson.errors.InvalidDocument: Cannot encode object: {...}
+                #with sets
+                datas[dname] = list(datas[dname])
+        return datas
