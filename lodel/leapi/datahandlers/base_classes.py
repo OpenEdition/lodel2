@@ -267,6 +267,12 @@ class Reference(DataHandler):
         self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
  
+    ##@brief Method designed to return an empty value for this kind of 
+    #multipleref
+    @classmethod
+    def empty(cls):
+        return None
+
     ##@brief Property that takes value of a copy of the back_reference tuple
     @property
     def back_reference(self):
@@ -377,7 +383,7 @@ class MultipleRef(Reference):
     #multipleref
     @classmethod
     def empty(cls):
-        return None
+        return []
 
     ##@brief Check and cast value in appropriate type
     #@param value *

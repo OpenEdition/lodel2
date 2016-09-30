@@ -624,6 +624,8 @@ construction and consitency when datas are not complete\n")
         if len(res) > 1:
             raise LodelFatalError("Get from uid returned more than one \
 object ! For class %s with uid value = %s" % (cls, uid))
+        elif len(res) == 0:
+            return None
         return res[0]
 
         

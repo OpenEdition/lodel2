@@ -11,7 +11,7 @@
 {% for classe in my_classes %}
     {% set abst = '' %}
     {% if not classe.is_abstract() %}
-    <li> <a href="create?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a></li>
+    <li> <a href="create?classname={{ classe.__name__ }}" >{{ classe.__name__ }} </a></li>
     {% endif %}
     {% endfor %}
 </ul>
