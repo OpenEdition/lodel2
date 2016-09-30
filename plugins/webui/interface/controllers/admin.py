@@ -317,7 +317,7 @@ def search_object(request):
             target_leo = dyncode.Object.name2class(classname)
         except LeApiError:
             raise HttpException(400)
-
+        # TODO The get method must be implemented here
     return get_response('admin/admin_search.html', my_classes = dyncode.dynclasses)
 
 
