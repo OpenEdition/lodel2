@@ -144,6 +144,7 @@ class LeObject(object):
     ##@brief Return the datahandler asssociated with a LeObject field
     # @param fieldname str : The fieldname
     # @return A data handler instance
+    #@todo update class of exception raised
     @classmethod
     def data_handler(cls, fieldname):
         if not fieldname in cls._fields:
@@ -623,7 +624,7 @@ construction and consitency when datas are not complete\n")
         if len(res) > 1:
             raise LodelFatalError("Get from uid returned more than one \
 object ! For class %s with uid value = %s" % (cls, uid))
-        return res
+        return res[0]
 
         
         
