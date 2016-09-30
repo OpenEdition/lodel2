@@ -308,6 +308,16 @@ def admin(request):
     #    return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
-        
-            
+
+def search_object(request):
+    if request.method == 'POST':
+        classname = request.POST['classname']
+        searchstring = request.POST['searchstring']
+        try:
+            target_leo = dyncode.Object.name2class(classname)
+        except LeApiError:
+            raise HttpException(400)
+
+    return get_response('admin/admin_search.html', my_classes = dyncode.dynclasses)
+
 

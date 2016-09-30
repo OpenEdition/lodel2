@@ -12,6 +12,7 @@ urls = (
     (r'^/admin/object_delete', delete_object),
     (r'^/admin/class_admin$', admin_class),
     (r'^/admin/class_delete$', delete_in_class),
+    (r'^/admin/search$', search_object),
     (r'/test/(?P<id>.*)$', test),
     (r'^/test/?$', test),
     (r'^/list_classes', list_classes),

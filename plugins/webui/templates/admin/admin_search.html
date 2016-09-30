@@ -1,0 +1,25 @@
+{% extends "base_backend.html" %}
+
+{% block title %}- Search{% endblock %}
+{% block body %}
+<ol class="breadcrumb">
+    <li><a href="/{{ root_url }}/admin">Home</a></li>
+    <li><a href="/{{ root_url }}/admin/object_create">Search</a></li>
+</ol>
+{% if msg is not none %}
+    {% block msg %} <p style="color: red; font-size:20pt; font-weight:bold">{{ msg }}</p> {% endblock %}
+{% endif %}
+<h1 class="h1_lodel">Searching</h1>
+<form class="form-horizontal" action="" method="post">
+    <select id="classname" name="classname">
+        {% for classe in my_classes %}
+            {% if not classe.is_abstract()%}
+                <option value="{{ classe.__name__ }}">{{ classe.__name__ }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <input type="text" name="searchstring" id="searchstring" value="" />
+    <p>&nbsp;</p>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+{% endblock %}
