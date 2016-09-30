@@ -27,8 +27,11 @@ class List(MultipleRef):
     #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
-        if not(isinstance(value, list) or isinstance(value, str)):
-            raise FieldValidationError("List or string expected for a set field")
+        try:
+            return list(value)
+        except Exception as e:
+            raise FieldValidationError("Given iterable is not castable in \
+a list : %s" % e)
         return value
 
 ##@brief Child class of MultipleRef where references are represented in the form of a python set
@@ -51,9 +54,11 @@ class Set(MultipleRef):
     #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
-        if not (isinstance(value, set) or isinstance(value, str)):
-            raise FieldValidationError("Set or string expected for a set field")
-        return value
+        try:
+            return set(value)
+        except Exception as e:
+            raise FieldValidationError("Given iterable is not castable in \
+a set : %s" % e)
     
 ##@brief Child class of MultipleRef where references are represented in the form of a python dict
 class Map(MultipleRef):
