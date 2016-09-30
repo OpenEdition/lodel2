@@ -104,8 +104,6 @@ class MongoDbDatasource(AbstractDatasource):
     def select(self, target, field_list, filters = None, 
             relational_filters=None, order=None, group=None, limit=None, 
             offset=0):
-        logger.debug("Select %s on %s filtered by %s and %s " % (
-            field_list, target, filters, relational_filters))
         if target.is_abstract():
             #Reccursiv calls for abstract LeObject child
             results =  self.__act_on_abstract(target, filters,
@@ -223,10 +221,18 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
         self._data_cast(upd_datas)
+        #fetching current datas state
+        mongo_filters = self.__process_filters(
+            target, filters, relational_filters)
+        old_datas_l = self.__collection(target).find(
+            mongo_filters)
+        old_datas_l = list(old_datas_l)
+        #Running update
         res = self.__update_no_backref(target, filters, relational_filters,
             upd_datas)
+        #updating backref
         self.__update_backref_filtered(target, filters, relational_filters,
-            upd_datas)
+            upd_datas, old_datas_l)
         return res
     
     ##@brief Designed to be called by backref update in order to avoid
@@ -243,6 +249,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         #Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
+        self._data_cast(upd_datas)
         mongo_arg = {'$set': upd_datas }
         res = self.__collection(target).update(mongo_filters, mongo_arg)
         return res['n']
@@ -281,16 +288,20 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param filters
     #@param relational_filters,
     #@param new_datas None | dict : optional new datas if None mean we are deleting
+    #@param old_datas_l None | list : if None fetch old datas from db (usefull
+    #when modifications are made on instance before updating backrefs)
     #@return nothing (for the moment
     def __update_backref_filtered(self, target,
-            filters, relational_filters, new_datas = None):
+            filters, relational_filters, new_datas = None, old_datas_l = None):
         #Getting all the UID of the object that will be deleted in order
         #to update back_references
-        mongo_filters = self.__process_filters(
-            target, filters, relational_filters)
-        old_datas_l = self.__collection(target).find(
-            mongo_filters)
-        old_datas_l = list(old_datas_l)
+        if old_datas_l is None:
+            mongo_filters = self.__process_filters(
+                target, filters, relational_filters)
+            old_datas_l = self.__collection(target).find(
+                mongo_filters)
+            old_datas_l = list(old_datas_l)
+            
         uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
         for old_datas in old_datas_l:
             self.__update_backref(
@@ -342,9 +353,11 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         upd_dict = {}
         for fname, fdh in target.reference_handlers().items():
             oldd = old_datas is not None and fname in old_datas and \
-                hasattr(fdh, 'default') and old_datas[fname] != fdh.default
+                (not hasattr(fdh, 'default') or old_datas[fname] != fdh.default) \
+                and not old_datas[fname] is None
             newd = new_datas is not None and fname in new_datas and \
-                hasattr(fdh, 'default') and new_datas[fname] != fdh.default
+                (not hasattr(fdh, 'default') or new_datas[fname] != fdh.default) \
+                and not new_datas[fname] is None
             if (oldd and newd and old_datas[fname] == new_datas[fname])\
                     or not(oldd or newd):
                 #No changes or not concerned
@@ -398,7 +411,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 #value
                 vdict = {}
                 if oldd:
-                    vdict['old'] = new_datas[fname]
+                    vdict['old'] = old_datas[fname]
                     uid_val = vdict['old']
                 if newd:
                     vdict['new'] = new_datas[fname]
@@ -412,11 +425,11 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                     upd_dict, bref_infos, bref_fname, uid_val)
                 #forging update bref_infos
                 bref_cls, bref_leo, bref_dh, bref_value = bref_infos
-                bref_infos = tuple(bref_cls, bref_leo, bref_dh,
+                bref_infos = (bref_cls, bref_leo, bref_dh,
                         upd_dict[bref_cls][uid_val][1][bref_fname])
                 #fetche and store updated value
                 new_bref_val = self.__back_ref_upd_one_value(
-                    fname, fdh, tuid, **vdict)
+                    fname, fdh, tuid, bref_infos, **vdict)
                 upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
         #Now we've got our upd_dict ready.
         #running the updates
@@ -478,6 +491,8 @@ object : %s. Value was : '%s'" % (bref_leo, tuid))
                     raise MongoDbConsistencyError("The value we want to \
 delete in this back reference update was not found in the back referenced \
 object : %s. Value was : '%s'" % (bref_leo, tuid))
+                if isinstance(bref_val, tuple):
+                    bref_val = set(bref_val)
                 if isinstance(bref_val, set):
                     bref_val -= set([tuid])
                 else:
@@ -487,6 +502,8 @@ object : %s. Value was : '%s'" % (bref_leo, tuid))
                     raise MongoDbConsistencyError("The value we want to \
 add in this back reference update was found in the back referenced \
 object : %s. Value was : '%s'" % (bref_leo, tuid))
+                if isinstance(bref_val, tuple):
+                    bref_val = set(bref_val)
                 if isinstance(bref_val, set):
                     bref_val |= set([tuid])
                 else:
@@ -504,7 +521,7 @@ have expected value. Expected was %s but found %s in %s" % (
                 if not hasattr(bref_dh, "default"): 
                     raise MongoDbConsistencyError("Unable to delete a \
 value for a back reference update. The concerned field don't have a default \
-value : in %s field %s" % (bref_leo, bref_fname))
+value : in %s field %s" % (bref_leo,fname))
                 bref_val = getattr(bref_dh, "default")
             elif not oldd and newdd:
                 bref_val = tuid

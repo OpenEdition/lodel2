@@ -68,6 +68,8 @@ def admin_update(request):
                     value=[spl for spl in [
                            v.strip() for v in value.split(LIST_SEPARATOR)]
                         if len(spl) > 0]
+                elif len(value.strip()) == 0:
+                    value = None
                 try:
                     leo_to_update.set_data(fieldname, value)
                 except Exception as e:
@@ -80,11 +82,7 @@ def admin_update(request):
                     fname, error)
             custom_msg += '</ul>'
             raise HttpException(400, custom = custom_msg)
-        try:
-            leo_to_update.update()
-        except Exception as e:
-            raise HttpException(
-                500, custom = "Something goes wrong during update : %s" % e)
+        leo_to_update.update()
 
     # Display of the form with the object's values to be updated
     if 'classname' in request.GET:
