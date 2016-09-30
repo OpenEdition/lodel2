@@ -13,7 +13,7 @@ mongodb_connfail() {
 }
 
 usage() {
-	echo -e "Usage : $0 (N|purgedb|-h|--help)
+	echo -e "Usage : $0 (N|purgedb|-h|--help) [FIXED_NAME]
 \tWith :
 \t\t- N the number of instances to create
 \t\t- purgedb is to remove all created mongodb db\n"
@@ -30,6 +30,8 @@ slim_fails() {
 	exit 1
 }
 
+fixed_name="$2"
+
 test -f $conffile || badconf
 #Load conffile
 . $conffile
@@ -37,14 +39,19 @@ test -z "$MONGODB_ADMIN_USER" && badconf
 test -z "$MONGODB_ADMIN_PASSWORD" && badconf
 
 
-#Check for the presence of /usr/share/dict/words to generate random names
-if [ -f '/usr/share/dict/words' ]
+if [ -z "$fixed_name" ]
 then
-	echo "/usr/share/dict/words found. Using this file as source for random names"
-	random_name=$(sed -nE 's/^([A-Za-z0-9]+)$/\1/p' /usr/share/dict/words |shuf|head -n1)
+	#Check for the presence of /usr/share/dict/words to generate random names
+	if [ -f '/usr/share/dict/words' ]
+	then
+		echo "/usr/share/dict/words found. Using this file as source for random names"
+		random_name=$(sed -nE 's/^([A-Za-z0-9]+)$/\1/p' /usr/share/dict/words |shuf|head -n1)
+	else
+		echo -e "\n\n\tWarning... /usr/share/dict/words not found using \$RANDOM for random names generation"
+		random_name=$RANDOM
+	fi
 else
-	echo -e "\n\n\tWarning... /usr/share/dict/words not found using \$RANDOM for random names generation"
-	random_name=$RANDOM
+	random_name="$fixed_name"
 fi
 
 #Check for the presence of mongo and its conf
