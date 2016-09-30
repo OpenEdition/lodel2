@@ -200,7 +200,7 @@ mass_deletion() {
 fetch_all_classes() {
 	#$1 is intance name
 	cls_list_file=$($cmktemp)
-	$curl_raw "$(_base_uri $1)/list_classes" | grep -v Abstract |sed -nE 's/^ *<li> +<a href="([^"]+)" target="_blank".*$/\1/p'|cut -d"=" -f2 > $cls_list_file
+	$curl_raw "$(_base_uri $1)/list_classes" | grep -v Abstract |sed -nE 's/^ *<li> +<a href="show_class([^"]+)".*$/\1/p'|cut -d"=" -f2 > $cls_list_file
 	echo $cls_list_file
 }
 
