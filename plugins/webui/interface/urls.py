@@ -18,6 +18,7 @@ urls = (
     (r'^/list_classes', list_classes),
     (r'^/list_classes?$', list_classes),
     (r'^/show_object?$', show_object),
+    (r'^/show_object_detailled?$', show_object_detailled),
     (r'^/show_class?$', show_class),
     (r'^/signin', signin),
     (r'^/signout', signout)

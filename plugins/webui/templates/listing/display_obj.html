@@ -1,0 +1,24 @@
+{% macro display(obj) -%}
+    <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
+    {% for fieldn, fieldv in obj.fields(include_ro = True).items() %}
+        {% if fieldv is not none %}
+           {% if fieldv.base_type == 'ref' %}
+                {% if obj.data(fieldn) is iterable %}
+                    <li>{{ fieldn }}
+                    {% set l_classe = fieldv.allowed_classes[0] %}
+                        <ul>
+                    {% for rel in obj.data(fieldn) %}
+                            {% set casttype = l_classe.data_handler(l_classe.uid_fieldname()[0]).cast_type %}
+                            {% set linked_object = l_classe.get(('%s = %s') % (l_classe.uid_fieldname()[0], rel)) %}
+                            {% set rel2 = casttype(rel) %}
+                            <li><a href="show_object_detailled?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" >{{ rel2 }}</a></li>
+                    {% endfor %}
+                        </ul></li>
+                {% endif %}
+            {% else %}
+                <li> {{ fieldn }} : {{ obj.data(fieldn) }} </li>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+ 
