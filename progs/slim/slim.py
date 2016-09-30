@@ -286,7 +286,7 @@ def stop_instances(names):
             continue
         pid = pids[name]
         try:
-            os.kill(pid, signal.SIGINT)
+            os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
             logging.warning("The instance %s seems to be in error, no process \
 with pid %d found" % (name, pids[name]))
