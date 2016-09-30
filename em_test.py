@@ -226,7 +226,8 @@ subsection.new_field(   'parent',
                         display_name = 'Parent',
                         group = editorial_group,
                         data_handler = 'link',
-                        allowed_classes = [section])
+                        allowed_classes = [section],
+                        back_reference = ('section', 'childs'))
 
 #####################
 # Persons & authors #
