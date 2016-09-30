@@ -30,7 +30,7 @@
                     {% for rel in obj.data(fieldname) %}
                             {% set casttype = l_classe.data_handler(l_classe.uid_fieldname()[0]).cast_type %}
                             {% set rel2 = casttype(rel) %}
-                            <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" target="_blank">{{ rel2 }}</a></li>
+                            <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" >{{ rel2 }}</a></li>
                     {% endfor %}
                         </ul></li>
                 {% endif %}

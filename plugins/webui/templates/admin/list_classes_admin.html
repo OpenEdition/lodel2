@@ -12,7 +12,7 @@
     {% set abst = ' - Abstract' %}
     {% if not classe.is_abstract() %}
     {% set abst = ' - ' ~ classe.get(None)|length %}
-    <li> <a href="/{{ root_url }}/admin/class_admin?classname={{ classe.__name__ }}" target="_blank">{{ classe.__name__ }} </a>{{ abst }}</li>
+    <li> <a href="/{{ root_url }}/admin/class_admin?classname={{ classe.__name__ }}" >{{ classe.__name__ }} </a>{{ abst }}</li>
     {% else %}
     <li> {{ classe.__name__ }} {{ abst }}</li>
     {% endif %}

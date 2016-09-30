@@ -12,7 +12,7 @@
     {% set objects = target.get(None) %}
     <ul>
     {% for obj in objects %}
-        <li><a href="delete?classname={{ target.__name__  }}&lodel_id={{ obj.uid() }}" target="_blank">{{ obj.uid() }} </a></li>
+        <li><a href="delete?classname={{ target.__name__  }}&lodel_id={{ obj.uid() }}" >{{ obj.uid() }} </a></li>
     {% endfor %}
     </ul>
  {% endif %}
