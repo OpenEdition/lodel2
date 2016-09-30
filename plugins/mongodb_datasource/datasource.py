@@ -222,6 +222,12 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param upd_datas dict : datas to update (new values)
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
+        for dname in upd_datas:
+            if isinstance(upd_datas[dname], set):
+                #pymongo raises :
+                #bson.errors.InvalidDocument: Cannot encode object: {...}
+                #with sets
+                upd_datas[dname] = list(upd_datas[dname])
         res = self.__update_no_backref(target, filters, relational_filters,
             upd_datas)
         self.__update_backref_filtered(target, filters, relational_filters,
