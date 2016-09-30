@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-	echo -e "Usage : $0 host_of_server instance_name host_of_db number_of_iterations >&2
+	echo -e "Usage : $0 host_of_server instance_name host_of_db number_of_iterations >&2"
 	echo -e "Example : create_datas locahost instance_00001 localhost:28015 1000"
 	echo -e "Example : create_datas locahost instance_00001 localhost 1000"
 	exit 1
