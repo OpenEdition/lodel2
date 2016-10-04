@@ -59,7 +59,7 @@ Other make targets :
 
 Lodel2 instance management utilities :
 ======================================
-
+NOTE: You have to run in root to use this below
 	SLIM : Simple Lodel Instance Manager
 	------------------------------------
 
@@ -92,6 +92,7 @@ Lodel2 instance management utilities :
 
 		- get some help for more options & actions :
 			slim -h
+
 
 	mass_deploy.sh :
 	----------------
@@ -127,7 +128,7 @@ Mass deployments tricks & tips:
 	#Add an admin user to mongodb
 	echo -e "use admin\ndb.addUser('$mongoadmin', '$mongopass')\nexit\n"|mongo
 	#Reactivate auth
-	sed -i -e 's/^noauth = /#noauth =/' -e 's/^#auth = /auth =/'
+	sed -i -e 's/^noauth = /#noauth =/' -e 's/^#auth = /auth =/' /etc/mongodb.conf
 	#Test connection
 	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
 	#Indicate mongodb credentials to mass_deploy
