@@ -807,6 +807,9 @@ by an equality filter")
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
         if mongop in cls.mongo_op_re:
+            if value.startswith('(') and value.endswith(')') and ',' in value:
+                mongoval = [ item for item in mongoval[1:-1].split(',') ]
+        elif mongop == 'like':
             #unescaping \
             mongoval = value.replace('\\\\','\\')
             if not mongoval.startswith('*'):
@@ -817,6 +820,7 @@ by an equality filter")
             #Replacing every other unescaped wildcard char
             mongoval = cls.wildcard_re.sub('.*', mongoval)
             mongoval = {'$regex': mongoval, '$options': 'i'}
+
         return (op, mongoval)
 
     ##@brief Convert a list of tuple(OP, VALUE) into a pymongo filter dict
