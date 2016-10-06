@@ -806,6 +806,7 @@ by an equality filter")
         mongoval = value
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
+        logger.info((op,value))
         if mongop in cls.mongo_op_re:
             if value.startswith('(') and value.endswith(')') and ',' in value:
                 mongoval = [ item for item in mongoval[1:-1].split(',') ]

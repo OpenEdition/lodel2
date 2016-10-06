@@ -27,7 +27,7 @@
                     <li>{{ fieldname }}
                     {% set l_classe = fieldvalue.allowed_classes[0] %}
                         <ul>
-                    {% set linked_objs=l_classe.get(("%s in %s") % (l_classe.uid_fieldname()[0], obj.data(fieldname)|join(','))) %}
+                    {% set linked_objs=l_classe.get(("%s in (%s)") % (l_classe.uid_fieldname()[0], obj.data(fieldname)|join(','))) %}
                     {% for linked_obj in linked_objs %}
                             <li>{{ edit.display(linked_obj) }}</li>
                     {% endfor %}
