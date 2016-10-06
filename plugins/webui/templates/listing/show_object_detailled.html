@@ -29,7 +29,8 @@
                         <ul>
                     {% set linked_objs=l_classe.get(("%s in (%s)") % (l_classe.uid_fieldname()[0], obj.data(fieldname)|join(','))) %}
                     {% for linked_obj in linked_objs %}
-                            <li>{{ edit.display(linked_obj) }}</li>
+                            {{ edit.display(linked_obj) }}
+                            <br/>
                     {% endfor %}
                         </ul></li>
                 {% endif %}

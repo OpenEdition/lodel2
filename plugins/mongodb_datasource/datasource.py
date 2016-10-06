@@ -642,7 +642,7 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
     #@return a list of pymongo filters ( dict {FIELD:{OPERATOR:VALUE}} )
     def __process_filters(self,target, filters, relational_filters):
         # Simple filters lodel2 -> pymongo converting
-        res = self.__filters2mongo(filters)
+        res = self.__filters2mongo(filters, target)
         rfilters = self.__prepare_relational_filters(target, relational_filters)
         #Now that everything is well organized, begin to forge subquerie
         #filters
@@ -706,7 +706,7 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
                     #warnings in some case (2 different values for a same op
                     #on a same field on a same collection)
                     mongofilters = cls.__op_value_listconv(
-                        rfilters[fname][leobject][rfield])
+                        rfilters[fname][leobject][rfield], target.field(fname))
                     rfilters[fname][leobject][rfield] = mongofilters
 
     ##@brief Generate a tree from relational_filters
@@ -759,13 +759,13 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
     #@param filters list : list of lodel filters
     #@return dict representing pymongo conditions
     @classmethod
-    def __filters2mongo(cls, filters):
+    def __filters2mongo(cls, filters, target):
         res = dict()
         eq_fieldname = [] #Stores field with equal comparison OP
         for fieldname, op, value in filters:
             oop = op
             ovalue = value
-            op, value = cls.__op_value_conv(op, value)
+            op, value = cls.__op_value_conv(op, value, target.field(fieldname))
             if op == '=':
                 eq_fieldname.append(fieldname)
                 if fieldname in res:
@@ -798,7 +798,7 @@ by an equality filter")
     #@param value mixed : the value
     #@return a tuple(mongo_op, mongo_value)
     @classmethod
-    def __op_value_conv(cls, op, value):
+    def __op_value_conv(cls, op, value, dhdl):
         if op not in cls.lodel2mongo_op_map:
             msg = "Invalid operator '%s' found" % op
             raise MongoDbDataSourceError(msg)
@@ -806,10 +806,12 @@ by an equality filter")
         mongoval = value
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
-        logger.info((op,value))
         if mongop in cls.mongo_op_re:
             if value.startswith('(') and value.endswith(')') and ',' in value:
-                mongoval = [ item for item in mongoval[1:-1].split(',') ]
+                if (dhdl.cast_type is not None):
+                    mongoval = [ dhdl.cast_type(item) for item in mongoval[1:-1].split(',') ]
+                else:
+                    mongoval = [ item for item in mongoval[1:-1].split(',') ]
         elif mongop == 'like':
             #unescaping \
             mongoval = value.replace('\\\\','\\')
@@ -821,16 +823,15 @@ by an equality filter")
             #Replacing every other unescaped wildcard char
             mongoval = cls.wildcard_re.sub('.*', mongoval)
             mongoval = {'$regex': mongoval, '$options': 'i'}
-
         return (op, mongoval)
 
     ##@brief Convert a list of tuple(OP, VALUE) into a pymongo filter dict
     #@return a dict with mongo op as key and value as value...
     @classmethod
-    def __op_value_listconv(cls, op_value_list):
+    def __op_value_listconv(cls, op_value_list, dhdl):
         result = dict()
         for op, value in op_value_list:
-            mongop, mongoval = cls.__op_value_conv(op, value)
+            mongop, mongoval = cls.__op_value_conv(op, value, dhdl)
             if mongop in result:
                 warnings.warn("Duplicated value given for a single \
 field/operator couple in a query. We will keep only the first one")
