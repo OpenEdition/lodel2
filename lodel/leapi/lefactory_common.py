@@ -1,5 +1,5 @@
 #-
-#-  THE CONTENT OF THIS FILE IS DESIGNED TO BE INCLUDED IN DYNAMICALLY 
+#-  THE CONTENT OF THIS FILE IS DESIGNED TO BE INCLUDED IN DYNAMICALLY
 #-  GENERATED CODE
 #-
 #- All lines that begins with #- will be deleted from dynamically generated

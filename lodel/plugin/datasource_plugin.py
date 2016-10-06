@@ -201,7 +201,7 @@ DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
         from lodel.settings import Settings
         if ds_plugin_name not in Settings.datasource._fields:
             msg = "Unknown or unconfigured datasource plugin %s"
-            msg %= ds_plugin
+            msg %= ds_plugin_name
             raise DatasourcePluginError(msg)
         ds_conf = getattr(Settings.datasource, ds_plugin_name)
         if ds_identifier not in ds_conf._fields:

@@ -1,4 +1,4 @@
-#-*- co:ding: utf-8 -*-
+#-*- coding: utf-8 -*-
 
 ## @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
 #
@@ -15,7 +15,7 @@ from lodel import logger
 ##@brief Base class for all data handlers
 #@ingroup lodel2_datahandlers
 class DataHandler(object):
-    
+    base_type = "type"
     _HANDLERS_MODULES = ('datas_base', 'datas', 'references')
     ##@brief Stores the DataHandler childs classes indexed by name
     _base_handlers = None
@@ -27,7 +27,7 @@ class DataHandler(object):
 
     ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
-    
+
     directly_editable = True
     ##@brief constructor
     # @param internal False | str : define whether or not a field is internal
@@ -38,9 +38,7 @@ class DataHandler(object):
     def __init__(self, **kwargs):
         if self.__class__ == DataHandler:
             raise NotImplementedError("Abstract class")
-        
         self.__arguments = kwargs
-
         self.nullable = True
         self.uniq = False
         self.immutable = False
@@ -62,14 +60,13 @@ class DataHandler(object):
     @classmethod
     def is_reference(cls):
         return issubclass(cls, Reference)
-    
+
     @classmethod
     def is_singlereference(cls):
         return issubclass(cls, SingleRef)
 
     def is_primary_key(self):
         return self.primary_key
-
 
     ##@brief checks if a fieldtype is internal
     # @return bool
@@ -78,7 +75,7 @@ class DataHandler(object):
 
     ##brief check if a value can be nullable
     #@param value *
-    #@throw DataNoneValid if value is None and nullable. LodelExceptions if not nullable 
+    #@throw DataNoneValid if value is None and nullable. LodelExceptions if not nullable
     #@return value (if not None)
     # @return value
     def _check_data_value(self, value):
@@ -87,7 +84,6 @@ class DataHandler(object):
                 raise LodelExceptions("None value is forbidden for this data field")
             raise DataNoneValid("None with a nullable. This exeption is allowed")
         return value
-
 
     ##@brief calls the data_field (defined in derived class) _check_data_value() method
     #@param value *
@@ -125,7 +121,6 @@ class DataHandler(object):
         data_handler = None
         if fname in emcomponent_fields:
             data_handler = emcomponent_fields[fname]
-        
         new_val = cur_value
         if fname in datas.keys():
             pass
@@ -134,7 +129,7 @@ class DataHandler(object):
         elif data_handler is not None and data_handler.nullable:
             new_val = None
         return self._construct_data(emcomponent, fname, datas, new_val)
-    
+
     ##@brief Designed to be reimplemented by child classes
     #@param emcomponent EmComponent : An EmComponent child class instance
     #@param fname str : The field name
@@ -144,7 +139,6 @@ class DataHandler(object):
     #@see construct_data() lodel2_dh_check_impl
     def _construct_data(self, empcomponent, fname, datas, cur_value):
         return cur_value
-        
 
     ##@brief Check datas consistency
     #@ingroup lodel2_dh_checks
@@ -160,7 +154,7 @@ class DataHandler(object):
     #@todo A implémenter
     def check_data_consistency(self, emcomponent, fname, datas):
         return self._check_data_consistency(emcomponent, fname, datas)
-    
+
     ##@brief Designed to be reimplemented by child classes
     #@param emcomponent EmComponent : An EmComponent child class instance
     #@param fname : the field name
@@ -175,10 +169,10 @@ class DataHandler(object):
     # @param fname : the field name
     # @param datas dict : dict storing fields values
     # @return an Exception instance if fails else True
-    # @todo A implémenter   
+    # @todo A implémenter
     def make_consistency(self, emcomponent, fname, datas):
         pass
-    
+
     ##@brief This method is use by plugins to register new data handlers
     @classmethod
     def register_new_handler(cls, name, data_handler):
@@ -187,7 +181,7 @@ class DataHandler(object):
         if not issubclass(data_handler, DataHandler):
             raise ValueError("A data handler HAS TO be a child class of DataHandler")
         cls.__custom_handlers[name] = data_handler
-    
+
     ##@brief Load all datahandlers
     @classmethod
     def load_base_handlers(cls):
@@ -213,7 +207,7 @@ class DataHandler(object):
         if name not in all_handlers:
             raise NameError("No data handlers named '%s'" % (name,))
         return all_handlers[name]
- 
+
     ##@brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name
     # @return a str
@@ -222,10 +216,10 @@ class DataHandler(object):
         name = name.lower()
         handler_class = cls.from_name(name)
         return '{module_name}.{class_name}'.format(
-                                                    module_name = handler_class.__module__,
-                                                    class_name = handler_class.__name__
+                                                    module_name=handler_class.__module__,
+                                                    class_name=handler_class.__name__
         )
-            
+
     ##@brief __hash__ implementation for fieldtypes
     def __hash__(self):
         hash_dats = [self.__class__.__module__]
@@ -248,17 +242,16 @@ class DataField(DataHandler):
 #@todo Check data consistency implementation : check that LeObject instance
 #is from an allowed class
 class Reference(DataHandler):
-    base_type="ref"
+    base_type = "ref"
 
     ##@brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param back_reference tuple | None : tuple containing (LeObject child class, fieldname)
     # @param internal bool : if False, the field is not internal
     # @param **kwargs : other arguments
-    def __init__(self, allowed_classes = None, back_reference = None, internal=False, **kwargs):
+    def __init__(self, allowed_classes=None, back_reference=None, internal=False, **kwargs):
         self.__allowed_classes = set() if allowed_classes is None else set(allowed_classes)
         self.allowed_classes = list() if allowed_classes is None else allowed_classes
-        
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
@@ -266,8 +259,8 @@ class Reference(DataHandler):
             #    raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str) but got : (%s, %s)" % (back_reference[0], back_reference[1]))
         self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
- 
-    ##@brief Method designed to return an empty value for this kind of 
+
+    ##@brief Method designed to return an empty value for this kind of
     #multipleref
     @classmethod
     def empty(cls):
@@ -277,8 +270,8 @@ class Reference(DataHandler):
     @property
     def back_reference(self):
         return copy.copy(self.__back_reference)
-    
-    ##@brief Property that takes value of datahandler of the backreference or 
+
+    ##@brief Property that takes value of datahandler of the backreference or
     #None
     @property
     def back_ref_datahandler(self):
@@ -296,7 +289,7 @@ class Reference(DataHandler):
 
     ##@brief Check and cast value in appropriate type
     #@param value *
-    #@throw FieldValidationError if value is an appropriate type 
+    #@throw FieldValidationError if value is an appropriate type
     #@return value
     #@todo implement the check when we have LeObject uid check value
     def _check_data_value(self, value):
@@ -328,34 +321,29 @@ class Reference(DataHandler):
             return rep
         if self.back_reference is None:
             return True
-        
         # !! Reimplement instance fetching in construct data !!
-        dh = emcomponent.field(fname)
-        uid = datas[emcomponent.uid_fieldname()[0]] #multi uid broken here
         target_class = self.back_reference[0]
-        target_field = self.back_reference[1]
         target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
         value = datas[fname]
-        
-        obj = target_class.get([(target_uidfield , '=', value)])
-        
+        obj = target_class.get([(target_uidfield, '=', value)])
         if len(obj) == 0:
             logger.warning('Object referenced does not exist')
             return False
-        
         return True
+
 
 ##@brief This class represent a data_handler for single reference to another object
 #
 # The fields using this data handlers are like "foreign key" on another object
 class SingleRef(Reference):
-    
-    def __init__(self, allowed_classes = None, **kwargs):
-        super().__init__(allowed_classes = allowed_classes, **kwargs)
- 
+
+    def __init__(self, allowed_classes=None, **kwargs):
+        super().__init__(allowed_classes=allowed_classes)
+
+
     ##@brief Check and cast value in appropriate type
     #@param value: *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@throw FieldValidationError if value is unappropriate or can not be cast
     #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
@@ -364,20 +352,22 @@ class SingleRef(Reference):
         #    raise FieldValidationError("List or string expected for a set field")
         return value
 
+
+
 ##@brief This class represent a data_handler for multiple references to another object
 #@ingroup lodel2_datahandlers
 #
 # The fields using this data handlers are like SingleRef but can store multiple references in one field
 # @note for the moment split on ',' chars
 class MultipleRef(Reference):
-    
+
     ##
     # @param max_item int | None : indicate the maximum number of item referenced by this field, None mean no limit
-    def __init__(self, max_item = None, **kwargs):
+    def __init__(self, max_item=None, **kwargs):
         self.max_item = max_item
         super().__init__(**kwargs)
-    
-    ##@brief Method designed to return an empty value for this kind of 
+
+    ##@brief Method designed to return an empty value for this kind of
     #multipleref
     @classmethod
     def empty(cls):
@@ -385,11 +375,11 @@ class MultipleRef(Reference):
 
     ##@brief Check and cast value in appropriate type
     #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@throw FieldValidationError if value is unappropriate or can not be cast
     #@return value
     #@TODO  Writing test error for errors when stored multiple references in one field
     def _check_data_value(self, value):
-        value = DataHandler._check_data_value(self,value)
+        value = DataHandler._check_data_value(self, value)
         if not hasattr(value, '__iter__'):
             raise FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
@@ -397,29 +387,93 @@ class MultipleRef(Reference):
                 raise FieldValidationError("Too many items")
         new_val = list() 
         error_list = list()
-        for i,v in enumerate(value):
+        for i, v in enumerate(value):
             try:
                 v = super()._check_data_value(v)
                 new_val.append(v)
-            except (FieldValidationError) as f:
+            except (FieldValidationError):
                 error_list.append(repr(v))
         if len(error_list) > 0:
             raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
         return new_val
 
+    ##@brief Construct a multiple ref data
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
+        if cur_value is not None:
+            if self.back_reference is not None:
+                br_class = self.back_reference[0]
+                for br_id in cur_value:
+                    query_filters = list()
+                    query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
+                    br_obj = br_class.get(query_filters)
+                    if len(br_obj) != 0:
+                        br_list = br_obj[0].data(self.back_reference[1])
+                        if br_list is None:
+                            br_list = list()
+                        if br_id not in br_list:
+                            br_list.append(br_id)
+        return cur_value
+
+    ## @brief Checks the backreference, updates it if it is not complete
+    # @param emcomponent EmComponent : An EmComponent child class instance
+    # @param fname : the field name
+    # @param datas dict : dict storing fields values
+    # @note Not done in case of delete
+    def make_consistency(self, emcomponent, fname, datas, type_query):
+        dh = emcomponent.field(fname)
+        logger.info('Warning : multiple uid capabilities are broken here')
+        uid = datas[emcomponent.uid_fieldname()[0]]
+        if self.back_reference is not None:
+            target_class = self.back_reference[0]
+            target_field = self.back_reference[1]
+            target_uidfield = target_class.uid_fieldname()[0]
+            l_value = datas[fname]
+
+            if l_value is not None:
+                for value in l_value:
+                    query_filters = list()
+                    query_filters.append((target_uidfield, '=', value))
+                    obj = target_class.get(query_filters)
+                    if len(obj) == 0:
+                        logger.warning('Object referenced does not exist')
+                        return False
+                    l_uids_ref = obj[0].data(target_field)
+                    if l_uids_ref is None:
+                        l_uids_ref = list()
+                    if uid not in l_uids_ref:
+                        l_uids_ref.append(uid)
+                        obj[0].set_data(target_field, l_uids_ref)
+                        obj[0].update()
+
+            if type_query == 'update':
+                query_filters = list()
+                query_filters.append((uid, ' in ', target_field))
+                objects = target_class.get(query_filters)
+                if l_value is None:
+                    l_value = list()
+                if len(objects) != len(l_value):
+                    for obj in objects:
+                        l_uids_ref = obj.data(target_field)
+                        if obj.data(target_uidfield) not in l_value:
+                            l_uids_ref.remove(uid)
+                            obj.set_data(target_field, l_uids_ref)
+                            obj.update()
+
+
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #@ingroup lodel2_datahandlers
 #
-# This class is designed to allow automatic scheduling of construct_data calls. 
+# This class is designed to allow automatic scheduling of construct_data calls.
 #
 # In theory it's able to detect circular dependencies
 # @todo test circular deps detection
 # @todo test circulat deps false positiv
 class DatasConstructor(object):
-    
+
     ## @brief Init a DatasConstructor
-    # @param lec LeCrud : @ref LeObject child class 
+    # @param lec LeCrud : @ref LeObject child class
     # @param datas dict : dict with field name as key and field values as value
     # @param fields_handler dict : dict with field name as key and data handler instance as value
     def __init__(self, leobject, datas, fields_handler):
@@ -433,11 +487,11 @@ class DatasConstructor(object):
         self._constructed = []
         ## Stores construct calls list
         self._construct_calls = []
-    
+
     ## @brief Implements the dict.keys() method on instance
     def keys(self):
         return self._datas.keys()
-    
+
     ## @brief Allows to access the instance like a dict
     def __getitem__(self, fname):
         if fname not in self._constructed:
@@ -447,10 +501,10 @@ class DatasConstructor(object):
             self._datas[fname] = self._fields_handler[fname].construct_data(self._leobject, fname, self, cur_value)
             self._constructed.append(fname)
         return self._datas[fname]
-    
+
     ## @brief Allows to set instance values like a dict
     # @warning Should not append in theory
     def __setitem__(self, fname, value):
         self._datas[fname] = value
         warnings.warn("Setting value of an DatasConstructor instance")
- 
+

@@ -16,7 +16,7 @@ class LeQuery(object):
     ##@brief Hookname prefix
     _hook_prefix = None
     ##@brief arguments for the LeObject.check_data_value()
-    _data_check_args = { 'complete': False, 'allow_internal': False }
+    _data_check_args = {'complete': False, 'allow_internal': False}
 
     ##@brief Abstract constructor
     # @param target_class LeObject : class of object the query is about
@@ -30,7 +30,7 @@ class LeQuery(object):
         self._target_class = target_class
         self._ro_datasource = target_class._ro_datasource
         self._rw_datasource = target_class._rw_datasource
-    
+
     ##@brief Execute a query and return the result
     #@param **datas
     #@return the query result
@@ -44,11 +44,11 @@ class LeQuery(object):
             self._target_class.prepare_datas(datas) #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
-        LodelHook.call_hook(    self._hook_prefix+'_pre',
+        LodelHook.call_hook(self._hook_prefix+'_pre',
                                 self._target_class,
                                 datas)
-        ret = self._query(datas = datas)
-        ret = LodelHook.call_hook(  self._hook_prefix+'_post',
+        ret = self._query(datas=datas)
+        ret = LodelHook.call_hook(self._hook_prefix+'_post',
                                     self._target_class,
                                     ret)
         return ret
@@ -71,7 +71,6 @@ class LeQuery(object):
 
 ##@brief Abstract class handling query with filters
 class LeFilteredQuery(LeQuery):
-    
     ##@brief The available operators used in query definitions
     _query_operators = [
                         ' = ',
@@ -84,16 +83,16 @@ class LeFilteredQuery(LeQuery):
                         ' not in ',
                         ' like ',
                         ' not like ']
-    
+
     ##@brief Regular expression to process filters
     _query_re = None
 
     ##@brief Abtract constructor for queries with filter
     #@param target_class LeObject : class of object the query is about
-    #@param query_filters list : with a tuple (only one filter) or a list of 
+    #@param query_filters list : with a tuple (only one filter) or a list of
     # tuple or a dict: {OP,list(filters)} with OP = 'OR' or 'AND for tuple
     # (FIELD,OPERATOR,VALUE)
-    def __init__(self, target_class, query_filters = None):
+    def __init__(self, target_class, query_filters=None):
         super().__init__(target_class)
         ##@brief The query filter tuple(std_filter, relational_filters)
         self._query_filter = None
@@ -108,7 +107,7 @@ class LeFilteredQuery(LeQuery):
     ##@brief Abstract FilteredQuery execution method
     #
     # This method takes care to execute subqueries before calling super execute
-    def execute(self, datas = None):
+    def execute(self, datas=None):
         #copy originals filters
         orig_filters = copy.copy(self._query_filter)
         std_filters, rel_filters = self._query_filter
@@ -143,7 +142,7 @@ class LeFilteredQuery(LeQuery):
         if isinstance(query_filter, str):
             query_filter = [query_filter]
         #Query filter prepration
-        filters_orig , rel_filters = self._prepare_filters(query_filter)
+        filters_orig, rel_filters = self._prepare_filters(query_filter)
         # Here we now that each relational filter concern only one datasource
         # thank's to _prepare_relational_fields
 
@@ -165,16 +164,16 @@ class LeFilteredQuery(LeQuery):
                 # The line below brake multi UID support
                 #
                 if tfield == tclass.uid_fieldname()[0]:
-                    #This relational filter can be simplified as 
+                    #This relational filter can be simplified as
                     # ref_field, op, value
                     # Note : we will have to dedup filters_orig
                     filters_orig.append((rfield, op, value))
                     del(ref_dict[tclass])
             if len(ref_dict) == 0:
                 continue
-            #Determine what to do with other relational filters given 
+            #Determine what to do with other relational filters given
             # referenced class datasource
-            #Remember : each class in a relational filter has the same 
+            #Remember : each class in a relational filter has the same
             # datasource
             tclass = list(ref_dict.keys())[0]
             cur_ds = tclass._datasource_name
@@ -191,7 +190,7 @@ class LeFilteredQuery(LeQuery):
         filters_cp = set()
         if not isinstance(filters_orig, set):
             for i, cfilt in enumerate(filters_orig):
-                a,b,c = cfilt
+                a, b, c = cfilt
                 if isinstance(c, list): #list are not hashable
                     newc = tuple(c)
                 else:
@@ -210,12 +209,12 @@ class LeFilteredQuery(LeQuery):
                 (rfield, ref_dict), op, value = rfilter
                 for tclass, tfield in ref_dict.items():
                     query = LeGetQuery(
-                        target_class = tclass,
-                        query_filters = [(tfield, op, value)],
-                        field_list = [tfield])
+                        target_class=tclass,
+                        query_filters=[(tfield, op, value)],
+                        field_list=[tfield])
                     subq.append((rfield, query))
         self.subqueries = subq
-    
+
     ##@return informations
     def dump_infos(self):
         ret = super().dump_infos()
@@ -227,17 +226,17 @@ class LeFilteredQuery(LeQuery):
         res = "<{classname} target={target_class} query_filter={query_filter}"
         res = res.format(
             classname=self.__class__.__name__,
-            query_filter = self._query_filter,
-            target_class = self._target_class)
+            query_filter=self._query_filter,
+            target_class=self._target_class)
         if len(self.subqueries) > 0:
-            for n,subq in enumerate(self.subqueries):
+            for n, subq in enumerate(self.subqueries):
                 res += "\n\tSubquerie %d : %s"
                 res %= (n, subq)
         res += '>'
         return res
 
     ## @brief Prepare filters for datasource
-    # 
+    #
     #A filter can be a string or a tuple with len = 3.
     #
     #This method divide filters in two categories :
@@ -248,13 +247,13 @@ class LeFilteredQuery(LeQuery):
     #the content, etc.) They are composed of three elements : FIELDNAME OP
     # VALUE . Where :
     #- FIELDNAME is the name of the field
-    #- OP is one of the authorized comparison operands ( see 
+    #- OP is one of the authorized comparison operands (see
     #@ref LeFilteredQuery.query_operators )
     #- VALUE is... a value
     #
     #@par Relational filters
     #
-    #Those filters concerns on reference fields ( see the corresponding
+    #Those filters concerns on reference fields (see the corresponding
     #abstract datahandler @ref lodel.leapi.datahandlers.base_classes.Reference)
     #The filter as quite the same composition than simple filters :
     # FIELDNAME[.REF_FIELD] OP VALUE . Where :
@@ -269,12 +268,12 @@ class LeFilteredQuery(LeQuery):
     #@todo move this doc in another place (a dedicated page ?)
     #@warning Does not supports multiple UID for an EmClass
     def _prepare_filters(self, filters_l):
-        filters = list()
+        filters=list()
         res_filters = list()
         rel_filters = list()
         err_l = dict()
         #Splitting in tuple if necessary
-        for i,fil in enumerate(filters_l):
+        for i, fil in enumerate(filters_l):
             if len(fil) == 3 and not isinstance(fil, str):
                 filters.append(tuple(fil))
             else:
@@ -292,8 +291,8 @@ class LeFilteredQuery(LeQuery):
             elif len(field_spl) == 1:
                 ref_field = None
             else:
-                err_l[field] = NameError(   "'%s' is not a valid relational \
-field name" % fieldname)
+                err_l[field] = NameError("'%s' is not a valid relational \
+field name" % field)
                 continue
             # Checking field against target_class
             ret = self._check_field(self._target_class, field)
@@ -302,13 +301,13 @@ field name" % fieldname)
                 continue
             field_datahandler = self._target_class.field(field)
             if isinstance(field_datahandler, Exception):
-                err_l[field] = error
+                err_l[field] = field_datahandler
                 continue
             if ref_field is not None and not field_datahandler.is_reference():
                 # inconsistency
-                err_l[field] = NameError(   "The field '%s' in %s is not \
+                err_l[field] = NameError("The field '%s' in %s is not \
 a relational field, but %s.%s was present in the filter"
-                                            % ( field,
+                                            % (field,
                                                 self._target_class.__name__,
                                                 field,
                                                 ref_field))
@@ -321,7 +320,7 @@ a relational field, but %s.%s was present in the filter"
                     # This piece of code does not supports multiple UID for an
                     # emclass
                     #
-                    ref_uid = [ 
+                    ref_uid = [
                         lc._uid[0] for lc in field_datahandler.linked_classes]
 
                     if len(set(ref_uid)) == 1:
@@ -410,7 +409,7 @@ field to use for the relational filter"
     #Relational filters are composed of a tuple like the simple filters
     #but the first element of this tuple is a tuple to :
     #
-    #<code>( (FIELDNAME, {REF_CLASS: REF_FIELD}), OP, VALUE)</code>
+    #<code>((FIELDNAME, {REF_CLASS: REF_FIELD}), OP, VALUE)</code>
     # Where :
     #- FIELDNAME is the field name is the target class
     #- the second element is a dict with :
@@ -429,7 +428,7 @@ field to use for the relational filter"
     #           {
     #               auteur: 'lodel_id',
     #               traducteur: 'lodel_id'
-    #           } 
+    #          }
     #       ),
     #       ' IN ',
     #       [ 1,2,3,5 ])</pre>
@@ -439,7 +438,7 @@ field to use for the relational filter"
     #@param ref_field str|None : The referenced field name (if None use
     #uniq identifiers as referenced field
     #@return a well formed relational filter tuple or an Exception instance
-    def _prepare_relational_fields(self, fieldname, ref_field = None):
+    def _prepare_relational_fields(self, fieldname, ref_field=None):
         datahandler = self._target_class.field(fieldname)
         # now we are going to fetch the referenced class to see if the
         # reference field is valid
@@ -464,29 +463,28 @@ the relational filter %s"
                     msg %= (ref_class.__name__, ref_field)
                     logger.debug(msg)
         if len(ref_dict) == 0:
-            return NameError(   "No field named '%s' in referenced objects [%s]"
+            return NameError("No field named '%s' in referenced objects [%s]"
                                 % (ref_field,
                                     ','.join([rc.__name__ for rc in ref_classes])))
         return (fieldname, ref_dict)
- 
+
 
 ##@brief A query to insert a new object
 class LeInsertQuery(LeQuery):
-    
     _hook_prefix = 'leapi_insert_'
-    _data_check_args = { 'complete': True, 'allow_internal': False }
+    _data_check_args = {'complete': True, 'allow_internal': False}
 
     def __init__(self, target_class):
         if target_class.is_abstract():
             raise LeApiQueryError("Trying to create an insert query on an \
-abstract LeObject : %s" % target_class )
+abstract LeObject : %s" % target_class)
         super().__init__(target_class)
     
     ## @brief Implements an insert query operation, with only one insertion
     # @param new_datas : datas to be inserted
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
-        id_inserted = self._rw_datasource.insert(self._target_class,datas)
+        id_inserted = self._rw_datasource.insert(self._target_class, datas)
         return id_inserted
     """
     ## @brief Implements an insert query operation, with multiple insertions
@@ -501,7 +499,7 @@ abstract LeObject : %s" % target_class )
 
     ## @brief Execute the insert query
     def execute(self, datas):
-        return super().execute(datas = datas)
+        return super().execute(datas=datas)
 
 
 ##@brief A query to update datas for a given object
@@ -509,10 +507,9 @@ abstract LeObject : %s" % target_class )
 #@todo Change behavior, Huge optimization problem when updating using filters
 #and not instance. We have to run a GET and then 1 update by fecthed object...
 class LeUpdateQuery(LeFilteredQuery):
-    
     _hook_prefix = 'leapi_update_'
-    _data_check_args = { 'complete': False, 'allow_internal': False }
-    
+    _data_check_args = {'complete': False, 'allow_internal': False}
+
     ##@brief Instanciate an update query
     #
     #If a class and not an instance is given, no query_filters are expected
@@ -523,12 +520,12 @@ class LeUpdateQuery(LeFilteredQuery):
     #@param query_filters list|None
     #@todo change strategy with instance update. We have to accept datas for
     #the execute method
-    def __init__(self, target, query_filters = None):
+    def __init__(self, target, query_filters=None):
         ##@brief This attr is set only if the target argument is an 
         #instance of a LeObject subclass
         self.__leobject_instance_datas = None
         target_class = target
-        
+
         if not inspect.isclass(target):
             if query_filters is not None:
                 msg = "No query_filters accepted when an instance is given as \
@@ -539,7 +536,7 @@ target to LeUpdateQuery constructor"
                 self.__leobject_instance_datas = target.datas(True)
             else:
                 query_filters = [(target._uid[0], '=', target.uid())]
-    
+
         super().__init__(target_class, query_filters)
 
     ##@brief Implements an update query
@@ -547,7 +544,7 @@ target to LeUpdateQuery constructor"
     #@param rel_filters list : see @ref LeFilteredQuery
     #@param datas dict : datas to update
     #@returns the number of updated items
-    #@todo change stategy for instance update. Datas should be allowed 
+    #@todo change stategy for instance update. Datas should be allowed
     #for execute method (and query)
     def _query(self, datas):
         uid_name = self._target_class._uid[0]
@@ -578,48 +575,47 @@ target to LeUpdateQuery constructor"
                     self._target_class, filters, [],
                     res_datas)
         return res
-    
+
     ## @brief Execute the update query
-    def execute(self, datas = None):
+    def execute(self, datas=None):
         if self.__leobject_instance_datas is not None and datas is not None:
             raise LeApiQueryError("No datas expected when running an update \
 query on an instance")
         if self.__leobject_instance_datas is None and datas is None:
             raise LeApiQueryError("Datas are mandatory when running an update \
 query on a class with filters")
-        return super().execute(datas = datas)
+        return super().execute(datas=datas)
+
 
 ##@brief A query to delete an object
 class LeDeleteQuery(LeFilteredQuery):
-    
     _hook_prefix = 'leapi_delete_'
 
     def __init__(self, target_class, query_filter):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
-    def execute(self, datas = None):
+    def execute(self, datas=None):
         return super().execute()
-    
+
     ##@brief Implements delete query operations
     #@param filters list : see @ref LeFilteredQuery
     #@param rel_filters list : see @ref LeFilteredQuery
     #@returns the number of deleted items
-    def _query(self, datas = None):
+    def _query(self, datas=None):
         filters, rel_filters = self._query_filter
         nb_deleted = self._rw_datasource.delete(
             self._target_class, filters, rel_filters)
         return nb_deleted
 
 class LeGetQuery(LeFilteredQuery):
-    
     _hook_prefix = 'leapi_get_'
 
     ##@brief Instanciate a new get query
     #@param target_class LeObject : class of object the query is about
-    #@param query_filters dict : {OP, list of query filters }
+    #@param query_filters dict : {OP, list of query filters}
     # or tuple (FIELD, OPERATOR, VALUE) )
-    #@param field_list list|None : list of string representing fields see 
+    #@param field_list list|None : list of string representing fields see
     # @ref leobject_filters
     #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
     #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
@@ -627,7 +623,6 @@ class LeGetQuery(LeFilteredQuery):
     #@param offset int : offset
     def __init__(self, target_class, query_filters, **kwargs):
         super().__init__(target_class, query_filters)
-        
         ##@brief The fields to get
         self._field_list = None
         ##@brief An equivalent to the SQL ORDER BY
@@ -638,7 +633,7 @@ class LeGetQuery(LeFilteredQuery):
         self._limit = None
         ##@brief An equivalent to the SQL LIMIT x, OFFSET
         self._offset = 0
-        
+
         # Checking kwargs and assigning default values if there is some
         for argname in kwargs:
             if argname not in (
@@ -672,7 +667,7 @@ class LeGetQuery(LeFilteredQuery):
             except ValueError:
                 msg = "offset argument expected to be an integer >= 0"
                 raise ValueError(msg)
-    
+
     ##@brief Set the field list
     # @param field_list list | None : If None use all fields
     # @return None
@@ -691,36 +686,36 @@ class LeGetQuery(LeFilteredQuery):
                 msg = "Error while setting field_list in a get query"
                 raise LeApiQueryErrors(msg = msg, exceptions = err_l)
             self._field_list = list(set(field_list))
-    
+
     ##@brief Execute the get query
-    def execute(self, datas = None):
+    def execute(self, datas=None):
         return super().execute()
 
     ##@brief Implements select query operations
     # @returns a list containing the item(s)
-    def _query(self, datas = None):
+    def _query(self, datas=None):
         # select datas corresponding to query_filter
         fl = list(self._field_list) if self._field_list is not None else None
-        l_datas=self._ro_datasource.select( 
+        l_datas=self._ro_datasource.select(
             target = self._target_class,
             field_list = fl,
-            filters = self._query_filter[0],
-            relational_filters = self._query_filter[1],
-            order = self._order,
-            group = self._group,
-            limit = self._limit,
+            filters = self._query_filter[0], 
+            relational_filters = self._query_filter[1], 
+            order = self._order, 
+            group = self._group, 
+            limit = self._limit, 
             offset = self._offset)
         return l_datas
-    
+
     ##@return a dict with query infos
     def dump_infos(self):
         ret = super().dump_infos()
-        ret.update( {   'field_list' : self._field_list,
-                        'order' : self._order,
-                        'group' : self._group,
-                        'limit' : self._limit,
-                        'offset': self._offset,
-        })
+        ret.update({  'field_list' : self._field_list, 
+                        'order' : self._order, 
+                        'group' : self._group, 
+                        'limit' : self._limit, 
+                        'offset': self._offset, 
+       })
         return ret
 
     def __repr__(self):

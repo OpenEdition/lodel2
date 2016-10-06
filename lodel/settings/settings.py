@@ -110,7 +110,7 @@ class Settings(object, metaclass=MetaSettings):
     # allready instanciated, else not
     # @throw RuntimeError
     @classmethod
-    def singleton_assert(cls, expect_instanciated = False):
+    def singleton_assert(cls, expect_instanciated=False):
         if expect_instanciated:
             if not cls.started():
                 raise RuntimeError("The Settings class is not started yet")

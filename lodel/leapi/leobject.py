@@ -63,6 +63,8 @@ class LeObject(object):
     _rw_datasource = None
     ##@brief Store the list of child classes
     _child_classes = None
+    ##@brief Name of the datasource plugin
+    _datasource_name = None
 
     def __new__(cls, **kwargs):
         
@@ -367,13 +369,13 @@ class LeObject(object):
                 for fname in self.fieldnames(include_ro = True):
                     try:
                         field = self._fields[fname]
-                        self.__datas[fname] = fields.construct_data(    self,
+                        self.__datas[fname] = field.construct_data(    self,
                                                                         fname,
                                                                         self.__datas,
                                                                         self.__datas[fname]
                         )
-                    except Exception as e:
-                        err_list[fname] = e
+                    except Exception as exp:
+                        err_list[fname] = exp
             # Datas consistency check
             if len(err_list) == 0:
                 for fname in self.fieldnames(include_ro = True):

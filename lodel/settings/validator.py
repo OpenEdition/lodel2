@@ -231,7 +231,7 @@ def host_val(value):
     try:
         socket.getaddrinfo(value, 80)
         return value
-    except (TypeError,socket.gaierrror):
+    except (TypeError,socket.gaierror):
         msg = "The value '%s' is not a valid host"
         raise SettingsValidationError(msg % value)
 
