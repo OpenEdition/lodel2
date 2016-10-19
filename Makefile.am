@@ -48,10 +48,10 @@ dyncode: examples/em_test.pickle
 	$(python) scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
 # run tests
-checks:
+checks: runtest
 	./runtest -v
 
-unittest: check
+unittest: checks
 
 #Cleaning documentation and dyncode
 clean-local: cleandoc
