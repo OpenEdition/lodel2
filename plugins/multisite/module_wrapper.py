@@ -26,6 +26,9 @@ SITE_PACKAGE_STRUCT = {
          'settings': {
 
          },
+         'logger': {
+
+         },
          'plugin': {
             'modules': {
                 'hooks': {
@@ -95,7 +98,9 @@ class LodelSiteModuleLoader(importlib.abc.Loader):
     def create_module(self, spec):
         #Here we do not want to import but get the module object of the parent
         #to store it's reference and set the new module as attribute
+        print("CREATE_MODULE debug : ", spec)
         if spec.parent_package is not None:
+            print("PARENT NAMe ;", spec.parent_package)
             parent_module = importlib.import_module(spec.parent_package)
             if hasattr(parent_module, spec.name):
                 warnings.warn("Overloading an existing module attribute will \
@@ -104,6 +109,10 @@ creating %s module" % spec.name)
             parent_module = None
 
         res = types.ModuleType(spec.name)
+        
+        root_pkg_name = globals()['SITE_PACKAGE']
+
+        res.__spec__ = spec
         res.__name__ = spec.name
         res.__loader__ = self
         res.__package__ = spec.parent_package
@@ -111,31 +120,71 @@ creating %s module" % spec.name)
         if spec.site_id is not None:
             res.__site_id__ = spec.site_id
         if parent_module is not None:
-            setattr(parent_module, spec.name, res)
-        if res.__package__ is not None:
-            fullname = "%s.%s" % (res.__package__, res.__name__)
-        else:
-            fullname = res.__name__
-        sys.modules[fullname] = res
+            rel_name = spec.name.split('.')[-1]
+            setattr(parent_module, rel_name, res)
+        #sys.modules[fullname] = res
+        sys.modules[spec.name] = res
+        print("INFO : module %s loaded" % spec.name)
+        print("INFO current state on sys.modules : ", [ mname for mname in sys.modules.keys() if mname .startswith('lodelsites.')])
+        self.__dyn_module__ = res
         return res
 
-        
+    def load_module(self, fullname):
+        if self.__dyn_module__.__name__ != fullname:
+            raise MultiSiteError("The name given to load_module do not match \
+the name of the handled module...")
+        sys.modules[fullname] = self.__dyn_module__
+        print("INFO : module %s loaded" % fullname)
+
+
+##@brief Custom metapath finder that is able to handle our 
+#dynamically created modules
+class LodelSiteMetaPathFinder(importlib.abc.MetaPathFinder):
+    
+    def find_spec(fullname, path, target = None):
+        print("FINDSPEC CALLEd : ", fullname, path)
+        if not fullname.startswith(globals()['SITE_PACKAGE']):
+            return None
+        n_spl = fullname.split('.')
+        site_id = n_spl[1]
+        res_mod = get_site_module(site_id)
+        print("Begin to walk in submodules. Starting from ", res_mod.__name__)
+        print("DEBUG RESMOD : ", res_mod.__name__,  dir(res_mod))
+        for nxt in n_spl[2:]:
+            res_mod = getattr(res_mod, nxt)
+        print("Real result : ", res_mod.__name__, res_mod)
+        return res_mod.__spec__
+
+
+##@brief Simple getter using site identifier
+def get_site_module(identifier):
+    glob_pkg = globals()['lodel_site_packages']
+    if identifier not in glob_pkg:
+        raise MultiSiteIdentifierError(
+            "No site identified by '%s'" % identifier)
+    return glob_pkg[identifier]
 
 
 ##@brief Create a new site module with given site identifier
 #@param identifier str : site identifier
 def new_site_module(identifier):
-    new_mod = _new_site_module(
-        identifier, identifier, globals()['SITE_PACKAGE_STRUCT'],
+    new_module_fullname = globals()['SITE_PACKAGE'] + '.' + identifier
+    new_modules = _new_site_module(
+        identifier, new_module_fullname, globals()['SITE_PACKAGE_STRUCT'],
         parent = globals()['_lodel_site_root_package'])
-    globals()['lodel_site_packages']['identifier'] = new_mod
+    new_mod = new_modules[0] #fetching root module
+    globals()['lodel_site_packages'][identifier] = new_mod
     setattr(globals()['_lodel_site_root_package'], identifier, new_mod)
+
+    for mod in new_modules:
+        print("Call reload on : ", mod)
+        imp.reload(mod)
+        for n in dir(mod):
+            v = getattr(mod, n)
+            if isinstance(v, types.ModuleType):
+                print("\t%s : %s" % (n, getattr(mod, n)))
     return new_mod
 
-def get_site_module(identifier):
-    glob_pkg = globals()['lodel_site_packages']
-    if identifier not in glob_pkg:
-        raise 
 
 ##@brief Create a new site module (part of a site package)
 #
@@ -146,21 +195,35 @@ def get_site_module(identifier):
 #@param module_name str 
 #@param module_infos dict
 #@param parent : modul object
+#@param all_mods list : in/out accumulator for reccursiv calls allowing to 
+#return the list of all created modules
 #
 #@return the created module
-def _new_site_module(identifier, module_name, module_infos, parent):
+def _new_site_module(identifier, module_name, module_infos, parent, 
+        mod_acc = None):
+    mod_acc = list() if mod_acc is None else mod_acc
+
     print("Rec debug : ", identifier, module_name, module_infos, parent)
     identifier = identifier_validation(identifier)
-    orig_modname = _original_name_from_module(parent)
-    if parent.__name__ != globals()['SITE_PACKAGE']:
-        orig_modname += '.'+module_name
-    if parent.__package__ is None:
-        parent_fullname = parent.__name__
+
+    if parent is None:
+        parent_name = None
     else:
-        parent_fullname = "%s.%s" % (parent.__package__, parent.__name__)
-    res = _module_from_spec(name = module_name, parent = parent_fullname,
+        parent_name = parent.__name__
+
+    res = _module_from_spec(name = module_name, parent = parent_name,
         site_id = identifier)
+    orig_modname = _original_name_from_module(res)
+    if len(mod_acc) == 0:
+        #we just created a site root package. Because we will reimport
+        #parent modules when creating submodules we have to insert the
+        #site root package NOW to the site_root_packages
+        print("WARNING : inserting module as site root package : ", res)
+        globals()['lodel_site_packages'][identifier] = res
+    mod_acc.append(res) #Add created module to accumulator asap
+
     orig_mod = importlib.import_module(orig_modname)
+    print("ORIG MOD = ", orig_mod)
     if 'classes' in module_infos:
         for cname in module_infos['classes']:
             orig_cls = getattr(orig_mod, cname)
@@ -169,11 +232,14 @@ def _new_site_module(identifier, module_name, module_infos, parent):
     #child modules creation
     if 'modules' in module_infos:
         for mname in module_infos['modules']:
+            new_mname = module_name + '.' + mname
+            print("DEBUG NAME ON REC CALL : ", new_mname)
             submod = _new_site_module(
-                identifier, mname, module_infos['modules'][mname],
-                parent = res)
-            setattr(res, mname, submod)
-    return res
+                identifier, new_mname, module_infos['modules'][mname],
+                parent = res, mod_acc = mod_acc)
+            submod = submod[-1]
+            #setattr(res, mname, submod) #done in create_module
+    return mod_acc
 
 ##@brief Validate a site identifier
 #@param identifier str
@@ -222,10 +288,13 @@ def onthefly_child_class(identifier, original_cls, parent_module):
 #
 #Takes care to create the lodel_site_package module object
 def init_module():
+    #Creating the package that contains all site packages
     site_pkg_name = globals()['SITE_PACKAGE']
     res = _module_from_spec(name = site_pkg_name)
     globals()['_lodel_site_root_package'] = res
     sys.modules[site_pkg_name] = res
+    #Add our custom metapathfinder
+    sys.meta_path = [LodelSiteMetaPathFinder] + sys.meta_path
     return res
     
 
@@ -242,18 +311,36 @@ def _module_from_spec(name, parent = None, origin = None, loader_state = None,
     return loader.create_module(spec)
 
 
+##@brief Replace all lodel modules references by references on dynamically
+#modules
+#@param mod ModuleType : the module to update
+#@return the modified module
+def _module_update_globals(mod):
+    return None
+    print("DEBUG : ", mod.__name__, dir(mod), mod.__dir__())
+    site_id = mod.__site_id__
+    lodel_site_package = get_site_module(mod.__site_id__)
+    for kname, val in mod.__globals__:
+        if isinstance(val, types.ModuleType) and \
+                val.__package__.startswith('lodel'):
+            #we have to replace the module reference
+            fullname = "%s.%s" % (val.__package__, val.__name__)
+            walkthrough = fullname.split('.')[1:]
+            repl = lodel_site_package
+            for submod in walkthrough:
+                repl = getattr(repl, submod)
+            mod.__globals__[kname] = repl
+    return mod
+                
+
 ##@brief Build the original fully quilified module name given a module
 #@warning Behavior is totally hardcoded given the lodel2 architecture
 #@param mod
 #@return a fully qualified module name
 def _original_name_from_module(mod):
     print("DEBUG MODNAME : ", mod, mod.__name__, mod.__package__)
-    if mod.__name__ == globals()['SITE_PACKAGE'] or mod.__package__ is None:
-        return 'lodel'
-    res = "%s.%s" % (mod.__package__, mod.__name__)
-    spl = res.split('.')
+    spl = mod.__name__.split('.')
     if len(spl) <= 2:
-        return 'lodel'
-    res = "lodel."+ ('.'.join(spl[2:]))
-    return res
+        return "lodel"
+    return "lodel.%s" % ('.'.join(spl[2:]))
 
