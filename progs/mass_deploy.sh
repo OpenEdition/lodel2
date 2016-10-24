@@ -75,7 +75,7 @@ else
 	echo "/etc/mongodb.conf not found. Unable to check if auth is on"
 fi
 
-echo "exit" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin &>/dev/null || mongodb_connfail
+echo "exit" | mongo --host $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin &>/dev/null || mongodb_connfail
 
 if [ "$1" == 'purgedb' ]
 then
@@ -88,7 +88,7 @@ then
 	read rep
 	if [ "$rep" = "Y" ]
 	then
-		for dbname in $(echo "show dbs" | mongo -u admin -p pass admin  |grep "^$MONGODB_DB_PREFIX"|cut -f1)
+		for dbname in $(echo "show dbs" | mongo --host $MONGODB_HOST -u $MONGODB_ADMIN_USER -p $MONGODB_ADMIN_PASSWORD admin  |grep "^$MONGODB_DB_PREFIX"|cut -f1)
 		do 
 			echo -e "use $dname\ndb.dropDatabase()\nexit\n" | mongo -u $MONGODB_ADMIN_USER -p $MONGODB_ADMIN_PASSWORD --quiet --authenticationDatabase admin $dbname && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
 		done
@@ -139,7 +139,7 @@ do
 	dbname="${MONGODB_DB_PREFIX}_$iname"
 	dbuser="lodel2_$iname"
 	dbpass=$($rnd_pass_cmd)
-	mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin <<EOF
+	mongo --host $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin <<EOF
 use $dbname
 db.addUser({user:"$dbuser", pwd:"$dbpass", roles:["readWrite", "dbAdmin"]})
 exit
