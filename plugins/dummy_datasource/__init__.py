@@ -1,4 +1,6 @@
-from lodel.settings.validator import SettingValidator
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings.validator': ['SettingValidator']})
 from .datasource import DummyDatasource as Datasource
 
 __plugin_type__ = 'datasource'

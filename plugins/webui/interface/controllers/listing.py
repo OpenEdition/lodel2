@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+
 from .base import get_response
 from ...exceptions import *
-from lodel import logger
 import leapi_dyncode as dyncode
 
 ##@brief These functions are called by the rules defined in ../urls.py

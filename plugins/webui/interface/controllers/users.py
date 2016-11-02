@@ -3,8 +3,10 @@ from .base import get_response
 from ...exceptions import *
 from ...client import WebUiClient as WebUiClient
 
-from lodel import logger
-import leapi_dyncode as dyncode
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+
+import leapi_dyncode as dyncode #TODO : handle this with context
 
 ##@brief These functions are called by the rules defined in ../urls.py
 ## Their goal is to handle the user authentication

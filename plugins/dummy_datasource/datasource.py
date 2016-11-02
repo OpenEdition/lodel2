@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 
-from lodel.plugin.datasource_plugin import AbstractDatasource
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.datasource_plugin': ['AbstractDatasource']})
 
 class DummyDatasource(AbstractDatasource):
     

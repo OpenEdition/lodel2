@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from lodel.editorial_model.components import EmClass, EmField
-from lodel.editorial_model.model import EditorialModel
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.editorial_model.components': ['EmClass', 'EmField'],
+    'lodel.editorial_model.model': ['EditorialModel'],
+    'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
+    'lodel.plugin': ['LodelHook'],
+    'lodel.logger': 'logger'})
+
+from leapi_dyncode import * #<-- TODO : handle this !!!
+
 from .utils import connect, object_collection_name, mongo_fieldname
-from lodel.leapi.datahandlers.base_classes import DataHandler
-from lodel.plugin import LodelHook
-from leapi_dyncode import *
 from .datasource import MongoDbDatasource
 from .exceptions import *
-from lodel import logger
 
 class MigrationHandler(object):
 

@@ -2,13 +2,15 @@
 from ...exceptions import *
 from .base import get_response
 
-from lodel.leapi.exceptions import *
-from lodel import logger
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.exceptions': [],
+    'lodel.logger': 'logger':
+    'lodel.leapi.datahandlers.base_classes': ['MultipleRef']})
 
 from ...client import WebUiClient
 import leapi_dyncode as dyncode
 import warnings
-from lodel.leapi.datahandlers.base_classes import MultipleRef
 
 LIST_SEPARATOR = ','
 

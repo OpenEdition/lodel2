@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
-from lodel.settings.validator import SettingValidator
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings.validator': ['SettingValidator']})
 
 CONFSPEC = {
     'lodel2.section1': {

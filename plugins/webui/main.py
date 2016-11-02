@@ -3,9 +3,13 @@
 import os, os.path
 import sys
 import shlex
-from lodel.plugin import LodelHook
-from lodel.settings import Settings
-from lodel import buildconf
+
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin': ['LodelHook'],
+    'lodel.settings': ['Settings']})
+
+from lodel import buildconf #<-- This one is common to the build
 
 PLUGIN_PATH = os.path.dirname(__file__)
 

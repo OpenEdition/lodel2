@@ -9,11 +9,13 @@ from collections import OrderedDict
 import pymongo
 from pymongo.errors import BulkWriteError
 
-from lodel import logger
-from lodel.leapi.leobject import CLASS_ID_FIELDNAME
-from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef
-from lodel.exceptions import LodelException, LodelFatalError
-from lodel.plugin.datasource_plugin import AbstractDatasource
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.leapi.leobject': ['CLASS_ID_FIELDNAME'],
+    'lodel.leapi.datahandlers.base_classes': ['Reference', 'MultipleRef'],
+    'lodel.exceptions': ['LodelException', 'LodelFatalError'],
+    'lodel.plugin.datasource_plugin': ['AbstractDatasource']})
 
 from . import utils
 from .exceptions import *

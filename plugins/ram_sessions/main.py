@@ -3,9 +3,12 @@ import os
 import copy
 import binascii
 
-from lodel import logger
-from lodel.settings import Settings
-from lodel.auth.exceptions import *
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.settings': ['Settings'],
+    'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
+        'ClientPermissionDenied', 'ClientAuthenticationError']})
 
 __sessions = dict()
 

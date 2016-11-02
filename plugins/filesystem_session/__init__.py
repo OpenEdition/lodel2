@@ -1,4 +1,6 @@
-from lodel.settings.validator import SettingValidator
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings.validator': ['SettingValidator']})
 
 __plugin_name__ = 'filesystem_session'
 __version__ = [0,0,1]

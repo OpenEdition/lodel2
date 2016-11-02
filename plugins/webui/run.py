@@ -7,12 +7,16 @@ import time
 
 from werkzeug.wrappers import Response
 
-from lodel.settings import Settings
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings': ['Settings'],
+    'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
+        'ClientPermissionDenied', 'ClientAuthenticationError']})
+
 from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest
 from .exceptions import *
 from .client import WebUiClient
-from lodel.auth.exceptions import *
 
 try:
     SESSION_FILES_BASE_DIR = Settings.webui.sessions.directory
@@ -57,7 +61,10 @@ def empty_cookie(response):
 #Starting instance
 loader.start()
 #providing access to dyncode
-import lodel
+
+##@todo Dirty & quick dyncode access providing. Replace it by a clean access
+#using LodelContext
+lodel = LodelContext.get()
 import leapi_dyncode as dyncode
 lodel.dyncode = dyncode
 

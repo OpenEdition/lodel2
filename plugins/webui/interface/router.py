@@ -4,7 +4,10 @@ import re
 from .controllers import *
 from .urls import urls
 from ..main import root_url
-from lodel.settings import Settings
+
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings': ['Settings']})
 
 def format_url_rule(url_rule):
     if url_rule.startswith('^'):

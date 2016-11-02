@@ -6,9 +6,11 @@ import pickle
 import re
 import time
 
-from lodel import logger
-from lodel.auth.exceptions import ClientAuthenticationFailure
-from lodel.settings import Settings
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.auth.exceptions': ['ClientAuthenticationFailure'],
+    'lodel.settings': ['Settings']})
 
 from .filesystem_session import FileSystemSession
 
