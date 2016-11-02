@@ -149,10 +149,14 @@ length == 2 but got : %s" % spec)
         errors = []
         module = importlib.import_module(fullname)
         for o_name in objects:
+            if isinstance(o_name, str):
+                alias = o_name
+            else:
+                o_name, alias = o_name
             if not hasattr(module, o_name):
                 errors.append(o_name)
             else:
-                cls.safe_exposure(globs, getattr(module, o_name), o_name)
+                cls.safe_exposure(globs, getattr(module, o_name), alias)
         if len(errors) > 0:
             msg = "Module %s does not have any of [%s] as attribute" % (
                 fullname, ','.join(errors))
@@ -204,8 +208,12 @@ submodule : '%s'" % module_fullname)
     #In this case items of specs is a string representing the alias name
     #for the module we are exposing
     #@par from x import i,j,k equivalent
-    #In this case items are lists of object name to expose as it in globals
+    #In this case items are lists of object name to expose as it in globals.
+    #You can specify an alias by giving a tuple instead of a string as 
+    #list element. In this case the first element of the tuple is the object
+    #name and the second it's alias in the globals
     #
+    #@todo make the specs format more consitant
     #@param cls : bultin params
     #@param globs dict : the globals dict of the caller module
     #@param specs dict : specs of exposure (see comments of this method)
