@@ -7,7 +7,10 @@ import socket
 import inspect
 import copy
 
-from lodel.exceptions import *
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'FieldValidationError']})
 
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #

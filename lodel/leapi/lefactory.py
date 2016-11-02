@@ -2,10 +2,14 @@
 
 import os, os.path
 import functools
-from lodel.editorial_model.components import *
-from lodel.leapi.leobject import LeObject
-from lodel.leapi.datahandlers.base_classes import DataHandler
-from lodel import logger
+
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.editorial_model.components': ['EmComponent', 'EmClass', 'EmField',
+        'EmGroup'],
+    'lodel.leapi.leobject': ['LeObject'],
+    'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
+    'lodel.logger': 'logger'})
 
 ##@brief Generate python module code from a given model
 # @param model lodel.editorial_model.model.EditorialModel
@@ -15,9 +19,11 @@ def dyncode_from_em(model):
     cls_code, modules, bootstrap_instr = generate_classes(model)
 
     # Header
-    imports = """from lodel.leapi.leobject import LeObject
-from lodel.leapi.datahandlers.base_classes import DataField
-from lodel.plugin.hooks import LodelHook
+    imports = """from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.leobject': ['LeObject'],
+    'lodel.leapi.datahandlers.base_classes': ['DataField'],
+    'lodel.plugin.hooks': ['LodelHook']})
 """
     for module in modules:
         imports += "import %s\n" % module

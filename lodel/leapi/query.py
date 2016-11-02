@@ -5,9 +5,13 @@ import copy
 import inspect
 import warnings
 
-from .exceptions import *
-from lodel.plugin.hooks import LodelHook
-from lodel import logger
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors', 
+        'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
+        'LeApiQueryErrors'],
+    'lodel.plugin.hooks': ['LodelHook'],
+    'lodel.logger': ['logger']})
 
 
 ##@todo check datas when running query

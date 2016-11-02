@@ -4,13 +4,15 @@ import hashlib
 import importlib
 import copy
 
-from lodel.utils.mlstring import MlString
-from lodel import logger
-from lodel.settings import Settings
-from lodel.settings.utils import SettingsError
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.utils.mlstring': ['MlString'],
+    'lodel.logger': 'logger',
+    'lodel.settings': ['Settings'],
+    'lodel.settings.utils': ['SettingsError'],
+    'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
+    'lodel.editorial_model.components': ['EmClass', 'EmField', 'EmGroup']})
 
-from lodel.editorial_model.exceptions import *
-from lodel.editorial_model.components import EmClass, EmField, EmGroup
 
 ##@brief Describe an editorial model
 #@ingroup lodel2_em

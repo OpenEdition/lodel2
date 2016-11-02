@@ -1,9 +1,16 @@
 #-*- coding: utf-8 -*-
 import warnings
 import inspect
-from lodel.leapi.datahandlers.datas_base import *
-from lodel.exceptions import *
 import re
+
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.datahandlers.datas_base': ['Boolean', 'Integer', 'Varchar',
+        'DateTime', 'Text', 'File'],
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+
 
 ##@brief Data field designed to handle formated strings
 class FormatString(Varchar):

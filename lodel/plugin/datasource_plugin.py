@@ -1,8 +1,11 @@
-from .plugins import Plugin
-from .exceptions import *
-from lodel.exceptions import *
-from lodel.settings.validator import SettingValidator
-
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.plugins': ['Plugin'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.settings.validator': ['SettingValidator'],
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 _glob_typename = 'datasource'
 

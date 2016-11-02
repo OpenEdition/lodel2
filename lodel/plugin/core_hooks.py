@@ -1,8 +1,10 @@
 #-*- coding: utf-8 -*-
 
-from lodel.plugin import LodelHook
-from lodel.settings import Settings
-from lodel import logger
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin': ['LodelHook'],
+    'lodel.settings': ['Settings'],
+    'lodel.logger': 'logger'})
 
 ##@package lodel.plugin.core_hooks
 #@brief Lodel2 internal hooks declaration

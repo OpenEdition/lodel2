@@ -7,10 +7,14 @@ import copy
 import json
 from importlib.machinery import SourceFileLoader, SourcelessFileLoader
 
-from lodel import logger
-from lodel.settings.utils import SettingsError
-from .exceptions import *
-from lodel.exceptions import *
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.settings.utils': ['SettingsError'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 ## @package lodel.plugins Lodel2 plugins management
 #@ingroup lodel2_plugins
@@ -828,6 +832,13 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             raise PluginError("Unable to import initfile")
         return (res_module, temp_module)
 
+    @classmethod
+    def debug_wrapper(cls, updglob = None):
+        if updglob is not None:
+            for k, v in updglob.items():
+                globals()[k] = v
+        print(logger)
+
     ##@brief Reccursiv plugin discover given a path
     #@param path str : the path to walk through
     #@return A dict with plugin_name as key and {'path':..., 'version':...} as value
@@ -849,6 +860,8 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                         to_explore.append(f_path)
         return res
 
+def debug_wrapper_mod():
+    print("MOD : ",logger)
 
 ##@brief Decorator class designed to allow plugins to add custom methods
 #to LeObject childs (dyncode objects)
@@ -961,3 +974,6 @@ with %s" % (custom_method._method_name, custom_method))
                         custom_method.__get_method())
                     logger.debug(
                         "Custom method %s added to target" % custom_method)
+
+def wrapper_debug_fun():
+    print(logger)

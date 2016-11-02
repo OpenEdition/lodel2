@@ -1,4 +1,6 @@
-import lodel.plugin.scripts as lodel_script
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.scripts': 'lodel_script'})
 
 ##@package lodel.plugin.core_scripts
 #@brief Lodel2 internal scripts declaration

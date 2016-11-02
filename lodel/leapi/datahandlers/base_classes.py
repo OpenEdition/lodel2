@@ -8,8 +8,13 @@ import copy
 import importlib
 import inspect
 import warnings
-from lodel.exceptions import *
-from lodel import logger
+
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(), {
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+    'lodel.logger': 'logger'})
 
 
 ##@brief Base class for all data handlers

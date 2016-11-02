@@ -1,7 +1,7 @@
 class PluginError(Exception):
     pass
 
-class PluginTypeErrror(PluginError):
+class PluginTypeError(PluginError):
     pass
 
 class LodelScriptError(Exception):

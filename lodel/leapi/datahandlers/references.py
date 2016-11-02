@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef
-from lodel.exceptions import *
-from lodel import logger
+
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.datahandlers.base_classes': ['Reference', 'MultipleRef',
+        'SingleRef'],
+    'lodel.logger': 'logger',
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 class Link(SingleRef):
     pass
