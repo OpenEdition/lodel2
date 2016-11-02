@@ -24,6 +24,10 @@ except ImportError as e:
     print(e)
     exit(1)
 
+#Set context to MONOSITE
+from lodel.context import LodelContext
+LodelContext.init()
+
 if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
     #
     # Loading settings

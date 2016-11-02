@@ -8,8 +8,15 @@ import warnings
 import types # for dynamic bindings
 from collections import namedtuple
 
-from lodel import logger
-from lodel.settings.utils import SettingsError, SettingsErrors
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(),{
+    'lodel.logger': 'logger',
+    'lodel.settings.utils': ['SettingsError', 'SettingsErrors']})
+    
+
+#from lodel import logger
+#from lodel.settings.utils import SettingsError, SettingsErrors
 from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS, \
     confspec_append
 from lodel.settings.settings_loader import SettingsLoader
