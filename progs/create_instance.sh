@@ -7,7 +7,8 @@ usage() {
 }
 
 cp_loader() {
-	cp -Rv $install_tpl/loader.py $instdir/
+	loader="${install_tpl}/loader.py"
+	cp -Rv $loader $instdir/
 	# Adding lib path to loader
 	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$loader"
 }
@@ -83,8 +84,12 @@ cp -Rv $install_tpl/conf.d $instdir/
 cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
-ln -sv $libdir/plugins $instdir/plugins
+ln -sv $libdir/lodel/plugins $instdir/plugins
 cp_loader
+
+echo "BEGIN LS"
+ls -la $instdir
+echo "END LS"
 # Adding instance name to conf
 sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 

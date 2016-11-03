@@ -55,7 +55,7 @@ ACTIVATE_METHOD_NAME = '_activate'
 ##@brief Discover stage cache filename
 DISCOVER_CACHE_FILENAME = '.plugin_discover_cache.json'
 ##@brief Default & failover value for plugins path list
-DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
+DEFAULT_PLUGINS_PATH_LIST = [os.path.join(LodelContext.context_dir(),'plugins')]
 
 ##@brief List storing the mandatory variables expected in a plugin __init__.py
 #file

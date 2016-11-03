@@ -38,6 +38,10 @@ class ContextError(Exception):
 class ContextModuleError(ContextError):
     pass
 
+def dir_for_context(site_identifier):
+    return os.path.join(lodelsites.__path__[0], site_identifier)
+    
+
 ##@brief Designed to permit dynamic packages creation from the lodel package
 #
 #The class is added in first position in the sys.metapath variable. Doing this
@@ -53,6 +57,9 @@ class ContextModuleError(ContextError):
 #@note Current implementation is far from perfection. In fact no deletion
 #mechanisms is written and the virtual package cannot be a subpackage of
 #the lodel package for the moment...
+#@note Current implementation asserts that all plugins are in CWD
+#a symlink will be done to create a copy of the plugins folder in 
+#lodelsites/SITENAME/ folder
 class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     
     def find_spec(fullname, path, target = None):
@@ -62,7 +69,7 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
             spl = fullname.split('.')
             site_identifier = spl[1]
             #creating a symlink to represent the lodel site package
-            mod_path = os.path.join(lodelsites.__path__[0], site_identifier)
+            mod_path = dir_for_context(site_identifier)
             if not os.path.exists(mod_path):
                 os.symlink(lodel.__path__[0], mod_path, True)
             #Cache invalidation after we "created" the new package
@@ -248,6 +255,14 @@ initialize it anymore")
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
     
+    ##@brief Return the directory of the package of the current loaded context
+    @classmethod
+    def context_dir(cls):
+        if cls._type == cls.MONOSITE:
+            return './'
+        return dir_for_context(cls._current.__id)
+        
+
     ##@brief Validate a context identifier
     #@param identifier str : the identifier to validate
     #@return true if the name is valide else false
