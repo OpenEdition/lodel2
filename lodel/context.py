@@ -271,13 +271,37 @@ initialize it anymore")
             warnings.warn("A module exposure leads in globals overwriting for \
 key '%s'" % alias)
         globs[alias] = obj
-
-    ## @brief initializes a context from the path
-    # @param path str
-    @classmethod
+        
+    ##@brief Actives a context from a path
+    #@param path str : the path from which we extract a sitename
+    
     def from_path(cls, path):
-        sitename = path.split('/')[-1]
+        site_id = path.split('/')[-1]
         if cls._type == cls.MULTISITE:
-            cls._contexts[sitename] = cls.new(sitename)
+            if site_id in cls._contexts:
+                cls.set(site_id)
+            else
+                cls._contexts[site_id] = cls.new(site_id)
         else:
-            cls._current = cls.new(sitename)
+            if cls._current is None:
+                cls._current = cls.new()
+
+    ##@brief Delete a site's context
+    #@param site_id str : the site's name to remove the context
+    def remove(cls, site_id):
+        if site_id is None:
+            if cls._type == cls.MULTISITE:
+                raise ContextError("Cannot have a context with \
+site_id set to None when we are in MULTISITE beahavior")
+            del cls._contexts
+        else:
+            if cls._type == cls.MULTISITE:
+                if site_id in cls._contexts:
+                    del cls._contexts[site_id]
+                else:
+                    raise ContextError("No site %s exist" % site_id)
+            else:
+                raise ContextError("Cannot have a context with \
+    site_id set when we are in MONOSITE beahavior")
+        
+

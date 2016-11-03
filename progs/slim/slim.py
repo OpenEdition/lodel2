@@ -13,6 +13,7 @@ import configparser
 import signal
 import subprocess
 from lodel import buildconf
+from lodel.context import LodelContext
 
 logging.basicConfig(level=logging.INFO)
 
@@ -168,10 +169,13 @@ def new_instance(name):
     name_is_valid(name)
     store_datas = get_store_datas()
     if name in store_datas:
-        logging.error("An instance named '%s' already exists" % name)
+        logging.error("A site named '%s' already exists" % name)
+        exit(1)
+    if LodelContext._type == LodelContext.MONOSITE and len(store_datas) > 0:
+        logging.error("We are in monosite mode and a site already exists")
         exit(1)
     if not os.path.isdir(INSTANCES_ABSPATH):
-        logging.info("Instances directory '%s' don't exists, creating it")
+        logging.info("Sites directory '%s' doesn't exist, creating it" % INSTANCES_ABSPATH)
         os.mkdir(INSTANCES_ABSPATH)
     instance_path = os.path.join(INSTANCES_ABSPATH, name)
     creation_cmd = '{script} "{name}" "{path}" "{install_tpl}" \
@@ -188,18 +192,19 @@ def new_instance(name):
     #storing new instance
     store_datas[name] = {'path': instance_path}
     save_datas(store_datas)
+    lodelcontext = LodelContext.new(name)
 
 ##@brief Delete an instance
 #@param name str : the instance name
-def delete_instance(name):
-    pids = get_pids()
+def delete_instance(name=None):
     if name in pids:
-        logging.error("The instance '%s' is started. Stop it before deleting \
+        logging.error("The site '%s' is started. Stop it before deleting \
 it" % name)
         return
     store_datas = get_store_datas()
-    logging.warning("Deleting instance %s" % name)
-    logging.info("Deleting instance folder %s" % store_datas[name]['path'])
+    logging.warning("Deleting site %s" % name)
+    LodelContext.remove(name)
+    logging.info("Deleting site's folder %s" % store_datas[name]['path'])
     shutil.rmtree(store_datas[name]['path'])
     logging.debug("Deleting instance from json store file")
     del(store_datas[name])
@@ -223,32 +228,6 @@ def validate_names(names):
         for name in invalid:
             print("\t%s" % name, file=sys.stderr)
         exit(1)
-
-##@brief Returns the PID dict
-#@return a dict with instance name as key an PID as value
-def get_pids():
-    if not os.path.isfile(PID_FILE) or os.stat(PID_FILE).st_size == 0:
-        return dict()
-    with open(PID_FILE, 'r') as pfd:
-        return json.load(pfd)
-
-##@brief Save a dict of pid
-#@param pid_dict dict : key is instance name values are pid
-def save_pids(pid_dict):
-    with open(PID_FILE, 'w+') as pfd:
-        json.dump(pid_dict, pfd)
-
-##@brief Given an instance name returns its PID
-#@return False or an int
-def get_pid(name):
-    pid_datas = get_pids()
-    if name not in pid_datas:
-        return False
-    else:
-        pid = pid_datas[name]
-        if not is_running(name, pid):
-            return False
-        return pid
 
 ##@brief Start an instance
 #@param names list : instance name list

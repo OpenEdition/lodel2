@@ -53,13 +53,11 @@ then
 	usage
 fi
 
-loader="$instdir/loader.py"
 conf="$instdir/conf.d/lodel2.ini"
 
 if [ $1 = '-u' ]
 then
 	#Update instance
-	cp_loader
 	exit 0
 fi
 
@@ -80,11 +78,10 @@ cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
 ln -sv $libdir/plugins $instdir/plugins
-cp_loader
 # Adding instance name to conf
 sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 
 
-echo -e "\nInstance successfully created in $instdir"
+echo -e "\nSite successfully created in $instdir"
 echo -e "============================\n"
 echo "Now you should edit files in '${instdir}/conf.d/' and then run : cd $instdir && make dyncode"
