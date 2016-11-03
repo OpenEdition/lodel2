@@ -286,18 +286,14 @@ with pid %d found" % (name, pids[name]))
 #
 #If not running clean the pid list
 #@return bool
-def is_running(name, pid):
-    try:
-        os.kill(pid, 0)
-        return True
-    except (OSError,ProcessLookupError):
-        pid_datas = get_pids()
-        logging.warning("Instance '%s' was marked as running, but not \
-process with pid %d found. Cleaning pid list" % (name, pid))
-        del(pid_datas[name])
-        save_pids(pid_datas)
-    return False
-        
+def is_running(name):
+    if name is None:
+        return LodelContext._current is not None
+    else:
+        if LodelContext._type == LodelContext.MONOSITE
+            logging.warning("In monosite mode no name is allowed")
+        else:
+            return LodelContext.__current == LodelContext._contexts[name]
 
 ##@brief Check if instance are specified
 def get_specified(args):
