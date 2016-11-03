@@ -4,6 +4,7 @@ import importlib.abc
 import sys
 import types
 import os
+import os.path
 import re
 
 import warnings #For the moment no way to use the logger in this file (I guess)
@@ -274,17 +275,15 @@ key '%s'" % alias)
         
     ##@brief Actives a context from a path
     #@param path str : the path from which we extract a sitename
-    
     def from_path(cls, path):
-        site_id = path.split('/')[-1]
-        if cls._type == cls.MULTISITE:
-            if site_id in cls._contexts:
-                cls.set(site_id)
-            else:
-                cls._contexts[site_id] = cls.new(site_id)
-        else:
-            if cls._current is None:
-                cls._current = cls.new()
+        if cls._type != cls.MULTISITE:
+            raise ContextError("Cannot create a context from a path in \
+MONOSITE mode")
+        site_id = os.path.basename(path.strip('/'))
+        if not self.validate_identifier(site_id):
+            raise ContextError(
+                "Unable to create a context named '%s'" % site_id)
+        cls.new(site_id)
 
     ##@brief Delete a site's context
     #@param site_id str : the site's name to remove the context
