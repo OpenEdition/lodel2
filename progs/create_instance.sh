@@ -63,6 +63,7 @@ conf="$instdir/conf.d/lodel2.ini"
 if [ $1 = '-u' ]
 then
 	#Update instance
+    cp_loader
 	exit 0
 fi
 
@@ -83,6 +84,7 @@ cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
 ln -sv $libdir/plugins $instdir/plugins
+cp_loader
 # Adding instance name to conf
 sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 
