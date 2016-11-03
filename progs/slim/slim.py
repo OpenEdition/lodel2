@@ -166,22 +166,31 @@ lower&upper alphanum and '_'. Name '%s' is invalid" % name)
 ##@brief Create a new instance
 #@param name str : the instance name
 def new_instance(name):
-    name_is_valid(name)
-    store_datas = get_store_datas()
-    if name in store_datas:
-        logging.error("A site named '%s' already exists" % name)
-        exit(1)
-    if LodelContext._type == LodelContext.MONOSITE and len(store_datas) > 0:
-        logging.error("We are in monosite mode and a site already exists")
-        exit(1)
+    if LodelContext._type == LodelContext.MONOSITE:
+        store_datas = get_store_datas()
+        if len(store_datas) > 0:
+            logging.error("We are in monosite mode and a site already exists")
+            exit(1)
+        if name is not None:
+            logging.error("We are in monosite mode, we can't have a site name")
+            exit(1)
+        instance_path = INSTANCES_ABSPATH
+    else:
+        name_is_valid(name)
+        store_datas = get_store_datas()
+        if name in store_datas:
+            logging.error("A site named '%s' already exists" % name)
+            exit(1)
+        instance_path = os.path.join(INSTANCES_ABSPATH, name)
+        
     if not os.path.isdir(INSTANCES_ABSPATH):
         logging.info("Sites directory '%s' doesn't exist, creating it" % INSTANCES_ABSPATH)
         os.mkdir(INSTANCES_ABSPATH)
-    instance_path = os.path.join(INSTANCES_ABSPATH, name)
+    sitename = name if name is not None else 'monosite'
     creation_cmd = '{script} "{name}" "{path}" "{install_tpl}" \
-"{emfile}"'.format(
+    "{emfile}"'.format(
         script = CREATION_SCRIPT,
-        name = name,
+        name = sitename,
         path = instance_path,
         install_tpl = INSTALL_TPL,
         emfile = EMFILE)

@@ -27,6 +27,11 @@ instdir="$2"
 libdir="$5"
 libdir=${libdir:=[@]PKGPYTHONDIR[@]}
 install_tpl="$3"
+
+if [ $name == "monosite" ];then
+    name=""
+fi
+
 if [ -z "$install_tpl" ]
 then
 	echo -e "Install template $install_tpl not found.\n" >&2
