@@ -280,7 +280,7 @@ key '%s'" % alias)
         if cls._type == cls.MULTISITE:
             if site_id in cls._contexts:
                 cls.set(site_id)
-            else
+            else:
                 cls._contexts[site_id] = cls.new(site_id)
         else:
             if cls._current is None:
