@@ -253,6 +253,15 @@ def get_pid(name):
 ##@brief Start an instance
 #@param names list : instance name list
 def start_instances(names, foreground):
+    from lodel.context import LodelContext
+    for name in names:
+        if name in LodelContext._contexts:
+            logging.warning("The instance %s is already activated" % name)
+            continue
+        LodelContext.from_path(name)
+        logging.info("Instance '%s' started.")
+
+    '''
     pids = get_pids()
     store_datas = get_store_datas()
     
@@ -274,6 +283,7 @@ def start_instances(names, foreground):
             pids[name] = curexec.pid
             logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
     save_pids(pids)
+    '''
 
 ##@brief Stop an instance given its name
 #@param names list : names list

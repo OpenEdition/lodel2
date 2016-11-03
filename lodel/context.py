@@ -271,4 +271,13 @@ initialize it anymore")
             warnings.warn("A module exposure leads in globals overwriting for \
 key '%s'" % alias)
         globs[alias] = obj
-        
+
+    ## @brief initializes a context from the path
+    # @param path str
+    @classmethod
+    def from_path(cls, path):
+        sitename = path.split('/')[-1]
+        if cls._type == cls.MULTISITE:
+            cls._contexts[sitename] = cls.new(sitename)
+        else:
+            cls._current = cls.new(sitename)
