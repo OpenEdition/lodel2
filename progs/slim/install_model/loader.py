@@ -32,20 +32,24 @@ if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
     #
     # Loading settings
     #
-    from lodel.settings.settings import Settings as settings
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings.settings': [('Settings', 'settings')]})
     if not settings.started():
         settings('conf.d')
-    from lodel.settings import Settings
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings': ['Settings']})
     
     #Starts hooks
-    from lodel.plugin import LodelHook
-    from lodel.plugin import core_hooks
-    from lodel.plugin import core_scripts
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin': ['LodelHook'],
+	'lodel.plugin.core_hooks': 'core_hooks',
+	'lodel.plugin.core_scripts': 'core_scripts'})
 
 def start():
     #Load plugins
-    from lodel import logger
-    from lodel.plugin import Plugin
+    LodelContext.expose_modules(globals(), {
+        'lodel.logger': 'logger',
+        'lodel.plugin': ['Plugin']})
     logger.debug("Loader.start() called")
     Plugin.load_all()
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
@@ -66,7 +70,7 @@ if __name__ == '__main__':
         runner.run(suite)
         exit()
 
-    import lodel
+    lodel = LodelContext.get()
     import leapi_dyncode as dyncode
     lodel.dyncode = dyncode
     LodelHook.call_hook('lodel2_dyncode_bootstraped', '__main__', None)

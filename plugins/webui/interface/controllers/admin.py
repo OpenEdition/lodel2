@@ -5,7 +5,7 @@ from .base import get_response
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.leapi.exceptions': [],
-    'lodel.logger': 'logger':
+    'lodel.logger': 'logger',
     'lodel.leapi.datahandlers.base_classes': ['MultipleRef']})
 
 from ...client import WebUiClient

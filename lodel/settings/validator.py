@@ -241,8 +241,10 @@ def host_val(value):
 ##@brief Validator for Editorial model component
 #
 # Designed to validate a conf that indicate a class.field in an EM
+#@todo modified the hardcoded dyncode import (it's a warning)
 def emfield_val(value):
-    from lodel.plugin.hooks import LodelHook
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
@@ -251,7 +253,7 @@ def emfield_val(value):
     #Late validation hook
     @LodelHook('lodel2_dyncode_bootstraped')
     def emfield_conf_check(hookname, caller, payload):
-        from lodel import dyncode
+        import eapi_dyncode as dyncode # <-- dirty & quick
         classnames = { cls.__name__.lower():cls for cls in dyncode.dynclasses}
         if value[0].lower() not in classnames:
             msg = "Following dynamic class do not exists in current EM : %s"
@@ -266,12 +268,14 @@ def emfield_val(value):
 #
 #Able to check that the value is a plugin and if it is of a specific type
 def plugin_validator(value, ptype = None):
-    from lodel.plugin.hooks import LodelHook
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
     value = copy.copy(value)
     @LodelHook('lodel2_dyncode_bootstraped')
     def plugin_type_checker(hookname, caller, payload):
-        from lodel.plugin.plugins import Plugin
-        from lodel.plugin.exceptions import PluginError
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugin.plugins': ['Plugin'],
+            'lodel.plugin.exceptions': ['PluginError']})
         if value is None:
             return
         try:

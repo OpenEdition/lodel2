@@ -93,9 +93,11 @@
 # - @ref lodel.plugin.sessionhandler.SessionHandlerPlugin "SessionHandlerPlugin"
 #
 
-from .hooks import LodelHook
-from .plugins import Plugin, CustomMethod
-from .datasource_plugin import DatasourcePlugin
-from .sessionhandler import SessionHandlerPlugin
-from .interface import InterfacePlugin
-from .extensions import Extension
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.hooks': ['LodelHook'],
+    'lodel.plugin.plugins': ['Plugin', 'CustomMethod'],
+    'lodel.plugin.datasource_plugin': ['DatasourcePlugin'],
+    'lodel.plugin.sessionhandler': ['SessionHandlerPlugin'],
+    'lodel.plugin.interface': ['InterfacePlugin'],
+    'lodel.plugin.extensions': ['Extension']})

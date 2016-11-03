@@ -11,6 +11,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError'],
+    'lodel.plugin.hooks': ['LodelHook'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
@@ -430,7 +431,6 @@ name differ from the one found in plugin's init file"
     #
     # @note Maybe we have to exit everything if a plugin cannot be loaded...
     def activable(self):
-        from lodel import logger
         try:
             test_fun = getattr(self.module, ACTIVATE_METHOD_NAME)
         except AttributeError:
@@ -452,7 +452,6 @@ name differ from the one found in plugin's init file"
     def _load(self):
         if self.loaded:
             return
-        from lodel import logger
         #Test that plugin "wants" to be activated
         activable = self.activable()
         if not(activable is True):
@@ -524,7 +523,6 @@ name differ from the one found in plugin's init file"
                 msg += "\n\t%20s : %s" % (name,e)
             msg += "\n"
             raise PluginError(msg)
-        from lodel.plugin.hooks import LodelHook
         LodelHook.call_hook(
             "lodel2_plugins_loaded", cls, cls._plugin_instances)
    
@@ -552,7 +550,8 @@ name differ from the one found in plugin's init file"
     # etc...
     @classmethod
     def plugin_list_confspec(cls):
-        from lodel.settings.validator import confspec_append
+        LodelContext.expose_modules(globals(), {
+            'lodel.settings.validator': ['confspec_append']})
         res = dict()
         for pcls in cls.plugin_types():
             plcs = pcls.plist_confspec()

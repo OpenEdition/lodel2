@@ -6,7 +6,6 @@ import warnings
 import inspect
 
 from lodel.context import LodelContext
-
 LodelContext.expose_modules(globals(), {
     'lodel.settings': 'Settings',
     'lodel.logger': 'logger',

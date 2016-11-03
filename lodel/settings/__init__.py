@@ -33,5 +33,7 @@
 #   print("DEBUG MODE !")
 # </pre>
 #
-from lodel.settings.settings import SettingsRO as Settings
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings.settings': [('SettingsRO', 'Settings')]})
 

@@ -134,7 +134,8 @@ class Settings(object, metaclass=MetaSettings):
 
     ##@brief This method handles Settings instance bootstraping
     def __bootstrap(self):
-        from lodel.plugin.plugins import Plugin, PluginError
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugin.plugins': ['Plugin', 'PluginError']})
         logger.debug("Settings bootstraping")
         lodel2_specs = LODEL2_CONF_SPECS
         loader = SettingsLoader(self.__conf_dir) 
