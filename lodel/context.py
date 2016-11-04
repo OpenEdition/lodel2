@@ -24,6 +24,11 @@ else:
 #packages
 CTX_PKG = "lodelsites"
 
+##@brief Reserved context name for loading steps
+#@note This context is designed to be set at loading time, allowing lodel2
+#main process to use lodel packages
+LOAD_CTX = "__loader__"
+
 
 #
 #   Following exception classes are written here to avoid circular dependencies
@@ -96,6 +101,7 @@ class LodelContext(object):
     ##@brief Create a new context
     #@see LodelContext.new()
     def __init__(self, site_id):
+        print("Registering new context for '%s'" % site_id)
         if site_id is None:
             #Monosite instanciation
             if self.__class__._type != self.__class__.MONOSITE:
@@ -251,6 +257,9 @@ initialize it anymore")
             cls._contexts = dict()
             #Add custom MetaPathFinder allowing implementing custom imports
             sys.meta_path = [LodelMetaPathFinder] + sys.meta_path
+            #Create and set __loader__ context
+            cls.new(LOAD_CTX)
+            cls.set(LOAD_CTX)
         else:
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
@@ -268,6 +277,8 @@ initialize it anymore")
     #@return true if the name is valide else false
     @staticmethod
     def validate_identifier(identifier):
+        if identifier == LOAD_CTX:
+            return True
         return identifier is None or \
             re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_]', identifier)
     
