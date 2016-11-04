@@ -13,7 +13,6 @@ import configparser
 import signal
 import subprocess
 from lodel import buildconf
-from lodel.context import LodelContext
 
 logging.basicConfig(level=logging.INFO)
 
@@ -166,31 +165,19 @@ lower&upper alphanum and '_'. Name '%s' is invalid" % name)
 ##@brief Create a new instance
 #@param name str : the instance name
 def new_instance(name):
-    if LodelContext._type == LodelContext.MONOSITE:
-        store_datas = get_store_datas()
-        if len(store_datas) > 0:
-            logging.error("We are in monosite mode and a site already exists")
-            exit(1)
-        if name is not None:
-            logging.error("We are in monosite mode, we can't have a site name")
-            exit(1)
-        instance_path = INSTANCES_ABSPATH
-    else:
-        name_is_valid(name)
-        store_datas = get_store_datas()
-        if name in store_datas:
-            logging.error("A site named '%s' already exists" % name)
-            exit(1)
-        instance_path = os.path.join(INSTANCES_ABSPATH, name)
-        
+    name_is_valid(name)
+    store_datas = get_store_datas()
+    if name in store_datas:
+        logging.error("An instance named '%s' already exists" % name)
+        exit(1)
     if not os.path.isdir(INSTANCES_ABSPATH):
-        logging.info("Sites directory '%s' doesn't exist, creating it" % INSTANCES_ABSPATH)
+        logging.info("Instances directory '%s' don't exists, creating it")
         os.mkdir(INSTANCES_ABSPATH)
-    sitename = name if name is not None else 'monosite'
+    instance_path = os.path.join(INSTANCES_ABSPATH, name)
     creation_cmd = '{script} "{name}" "{path}" "{install_tpl}" \
-    "{emfile}"'.format(
+"{emfile}"'.format(
         script = CREATION_SCRIPT,
-        name = sitename,
+        name = name,
         path = instance_path,
         install_tpl = INSTALL_TPL,
         emfile = EMFILE)
@@ -201,19 +188,18 @@ def new_instance(name):
     #storing new instance
     store_datas[name] = {'path': instance_path}
     save_datas(store_datas)
-    lodelcontext = LodelContext.new(name)
 
 ##@brief Delete an instance
 #@param name str : the instance name
-def delete_instance(name=None):
+def delete_instance(name):
+    pids = get_pids()
     if name in pids:
-        logging.error("The site '%s' is started. Stop it before deleting \
+        logging.error("The instance '%s' is started. Stop it before deleting \
 it" % name)
         return
     store_datas = get_store_datas()
-    logging.warning("Deleting site %s" % name)
-    LodelContext.remove(name)
-    logging.info("Deleting site's folder %s" % store_datas[name]['path'])
+    logging.warning("Deleting instance %s" % name)
+    logging.info("Deleting instance folder %s" % store_datas[name]['path'])
     shutil.rmtree(store_datas[name]['path'])
     logging.debug("Deleting instance from json store file")
     del(store_datas[name])
@@ -238,18 +224,35 @@ def validate_names(names):
             print("\t%s" % name, file=sys.stderr)
         exit(1)
 
+##@brief Returns the PID dict
+#@return a dict with instance name as key an PID as value
+def get_pids():
+    if not os.path.isfile(PID_FILE) or os.stat(PID_FILE).st_size == 0:
+        return dict()
+    with open(PID_FILE, 'r') as pfd:
+        return json.load(pfd)
+
+##@brief Save a dict of pid
+#@param pid_dict dict : key is instance name values are pid
+def save_pids(pid_dict):
+    with open(PID_FILE, 'w+') as pfd:
+        json.dump(pid_dict, pfd)
+
+##@brief Given an instance name returns its PID
+#@return False or an int
+def get_pid(name):
+    pid_datas = get_pids()
+    if name not in pid_datas:
+        return False
+    else:
+        pid = pid_datas[name]
+        if not is_running(name, pid):
+            return False
+        return pid
+
 ##@brief Start an instance
 #@param names list : instance name list
 def start_instances(names, foreground):
-    from lodel.context import LodelContext
-    for name in names:
-        if name in LodelContext._contexts:
-            logging.warning("The instance %s is already activated" % name)
-            continue
-        LodelContext.from_path(name)
-        logging.info("Instance '%s' started.")
-
-    '''
     pids = get_pids()
     store_datas = get_store_datas()
     
@@ -271,7 +274,6 @@ def start_instances(names, foreground):
             pids[name] = curexec.pid
             logging.info("Instance '%s' started. PID %d" % (name, curexec.pid))
     save_pids(pids)
-    '''
 
 ##@brief Stop an instance given its name
 #@param names list : names list
@@ -295,14 +297,18 @@ with pid %d found" % (name, pids[name]))
 #
 #If not running clean the pid list
 #@return bool
-def is_running(name):
-    if name is None:
-        return LodelContext._current is not None
-    else:
-        if LodelContext._type == LodelContext.MONOSITE
-            logging.warning("In monosite mode no name is allowed")
-        else:
-            return LodelContext.__current == LodelContext._contexts[name]
+def is_running(name, pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except (OSError,ProcessLookupError):
+        pid_datas = get_pids()
+        logging.warning("Instance '%s' was marked as running, but not \
+process with pid %d found. Cleaning pid list" % (name, pid))
+        del(pid_datas[name])
+        save_pids(pid_datas)
+    return False
+        
 
 ##@brief Check if instance are specified
 def get_specified(args):
