@@ -84,7 +84,7 @@ cp -Rv $install_tpl/conf.d $instdir/
 cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
-ln -sv $libdir/lodel/plugins $instdir/plugins
+ln -sv $libdir/plugins $instdir/plugins
 cp_loader
 
 echo "BEGIN LS"
