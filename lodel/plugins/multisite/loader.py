@@ -9,13 +9,8 @@ except ImportError:
     from lodel.context import LodelContext
 
 def preload():
-    # TODO Get this path dynamically but should be ./ everytime (we run
-    #the loader from the good folder)
-    LODEL_INSTANCE_DIR = './'
-    LodelContext.init(LodelContext.MULTISITE)
-    lodelsites_list = [sitename for sitename in os.listdir(LODEL_INSTANCES_DIR) if os.path.isdir(sitename)]
 
-    for lodelsite_path in lodelsites_list:
+    for lodelcontext in LodelContext._contexts.values():
         ctx_name = LodelContext.from_path(lodelsite_path)
         #Switch to new context
         LodelContext.set(ctx_name)
@@ -33,5 +28,13 @@ def preload():
             'lodel.plugin.core_hooks': 'core_hooks',
             'lodel.plugin.core_scripts': 'core_scripts'
         })
+
+        #Load plugins
+        lodelcontext.expose_modules(globals(), {
+            'lodel.logger': 'logger',
+            'lodel.plugin': ['Plugin']})
+        logger.debug("Loader.start() called")
+        Plugin.load_all()
+        LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
         #switch back to loader context
         LodelContext.set(None)
