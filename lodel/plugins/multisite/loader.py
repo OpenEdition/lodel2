@@ -4,7 +4,7 @@ from lodel.context import LodelContext
 
 def preload():
 
-    for lodelcontext in LodelContext._contexts:
+    for lodelcontext in LodelContext._contexts.values():
 
         # Loading settings
         lodelcontext.expose_modules(globals(), {'lodel.settings.settings': [('Settings', 'settings')]})
