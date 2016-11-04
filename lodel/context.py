@@ -68,9 +68,9 @@ def dir_for_context(site_identifier):
 class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     
     def find_spec(fullname, path, target = None):
-        print("find_spec called : fullname=%s path=%s target=%s" % (
-            fullname, path, target))
         if fullname.startswith(CTX_PKG):
+            print("find_spec called : fullname=%s path=%s target=%s" % (
+                fullname, path, target))
             spl = fullname.split('.')
             site_identifier = spl[1]
             #creating a symlink to represent the lodel site package
@@ -126,6 +126,8 @@ site_id when we are in MONOSITE beahvior")
                     "A context named '%s' allready exists." % site_id)
             self.__id = site_id
             self.__pkg_name = '%s.%s' % (CTX_PKG, site_id)
+            if self.__id == LOAD_CTX:
+                self.__pkg_name = 'lodel'
             #Importing the site package to trigger its creation
             self.__package = importlib.import_module(self.__pkg_name)
             self.__class__._contexts[site_id] = self
