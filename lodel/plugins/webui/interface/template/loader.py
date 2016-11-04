@@ -4,9 +4,9 @@ import os
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
+LodelContext.expose_dyncode(globals())
 
 from ...client import WebUiClient as WebUiClient
-import leapi_dyncode
 
 from .api import api_lodel_templates
 from .exceptions.not_allowed_custom_api_key_error import NotAllowedCustomAPIKeyError

@@ -103,7 +103,7 @@ class LodelContext(object):
     
     ##@brief Create a new context
     #@see LodelContext.new()
-    def __init__(self, site_id):
+    def __init__(self, site_id, instance_path = None):
         print("Registering new context for '%s'" % site_id)
         if site_id is None:
             #Monosite instanciation
@@ -131,6 +131,15 @@ site_id when we are in MONOSITE beahvior")
             self.__pkg_name = '%s.%s' % (CTX_PKG, site_id)
             if self.__id == LOAD_CTX:
                 self.__pkg_name = 'lodel'
+            elif instance_path is None:
+                """
+                raise ContextError("Cannot create a context without an \
+instance path")
+                """
+                warnings.warn("It can be a really BAD idea to create a \
+a context without a path......")
+            else:
+                self.__instance_path = os.path.realpath(instance_path)
             #Importing the site package to trigger its creation
             self.__package = importlib.import_module(self.__pkg_name)
             self.__class__._contexts[site_id] = self
@@ -149,6 +158,12 @@ length == 2 but got : %s" % spec)
         else:
             self._expose_objects(globs, module_fullname, exposure_spec)
     
+    ##@brief Implements LodelContext::expose_dyncode()
+    def _expose_dyncode(self, globs, alias = 'leapi_dyncode'):
+        sys.path.append(self.__instance_path)
+        dyncode = importlib.import_module('leapi_dyncode')
+        self.safe_exposure(globs, dyncode, alias)
+
     ##@brief Utility method to expose a module with an alias name in globals
     #@param globs globals() : concerned globals dict
     #@param fullname str : module fullname
@@ -217,8 +232,8 @@ submodule : '%s'" % module_fullname)
     #@param site_id str : context name
     #@return the context instance
     @classmethod
-    def new(cls, site_id):
-        return cls(site_id)
+    def new(cls, site_id, instance_path = None):
+        return cls(site_id, instance_path)
 
     ##@brief Helper function that import and expose specified modules
     #
@@ -245,6 +260,11 @@ submodule : '%s'" % module_fullname)
         for spec in specs.items():
             ctx.expose(globs, spec)
     
+    ##@brief Expose leapi_dyncode module
+    @classmethod
+    def expose_dyncode(cls, globs, alias = 'leapi_dyncode'):
+        cls.get()._expose_dyncode(globs, alias)
+
     ##@brief Initialize the context manager
     #
     #@note Add the LodelMetaPathFinder class to sys.metapath if type is
@@ -319,10 +339,11 @@ key '%s'" % alias)
             raise ContextError("Cannot create a context from a path in \
 MONOSITE mode")
         site_id = os.path.basename(path.strip('/'))
+        path = os.path.realpath(path)
         if not cls.validate_identifier(site_id):
             raise ContextError(
                 "Unable to create a context named '%s'" % site_id)
-        cls.new(site_id)
+        cls.new(site_id, path)
         return site_id
 
     ##@brief Delete a site's context

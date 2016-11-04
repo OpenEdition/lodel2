@@ -61,7 +61,10 @@ def empty_cookie(response):
     response.set_cookie(COOKIE_SESSION_ID, '')
 
 #Starting instance
-loader.start()
+try:
+    loader.start() #Works only in MONOSITE mode
+except NameError:
+    pass
 #providing access to dyncode
 
 ##@todo Dirty & quick dyncode access providing. Replace it by a clean access
