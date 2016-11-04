@@ -7,8 +7,6 @@
 #
 
 import sys, os, os.path
-import lodel.plugins.multisite.loader.preload as preload
-import lodel.plugins.multisite.main as multisite
 #
 # Bootstraping
 #
@@ -26,55 +24,39 @@ except ImportError as e:
     print(e)
     exit(1)
 
-#Set context
+#Set context to MONOSITE
 from lodel.context import LodelContext
-LODEL2_CONTEXT_MODE = LodelContext.MULTISITE
-LODEL2_SITES_PATH = '.'
-LodelContext.init(LODEL2_CONTEXT_MODE)
-
-if LODEL2_CONTEXT_MODE == LodelContext.MULTISITE:
-    #Browse site's directory to set contextes
-    l_dir = os.listdir(LODEL2_SITES_PATH)
-    for entry in l_dir:
-        if os.path.isdir(entry):
-            LodelContext.from_path(entry)
-
-def global_load():
-    LodelContext.expose_modules(globals(), {
-    'lodel.settings.settings': [('Settings', 'settings')]})
-    if not settings.started():
-        settings('conf.d')
-        LodelContext.expose_modules(globals(), {
-        'lodel.settings': ['Settings']})
-        #Starts hooks
-        LodelContext.expose_modules(globals(), {
-            'lodel.plugin': ['LodelHook'],
-            'lodel.plugin.core_hooks': 'core_hooks',
-            'lodel.plugin.core_scripts': 'core_scripts'})
+LodelContext.init()
 
 if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
     #
     # Loading settings
     #
-    if LODEL2_CONTEXT_MODE == LodelContext.MULTISITE:
-        #for ctx in LodelContext._contexts:
-        #   LodelContext.set(ctx)
-        #   global_load()
-    else:
-        global_load()
-
-def load_loop(lodel):
-    import leapi_dyncode as dyncode
-    lodel.dyncode = dyncode
-    LodelHook.call_hook('lodel2_dyncode_bootstraped', '__main__', None)
-    #Run interative python
-    import code
-    print("""
-     Running interactive python in Lodel2 %s instance environment
-    """%Settings.sitename)
-    code.interact(local=locals())
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings.settings': [('Settings', 'settings')]})
+    if not settings.started():
+        settings('conf.d')
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings': ['Settings']})
     
+    #Starts hooks
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin': ['LodelHook'],
+	'lodel.plugin.core_hooks': 'core_hooks',
+	'lodel.plugin.core_scripts': 'core_scripts'})
+
+def start():
+    #Load plugins
+    LodelContext.expose_modules(globals(), {
+        'lodel.logger': 'logger',
+        'lodel.plugin': ['Plugin']})
+    logger.debug("Loader.start() called")
+    Plugin.load_all()
+    LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+
+
 if __name__ == '__main__':
+
     start()
     if Settings.runtest:
         import unittest
@@ -88,11 +70,16 @@ if __name__ == '__main__':
         runner.run(suite)
         exit()
 
-    if LODEL2_CONTEXT_MODE == LodelContext.MULTISITE:
-        preload.preload()
-    else:
-        lodel = LodelContext.get()
-        load_loop(lodel)
+    lodel = LodelContext.get()
+    import leapi_dyncode as dyncode
+    lodel.dyncode = dyncode
+    LodelHook.call_hook('lodel2_dyncode_bootstraped', '__main__', None)
+    LodelHook.call_hook('lodel2_loader_main', '__main__', None)
 
-    multisite.main_loop()
+    #Run interative python
+    import code
+    print("""
+     Running interactive python in Lodel2 %s instance environment
 
+"""%Settings.sitename)
+    code.interact(local=locals())
