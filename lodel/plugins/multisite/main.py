@@ -104,6 +104,9 @@ class HtppHandler(wsgiref.simple_server.WSGIRequestHandler):
 ##@brief Speciallized ForkingTCPServer to fit specs of WSGIHandler
 class HttpServer(socketserver.ForkingTCPServer):
     
+    ##@brief Max childs count
+    max_children = 80
+
     ##@brief Onverwritting of ForkingTCPServer.server_bind method
     #to fit the wsgiref specs
     def server_bind(self):
