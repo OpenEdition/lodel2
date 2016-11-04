@@ -97,6 +97,9 @@ class LodelContext(object):
     _type = None
     ##@brief Stores the contexts
     _contexts = None
+
+    ##@brief Flag indicating if the classe is initialized
+    __initialized = False
     
     ##@brief Create a new context
     #@see LodelContext.new()
@@ -266,6 +269,11 @@ initialize it anymore")
         else:
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
+        cls.__initialized = True
+
+    @classmethod
+    def is_initialized(cls):
+        return cls.__initialized
     
     ##@brief Return the directory of the package of the current loaded context
     @classmethod
@@ -305,12 +313,13 @@ key '%s'" % alias)
     ##@brief Create a context from a path and returns the context name
     #@param path str : the path from which we extract a sitename
     #@return the site identifier
+    @classmethod
     def from_path(cls, path):
         if cls._type != cls.MULTISITE:
             raise ContextError("Cannot create a context from a path in \
 MONOSITE mode")
         site_id = os.path.basename(path.strip('/'))
-        if not self.validate_identifier(site_id):
+        if not cls.validate_identifier(site_id):
             raise ContextError(
                 "Unable to create a context named '%s'" % site_id)
         cls.new(site_id)

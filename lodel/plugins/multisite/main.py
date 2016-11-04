@@ -145,18 +145,10 @@ def wsgi_router(env, start_response):
         print(e)
         return http_error(env, start_response, '404 Not found',
             "No site named '%s'" % site_id)
-    #
-    #   Here we have to put the code that run the request
-    #
-    
-    #Testing purpose
-    rep = "Woot '%s'" % site_id
-    print(rep)
-    start_response('200 ok', [('Content-type', 'text/plain; charset=utf-8')])
-    return [rep.encode('utf-8')]
-
-    #mp.Process(target=foo, args=(env,start_response))
-    return child_proc(env, start_response)
+    #Calling webui
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugins.webui.run': ['application']})
+    return application(env, start_response)
 
 ##@brief Starts the server until a SIGINT is received
 def main_loop():

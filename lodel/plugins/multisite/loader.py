@@ -6,17 +6,22 @@ LODEL2_INSTANCES_DIR = '.'
 try:
     from lodel.context import LodelContext
 except ImportError:
-    LODEL_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    LODEL_BASE_DIR = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from lodel.context import LodelContext
 
-lodelsites_list = [sitename for sitename in os.listdir(LODEL2_INSTANCES_DIR) if os.path.isdir(sitename)]
+LodelContext.init(LodelContext.MULTISITE)
+lodelsites_list = [ os.path.realpath(os.path.join(LODEL2_INSTANCES_DIR,sitename)) 
+    for sitename in os.listdir(LODEL2_INSTANCES_DIR)
+    if os.path.isdir(sitename)]
 for lodelsite_path in lodelsites_list:
     ctx_name = LodelContext.from_path(lodelsite_path)
     #Switch to new context
     LodelContext.set(ctx_name)
-    os.cwd(lodelsite_path)
+    os.chdir(lodelsite_path)
     # Loading settings
-    LodelContext.expose_modules(globals(), {'lodel.settings.settings': [('Settings', 'settings')]})
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings.settings': [('Settings', 'settings')]})
     if not settings.started():
         settings('conf.d')
     LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import loader # Lodel2 loader
+from lodel.context import LodelContext
+
+if not LodelContext.is_initialized():
+    import loader # Lodel2 loader
 
 import os
 import hashlib
@@ -7,7 +10,6 @@ import time
 
 from werkzeug.wrappers import Response
 
-from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings'],
     'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
