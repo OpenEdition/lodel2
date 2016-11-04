@@ -2,7 +2,6 @@
 #Sockets are not closed properly leading in a listening socket leak
 #
 
-
 import wsgiref
 import wsgiref.simple_server
 from wsgiref.simple_server import make_server
@@ -20,14 +19,32 @@ import sys, signal
 from lodel.context import LodelContext
 from lodel.context import ContextError
 
+##@brief On wich addr we want to bind. '' mean all interfaces
 LISTEN_ADDR = ''
+##@brief Listening socket port
 LISTEN_PORT = 1337
 
+##@brief Set the poll interval to detect shutdown requests (do not work)
 SHUTDOWN_POLL_INTERVAL = 0.1
 
+##@brief Reimplementation of WSGIRequestHandler
+#
+#Handler class designed to be called by socketserver child classes to handle
+#a request.
+#We inherit from wsgiref.simple_server.WSGIRequestHandler to avoid writing
+#all the construction of the wsgi variables
 class HtppHandler(wsgiref.simple_server.WSGIRequestHandler):
+    
+    ##@brief Method called by the socketserver to handle a request
     def handle(self):
         print("addr : %s %s\n" % (self.client_address, type(self.request)))
+        #Register a signal handler for sigint in the child process
+        req_ref = self.request
+        def sigstop_handler_client(signal, frame):
+            req_ref.close()
+            print("Client %d stopping by signal" % os.getpid())
+            os._exit(0)
+        signal.signal(signal.SIGTERM, sigstop_handler_client)
         #Dirty copy & past from Lib/http/server.py in Cpython sources       
         try:
             self.raw_requestline = self.rfile.readline(65537)
@@ -130,14 +147,24 @@ class HttpServer(socketserver.ForkingTCPServer):
         return wsgi_router
 
     ##@brief An attempt to solve the socket leak problem
-    def close_request(self, request):
-        print("Closing client socket in server : %s" % request)
-        request.close()
-
-    ##@brief An attempt to solve the socket leak problem
     def server_close(self):
+        self.collect_children()
         print("Closing listening socket")
         self.socket.close()
+    
+    ##@brief Custom reimplementation of shutdown method in order to ensure
+    #that we close all listening sockets
+    def shutdown(self):
+        if self.active_children is not None:
+            for pid in self.active_children.copy():
+                print("Killing : %d"%pid)
+                os.kill(pid, signal.SIGTERM)
+                try:
+                    pid, _ = os.waitpid(pid, 0)
+                    self.active_children.discard(pid)
+                except ChildProcessError:
+                    self.active_children.discard(pid)
+        self.server_close()
 
 ##@brief utility function to extract site id from an url
 def site_id_from_url(url):
@@ -193,7 +220,7 @@ def main_loop():
     
     #Set the start method for multiprocessing
     mp.set_start_method('forkserver')
-    print("\n\nPID = %d\n\n" % os.getpid())
+    print("PID = %d" % os.getpid())
 
     listen_addr = LISTEN_ADDR
     listen_port = LISTEN_PORT
@@ -206,10 +233,10 @@ def main_loop():
     #Signal handler to close server properly on sigint
     def sigint_handler(signal, frame):
         print("Ctrl-c pressed, exiting")
-        server.shutdown() # <-- Do not work for unkonwn reasons
+        server.shutdown()
         server.server_close()
-        sys.exit(0)
-    #signal.signal(signal.SIGINT, sigint_handler)
-
+        exit(0)
+    signal.signal(signal.SIGINT, sigint_handler)
+    #Listen until SIGINT
     server.serve_forever(SHUTDOWN_POLL_INTERVAL)
 
