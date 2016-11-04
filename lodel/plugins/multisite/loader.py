@@ -9,7 +9,7 @@ except ImportError:
     LODEL_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from lodel.context import LodelContext
 
-lodelsites_list = [sitename for sitename in os.listdir(LODEL_INSTANCES_DIR) if os.path.isdir(sitename)]
+lodelsites_list = [sitename for sitename in os.listdir(LODEL2_INSTANCES_DIR) if os.path.isdir(sitename)]
 for lodelsite_path in lodelsites_list:
     ctx_name = LodelContext.from_path(lodelsite_path)
     #Switch to new context
@@ -29,7 +29,7 @@ for lodelsite_path in lodelsites_list:
     })
 
     #Load plugins
-    lodelcontext.expose_modules(globals(), {
+    LodelContext.expose_modules(globals(), {
         'lodel.logger': 'logger',
         'lodel.plugin': ['Plugin']})
     logger.debug("Loader.start() called")
