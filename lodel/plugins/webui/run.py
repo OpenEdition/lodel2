@@ -12,6 +12,7 @@ from werkzeug.wrappers import Response
 
 LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings'],
+    'lodel.logger': 'logger',
     'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
         'ClientPermissionDenied', 'ClientAuthenticationError']})
 
@@ -66,12 +67,6 @@ try:
 except NameError:
     pass
 #providing access to dyncode
-
-##@todo Dirty & quick dyncode access providing. Replace it by a clean access
-#using LodelContext
-lodel = LodelContext.get()
-import leapi_dyncode as dyncode
-lodel.dyncode = dyncode
 
 
 # WSGI Application

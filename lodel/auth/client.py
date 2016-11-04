@@ -7,7 +7,7 @@ import inspect
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings': 'Settings',
+    'lodel.settings': ['Settings'],
     'lodel.logger': 'logger',
     'lodel.plugin': [('SessionHandlerPlugin', 'SessionHandler')],
     'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
@@ -243,7 +243,7 @@ a session is allready started !!!")
     #informations on login and password location (LeApi object & field)
     @classmethod
     def fetch_settings(cls):
-        from lodel import dyncode
+        LodelContext.expose_dyncode(globals(), 'dyncode')
         if cls._infos_fields is None:
             cls._infos_fields = list()
         else:
