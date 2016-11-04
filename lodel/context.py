@@ -193,6 +193,7 @@ submodule : '%s'" % module_fullname)
     def set(cls, site_id):
         if cls._type == cls.MONOSITE:
             raise ContextError("Context cannot be set in MONOSITE beahvior")
+        site_id = LOAD_CTX if site_id is None else site_id
         if not cls.validate_identifier(site_id):
             raise ContextError("Given context name is not a valide identifier \
 : '%s'" % site_id)
@@ -301,8 +302,9 @@ initialize it anymore")
 key '%s'" % alias)
         globs[alias] = obj
         
-    ##@brief Actives a context from a path
+    ##@brief Create a context from a path and returns the context name
     #@param path str : the path from which we extract a sitename
+    #@return the site identifier
     def from_path(cls, path):
         if cls._type != cls.MULTISITE:
             raise ContextError("Cannot create a context from a path in \
@@ -312,6 +314,7 @@ MONOSITE mode")
             raise ContextError(
                 "Unable to create a context named '%s'" % site_id)
         cls.new(site_id)
+        return site_id
 
     ##@brief Delete a site's context
     #@param site_id str : the site's name to remove the context
