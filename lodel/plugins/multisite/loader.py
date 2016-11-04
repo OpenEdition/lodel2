@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
-LODEL2_SITES_PATH = '.'
+LODEL2_INSTANCES_DIR = '.'
 
 try:
     from lodel.context import LodelContext
