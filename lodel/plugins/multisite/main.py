@@ -1,20 +1,17 @@
 #Known bugs : 
-#Sockets are not closed properly leading in a listening socket leak
+#Sockets are not closed properly leading in a listening socket leak, a patch
+#will be submitted for cpython 3.6
 #
 
+import os
+import sys
+import signal
+import socket
+import socketserver
 import wsgiref
 import wsgiref.simple_server
 from wsgiref.simple_server import make_server
-import http.server
-import multiprocessing as mp
-import socketserver
-import socket
-import os
 from io import BufferedWriter
-import urllib
-import threading
-
-import sys, signal
 
 from lodel.context import LodelContext
 from lodel.context import ContextError
@@ -25,7 +22,10 @@ LISTEN_ADDR = ''
 LISTEN_PORT = 1337
 
 ##@brief Set the poll interval to detect shutdown requests (do not work)
-SHUTDOWN_POLL_INTERVAL = 0.1
+SHUTDOWN_POLL_INTERVAL = 0.1 # <-- No impact because of ForkingTCPServer bug
+
+##@brief Stores the signal we uses to kill childs
+KILLING_CHILDS_SIGNAL = signal.SIGTERM
 
 ##@brief Reimplementation of WSGIRequestHandler
 #
@@ -33,7 +33,7 @@ SHUTDOWN_POLL_INTERVAL = 0.1
 #a request.
 #We inherit from wsgiref.simple_server.WSGIRequestHandler to avoid writing
 #all the construction of the wsgi variables
-class HtppHandler(wsgiref.simple_server.WSGIRequestHandler):
+class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
     
     ##@brief Method called by the socketserver to handle a request
     def handle(self):
@@ -44,7 +44,7 @@ class HtppHandler(wsgiref.simple_server.WSGIRequestHandler):
             req_ref.close()
             print("Client %d stopping by signal" % os.getpid())
             os._exit(0)
-        signal.signal(signal.SIGTERM, sigstop_handler_client)
+        signal.signal(KILLING_CHILDS_SIGNAL, sigstop_handler_client)
         #Dirty copy & past from Lib/http/server.py in Cpython sources       
         try:
             self.raw_requestline = self.rfile.readline(65537)
@@ -80,85 +80,27 @@ class HtppHandler(wsgiref.simple_server.WSGIRequestHandler):
         self.request.close()
         super().close()
 
-    ##@brief Copy of wsgiref.simple_server.WSGIRequestHandler.get_environ method
-    def get_environ(self):
-        env = self.server.base_environ.copy()
-        env['SERVER_PROTOCOL'] = self.request_version
-        env['SERVER_SOFTWARE'] = self.server_version
-        env['REQUEST_METHOD'] = self.command
-        if '?' in self.path:
-            path,query = self.path.split('?',1)
-        else:
-            path,query = self.path,''
-
-        env['PATH_INFO'] = urllib.parse.unquote(path, 'iso-8859-1')
-        env['QUERY_STRING'] = query
-
-        host = self.address_string()
-        if host != self.client_address[0]:
-            env['REMOTE_HOST'] = host
-        env['REMOTE_ADDR'] = self.client_address[0]
-
-        if self.headers.get('content-type') is None:
-            env['CONTENT_TYPE'] = self.headers.get_content_type()
-        else:
-            env['CONTENT_TYPE'] = self.headers['content-type']
-
-        length = self.headers.get('content-length')
-        if length:
-            env['CONTENT_LENGTH'] = length
-
-        for k, v in self.headers.items():
-            k=k.replace('-','_').upper(); v=v.strip()
-            if k in env:
-                continue                    # skip content length, type,etc.
-            if 'HTTP_'+k in env:
-                env['HTTP_'+k] += ','+v     # comma-separate multiple headers
-            else:
-                env['HTTP_'+k] = v
-        return env
-
-##@brief Speciallized ForkingTCPServer to fit specs of WSGIHandler
-class HttpServer(socketserver.ForkingTCPServer):
-    
-    ##@brief Max childs count
-    max_children = 80
-
-    ##@brief Onverwritting of ForkingTCPServer.server_bind method
-    #to fit the wsgiref specs
-    def server_bind(self):
-        super().server_bind()
-        #Copy & paste from Lib/http/server.py
-        host, port = self.socket.getsockname()[:2]
-        self.server_name = socket.getfqdn(host)
-        self.server_port = port
-        # Copy&paste from Lib/wsgiref/simple_server.py
-        # Set up base environment 
-        env = self.base_environ = {}
-        env['SERVER_NAME'] = self.server_name
-        env['GATEWAY_INTERFACE'] = 'CGI/1.1'
-        env['SERVER_PORT'] = str(self.server_port)
-        env['REMOTE_HOST']=''
-        env['CONTENT_LENGTH']=''
-        env['SCRIPT_NAME'] = ''
-
-    ##@brief Hardcoded callback function
-    def get_app(self):
-        return wsgi_router
-
-    ##@brief An attempt to solve the socket leak problem
-    def server_close(self):
-        self.collect_children()
-        print("Closing listening socket")
-        self.socket.close()
-    
+##@brief WSGIServer implementing ForkingTCPServer.
+#
+#Same features than wsgiref.simple_server.WSGIServer but process each requests
+#in a child process
+class ForkingWSGIServer(
+        wsgiref.simple_server.WSGIServer, socketserver.ForkingTCPServer):
     ##@brief Custom reimplementation of shutdown method in order to ensure
     #that we close all listening sockets
+    #
+    #This method is here because of a bug (or a missing feature) : 
+    #The socketserver implementation force to call the shutdown method
+    #from another thread/process else it leads in a deadlock.
+    #The problem is that the implementation of shutdown set a private attribute
+    #__shutdown_request to true. So we cannot reimplement a method that will
+    #just set the flag to True, we have to manually collect each actives 
+    #childs. A patch is prepared and will be proposed for cpython upstream.
     def shutdown(self):
         if self.active_children is not None:
             for pid in self.active_children.copy():
                 print("Killing : %d"%pid)
-                os.kill(pid, signal.SIGTERM)
+                os.kill(pid, KILLING_CHILDS_SIGNAL)
                 try:
                     pid, _ = os.waitpid(pid, 0)
                     self.active_children.discard(pid)
@@ -216,20 +158,15 @@ def wsgi_router(env, start_response):
     #mp.Process(target=foo, args=(env,start_response))
     return child_proc(env, start_response)
 
+##@brief Starts the server until a SIGINT is received
 def main_loop():
-    
-    #Set the start method for multiprocessing
-    mp.set_start_method('forkserver')
     print("PID = %d" % os.getpid())
 
     listen_addr = LISTEN_ADDR
     listen_port = LISTEN_PORT
-    
-    #server = socketserver.ForkingTCPServer((listen_addr, listen_port),
-    #    HtppHandler)
-    server = HttpServer((listen_addr, listen_port),
-        HtppHandler)
-    
+    server = wsgiref.simple_server.make_server(
+        listen_addr, listen_port, wsgi_router,
+        server_class=ForkingWSGIServer, handler_class = LodelWSGIHandler)
     #Signal handler to close server properly on sigint
     def sigint_handler(signal, frame):
         print("Ctrl-c pressed, exiting")
