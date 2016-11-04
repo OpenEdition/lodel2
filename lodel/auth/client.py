@@ -9,7 +9,6 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.settings': 'Settings',
     'lodel.logger': 'logger',
-    'lodel.plugins.hooks': ['LodelHook'],
     'lodel.plugin': [('SessionHandlerPlugin', 'SessionHandler')],
     'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
         'ClientPermissionDenied', 'ClientAuthenticationError'],
