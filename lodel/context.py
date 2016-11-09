@@ -69,8 +69,8 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     
     def find_spec(fullname, path, target = None):
         if fullname.startswith(CTX_PKG):
-            print("find_spec called : fullname=%s path=%s target=%s" % (
-                fullname, path, target))
+            #print("find_spec called : fullname=%s path=%s target=%s" % (
+            #    fullname, path, target))
             spl = fullname.split('.')
             site_identifier = spl[1]
             #creating a symlink to represent the lodel site package

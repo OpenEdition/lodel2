@@ -130,7 +130,7 @@ Mass deployments tricks & tips:
 	#Reactivate auth
 	sed -i -e 's/^noauth = /#noauth =/' -e 's/^#auth = /auth =/' /etc/mongodb.conf
 	#Test connection
-	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
+	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
 	#Indicate mongodb credentials to mass_deploy
 	echo -e "MONGODB_ADMIN_USER='$mongoadmin'\nMONGODB_ADMIN_PASSWORD='$mongopass'\n" >> /etc/lodel2/mass_deploy.cfg
 	#Deploying 50 instances

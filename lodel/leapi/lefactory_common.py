@@ -5,7 +5,6 @@
 #- All lines that begins with #- will be deleted from dynamically generated
 #- code...
 
-
 ##@brief Return a dynamically generated class given it's name
 #@param name str : The dynamic class name
 #@return False or a child class of LeObject
@@ -32,6 +31,6 @@ def lowername2class(name):
 def lodel2_dyncode_datasources_init(self, caller, payload):
     for cls in dynclasses:
         cls._init_datasources()
-    from lodel.plugin.hooks import LodelHook
+    LodelContext.expose_modules(globals(), {'lodel.plugin.hooks': ['LodelHook']})
     LodelHook.call_hook("lodel2_dyncode_loaded", __name__, dynclasses)
 

@@ -39,6 +39,11 @@ for lodelsite_path in lodelsites_list:
         'lodel.plugin': ['Plugin']})
     logger.debug("Loader.start() called")
     Plugin.load_all()
+    #Import & expose dyncode
+    LodelContext.expose_dyncode(globals())
+    #Next hook triggers dyncode datasource instanciations
+    LodelHook.call_hook('lodel2_plugins_loaded', '__main__', None)
+    #Next hook triggers call of interface's main loop
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
     #switch back to loader context
     LodelContext.set(None)
