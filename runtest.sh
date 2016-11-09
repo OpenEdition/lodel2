@@ -72,4 +72,4 @@ make
 make refresh_plugins
 $PYTHON loader.py $@
 
-#rm -Rf $testdir
+rm -Rf $testdir
