@@ -10,9 +10,10 @@ loader_update() {
 	libdir=$1
 	install_tpl=$2
 	instdir=$3
+	lib_abs_path=$(dirname $libdir)
 	cp -Rv $install_tpl/loader.py $instdir/loader.py
 	# Adding lib path to loader
-	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$instdir/loader.py"
+	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$lib_abs_path'#" "$instdir/loader.py"
 }
 
 
@@ -87,7 +88,7 @@ cp -Rv $install_tpl/conf.d $instdir/
 cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
-ln -sv $libdir/lodel/plugins $instdir/plugins
+ln -sv $libdir/plugins $instdir/plugins
 loader_update "$libdir" "$install_tpl" "$instdir"
 
 # Adding instance name to conf
