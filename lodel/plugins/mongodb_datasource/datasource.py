@@ -115,9 +115,9 @@ class MongoDbDatasource(AbstractDatasource):
             #Here we may implement the group
             #If sorted query we have to sort again
             if order is not None:
-                results = sorted(results,
-                    key=functools.cmp_to_key(
-                        self.__generate_lambda_cmp_order(order)))
+                key_fun = functools.cmp_to_key(
+                    self.__generate_lambda_cmp_order(order))
+                results = sorted(results, key=key_fun)
             #If limit given apply limit again
             if offset > len(results):
                 results = list()
@@ -851,7 +851,7 @@ field/operator couple in a query. We will keep only the first one")
         glco = cls.__generate_lambda_cmp_order
         fname, cmpdir = order[0]
         order = order[1:]
-        return lambda a,b: glco(order) if a[fname] == b[fname] else (\
+        return lambda a,b: glco(order)(a,b) if a[fname] == b[fname] else (\
             1 if (a[fname]>b[fname] if cmpdir == 'ASC' else a[fname]<b[fname])\
             else -1)
 
