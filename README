@@ -137,11 +137,30 @@ Mass deployments tricks & tips:
 	NINSTANCE=50
 	#Running mass_deploy
 	/usr/share/lodel2/scripts/mass_deploy $NINSTANCE
+
+	#FOLLOWING INSTRUCTIONS ARE FOR STARTING APPS WITH UWSGI
+	# for standalone instructions see bellow
+
 	#Updating nginx conf (delete /etc/nginx/sites-enabled/default if exists)
 	slim --nginx-conf -a > /etc/nginx/sites-enabled/lodel2
 	/etc/init.d/nginx reload
 	#Start all instances and check if they managed to start
 	slim --start -a && sleep 2 && slim -l
+
+	# FOLLOWING INSTRUCTIONS ARE FOR STANDALONE LODEL2 WEBSERVER
+	
+	#Configure nginx & restart it
+	echo -e "server {\n\tlisten 80 default_server;\n\tlisten [::]:80 default_server;\n\tlocation / {\n\t\tproxy_pass http://127.0.0.1:1337/;\n\t}\n}\n" > /etc/nginx/sites-enabled/default
+	/etc/init.d/nginx restart
+	#Build dyncode for instances
+	slim -a -m
+	#Copy the multisite loader in lodel instances root folder
+	cp /usr/lib/python3/dist-packages/lodel/plugins/multisite/loader.py /tmp/lodel2_instances/
+	cd /tmp/lodel2_instances/
+	#Start the server
+	python3 loader.py
+	#Now you can access to the app in HTTP via nginx throught port 80 
+	#or directly via the python server throught the port 1337
 
 
 	Cleaning mongodb + instances :
