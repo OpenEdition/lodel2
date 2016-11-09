@@ -10,7 +10,7 @@ import sys, os, os.path
 #
 # Bootstraping
 #
-LODEL2_LIB_ABS_PATH = '/home/yannweb/dev/lodel2/lodel2-git'
+LODEL2_LIB_ABS_PATH = None
 if LODEL2_LIB_ABS_PATH is not None:
     if not os.path.isdir(LODEL2_LIB_ABS_PATH):
         print("FATAL ERROR : the LODEL2_LIB_ABS_PATH variable in loader.py is \

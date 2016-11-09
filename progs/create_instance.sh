@@ -6,11 +6,13 @@ usage() {
 	exit 1
 }
 
-cp_loader() {
-	loader="${install_tpl}/loader.py"
-	cp -Rv $loader $instdir/
+loader_update() {
+	libdir=$1
+	install_tpl=$2
+	instdir=$3
+	cp -Rv $install_tpl/loader.py $instdir/loader.py
 	# Adding lib path to loader
-	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$loader"
+	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$instdir/loader.py"
 }
 
 
@@ -51,6 +53,7 @@ libdir=$(realpath $libdir)
 install_tpl=$(realpath $install_tpl)
 em_file=$(realpath $em_file)
 
+echo "LIBDIR : $libdir"
 
 if test ! -d $install_tpl
 then
@@ -63,9 +66,9 @@ conf="$instdir/conf.d/lodel2.ini"
 
 if [ $1 = '-u' ]
 then
-	#Update instance
-    cp_loader
-	exit 0
+      #Update instance
+      loader_update "$libdir" "$install_tpl" "$instdir"
+      exit 0
 fi
 
 if [ -e "$instdir" ]
@@ -84,12 +87,9 @@ cp -Rv $install_tpl/conf.d $instdir/
 cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
-ln -sv $libdir/plugins $instdir/plugins
-cp_loader
+ln -sv $libdir/lodel/plugins $instdir/plugins
+loader_update "$libdir" "$install_tpl" "$instdir"
 
-echo "BEGIN LS"
-ls -la $instdir
-echo "END LS"
 # Adding instance name to conf
 sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 

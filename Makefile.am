@@ -1,5 +1,5 @@
 SUBDIRS = lodel progs lodelsites
-EXTRA_DIST = runtest examples tests runtest.sh debian
+EXTRA_DIST = runtest examples tests debian
 CLEANFILES = runtest
 
 lodel2_localstate_DATA =

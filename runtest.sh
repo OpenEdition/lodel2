@@ -59,8 +59,10 @@ if [ ! -d "$install_model_dir" ]
 then
 	install_model_dir="$(dirname $0)/progs/slim/install_model/"
 fi
+libdir=$(realpath "$(dirname $0)")
 rmdir $testdir
-./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$(dirname $0)/lodel"
+./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
+echo ./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
 cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir
@@ -70,4 +72,4 @@ make
 make refresh_plugins
 $PYTHON loader.py $@
 
-rm -Rf $testdir
+#rm -Rf $testdir
