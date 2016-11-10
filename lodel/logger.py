@@ -118,6 +118,9 @@ def log(lvl, msg, *args, **kwargs):
         else:
             for s_kwargs, args in msg_buffer:
                 log(*args, **s_kwargs)
+    from lodel.context import LodelContext
+    if LodelContext.multisite():
+        msg = "CTX(%s) %s" % (LodelContext.get_name(), msg)
     caller = logger.findCaller() # Opti warning : small overhead
     extra = {
         '_pathname': os.path.abspath(caller[0]),
