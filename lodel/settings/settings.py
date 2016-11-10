@@ -80,13 +80,15 @@ class Settings(object, metaclass=MetaSettings):
     
     ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
-    def __init__(self, conf_dir):
+    #@param custom_confspec None | dict : if given overwrite default lodel2
+    #confspecs
+    def __init__(self, conf_dir, custom_confspecs = None):
         self.singleton_assert() # check that it is the only instance
         Settings.instance = self
         ## @brief Configuration specification
         #
         # Initialized by Settings.__bootstrap() method
-        self.__conf_specs = None
+        self.__conf_specs = custom_confspecs
         ## @brief Stores the configurations in namedtuple tree
         self.__confs = None
         self.__conf_dir = conf_dir
@@ -137,7 +139,11 @@ class Settings(object, metaclass=MetaSettings):
         LodelContext.expose_modules(globals(), {
             'lodel.plugin.plugins': ['Plugin', 'PluginError']})
         logger.debug("Settings bootstraping")
-        lodel2_specs = LODEL2_CONF_SPECS
+        if self.__conf_specs is None:
+            lodel2_specs = LODEL2_CONF_SPECS
+        else:
+            lodel2_specs = self.__conf_specs
+            self.__conf_specs = None
         loader = SettingsLoader(self.__conf_dir) 
         plugin_list = []
         for ptype_name,ptype in Plugin.plugin_types().items():
