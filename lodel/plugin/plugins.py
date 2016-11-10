@@ -843,6 +843,9 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #@return A dict with plugin_name as key and {'path':..., 'version':...} as value
     @classmethod
     def _discover(cls, path):
+        #Ensure plugins symlink creation
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugins': 'plugins'})
         res = []
         to_explore = [path]
         while len(to_explore) > 0:
