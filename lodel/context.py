@@ -84,6 +84,9 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
 
 ##@brief Class designed to handle context switching and virtual module
 #exposure
+#
+#@note a dedicated context named LOAD_CTX is used as context for the 
+#loading process
 class LodelContext(object):
     
     ##@brief FLag telling that the context handler is in single context mode
@@ -104,7 +107,7 @@ class LodelContext(object):
     ##@brief Create a new context
     #@see LodelContext.new()
     def __init__(self, site_id, instance_path = None):
-        print("Registering new context for '%s'" % site_id)
+        print("New context instanciation named '%s'" % site_id)
         if site_id is None:
             #Monosite instanciation
             if self.__class__._type != self.__class__.MONOSITE:
@@ -129,9 +132,8 @@ site_id when we are in MONOSITE beahvior")
                     "A context named '%s' allready exists." % site_id)
             self.__id = site_id
             self.__pkg_name = '%s.%s' % (CTX_PKG, site_id)
-            if self.__id == LOAD_CTX:
-                self.__pkg_name = 'lodel'
-            elif instance_path is None:
+
+            if instance_path is None:
                 """
                 raise ContextError("Cannot create a context without an \
 instance path")
@@ -233,6 +235,8 @@ submodule : '%s'" % module_fullname)
     #@return the context instance
     @classmethod
     def new(cls, site_id, instance_path = None):
+        if site_id is None:
+            site_id = LOAD_CTX
         return cls(site_id, instance_path)
 
     ##@brief Helper function that import and expose specified modules
