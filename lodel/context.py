@@ -6,6 +6,7 @@ import types
 import os
 import os.path
 import re
+import copy
 
 import warnings #For the moment no way to use the logger in this file (I guess)
 
@@ -107,10 +108,16 @@ class LodelContext(object):
     ##@brief Create a new context
     #@see LodelContext.new()
     def __init__(self, site_id, instance_path = None):
-        print("New context instanciation named '%s'" % site_id)
+        if site_id is None and self.multisite():
+            site_id = LOAD_CTX
+        if self.multisite() and site_id is not LOAD_CTX:
+            with LodelContext.with_context(None) as ctx:
+                ctx.expose_modules(globals(), {'lodel.logger': 'logger'})
+                logger.info("New context instanciation named '%s'" % site_id)
         if site_id is None:
+            self.__id = None
             #Monosite instanciation
-            if self.__class__._type != self.__class__.MONOSITE:
+            if self.multisite():
                 raise ContextError("Cannot instanciate a context with \
 site_id set to None when we are in MULTISITE beahavior")
             else:
@@ -121,7 +128,7 @@ site_id set to None when we are in MULTISITE beahavior")
                 return
         else:
             #Multisite instanciation
-            if self.__class__._type != self.__class__.MULTISITE:
+            if not self.multisite():
                 raise ContextError("Cannot instanciate a context with a \
 site_id when we are in MONOSITE beahvior")
             if not self.validate_identifier(site_id):
@@ -145,6 +152,8 @@ a context without a path......")
             #Importing the site package to trigger its creation
             self.__package = importlib.import_module(self.__pkg_name)
             self.__class__._contexts[site_id] = self
+        #Designed to be use by with statement
+        self.__previous_ctx = None
     
     ##@brief Expose a module from the context
     #@param globs globals : globals where we have to expose the module
@@ -165,6 +174,14 @@ length == 2 but got : %s" % spec)
         sys.path.append(self.__instance_path)
         dyncode = importlib.import_module('leapi_dyncode')
         self.safe_exposure(globs, dyncode, alias)
+    
+    @classmethod
+    def multisite(cls):
+        return cls._type == cls.MULTISITE
+
+    @classmethod
+    def with_context(cls, target_ctx_id):
+        return cls.get(target_ctx_id)
 
     ##@brief Utility method to expose a module with an alias name in globals
     #@param globs globals() : concerned globals dict
@@ -220,13 +237,29 @@ submodule : '%s'" % module_fullname)
         if site_id not in cls._contexts:
             raise ContextError("No context named '%s' found." % site_id)
         cls._current = cls._contexts[site_id]
+        return cls._current
     
-    ##@brief Helper method that returns the current context
+    ##@brief Getter for contexts
+    #@param ctx_id str | None | False : if False return the current context
+    #@return A LodelContext instance
     @classmethod
-    def get(cls):
+    def get(cls, ctx_id = False):
+        if ctx_id is False:
+            if cls._current is None:
+                raise ContextError("No context loaded")
+            return cls._current
+        ctx_id = LOAD_CTX if ctx_id is None else ctx_id
+        if ctx_id not in cls._contexts:
+            raise ContextError("No context identified by '%s'" % ctx_id)
+        return cls._contexts[ctx_id]
+    
+    ##@brief Returns the name of the loaded context
+    @classmethod
+    def get_name(cls):
         if cls._current is None:
             raise ContextError("No context loaded")
-        return cls._current
+        return copy.copy(cls._current.__id)
+        
 
     ##@brief Create a new context given a context name
     #
@@ -349,7 +382,7 @@ MONOSITE mode")
                 "Unable to create a context named '%s'" % site_id)
         cls.new(site_id, path)
         return site_id
-
+    
     ##@brief Delete a site's context
     #@param site_id str : the site's name to remove the context
     def remove(cls, site_id):
@@ -367,5 +400,24 @@ site_id set to None when we are in MULTISITE beahavior")
             else:
                 raise ContextError("Cannot have a context with \
     site_id set when we are in MONOSITE beahavior")
-        
+    
+    ##@brief Implements the with statement behavior
+    def __enter__(self):
+        if self.__previous_ctx is not None:
+            raise ContextError("__enter__ called but a previous context \
+is allready registered !!! Bailout")
+        current = LodelContext.get().__id
+        if current != self.__id:
+            #Only switch if necessary
+            self.__previous_ctx = LodelContext.get().__id
+            LodelContext.set(self.__id)
+        return self
+
+    ##@brief Implements the with statement behavior
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        prev = self.__previous_ctx
+        self.__previous_ctx = None
+        if prev is not None:
+            #Only restore if needed
+            LodelContext.set(self.__previous_ctx)
 
