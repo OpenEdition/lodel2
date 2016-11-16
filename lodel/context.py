@@ -115,7 +115,7 @@ class LodelContext(object):
                 ctx.expose_modules(globals(), {'lodel.logger': 'logger'})
                 logger.info("New context instanciation named '%s'" % site_id)
         if site_id is None:
-            self.__id = None
+            self.__id = "MONOSITE"
             #Monosite instanciation
             if self.multisite():
                 raise ContextError("Cannot instanciate a context with \
@@ -169,60 +169,36 @@ length == 2 but got : %s" % spec)
         else:
             self._expose_objects(globs, module_fullname, exposure_spec)
     
-    ##@brief Implements LodelContext::expose_dyncode()
-    def _expose_dyncode(self, globs, alias = 'leapi_dyncode'):
-        sys.path.append(self.__instance_path)
-        dyncode = importlib.import_module('leapi_dyncode')
-        self.safe_exposure(globs, dyncode, alias)
+    ##@brief Delete a site's context
+    #@param site_id str : the site's name to remove the context
+    def remove(cls, site_id):
+        if site_id is None:
+            if cls._type == cls.MULTISITE:
+                raise ContextError("Cannot have a context with \
+site_id set to None when we are in MULTISITE beahavior")
+            del cls._contexts
+        else:
+            if cls._type == cls.MULTISITE:
+                if site_id in cls._contexts:
+                    del cls._contexts[site_id]
+                else:
+                    raise ContextError("No site %s exist" % site_id)
+            else:
+                raise ContextError("Cannot have a context with \
+    site_id set when we are in MONOSITE beahavior")
     
+    ##@return True if the class is in MULTISITE mode
     @classmethod
     def multisite(cls):
         return cls._type == cls.MULTISITE
-
+    
+    ##@brief helper class to use LodeContext with with statement
+    #@note alias to get method
+    #@note maybe useless
+    #@todo delete me
     @classmethod
     def with_context(cls, target_ctx_id):
         return cls.get(target_ctx_id)
-
-    ##@brief Utility method to expose a module with an alias name in globals
-    #@param globs globals() : concerned globals dict
-    #@param fullname str : module fullname
-    #@param alias str : alias name
-    @classmethod
-    def _expose_module(cls, globs, fullname, alias):
-        module = importlib.import_module(fullname)
-        cls.safe_exposure(globs, module, alias)
-    
-    ##@brief Utility mehod to expose objects like in a from x import y,z
-    #form
-    #@param globs globals() : dict of globals
-    #@param fullename str : module fullname
-    #@param objects list : list of object names to expose
-    @classmethod
-    def _expose_objects(cls, globs, fullname, objects):
-        errors = []
-        module = importlib.import_module(fullname)
-        for o_name in objects:
-            if isinstance(o_name, str):
-                alias = o_name
-            else:
-                o_name, alias = o_name
-            if not hasattr(module, o_name):
-                errors.append(o_name)
-            else:
-                cls.safe_exposure(globs, getattr(module, o_name), alias)
-        if len(errors) > 0:
-            msg = "Module %s does not have any of [%s] as attribute" % (
-                fullname, ','.join(errors))
-            raise ImportError(msg)
-    
-    ##@brief Translate a module fullname to the context equivalent
-    #@param module_fullname str : a module fullname
-    #@return The module name in the current context
-    def _translate(self, module_fullname):
-        if not module_fullname.startswith('lodel'):
-            raise ContextModuleError("Given module is not lodel or any \
-submodule : '%s'" % module_fullname)
-        return module_fullname.replace('lodel', self.__pkg_name)
 
     ##@brief Set a context as active
     #@param site_id str : site identifier (identify a context)
@@ -327,7 +303,8 @@ initialize it anymore")
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
         cls.__initialized = True
-
+    
+    ##@return True if the class is initialized
     @classmethod
     def is_initialized(cls):
         return cls.__initialized
@@ -382,27 +359,63 @@ MONOSITE mode")
                 "Unable to create a context named '%s'" % site_id)
         cls.new(site_id, path)
         return site_id
+
+
+
+    ##@brief Utility method to expose a module with an alias name in globals
+    #@param globs globals() : concerned globals dict
+    #@param fullname str : module fullname
+    #@param alias str : alias name
+    @classmethod
+    def _expose_module(cls, globs, fullname, alias):
+        module = importlib.import_module(fullname)
+        cls.safe_exposure(globs, module, alias)
     
-    ##@brief Delete a site's context
-    #@param site_id str : the site's name to remove the context
-    def remove(cls, site_id):
-        if site_id is None:
-            if cls._type == cls.MULTISITE:
-                raise ContextError("Cannot have a context with \
-site_id set to None when we are in MULTISITE beahavior")
-            del cls._contexts
-        else:
-            if cls._type == cls.MULTISITE:
-                if site_id in cls._contexts:
-                    del cls._contexts[site_id]
-                else:
-                    raise ContextError("No site %s exist" % site_id)
+    ##@brief Utility mehod to expose objects like in a from x import y,z
+    #form
+    #@param globs globals() : dict of globals
+    #@param fullename str : module fullname
+    #@param objects list : list of object names to expose
+    @classmethod
+    def _expose_objects(cls, globs, fullname, objects):
+        errors = []
+        module = importlib.import_module(fullname)
+        for o_name in objects:
+            if isinstance(o_name, str):
+                alias = o_name
             else:
-                raise ContextError("Cannot have a context with \
-    site_id set when we are in MONOSITE beahavior")
+                o_name, alias = o_name
+            if not hasattr(module, o_name):
+                errors.append(o_name)
+            else:
+                cls.safe_exposure(globs, getattr(module, o_name), alias)
+        if len(errors) > 0:
+            msg = "Module %s does not have any of [%s] as attribute" % (
+                fullname, ','.join(errors))
+            raise ImportError(msg)
     
+    ##@brief Implements LodelContext::expose_dyncode()
+    def _expose_dyncode(self, globs, alias = 'leapi_dyncode'):
+        sys.path.append(self.__instance_path)
+        dyncode = importlib.import_module('leapi_dyncode')
+        self.safe_exposure(globs, dyncode, alias)
+    
+    ##@brief Translate a module fullname to the context equivalent
+    #@param module_fullname str : a module fullname
+    #@return The module name in the current context
+    def _translate(self, module_fullname):
+        if not module_fullname.startswith('lodel'):
+            raise ContextModuleError("Given module is not lodel or any \
+submodule : '%s'" % module_fullname)
+        return module_fullname.replace('lodel', self.__pkg_name)
+
     ##@brief Implements the with statement behavior
+    #@see https://www.python.org/dev/peps/pep-0343/
+    #@see https://wiki.python.org/moin/WithStatement
     def __enter__(self):
+        if not self.multisite:
+            warnings.warn("Using LodelContext with with statement in \
+MONOSITE mode")
         if self.__previous_ctx is not None:
             raise ContextError("__enter__ called but a previous context \
 is allready registered !!! Bailout")
@@ -414,6 +427,8 @@ is allready registered !!! Bailout")
         return self
 
     ##@brief Implements the with statement behavior
+    #@see https://www.python.org/dev/peps/pep-0343/
+    #@see https://wiki.python.org/moin/WithStatement
     def __exit__(self, exc_type, exc_val, exc_tb):
         prev = self.__previous_ctx
         self.__previous_ctx = None
