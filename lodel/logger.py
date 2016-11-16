@@ -13,8 +13,9 @@ handlers = dict() # Handlers list (generated from settings)
 ##@brief Stores sent messages until module is able to be initialized
 msg_buffer = []
 
-# Fetching default root logger
-logger = logging.getLogger()
+# Fetching logger for current context
+from lodel.context import LodelContext
+logger = logging.getLogger(LodelContext.get_name())
 
 ##@brief Module initialisation from settings
 #@return True if inited else False
@@ -52,7 +53,7 @@ def __init_from_settings():
 # @param name str : The handler name
 # @param logging_opt dict : dict containing options ( see above )
 def add_handler(name, logging_opt):
-    logger = logging.getLogger()
+    logger = logging.getLogger(LodelContext.get_name())
     if name in handlers:
         raise KeyError("A handler named '%s' allready exists")
     
