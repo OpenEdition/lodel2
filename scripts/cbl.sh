@@ -63,7 +63,7 @@
 #
 
 usage() {
-	echo "Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE]"
+	echo "Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE] [CREATE_COUNT] [EDIT_COUNT] [DELETE_COUNT]"
 	exit
 }
 
@@ -71,6 +71,19 @@ host=$1
 host=${host:=localhost}
 instance_list=$2
 instance_list=${instance_list:=/tmp/lodel2_instance_list.txt}
+#A modifier for requests count
+n_create=$3
+n_create=${delta_mod:=50}
+n_edit=$4
+n_edit=${n_edit:=10}
+n_delete=$5
+n_delete=${n_delete:=10}
+
+for i in $(seq $#)
+do
+	echo $1 |grep -E "^-?-h" &>/dev/null && usage
+	shift
+done
 
 
 logdir="/tmp/lodel2_cbl_logs"
@@ -272,9 +285,9 @@ run_bg_with_param() {
 	rm -v $pidlist
 }
 
-run_bg_with_param "mass_creation" $instance_list 50
-run_bg_with_param "mass_link_edit" $instance_list 10
-run_bg_with_param "mass_deletion" $instance_list 10
+run_bg_with_param "mass_creation" $instance_list $n_create
+run_bg_with_param "mass_link_edit" $instance_list $n_edit
+run_bg_with_param "mass_deletion" $instance_list $n_delete
 
 echo ""
 echo "Logs can be found in $logdir"
