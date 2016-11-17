@@ -70,8 +70,6 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     
     def find_spec(fullname, path, target = None):
         if fullname.startswith(CTX_PKG):
-            #print("find_spec called : fullname=%s path=%s target=%s" % (
-            #    fullname, path, target))
             spl = fullname.split('.')
             site_identifier = spl[1]
             #creating a symlink to represent the lodel site package
@@ -332,6 +330,8 @@ initialize it anymore")
     #@note designed to implements warning messages or stuff like that
     #when doing nasty stuff
     #
+    #@warning Logging stuffs may lead in a performance issue
+    #
     #@todo try to use the logger module instead of warnings
     #@param globs globals : the globals where we want to expose our
     #module alias
@@ -340,8 +340,17 @@ initialize it anymore")
     @staticmethod
     def safe_exposure(globs, obj, alias):
         if alias in globs:
-            warnings.warn("A module exposure leads in globals overwriting for \
-key '%s'" % alias)
+            if globs[alias] != obj:
+                print("Context '%s' : A module exposure leads in globals overwriting for \
+key '%s' with a different value : %s != %s" % (LodelContext.get_name(), alias, globs[alias], obj))
+                """#Uncomment this bloc to display a stack trace for dangerous modules overwriting
+                print("DEBUG INFOS : ")
+                import traceback
+                traceback.print_stack()
+                """
+            else:
+                print("Context '%s' : A module exposure leads in a useless replacement for \
+key '%s'" % (LodelContext.get_name(),alias))
         globs[alias] = obj
         
     ##@brief Create a context from a path and returns the context name
