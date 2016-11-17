@@ -343,7 +343,7 @@ class Reference(DataHandler):
 class SingleRef(Reference):
 
     def __init__(self, allowed_classes=None, **kwargs):
-        super().__init__(allowed_classes=allowed_classes)
+        super().__init__(allowed_classes=allowed_classes, **kwargs)
 
 
     ##@brief Check and cast value in appropriate type
