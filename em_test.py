@@ -231,6 +231,8 @@ subsection.new_field(   'parent',
                         display_name = 'Parent',
                         group = editorial_group,
                         data_handler = 'link',
+                        default = None,
+                        nullable = True,
                         allowed_classes = [section],
                         back_reference = ('section', 'childs'))
 
