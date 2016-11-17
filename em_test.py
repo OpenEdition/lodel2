@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 #-*- coding: utf-8 -*-
 
+from lodel.context import LodelContext
+LodelContext.init()
+
 from lodel.settings.settings import Settings as settings
 settings('globconf.d')
 from lodel.settings import Settings
@@ -188,6 +191,8 @@ publication.new_field(  'collection',
                         display_name = 'Collection',
                         group = editorial_group,
                         data_handler = 'link',
+                        default = None,
+                        nullable = True,
                         allowed_classes = [collection],
                         back_reference = ('collection', 'publications'))
 collection.new_field(   'publications',
