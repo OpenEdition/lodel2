@@ -150,7 +150,8 @@ Mass deployments tricks & tips:
 	# FOLLOWING INSTRUCTIONS ARE FOR STANDALONE LODEL2 WEBSERVER
 	
 	#Configure nginx & restart it
-	echo -e "server {\n\tlisten 80 default_server;\n\tlisten [::]:80 default_server;\n\tlocation / {\n\t\tproxy_pass http://127.0.0.1:1337/;\n\t}\n}\n" > /etc/nginx/sites-enabled/default
+	export lodel2_install_dir="/usr/lib/python3/dist-packages";
+	echo -e "server {\n\tlisten 80 default_server;\n\tlisten [::]:80 default_server;\n\tlocation / {\n\t\tproxy_pass http://127.0.0.1:1337/;\n\t}\n\t\n\tlocation /static/ {\n\t\talias $lodel2_install_dir/lodel/plugins/webui/templates;\n\t}\n\t\n}\n" > /etc/nginx/sites-enabled/default
 	/etc/init.d/nginx restart
 	#Build dyncode for instances
 	slim -a -m
