@@ -566,13 +566,17 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
     def __act_on_abstract(self,
         target, filters, relational_filters, act, **kwargs):
 
+        logger.debug("Abstract %s, running reccursiv select \
+on non abstract childs" % act.__name__)
         result = list() if act == self.select else 0
         if not target.is_abstract():
-            target_childs = target
+            target_childs = [target]
         else:
             target_childs = [tc for tc in target.child_classes()
                 if not tc.is_abstract()]
         for target_child in target_childs:
+            logger.debug(
+                "Abstract %s on %s" % (act.__name__, target_child.__name__))
             #Add target_child to filter
             new_filters = copy.copy(filters)
             for i in range(len(filters)):

@@ -9,9 +9,9 @@ LodelContext.expose_modules(globals(), {
     'lodel.leapi.datahandlers.base_classes': ['MultipleRef'],
     'lodel.leapi.exceptions': ['LeApiDataCheckErrors'],
     'lodel.exceptions': ['LodelExceptions']})
+LodelContext.expose_dyncode(globals(), 'dyncode')
 
 from ...client import WebUiClient
-import leapi_dyncode as dyncode
 import warnings
 
 LIST_SEPARATOR = ','
