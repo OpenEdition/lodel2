@@ -818,6 +818,11 @@ by an equality filter")
                     mongoval = [ dhdl.cast_type(item) for item in mongoval[1:-1].split(',') ]
                 else:
                     mongoval = [ item for item in mongoval[1:-1].split(',') ]
+            elif value.startswith('(') and value.endswith(')'):
+                if (dhdl.cast_type is not None):
+                    mongoval = [ dhdl.cast_type(mongoval[1:-1]) ]
+                else:
+                    mongoval = [ mongoval[1:-1] ]
         elif mongop == 'like':
             #unescaping \
             mongoval = value.replace('\\\\','\\')

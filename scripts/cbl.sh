@@ -161,7 +161,7 @@ mass_link_edit() {
 			Person)
 				person_ids=$(fetch_all_ids $1 Person)
 				section_ids=$(fetch_all_ids $1 Section)
-				subsection_ids=$(fetch_all_ids $1 Section)
+				subsection_ids=$(fetch_all_ids $1 Subsection)
 				text_ids=$($cmktemp)
 				cat $section_ids $subsection_ids | shuf > $text_ids
 				for i in $(seq $iteration_count)
