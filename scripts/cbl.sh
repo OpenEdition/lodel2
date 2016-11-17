@@ -131,6 +131,11 @@ mass_creation() {
 	logfile="$logdir/mass_creation_${instance_name}.log"
 	cls_list_file=$(fetch_all_classes $1)
 
+	if [ "$iteration_count" -le "0" ]
+	then
+		return
+	fi
+
 	for i in $(seq $iteration_count)
 	do
 		cls=$(shuf -n1 $cls_list_file)
