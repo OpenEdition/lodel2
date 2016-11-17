@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+LodelContext.expose_dyncode(globals(), 'dyncode')
 
 from .base import get_response
 from ...exceptions import *
-import leapi_dyncode as dyncode
 
 ##@brief These functions are called by the rules defined in ../urls.py
 ## To browse the editorial model

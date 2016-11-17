@@ -166,6 +166,13 @@ length == 2 but got : %s" % spec)
             self._expose_module(globs, module_fullname, exposure_spec)
         else:
             self._expose_objects(globs, module_fullname, exposure_spec)
+
+    ##@brief Return a module from current context
+    def get_module(self, fullname):
+        fullname = self._translate(fullname)
+        module = importlib.import_module(fullname)
+        return module
+        
     
     ##@brief Delete a site's context
     #@param site_id str : the site's name to remove the context
@@ -210,7 +217,10 @@ site_id set to None when we are in MULTISITE beahavior")
 : '%s'" % site_id)
         if site_id not in cls._contexts:
             raise ContextError("No context named '%s' found." % site_id)
-        cls._current = cls._contexts[site_id]
+        wanted_ctx = cls._contexts[site_id]
+        if hasattr(wanted_ctx, '__instance_path'):
+            os.chdir(self.__instance_path) #May cause problems
+        cls._current = wanted_ctx
         return cls._current
     
     ##@brief Getter for contexts
@@ -271,6 +281,12 @@ site_id set to None when we are in MULTISITE beahavior")
         for spec in specs.items():
             ctx.expose(globs, spec)
     
+    ##@brief Return a module from current context
+    #@param fullname str : module fullname
+    @classmethod
+    def module(cls, fullname):
+        return cls.get().get_module(fullname)
+        
     ##@brief Expose leapi_dyncode module
     @classmethod
     def expose_dyncode(cls, globs, alias = 'leapi_dyncode'):
@@ -404,9 +420,15 @@ MONOSITE mode")
             raise ImportError(msg)
     
     ##@brief Implements LodelContext::expose_dyncode()
+    #@todo change hardcoded leapi_dyncode.py filename
     def _expose_dyncode(self, globs, alias = 'leapi_dyncode'):
-        sys.path.append(self.__instance_path)
-        dyncode = importlib.import_module('leapi_dyncode')
+        fullname = '%s.%s.dyncode' % (CTX_PKG, self.__id)
+        if fullname in sys.modules:
+            dyncode = sys.modules[fullname]
+        else:
+            path = os.path.join(self.__instance_path, 'leapi_dyncode.py')
+            sfl = importlib.machinery.SourceFileLoader(fullname, path)
+            dyncode = sfl.load_module()
         self.safe_exposure(globs, dyncode, alias)
     
     ##@brief Translate a module fullname to the context equivalent

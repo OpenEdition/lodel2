@@ -5,7 +5,7 @@ import os.path
 import importlib
 import copy
 import json
-from importlib.machinery import SourceFileLoader, SourcelessFileLoader
+from importlib.machinery import SourceFileLoader
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
@@ -297,13 +297,7 @@ class Plugin(object, metaclass=MetaPlugType):
         # Importing __init__.py infos in it
         plugin_module = '%s.%s' % (VIRTUAL_PACKAGE_NAME,
                                     plugin_name)
-
-        init_source = os.path.join(self.path, INIT_FILENAME)
-        try:
-            loader = SourceFileLoader(plugin_module, init_source)
-            self.module = loader.load_module()
-        except (ImportError,FileNotFoundError) as e:
-             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid or the plugin do not exists" % plugin_name)
+        self.module = LodelContext.module(plugin_module)
 
         # loading confspecs
         try:
@@ -397,11 +391,10 @@ name differ from the one found in plugin's init file"
                 fname = filename,
                 name = self.name)
             raise PluginError(msg)
-        # importing the file in varname
-        module_name = self.module.__name__+"."+varname
-        filename = os.path.join(self.path, filename)
-        loader = SourceFileLoader(module_name, filename)
-        return loader.load_module()
+        #extract module name from filename
+        base_mod = '.'.join(filename.split('.')[:-1])
+        module_name = self.module.__name__+"."+base_mod
+        return importlib.import_module(module_name)
    
     ##@brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
@@ -813,6 +806,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Import init file from a plugin path
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
+    #@todo very dirty, clean it
     @classmethod
     def import_init(cls, path):
         cls._mod_cnt += 1 # in order to ensure module name unicity

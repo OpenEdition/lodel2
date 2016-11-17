@@ -2,7 +2,7 @@
 
 import os
 import copy
-from importlib.machinery import SourceFileLoader
+from lodel.context import LodelContext
 
 
 ##@brief Class designed to handle a hook's callback with a priority
@@ -64,7 +64,7 @@ class LodelHook(object):
     # @return modified payload
     @classmethod
     def call_hook(cls, hook_name, caller, payload):
-        from lodel import logger
+        LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
         logger.info("Calling hook '%s'" % hook_name)
         if hook_name in cls._hooks:
             for hook in cls._hooks[hook_name]:

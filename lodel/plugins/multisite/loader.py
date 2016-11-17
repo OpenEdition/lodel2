@@ -58,6 +58,11 @@ for lodelsite_path in lodelsites_list:
     LodelHook.call_hook('lodel2_plugins_loaded', '__main__', None)
     #Next hook triggers call of interface's main loop
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+    #a dirty & quick attempt to fix context unwanted exite via
+    #hooks
+    for name in ( 'LodelHook', 'core_hooks', 'core_scripts',
+            'Settings', 'settings', 'logger', 'Plugin'):
+        del(globals()[name])
     #switch back to loader context
     LodelContext.set(None)
 
