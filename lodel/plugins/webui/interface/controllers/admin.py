@@ -6,7 +6,9 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.leapi.exceptions': [],
     'lodel.logger': 'logger',
-    'lodel.leapi.datahandlers.base_classes': ['MultipleRef']})
+    'lodel.leapi.datahandlers.base_classes': ['MultipleRef'],
+    'lodel.leapi.exceptions': ['LeApiDataCheckErrors'],
+    'lodel.exceptions': ['LodelExceptions']})
 
 from ...client import WebUiClient
 import leapi_dyncode as dyncode
@@ -37,54 +39,20 @@ def admin_update(request):
     #    return get_response('users/signin.html')
     msg=''
     
-    # If the form has been submitted
-    if request.method == 'POST':
-        error = None
-        datas = list()
-        classname = request.form['classname']
-        logger.warning('Composed uids broken here')
-        uid = request.form['uid']
+    datas = process_form(request)
+    if not(datas is False):
+        if 'lodel_id' not in datas:
+            raise HttpException(400)
+        target_leo = dyncode.Object.name2class(datas['classname'])
+        leo = target_leo.get_from_uid(datas['lodel_id'])
         try:
-            target_leo = dyncode.Object.name2class(classname)
-        except LeApiError:
-            classname = None
-        if classname is None or target_leo.is_abstract():
-            raise HttpException(400, custom = "Bad classname given")
-
-        leo_to_update = target_leo.get_from_uid(uid)
-        
-        errors = dict()
-        for fieldname, value in request.form.items():
-            #We want to drop 2 input named 'classname' and 'uid'
-            if len(fieldname) > 12:
-                #Other input names are : field_input_FIELDNAME
-                #Extract the fieldname
-                fieldname = fieldname[12:]
-                try:
-                    dh = leo_to_update.data_handler(fieldname)
-                except NameError as e:
-                    errors[fieldname] = e
-                    continue
-                #Multiple ref list preparation
-                if issubclass(dh.__class__, MultipleRef):
-                    value=[spl for spl in [
-                           v.strip() for v in value.split(LIST_SEPARATOR)]
-                        if len(spl) > 0]
-                elif len(value.strip()) == 0:
-                    value = None
-                try:
-                    leo_to_update.set_data(fieldname, value)
-                except Exception as e:
-                    errors[fieldname] = e
-                    continue
-        if len(errors) > 0:
-            custom_msg = '<h1>Errors in datas</h1><ul>'
-            for fname, error in errors.items():
-                custom_msg += '<li>%s : %s</li>' % (
-                    fname, error)
-            custom_msg += '</ul>'
-            raise HttpException(400, custom = custom_msg)
-        leo_to_update.update()
+            leo.update(
+                { f:datas[f] for f in datas if f not in ('classname', 'lodel_id')})
+        except LeApiDataCheckErrors as e:
+            raise HttpErrors(
+                title='Form validation errors', errors = e._exceptions)
+            
+            
 
     # Display of the form with the object's values to be updated
     if 'classname' in request.GET:
@@ -134,45 +102,25 @@ def admin_create(request):
     # temporary, the acl will be more restrictive
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
-    classname = None
-     # If the form has been submitted
-    if request.method == 'POST':
-        error = None
-        datas = list()
-        classname = request.form['classname']
-        try:
-            target_leo = dyncode.Object.name2class(classname)
-        except LeApiError:
-            classname = None
-        if classname is None or target_leo.is_abstract():
+
+    datas = process_form(request)
+    if not(datas is False):
+        target_leo = dyncode.Object.name2class(datas['classname'])
+        if 'lodel_id' in datas:
             raise HttpException(400)
-        fieldnames = target_leo.fieldnames()
-        fields = dict()
-
-        for in_put, in_value in request.form.items():
-            # The classname is handled by the datasource, we are not allowed to modify it
-            # both are hidden in the form, to identify the object here
-            if in_put != 'classname' and in_value != '':
-                dhl = target_leo.data_handler(in_put[12:])
-                if dhl.is_reference() and in_value != '' and not dhl.is_singlereference():
-                    logger.info(in_value)
-                    in_value.replace(" ","")
-                    in_value=in_value.split(',')
-                    in_value=list(in_value)
-                fields[in_put[12:]] = in_value
-            if in_value == '':
-                fields[in_put[12:]] = None             
-
-        # Insertion in the database of the values corresponding to a new object
-        new_uid = target_leo.insert(fields)
-        
-        # reurn to the form with a confirmation or error message
-        if not new_uid is None:
-            msg = 'Successfull creation';
+        try:
+            new_uid = target_leo.insert(
+                { f:datas[f] for f in datas if f != 'classname'})
+        except LeApiDataCheckErrors as e:
+            raise HttpErrors(
+                title='Form validation errors', errors = e._exceptions)
+        if new_uid is None:
+            raise HttpException(400, "Creation fails")
         else:
-            msg = 'Oops something wrong happened...object not saved'
-        return get_response('admin/admin_create.html', target=target_leo, msg = msg)
-    
+            return get_response(
+                'admin/admin_create.html', target=target_leo,
+                msg = "Created with uid %s" % new_uid)
+
     # Display of an empty form
     if 'classname' in request.GET:
         # We need the class to create an object in
@@ -320,4 +268,62 @@ def search_object(request):
         # TODO The get method must be implemented here
     return get_response('admin/admin_search.html', my_classes = dyncode.dynclasses)
 
+##@brief Process a form POST and return the posted datas
+#@param request : the request object
+#@return a dict with datas as value and fieldname as key
+def process_form(request):
+    if request.method != 'POST':
+        return False
+    res = dict()
+    errors = dict()
+    #Fetch concerned LeObject
+    if 'classname' not in request.form:
+        logger.error("Received a form without classname !")
+        raise HttpException(400)
+    res['classname'] = classname = request.form['classname']
+    try:
+        target_leo = dyncode.Object.name2class(classname)
+    except LeApiError:
+        logger.error(
+            "Received a form with an invalid leo name : '%s'" % classname)
+        raise HttpException(400, "No leobject named '%s'" % classname)
+    if target_leo.is_abstract():
+        logger.error(
+            "Received a form with an abstract leo : '%s'" % classname)
+        raise HttpException(400, '%s is abstract' % classname)
+    #Process input fields
+    for fieldname, value in request.form.items():
+        if fieldname == 'classname':
+            continue
+        elif fieldname == 'uid':
+            fieldname = 'lodel_id' #wow
+        elif fieldname.startswith('field_input_'):
+            fieldname = fieldname[12:]
+        try:
+            dh = target_leo.data_handler(fieldname)
+        except NameError as e:
+            errors[fieldname] = e
+            continue
+        if dh.is_reference() and not dh.is_singlereference():
+            #Converting multiple references fields
+            value = value.strip()
+            if len(value) == 0:
+                #handling default value for empty string
+                if hasattr(dh, 'default'):
+                    value = dh.default
+                else:
+                    #if not explicit default value, enforcing default as 
+                    #an empty list
+                    value = []
+            else:
+                value = [ v.strip() for v in value.split(LIST_SEPARATOR) ]
+        else:
+            #Handling default value for empty string
+            if len(value.strip()) == 0 and hasattr(dh, 'default'):
+                value = dh.default
+        res[fieldname] = value
+    if len(errors) > 0:
+        del(res)
+        raise HttpErrors(errors, title="Form validation error")
+    return res
 

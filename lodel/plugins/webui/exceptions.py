@@ -47,5 +47,25 @@ class HttpException(Exception):
             return HttpException.STATUS_STR[status_fam][status_code]
 
 
+##@brief Render multiple errors
+class HttpErrors(HttpException):
+    
+    def __init__(self, errors, title = None, status_code = 400):
+        super().__init__(status_code = status_code, tpl = 'errors.html',
+            custom = title)
+        self.errors = errors
+
+    def render(self, request):
+        from .interface.template.loader import TemplateLoader
+        loader = TemplateLoader()
+        tpl_vars = {
+            'status_code': self.status_code,
+            'errors': self.errors,
+            'title': self.custom }
+        response = Response(
+            loader.render_to_response(self.tpl, template_vars = tpl_vars),
+            mimetype = 'text/html')
+        response.status_code = self.status_code
+        return response
 
         
