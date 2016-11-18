@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 from werkzeug.wrappers import Response
+from lodel.context import LodelContext
 
 class HttpException(Exception):
 
@@ -23,8 +24,23 @@ class HttpException(Exception):
         self.status_code = status_code
         self.tpl = tpl
         self.custom = custom
+    
+    ##@brief Log exception with lodel logger
+    def log(self):
+        LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+        msg = "Webui HTTP exception : %s" % self
+        if self.status_code / 100 == 4:
+            logger.security(msg)
+        elif self.status_code / 100 == 5:
+            logger.error(msg)
+        else:
+            logger.warning(msg)
+    
+    def __str__(self):
+        return "HTTP:%d '%s'" % (self.status_code, self.custom)
 
     def render(self, request):
+        self.log()
         from .interface.template.loader import TemplateLoader
         loader = TemplateLoader()
         tpl_vars = {
@@ -55,7 +71,13 @@ class HttpErrors(HttpException):
             custom = title)
         self.errors = errors
 
+    def __str__(self):
+        ret = super().__str__()
+        ret += ', '.join([ '%s: %s' % val for val in self.errors.items()])
+        return ret
+
     def render(self, request):
+        self.log()
         from .interface.template.loader import TemplateLoader
         loader = TemplateLoader()
         tpl_vars = {
