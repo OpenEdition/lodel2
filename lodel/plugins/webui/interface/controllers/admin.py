@@ -317,6 +317,7 @@ def process_form(request):
                     value = []
             else:
                 value = [ v.strip() for v in value.split(LIST_SEPARATOR) ]
+                value = [ v for v in value if len(v) > 0]
         else:
             #Handling default value for empty string
             if len(value.strip()) == 0 and hasattr(dh, 'default'):
