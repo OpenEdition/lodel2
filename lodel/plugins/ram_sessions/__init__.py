@@ -2,7 +2,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.settings.validator': ['SettingValidator']})
 
-__plugin_name__ = 'ram_session'
+__plugin_name__ = 'ram_sessions'
 __version__ = [0,0,1]
 __plugin_type__ = 'session_handler'
 __loader__ = 'main.py'

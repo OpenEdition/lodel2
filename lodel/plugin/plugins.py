@@ -373,6 +373,11 @@ name differ from the one found in plugin's init file"
     #@throw AttributeError if varname not found
     #@throw ImportError if the file fails to be imported
     #@throw PluginError if the filename was not valid
+    #@todo Some strange things append :
+    #when loading modules in test self.module.__name__ does not contains
+    #the package... but in prod cases the self.module.__name__ is 
+    #the module fullname... Just a reminder note to explain the dirty
+    #if on self_modname
     def _import_from_init_var(self, varname):
         # Read varname
         try:
@@ -391,9 +396,14 @@ name differ from the one found in plugin's init file"
                 fname = filename,
                 name = self.name)
             raise PluginError(msg)
+        #See the todo
+        if len(self.module.__name__.split('.')) == 1:
+            self_modname = self.module.__package__
+        else:
+            self_modname = self.module.__name__
         #extract module name from filename
         base_mod = '.'.join(filename.split('.')[:-1])
-        module_name = self.module.__name__+"."+base_mod
+        module_name = self_modname+"."+base_mod
         return importlib.import_module(module_name)
    
     ##@brief Check dependencies of plugin
@@ -701,7 +711,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                 #dropped
                 pass
         result = {'path_list': paths, 'plugins': result}
-        print("DEUG ",result['plugins'])
         #Writing to cache
         if not no_cache:
             with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
@@ -806,7 +815,8 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Import init file from a plugin path
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
-    #@todo very dirty, clean it
+    #@todo replace by LodelContext usage !!! (not mandatory, this fun
+    #is only used in plugin discover method)
     @classmethod
     def import_init(cls, path):
         cls._mod_cnt += 1 # in order to ensure module name unicity

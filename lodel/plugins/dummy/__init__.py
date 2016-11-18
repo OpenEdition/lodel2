@@ -8,7 +8,7 @@ __loader__ = "main.py"
 __confspec__ = "confspec.py"
 __author__ = "Lodel2 dev team"
 __fullname__ = "Dummy plugin"
-__name__ = 'yweber.dummy'
+__name__ = 'dummy'
 __plugin_type__ = 'extension'
 
 
