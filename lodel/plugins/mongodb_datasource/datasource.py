@@ -813,16 +813,11 @@ by an equality filter")
         #Converting lodel2 wildcarded string into a case insensitive
         #mongodb re
         if mongop in cls.mongo_op_re:
-            if value.startswith('(') and value.endswith(')') and ',' in value:
+            if value.startswith('(') and value.endswith(')'):
                 if (dhdl.cast_type is not None):
                     mongoval = [ dhdl.cast_type(item) for item in mongoval[1:-1].split(',') ]
                 else:
                     mongoval = [ item for item in mongoval[1:-1].split(',') ]
-            elif value.startswith('(') and value.endswith(')'):
-                if (dhdl.cast_type is not None):
-                    mongoval = [ dhdl.cast_type(mongoval[1:-1]) ]
-                else:
-                    mongoval = [ mongoval[1:-1] ]
         elif mongop == 'like':
             #unescaping \
             mongoval = value.replace('\\\\','\\')
