@@ -27,6 +27,7 @@ class SettingsValidationError(Exception):
 # Class instance are callable objects that takes a value argument (the value to validate). It raises
 # a SettingsValidationError if validation fails, else it returns a properly
 # casted value.
+#@todo implement an IP validator and use it in multisite confspec
 class SettingValidator(object):
     
     _validators = dict()

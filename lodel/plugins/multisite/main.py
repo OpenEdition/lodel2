@@ -16,11 +16,6 @@ from io import BufferedWriter
 from lodel.context import LodelContext
 from lodel.context import ContextError
 
-##@brief On wich addr we want to bind. '' mean all interfaces
-LISTEN_ADDR = ''
-##@brief Listening socket port
-LISTEN_PORT = 1337
-
 ##@brief Set the poll interval to detect shutdown requests (do not work)
 SHUTDOWN_POLL_INTERVAL = 0.1 # <-- No impact because of ForkingTCPServer bug
 
@@ -86,6 +81,10 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
 #in a child process
 class ForkingWSGIServer(
         wsgiref.simple_server.WSGIServer, socketserver.ForkingTCPServer):
+    
+    ##@brief static property indicating the max number of childs allowed
+    max_children = 40
+
     ##@brief Custom reimplementation of shutdown method in order to ensure
     #that we close all listening sockets
     #
@@ -152,9 +151,10 @@ def wsgi_router(env, start_response):
 
 ##@brief Starts the server until a SIGINT is received
 def main_loop():
-    #Init app cache
-    listen_addr = LISTEN_ADDR
-    listen_port = LISTEN_PORT
+    LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
+    ForkingWSGIServer.max_children = Settings.server.max_children
+    listen_addr = Settings.server.listen_address
+    listen_port = Settings.server.listen_port
     server = wsgiref.simple_server.make_server(
         listen_addr, listen_port, wsgi_router,
         server_class=ForkingWSGIServer, handler_class = LodelWSGIHandler)

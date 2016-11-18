@@ -7,6 +7,12 @@ LODEL2_CONFSPECS = {
     'lodel2': {
         'debug': (True, SettingValidator('bool'))
     },
+    'lodel2.server': {
+        'listen_address': ('', SettingValidator('dummy')),
+        #'listen_address': ('', SettingValidator('ip')), #<-- not implemented
+        'listen_port': ( 1337, SettingValidator('int')),
+        'max_children': (40, SettingValidator('int')),
+    },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
                     SettingValidator('loglevel')),
