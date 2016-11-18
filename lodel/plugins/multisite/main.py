@@ -37,7 +37,6 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
     
     ##@brief Method called by the socketserver to handle a request
     def handle(self):
-        print("addr : %s %s\n" % (self.client_address, type(self.request)))
         #Register a signal handler for sigint in the child process
         req_ref = self.request
         def sigstop_handler_client(signal, frame):
@@ -76,7 +75,6 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
     
     ##@brief An attempt to solve the socket leak problem
     def close(self):
-        print("Closing request from handler : %s" % self.request)
         self.request.close()
         super().close()
 
@@ -131,7 +129,6 @@ def http_error(env, start_response, status = '500 internal server error', \
 
 ##@brief This method is run in a child process by the handler
 def wsgi_router(env, start_response):
-    print("\n\nCPROCPID = %d\n\n" % os.getpid()) #<-- print PID (for debug)
     #Attempt to load a context
     site_id = site_id_from_url(env['PATH_INFO'])
     if site_id is None:
@@ -152,8 +149,6 @@ def wsgi_router(env, start_response):
 
 ##@brief Starts the server until a SIGINT is received
 def main_loop():
-    print("PID = %d" % os.getpid())
-
     listen_addr = LISTEN_ADDR
     listen_port = LISTEN_PORT
     server = wsgiref.simple_server.make_server(
