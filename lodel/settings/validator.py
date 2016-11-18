@@ -183,7 +183,7 @@ def directory_val(value):
 
 ##@brief Validate a loglevel value
 def loglevel_val(value):
-    valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
+    valids = ['DEBUG', 'INFO', 'WARNING', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
         raise SettingsValidationError(
                 "The value '%s' is not a valid loglevel" % value)
@@ -429,12 +429,12 @@ LODEL2_CONF_SPECS = {
                     SettingValidator('loglevel')),
         'context': (    False,
                         SettingValidator('bool')),
-        'filename': (   None,
-                        SettingValidator('errfile', none_is_valid = True)),
-        'backupcount': (    None,
-                            SettingValidator('int', none_is_valid = True)),
-        'maxbytes': (   None,
-                        SettingValidator('int', none_is_valid = True)),
+        'filename': (   "-",
+                        SettingValidator('errfile', none_is_valid = False)),
+        'backupcount': (    5,
+                            SettingValidator('int', none_is_valid = False)),
+        'maxbytes': (   1024*10,
+                        SettingValidator('int', none_is_valid = False)),
     },
     'lodel2.editorialmodel': {
         'emfile': ( 'em.pickle', SettingValidator('strip')),
