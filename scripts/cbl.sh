@@ -73,7 +73,7 @@ instance_list=$2
 instance_list=${instance_list:=/tmp/lodel2_instance_list.txt}
 #A modifier for requests count
 n_create=$3
-n_create=${delta_mod:=50}
+n_create=${n_create:=50}
 n_edit=$4
 n_edit=${n_edit:=10}
 n_delete=$5
