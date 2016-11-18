@@ -27,6 +27,8 @@ SHUTDOWN_POLL_INTERVAL = 0.1 # <-- No impact because of ForkingTCPServer bug
 ##@brief Stores the signal we uses to kill childs
 KILLING_CHILDS_SIGNAL = signal.SIGTERM
 
+FAST_APP_EXPOSAL_CACHE = dict()
+
 ##@brief Reimplementation of WSGIRequestHandler
 #
 #Handler class designed to be called by socketserver child classes to handle
@@ -143,12 +145,14 @@ def wsgi_router(env, start_response):
         return http_error(env, start_response, '404 Not found',
             "No site named '%s'" % site_id)
     #Calling webui
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugins.webui.run': ['application']})
-    return application(env, start_response)
+    return FAST_APP_EXPOSAL_CACHE[site_id].application(env, start_response)
+    #LodelContext.expose_modules(globals(), {
+    #    'lodel.plugins.webui.run': ['application']})
+    #return application(env, start_response)
 
 ##@brief Starts the server until a SIGINT is received
 def main_loop():
+    #Init app cache
     listen_addr = LISTEN_ADDR
     listen_port = LISTEN_PORT
     server = wsgiref.simple_server.make_server(

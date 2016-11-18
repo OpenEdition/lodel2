@@ -27,6 +27,10 @@ if not settings.started():
 lodelsites_list = [ os.path.realpath(os.path.join(LODEL2_INSTANCES_DIR,sitename)) 
     for sitename in os.listdir(LODEL2_INSTANCES_DIR)
     if os.path.isdir(sitename) and sitename not in EXCLUDE_DIR]
+
+#Exposed now to allow access to FAST_APP_EXPOSAL_CACHE
+LodelContext.expose_modules(
+    globals(), {'lodel.plugins.multisite.main': 'main'})
 for lodelsite_path in lodelsites_list:
     ctx_name = LodelContext.from_path(lodelsite_path)
     #Switch to new context
@@ -58,6 +62,10 @@ for lodelsite_path in lodelsites_list:
     LodelHook.call_hook('lodel2_plugins_loaded', '__main__', None)
     #Next hook triggers call of interface's main loop
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+    #FAST_APP_EXPOSAL_CACHE populate
+    main.FAST_APP_EXPOSAL_CACHE[ctx_name] = LodelContext.module(
+    	'lodel.plugins.webui.run')
+    LodelContext
     #a dirty & quick attempt to fix context unwanted exite via
     #hooks
     for name in ( 'LodelHook', 'core_hooks', 'core_scripts',
@@ -66,7 +74,5 @@ for lodelsite_path in lodelsites_list:
     #switch back to loader context
     LodelContext.set(None)
 
-LodelContext.expose_modules(
-    globals(), {'lodel.plugins.multisite.main': 'main'})
 main.main_loop()
 
