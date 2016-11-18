@@ -169,8 +169,8 @@ mass_link_edit() {
 					cur_id=$(shuf -n1 $person_ids)
 					alias_count=$(shuf -i1-5 -n1)
 					ltext_count=$(shuf -i1-5 -n1)
-					alias_param=$(head -n $(expr $alias_count \* $i) $person_ids| tail -n$alias_count|tr -s "\n" ",")
-					txt_param=$(head -n $(expr $ltext_count \* $i) $text_ids | tail -n$ltext_count|tr -s "\n" ",")
+					alias_param=$(head -n $(expr $alias_count \* $i) $person_ids| tail -n$alias_count|tr -s "\n" "," | sed 's/,$//')
+					txt_param=$(head -n $(expr $ltext_count \* $i) $text_ids | tail -n$ltext_count|tr -s "\n" "," | sed 's/,$//')
 					$curcurl -d "$(curl_opt_create_$cls $alias_param $txt_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
 				done
 				rm -v $text_ids $person_ids $section_ids $subsection_ids
