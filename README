@@ -90,6 +90,9 @@ NOTE: You have to run in root to use this below
 		- generate a nginx conf for all instances :
 			slim -a --nginx-conf
 
+		- set logger to warning level and log in file :
+			slim -a -s --set-logger test:WARNING:/var/log/lodel2/%l.%s.log
+
 		- get some help for more options & actions :
 			slim -h
 
