@@ -282,6 +282,7 @@ run_bg_with_param() {
 	do
 		$fun $iname $@ &
 		echo $! >> $pidlist
+		sleep 1
 	done
 	for pid in $(cat $pidlist)
 	do
