@@ -35,7 +35,7 @@ done
 M=$(expr $N / 4)
 for i in `eval echo {1..$M}`;
 do
-    persons=$(printf "use lodel2_$instance\n db.Person.find({}, {lodel_id:1, _id:0}).limit(3)" | mongo  $HOSTDB/admin -u lodel2_admin -p lapwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d")
+    persons=$(printf "use lodel2_$instance\n db.Person.find({}, {lodel_id:1, _id:0}).limit(3)" | mongo  $HOSTDB/admin -u admin -p pwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d")
     tmp=""
     for i in $persons
     do
