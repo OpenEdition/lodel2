@@ -81,7 +81,7 @@ n_delete=${n_delete:=10}
 
 for i in $(seq $#)
 do
-	echo $1 |grep -E "^-?-h" &>/dev/null && usage
+	echo $1 |grep -E "^-?-h" &>/dev/null
 	shift
 done
 
@@ -175,7 +175,69 @@ mass_link_edit() {
 				done
 				rm -v $text_ids $person_ids $section_ids $subsection_ids
 				;;
+            
+            Collection)
+                collections_ids=$(fetch_all_ids $1 Collection)
+                publication_ids=$(fetch_all_ids $1 Publication)
+                for i in $(seq $iteration_count)
+                do
+                    cur_id=$(shuf -n1 $collections_ids)
+                    publications_count=$(shuf -i1-5 -n1)
+                    publication_param=$(head -n $(expr $publications_count \* $i) $publication_ids| tail -n$publications_count|tr -s "\n" ",")
+                    $curcurl -d "$(curl_opt_create_$cls $publication_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+                done
+                rm -v $collections_ids $publication_ids
+                ;;
 
+            Publication)
+                publication_ids=$(fetch_all_ids $1 Publication)
+                collection_ids=$(fetch_all_ids $1 Collection)
+                for i in $(seq $iteration_count)
+                do
+                    cur_id=$(shuf -n1 $publication_ids)
+                    collections_count=$(shuf -i1-5 -n1)
+                    collection_param=$(head -n $(expr $collections_count \* $i) $collection_ids| tail -n$collections_count|tr -s "\n" ",")
+                    $curcurl -d "$(curl_opt_create_$cls $collection_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+                done
+                rm -v $publication_ids $collection_ids
+                ;;
+			
+			Section)
+                section_ids=$(fetch_all_ids $1 Section)
+                child_ids=$(fetch_all_ids $1 Subsection)
+                person_ids=$(fetch_all_ids $1 Person)
+                for i in $(seq $iteration_count)
+                do
+                    cur_id=$(shuf -n1 $section_ids)
+                    child_count=$(shuf -i1-5 -n1)
+                    person_count=$(shuf -i1-5 -n1)
+                    child_param=$(head -n $(expr $child_count \* $i) $child_ids| tail -n$child_count|tr -s "\n" ",")
+                    person_param=$(head -n $(expr $person_count \* $i) $person_ids| tail -n$person_count|tr -s "\n" ",")
+                    $curcurl -d "$(curl_opt_create_$cls $child_param $person_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile                    
+                done
+                rm -v $section_ids $child_ids $person_ids
+                ;;
+                
+            Subsection)
+                subsection_ids=$(fetch_all_ids $1 Subsection)
+                section_ids=$(fetch_all_ids $1 Section)
+                persons_ids=$(fetch_all_ids $1 Person)
+                parent_ids=$($cmktemp)
+                cat $section_ids $subsection_ids | shuf > $parent_ids
+                child_ids=$subsection_ids
+                for i in $(seq $iteration_count)
+                do
+                    cur_id=$(shuf -n1 $subsection_ids)
+                    child_count=$(shuf -i1-5 -n1)
+                    parent_count=$(shuf -i1-5 -n1)
+                    person_count=$(shuf -i1-5 -n1)
+                    child_param=$(head -n $(expr $child_count \* $i) $child_ids| tail -n$child_count|tr -s "\n" ",")
+                    parent_param=$(head -n $(expr $parent_count \* $i) $parent_ids| tail -n$parent_count|tr -s "\n" ",")
+                    person_param=$(head -n $(expr $person_count \* $i) $persons_ids| tail -n$person_count|tr -s "\n" ",")
+                    $curcurl -d "$(curl_opt_create_$cls $child_param $person_param $parent_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+                done
+                rm -v $subsection_ids $parent_ids $section_ids $persons_ids
+                ;;
 			*)
 				;;
 			
