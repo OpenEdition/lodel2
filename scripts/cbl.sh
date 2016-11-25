@@ -2,7 +2,7 @@
 #
 # CBL : Curl Benchmark on Lodel
 #
-# Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE]
+# Usage : $0 [HOSTNAME] [INSTANCE_LIST_FILE] [N_CREATE] [N_EDIT] [N_DELETE]
 #
 # Instance_list_file is expected to be a file containing instances name (1 per
 # line). Uses by default /tmp/lodel2_instance_list.txt
