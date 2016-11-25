@@ -16,6 +16,10 @@ from io import BufferedWriter
 from lodel.context import LodelContext
 from lodel.context import ContextError
 
+
+from multiprocessing.pool import Pool
+import multiprocessing
+
 ##@brief Set the poll interval to detect shutdown requests (do not work)
 SHUTDOWN_POLL_INTERVAL = 0.1 # <-- No impact because of ForkingTCPServer bug
 
@@ -36,12 +40,7 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
     def handle(self):
         #Register a signal handler for sigint in the child process
         req_ref = self.request
-        def sigstop_handler_client(signal, frame):
-            req_ref.close()
-            print("Client %d stopping by signal" % os.getpid())
-            os._exit(0)
-        signal.signal(KILLING_CHILDS_SIGNAL, sigstop_handler_client)
-        #Dirty copy & past from Lib/http/server.py in Cpython sources       
+	#Dirty copy & past from Lib/http/server.py in Cpython sources
         try:
             self.raw_requestline = self.rfile.readline(65537)
             if len(self.raw_requestline) > 65536:
@@ -75,37 +74,64 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
         self.request.close()
         super().close()
 
+##@brief ForkMixIn using multiprocessing.pool.Pool
+class PoolMixIn:
+
+    pool_size = 10
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__pool = Pool(self.__class__.pool_size)
+        self.__results = list()
+
+    def __pool_callback(self, request, client_address):
+        try:
+            self.finish_request(request, client_address)
+            self.shutdown_request(request)
+            pass
+        except:
+            try:
+                self.handle_error(request, client_address)
+                self.shutdown_request(request)
+            finally:
+                pass
+
+    def collect_results(self):
+        new_res = list()
+        while len(self.__results) > 0:
+            cur = self.__results.pop()
+            try:
+                cur.get(0.0)
+            except multiprocessing.TimeoutError:
+                new_res.append(cur)
+        self.__results = new_res
+
+    def process_request(self, request, client_address):
+        self.collect_results()
+        res = self.__pool.apply_async(
+            self.__pool_callback, (self, request, client_address))
+        self.__results.append(res)
+        self.close_request(request)
+        return
+
+    def shutdown(self):
+        print("Terminating jobs")
+        self.__pool.terminate()
+        print("Waiting jobs to end...")
+        self.__pool.join()
+ 
+
 ##@brief WSGIServer implementing ForkingTCPServer.
 #
 #Same features than wsgiref.simple_server.WSGIServer but process each requests
 #in a child process
 class ForkingWSGIServer(
-        wsgiref.simple_server.WSGIServer, socketserver.ForkingTCPServer):
+        wsgiref.simple_server.WSGIServer, PoolMixIn):
     
     ##@brief static property indicating the max number of childs allowed
     max_children = 40
-
-    ##@brief Custom reimplementation of shutdown method in order to ensure
-    #that we close all listening sockets
-    #
-    #This method is here because of a bug (or a missing feature) : 
-    #The socketserver implementation force to call the shutdown method
-    #from another thread/process else it leads in a deadlock.
-    #The problem is that the implementation of shutdown set a private attribute
-    #__shutdown_request to true. So we cannot reimplement a method that will
-    #just set the flag to True, we have to manually collect each actives 
-    #childs. A patch is prepared and will be proposed for cpython upstream.
-    def shutdown(self):
-        if self.active_children is not None:
-            for pid in self.active_children.copy():
-                print("Killing : %d"%pid)
-                os.kill(pid, KILLING_CHILDS_SIGNAL)
-                try:
-                    pid, _ = os.waitpid(pid, 0)
-                    self.active_children.discard(pid)
-                except ChildProcessError:
-                    self.active_children.discard(pid)
-        self.server_close()
+    request_queue_size = 40
+    allow_reuse_address = True
 
 ##@brief utility function to extract site id from an url
 def site_id_from_url(url):
@@ -151,8 +177,9 @@ def wsgi_router(env, start_response):
 
 ##@brief Starts the server until a SIGINT is received
 def main_loop():
+    multiprocessing.set_start_method('forkserver')
     LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
-    ForkingWSGIServer.max_children = Settings.server.max_children
+    ForkingWSGIServer.pool_size = Settings.server.max_children
     listen_addr = Settings.server.listen_address
     listen_port = Settings.server.listen_port
     server = wsgiref.simple_server.make_server(
@@ -161,7 +188,7 @@ def main_loop():
     #Signal handler to close server properly on sigint
     def sigint_handler(signal, frame):
         print("Ctrl-c pressed, exiting")
-        server.shutdown()
+        #server.shutdown()
         server.server_close()
         exit(0)
     signal.signal(signal.SIGINT, sigint_handler)
