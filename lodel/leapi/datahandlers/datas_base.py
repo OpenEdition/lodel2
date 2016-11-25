@@ -63,12 +63,12 @@ class Integer(DataField):
 ##@brief Data field designed to handle string
 class Varchar(DataField):
 
-    help = 'Basic string (varchar) field. Default size is 64 characters'
+    help = 'Basic string (varchar) field. Default size is 100 characters'
     base_type = 'char'
 
     ##@brief A string field
     # @brief max_length int: The maximum length of this field
-    def __init__(self, max_length=64, **kwargs):
+    def __init__(self, max_length=100, **kwargs):
         self.max_length = int(max_length)
         super().__init__(**kwargs)
 

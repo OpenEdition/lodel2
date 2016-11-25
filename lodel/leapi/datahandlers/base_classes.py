@@ -330,10 +330,11 @@ class Reference(DataHandler):
         target_class = self.back_reference[0]
         target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
         value = datas[fname]
-        obj = target_class.get([(target_uidfield, '=', value)])
-        if len(obj) == 0:
-            logger.warning('Object referenced does not exist')
-            return False
+        if (value is not None):
+            obj = target_class.get([(target_uidfield, '=', value)])
+            if len(obj) == 0:
+                logger.warning('Object referenced does not exist')
+                return False
         return True
 
 

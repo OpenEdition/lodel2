@@ -8,7 +8,7 @@
 		<input id="field_input_{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" >
 	{% elif field.base_type == 'password' %}
             <input id="{{fieldname}}" name="field_input_{{fieldname}}" class="form-control" type="password"  value="{{sval}}" >
-    {% elif field.base_type == 'char' or field.base_type == 'int' %}
+    {% elif field.base_type == 'char' or field.base_type == 'int' or field.base_type == 'text' or field.base_type == 'datetime' %}
 		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{value}}" >
     {% elif field.base_type == 'ref' %}
         {% if value is iterable %}

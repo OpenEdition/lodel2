@@ -19,6 +19,6 @@ def _activate():
     import leapi_dyncode
     print("Testing dynamic objects : ")
     print("Object : ", leapi_dyncode.Object)
-    print("Publication : ", leapi_dyncode.Publication)
-    print("Publication fields : ", leapi_dyncode.Publication.fieldnames())
+    print("Collection : ", leapi_dyncode.Collection)
+    print("Collection fields : ", leapi_dyncode.Collection.fieldnames())
     return True

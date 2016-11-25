@@ -814,7 +814,7 @@ by an equality filter")
         #mongodb re
         if mongop in cls.mongo_op_re:
             if value.startswith('(') and value.endswith(')'):
-                if (dhdl.cast_type is not None):
+                if (dhdl.cast_type is not None and value != '()'):
                     mongoval = [ dhdl.cast_type(item) for item in mongoval[1:-1].split(',') ]
                 else:
                     mongoval = [ item for item in mongoval[1:-1].split(',') ]

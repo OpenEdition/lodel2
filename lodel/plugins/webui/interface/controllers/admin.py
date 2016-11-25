@@ -45,6 +45,9 @@ def admin_update(request):
             raise HttpException(400)
         target_leo = dyncode.Object.name2class(datas['classname'])
         leo = target_leo.get_from_uid(datas['lodel_id'])
+        for in_value in datas:
+            if datas[in_value] == '':
+                datas[in_value] = None
         try:
             leo.update(
                 { f:datas[f] for f in datas if f not in ('classname', 'lodel_id')})
@@ -109,6 +112,9 @@ def admin_create(request):
         if 'lodel_id' in datas:
             raise HttpException(400)
         try:
+            for in_value in datas:
+                if datas[in_value] == '':
+                    datas[in_value] = None
             new_uid = target_leo.insert(
                 { f:datas[f] for f in datas if f != 'classname'})
         except LeApiDataCheckErrors as e:

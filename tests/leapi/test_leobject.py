@@ -18,8 +18,7 @@ class LeObjectDummyTestCase(unittest.TestCase):
         dyncode.Person(
             lodel_id = '1',
             lastname = "Foo",
-            firstname = "Bar",
-            alias = "Foobar")
+            firstname = "Bar")
 
     def test_init_abstract(self):
         """ Testing init abstract LeObject childs """
@@ -86,7 +85,7 @@ but invalid name %s was given" % badname):
         """ Testing fieldnames() accessor method """
         fnames = dyncode.Person.fieldnames(False)
         self.assertEqual(set(fnames),
-            {'lastname', 'linked_texts', 'firstname', 'alias'})
+            {'lastname', 'linked_texts', 'firstname'})
 
     def test_bad_insert(self):
         """ Insert with bad arguments """
@@ -179,7 +178,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             with patch.object(
                 LeObject, 'datas', return_value = {
                     'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
-                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+                    'fullname': 'Foo Bar' }) as mock_datas:
             
                 inst = dyncode.Person(
                     lodel_id = 1, firstname = "foo", lastname = "bar")
@@ -195,14 +194,14 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             with patch.object(
                 LeObject, 'datas', return_value = {
                     'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
-                    'fullname': 'Foo Bar', 'alias': None }) as mock_datas:
+                    'fullname': 'Foo Bar' }) as mock_datas:
             
                 inst = dyncode.Person(
                     lodel_id = 1, firstname = "foo", lastname = "bar")
                 inst.update()
                 mock_update.assert_called_once_with({
                     'lodel_id': 1, 'firstname': 'foo', 'lastname': 'bar',
-                    'fullname': 'Foo Bar', 'alias': None })
+                    'fullname': 'Foo Bar' })
                     
     
     def test_get(self):
@@ -212,7 +211,7 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             'query_filters': ['lodel_id = 1'],
             'field_list': ['firstname'],
             'order': ['firstname'],
-            'group': ['alias'],
+            'group': ['lastname'],
             'limit': 42,
             'offset': 24}
 
@@ -233,7 +232,6 @@ class LeObjectQueryMockTestCase(unittest.TestCase):
             'firstname': 'foo',
             'lastname': 'bar',
             'fullname': 'foo bar',
-            'alias': None,
             'classname': 'Person'}]
         with patch.object(
             LeGetQuery, 'execute', return_value = ret_val) as mock_execute:
