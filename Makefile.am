@@ -27,7 +27,7 @@ doc_graphviz:
 
 do_subst = sed -e 's,\[@\]INSTALLMODEL_DIR\[@\],$(install_model_dir),g' 
 
-runtest: runtest.sh
+runtest: ./runtest.sh
 	$(do_subst) < $(srcdir)/runtest.sh > runtest
 	chmod +x runtest
 
