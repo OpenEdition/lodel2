@@ -21,15 +21,14 @@ dbname=lodel2_$instance
 dbuser=admin 
 dbpwd=pass
 
-
-
 M=$(($N*20))
 for i in `eval echo {1..$M}`;
 do
     # Classe Person
     LN=$(lenmax=20;wcount=1; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     FN=$(lenmax=20;wcount=1; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
-    curl -A "Mozilla/5.0" -L -s -d "field_input_lastname=$LN&field_input_firstname=$FN&classname=Person" http://$host/$instance/admin/create?classname=Person
+    $LC=''
+    curl -A "Mozilla/5.0" -L -s -d "field_input_lastname=$LN&field_input_firstname=$FN&field_input_linked_containers=$LC&classname=Person" http://$host/$instance/admin/create?classname=Person
     
     # Classe User
     PWD='pwgen 10'
@@ -124,15 +123,15 @@ do
             ATCT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             ATCST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-            LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-            ATCTXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+            LNG=32000; #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+            ATCTXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
             JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
             AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
             ATCDATE=$AA'-'$M'-'$JJ
             LNG=$(</dev/urandom tr -dc 0-9 | head -c4;echo;)
             ATCFN=$(lenmax=$LNG;wcount=2000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
-            nb=$(( ( RANDOM % 10 )  + 1 ))
+            nb=$(( ( $RANDOM % 10 )  + 1 ))
             entries=$(printf "use $dbname\nDBQuery.shellBatchSize = 30000\n db.Entry.find({}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd  | sed "1,4d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" | shuf | head -n $nb;)
             tmp=""
             for i in $entries
@@ -145,7 +144,7 @@ do
                 fi
             done
             ATCLE=$tmp
-            nb=$(( ( RANDOM % 10 )  + 1 ))
+            nb=$(( ( $RANDOM % 10 )  + 1 ))
             persons=$(printf "use $dbname\nDBQuery.shellBatchSize = 30000\n db.Person.find({}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd  | sed "1,4d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" | shuf | head -n $nb;)
             tmp=""
             for i in $persons
@@ -176,8 +175,8 @@ do
             RET=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             REST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-            LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-            RETXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+            LNG=32000 #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+            RETXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
             JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
             AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
@@ -250,8 +249,8 @@ do
                 ATCT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 ATCST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-                LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-                ATCTXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                LNG=32000 #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+                ATCTXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
                 JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
                 AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
@@ -302,8 +301,8 @@ do
                 RET=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 REST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-                LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-                RETXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                LNG=32000 #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+                RETXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
                 JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
                 AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
@@ -376,8 +375,8 @@ do
                     ATCT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     ATCST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-                    LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-                    ATCTXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                    LNG=32000 #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+                    ATCTXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
                     JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
                     AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
@@ -427,8 +426,8 @@ do
                     RET=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     REST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-                    LNG=$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
-                    RETXT=$(lenmax=$LNG;wcount=20000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                    LNG=32000 #$(</dev/urandom tr -dc 0-9 | head -c5;echo;)
+                    RETXT=$(lenmax=$LNG;wcount=12000; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                     M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
                     JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28' | head -n 1)
                     AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)

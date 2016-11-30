@@ -12,6 +12,12 @@ from ...exceptions import *
 ##@brief Controller's function to list all types (classes) of the editorial model
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
+def collections(request):
+    return get_response('listing/collections.html', my_classes=dyncode)
+
+##@brief Controller's function to list all types (classes) of the editorial model
+# @param request : the request (get or post)
+# @note the response is given in a html page called in get_response_function
 def list_classes(request):
     if 'allclasses' in request.GET:
         allclasses = request.GET['allclasses']

@@ -316,7 +316,18 @@ container.new_field(    'linked_directors',
                     data_handler = 'list',
                     nullable = True,
                     allowed_classes = [person],
-                    back_reference = ('person', 'linked_texts')
+                    back_reference = ('person', 'linked_containers')
+)
+person.new_field(   'linked_containers',
+                    display_name = {
+                        'eng': 'Director of ',
+                        'fre': 'Directeur de ',
+                    },
+                    group = editorial_group,
+                    data_handler = 'list',
+                    nullable = True,
+                    allowed_classes = [person],
+                    back_reference = ('container', 'linked_directors')
 )
 container.new_field(    'description',
                     display_name = {

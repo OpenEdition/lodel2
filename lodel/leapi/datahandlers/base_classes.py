@@ -331,10 +331,17 @@ class Reference(DataHandler):
         target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
         value = datas[fname]
         if (value is not None):
-            obj = target_class.get([(target_uidfield, '=', value)])
-            if len(obj) == 0:
-                logger.warning('Object referenced does not exist')
-                return False
+            if hasattr(value, "__iter__"):
+                for val in value:
+                    obj = target_class.get([(target_uidfield, '=', val)])
+                    if len(obj) == 0:
+                        logger.warning('Object referenced does not exist')
+                        return False
+            else:
+                obj = target_class.get([(target_uidfield, '=', value)])
+                if len(obj) == 0:
+                    logger.warning('Object referenced does not exist')
+                    return False
         return True
 
 
