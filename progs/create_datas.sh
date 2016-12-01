@@ -27,7 +27,7 @@ do
     # Classe Person
     LN=$(lenmax=20;wcount=1; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     FN=$(lenmax=20;wcount=1; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
-    $LC=''
+    LC=''
     curl -A "Mozilla/5.0" -L -s -d "field_input_lastname=$LN&field_input_firstname=$FN&field_input_linked_containers=$LC&classname=Person" http://$host/$instance/admin/create?classname=Person
     
     # Classe User

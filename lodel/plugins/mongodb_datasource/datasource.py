@@ -132,13 +132,11 @@ class MongoDbDatasource(AbstractDatasource):
             filters = list()
         if relational_filters is None:
             relational_filters = list()
-
         collection_name = object_collection_name(target)
         collection = self.database[collection_name]
-
+        
         query_filters = self.__process_filters(
             target, filters, relational_filters)
-        
         query_result_ordering = None
         if order is not None:
             query_result_ordering = utils.parse_query_order(order)
@@ -354,12 +352,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         #       },
         #   LeoClass2: {...
         #
-        logger.warning("Update BR called on %s filtered by (%s,%s) with datas \
-%s" % (target, tuid, old_datas, new_datas))
         upd_dict = {}
-        logger.warning(target.reference_handlers().items())
         for fname, fdh in target.reference_handlers().items():
-            logger.warning("BR : %" % (fname))
             oldd = old_datas is not None and fname in old_datas and \
                 (not hasattr(fdh, 'default') or old_datas[fname] != fdh.default) \
                 and not old_datas[fname] is None

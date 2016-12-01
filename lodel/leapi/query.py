@@ -107,6 +107,7 @@ class LeFilteredQuery(LeQuery):
         self.subqueries = None
         query_filters = [] if query_filters is None else query_filters
         self.set_query_filter(query_filters)
+        
     
     ##@brief Abstract FilteredQuery execution method
     #
@@ -122,7 +123,6 @@ class LeFilteredQuery(LeQuery):
                 (rfield, ' in ', subq_res))
         self._query_filter = (std_filters, rel_filters)
         try:
-
             filters, rel_filters = self._query_filter
             res = super().execute(datas)
         except Exception as e:
@@ -205,7 +205,6 @@ class LeFilteredQuery(LeQuery):
                     del(filters_orig[i])
         # Sets _query_filter attribute of self query
         self._query_filter = (filters_orig, result_rel_filters)
-
         #Sub queries creation
         subq = list()
         for ds, rfilters in other_ds_filters.items():
@@ -285,7 +284,6 @@ class LeFilteredQuery(LeQuery):
                     filters.append(self.split_filter(fil))
                 except ValueError as e:
                     err_l["filter %d" % i] = e
-
         for field, operator, value in filters:
             err_key = "%s %s %s" % (field, operator, value) #to push in err_l
             # Spliting field name to be able to detect a relational field
@@ -345,6 +343,7 @@ field to use for the relational filter"
                     err_l[err_key] = ret
                     continue
                 else:
+                    value, error = field_datahandler.check_data_value(value)
                     rel_filters.append((ret, operator, value))
             else:
                 value_orig = value
@@ -375,7 +374,6 @@ field to use for the relational filter"
             matches.group('field'),
             re.sub(r'\s', ' ', matches.group('operator'), count=0),
             matches.group('value').strip())
-
         result = [r.strip() for r in result]
         for r in result:
             if len(r) == 0:
