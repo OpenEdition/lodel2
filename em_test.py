@@ -326,7 +326,7 @@ person.new_field(   'linked_containers',
                     group = editorial_group,
                     data_handler = 'list',
                     nullable = True,
-                    allowed_classes = [person],
+                    allowed_classes = [container],
                     back_reference = ('container', 'linked_directors')
 )
 container.new_field(    'description',

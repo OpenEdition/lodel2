@@ -164,6 +164,11 @@ class LeObject(object):
     #@return <code>{'fieldname': datahandler, ...}</code>
     @classmethod
     def reference_handlers(cls, with_backref = True):
+        for fname, fdh in cls.fields(True).items():
+            logger.warning(fdh)
+            if issubclass(fdh.__class__, Reference):
+                logger.warning("%s est une référence" % (fname))
+                
         return {    fname: fdh 
                     for fname, fdh in cls.fields(True).items()
                     if issubclass(fdh.__class__, Reference) and \

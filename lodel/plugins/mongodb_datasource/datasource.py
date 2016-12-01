@@ -297,6 +297,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             filters, relational_filters, new_datas = None, old_datas_l = None):
         #Getting all the UID of the object that will be deleted in order
         #to update back_references
+        logger.warning("Update with BR called on %s filtered by (%s,%s) with datas \
+%s" % (target, filters, relational_filters, new_datas))
         if old_datas_l is None:
             mongo_filters = self.__process_filters(
                 target, filters, relational_filters)
@@ -352,8 +354,12 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         #       },
         #   LeoClass2: {...
         #
+        logger.warning("Update BR called on %s filtered by (%s,%s) with datas \
+%s" % (target, tuid, old_datas, new_datas))
         upd_dict = {}
+        logger.warning(target.reference_handlers().items())
         for fname, fdh in target.reference_handlers().items():
+            logger.warning("BR : %" % (fname))
             oldd = old_datas is not None and fname in old_datas and \
                 (not hasattr(fdh, 'default') or old_datas[fname] != fdh.default) \
                 and not old_datas[fname] is None
