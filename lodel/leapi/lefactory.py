@@ -134,7 +134,7 @@ def generate_classes(model):
         # Determine parent for inheritance
         if len(em_class.parents) > 0:
             for parent in em_class.parents:
-               parents.append(LeObject.name2objname(parent.uid))
+                parents.append(LeObject.name2objname(parent.uid))
         else:
             parents.append('LeObject')
         datasource_name = em_class.datasource
