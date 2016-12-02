@@ -18,6 +18,13 @@ def collections(request):
 ##@brief Controller's function to list all types (classes) of the editorial model
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
+def issue(request):
+    lodel_id = request.GET['lodel_id']
+    return get_response('listing/issue.html', lodel_id=lodel_id[0], my_classes=dyncode )
+
+##@brief Controller's function to list all types (classes) of the editorial model
+# @param request : the request (get or post)
+# @note the response is given in a html page called in get_response_function
 def list_classes(request):
     if 'allclasses' in request.GET:
         allclasses = request.GET['allclasses']

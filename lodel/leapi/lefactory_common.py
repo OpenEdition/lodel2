@@ -25,6 +25,25 @@ def lowername2class(name):
         return False
     return new_dict[name]
 
+##@brief Return the list of authors of a publication
+
+def get_authors(publication):
+    texts = publication.data('linked_texts')
+    text_objects = Text.get(("%s in (%s)") % ("lodel_id", str(texts).strip('[]')))
+    #authors = [str(text.data('linked_persons')).strip('[]') for text in text_objects]
+    authors = list()
+    for text in text_objects:
+        for lp in text.data('linked_persons'):
+            authors.append(lp)
+    parts = publication.data('linked_parts')
+    part_objects = Part.get(("%s in (%s)") % ("lodel_id", str(parts).strip('[]')))
+    for part in part_objects:
+        for elem in get_authors(part):
+            authors.append(elem)
+
+    authors_list = list()
+    [authors_list.append(author) for author in authors if not author in authors_list]
+    return authors_list
 
 ##@brief Trigger dynclasses datasources initialisation
 @LodelHook("lodel2_plugins_loaded")
