@@ -20,7 +20,7 @@
     <ul>
      {% for text in texts %}
           <li>
-              <h3><a href="/{{ root_url }}/show_object?classname={{ text.data('classname') }}&lodel_id={{ text.uid() }}"> {{ text.data('title') }}</a></h3>
+              <h3><a href="/{{ root_url }}/show_object?classname={{ text.data('classname') }}&lodel_id={{ text.uid() }}" target="_blank" > {{ text.data('title') }}</a></h3>
               <h4>{{ text.data('subtitle') }}</h4>
               {% set authors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], text.data('linked_persons')|join(','))) %}
               <p>Authors : {% for author in authors %} {{ author.data('firstname')}} {{ author.data('lastname')}} ; {% endfor %} </p>
@@ -34,7 +34,7 @@
 <ul>
      {% for part in parts %}
           <li>
-              <h3><a href="/{{ root_url }}/show_object?classname{{ part.data('classname') }}=&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
+              <h3><a href="/{{ root_url }}/show_object?classname={{ part.data('classname') }}&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
               <h4>{{ part.data('subtitle') }}</h4>
               {% set directors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], part.data('linked_directors')|join(','))) %}
               <p>Directors : {% for director in directors %} {{ director.data('firstname')}} {{ director.data('lastname')}} ; {% endfor %} </p>
@@ -57,7 +57,7 @@
                 <ul>
                      {% for part in ss_parts %}
                           <li>
-                              <h3><a href="/{{ root_url }}/show_object?classname{{ part.data('classname') }}=&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
+                              <h3><a href="/{{ root_url }}/show_object?classname={{ part.data('classname') }}&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
                               <h4>{{ part.data('subtitle') }}</h4>
                               {% set directors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], part.data('linked_directors')|join(','))) %}
                               <p>Directors : {% for director in directors %} {{ director.data('firstname')}} {{ director.data('lastname')}} ; {% endfor %} </p>

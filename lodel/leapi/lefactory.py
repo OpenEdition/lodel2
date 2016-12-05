@@ -62,7 +62,6 @@ def common_code():
                 res += line
     return res
     
-
 ##@brief return A list of EmClass sorted by dependencies
 #
 # The first elts in the list depends on nothing, etc.
