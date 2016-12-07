@@ -9,7 +9,7 @@ from ...exceptions import *
 ##@brief These functions are called by the rules defined in ../urls.py
 ## To browse the editorial model
 def index(request):
-    return get_response('listing/collections.html', my_classes=dyncode')
+    return get_response('listing/collections.html', my_classes=dyncode)
 
 ##@brief Controller's function to list all types (classes) of the editorial model
 # @param request : the request (get or post)
