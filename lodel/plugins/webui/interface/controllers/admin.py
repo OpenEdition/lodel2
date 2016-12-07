@@ -47,7 +47,7 @@ def admin_update(request):
         leo = target_leo.get_from_uid(datas['lodel_id'])
         if leo is None:
             raise HttpException(404,
-                'No %s with id %d' % (target_leo.__name__, datas['lodel_id']))
+                'No %s with id %s' % (target_leo.__name__, datas['lodel_id']))
         try:
             leo.update(
                 { f:datas[f] for f in datas if f not in ('classname', 'lodel_id')})
