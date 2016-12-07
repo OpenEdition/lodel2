@@ -27,9 +27,6 @@ def get_component_html(type='text', params={}):
     template_loader = TemplateLoader()
     return template_loader.render_to_html(template_file='components/components.html', template_vars=params)
 
-def index(request):
-    return get_response('index/index.html')
-
 
 def not_found(request):
     return get_response('errors/404.html', status_code=404)
