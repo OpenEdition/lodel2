@@ -86,15 +86,6 @@ do
 done
 
 
-logdir="/tmp/lodel2_cbl_logs"
-if [ -d "$logdir" ]
-then
-	echo "WARNING : $logdir allready exists. It's a better idea to delete it before running this script again"
-	echo "waiting 3s"
-	sleep 3
-fi
-mkdir -p $logdir
-
 #curl_options='--silent -o /dev/null -s -w %{http_code}:%{time_connect}:%{time_starttransfer}:%{time_total}\n'
 curl_options='--silent -o /dev/null -s -w %{url_effective};%{http_code};%{time_connect};%{time_starttransfer};%{time_total}\n'
 curl_debug_opt='-v -w %{url_effective};%{http_code};%{time_connect};%{time_starttransfer};%{time_total}\n'
@@ -128,8 +119,13 @@ mass_creation() {
 	instance_name=$1
 	iteration_count=$2
 	base_uri=$(_base_uri $1)
-	logfile="$logdir/mass_creation_${instance_name}.log"
 	cls_list_file=$(fetch_all_classes $1)
+
+	if [ -z "$(cat $cls_list_file)" ]
+	then
+		echo "Failed to fetch class list for instance $1. Abording..." >&2
+		exit
+	fi
 
 	if [ "$iteration_count" -le "0" ]
 	then
@@ -139,10 +135,9 @@ mass_creation() {
 	for i in $(seq $iteration_count)
 	do
 		cls=$(shuf -n1 $cls_list_file)
-		$curcurl -d "$(curl_opt_create_$cls)" "${base_uri}$(uri_create $cls)" | tee -a $logfile
+		echo "${base_uri}$(uri_create $cls) POST $(curl_opt_create_$cls)"
 	done
-
-	rm -v $cls_list_file
+	rm -v $cls_list_file >&2
 }
 
 mass_link_edit() {
@@ -152,7 +147,6 @@ mass_link_edit() {
 	instance_name=$1
 	iteration_count=$2
 	base_uri=$(_base_uri $1)
-	logfile="$logdir/mass_link_edit_${instance_name}.log"
 	cls_list_file=$(fetch_all_classes $1)
 
 	for cls in $(cat $cls_list_file)
@@ -171,7 +165,7 @@ mass_link_edit() {
 					ltext_count=$(shuf -i1-5 -n1)
 					alias_param=$(head -n $(expr $alias_count \* $i) $person_ids| tail -n$alias_count|tr -s "\n" "," | sed 's/,$//')
 					txt_param=$(head -n $(expr $ltext_count \* $i) $text_ids | tail -n$ltext_count|tr -s "\n" "," | sed 's/,$//')
-					$curcurl -d "$(curl_opt_create_$cls $alias_param $txt_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+					echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $alias_param $txt_param)&uid=$cur_id"
 				done
 				rm -v $text_ids $person_ids $section_ids $subsection_ids
 				;;
@@ -184,7 +178,7 @@ mass_link_edit() {
                     cur_id=$(shuf -n1 $collections_ids)
                     publications_count=$(shuf -i1-5 -n1)
                     publication_param=$(head -n $(expr $publications_count \* $i) $publication_ids| tail -n$publications_count|tr -s "\n" ",")
-                    $curcurl -d "$(curl_opt_create_$cls $publication_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+		    echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $publication_param)&uid=$cur_id"
                 done
                 rm -v $collections_ids $publication_ids
                 ;;
@@ -197,9 +191,9 @@ mass_link_edit() {
                     cur_id=$(shuf -n1 $publication_ids)
                     collections_count=$(shuf -i1-5 -n1)
                     collection_param=$(head -n $(expr $collections_count \* $i) $collection_ids| tail -n$collections_count|tr -s "\n" ",")
-                    $curcurl -d "$(curl_opt_create_$cls $collection_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+		    echo "$base_uri/admin.update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $collection_param)&uid=$cur_id"
                 done
-                rm -v $publication_ids $collection_ids
+                rm -v $publication_ids $collection_ids >&2
                 ;;
 			
 			Section)
@@ -213,9 +207,9 @@ mass_link_edit() {
                     person_count=$(shuf -i1-5 -n1)
                     child_param=$(head -n $(expr $child_count \* $i) $child_ids| tail -n$child_count|tr -s "\n" ",")
                     person_param=$(head -n $(expr $person_count \* $i) $person_ids| tail -n$person_count|tr -s "\n" ",")
-                    $curcurl -d "$(curl_opt_create_$cls $child_param $person_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile                    
+		    echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $child_param $person_param)&uid=$cur_id"
                 done
-                rm -v $section_ids $child_ids $person_ids
+                rm -v $section_ids $child_ids $person_ids >&2
                 ;;
                 
             Subsection)
@@ -234,16 +228,16 @@ mass_link_edit() {
                     child_param=$(head -n $(expr $child_count \* $i) $child_ids| tail -n$child_count|tr -s "\n" ",")
                     parent_param=$(head -n $(expr $parent_count \* $i) $parent_ids| tail -n$parent_count|tr -s "\n" ",")
                     person_param=$(head -n $(expr $person_count \* $i) $persons_ids| tail -n$person_count|tr -s "\n" ",")
-                    $curcurl -d "$(curl_opt_create_$cls $child_param $person_param $parent_param)&uid=$cur_id" "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id" | tee -a $logfile
+		    echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $child_param $person_param $parent_param)&uid=$cur_id"
                 done
-                rm -v $subsection_ids $parent_ids $section_ids $persons_ids
+                rm -v $subsection_ids $parent_ids $section_ids $persons_ids >&2
                 ;;
 			*)
 				;;
 			
 		esac
 	done
-	rm -v $cls_list_file
+	rm -v $cls_list_file >&2
 }
 
 mass_deletion() {
@@ -253,7 +247,6 @@ mass_deletion() {
 	instance_name=$1
 	iteration_count=$2
 	base_uri=$(_base_uri $1)
-	logfile="$logdir/mass_deletion_${instance_name}.log"
 	cls_list_file=$(fetch_all_classes $1)
 	
 	for cls in $(cat $cls_list_file)
@@ -269,7 +262,7 @@ mass_deletion() {
 		for i in $(seq $max_iter)
 		do
 			id=$(tail -n $i $id_list_file | head -n1)
-			$curcurl "${base_uri}/admin/delete?classname=$cls&lodel_id=$id" | tee -a $logfile
+			echo "${base_uri}/admin/delete?classname=$cls&lodel_id=$id"
 		done
 		rm -v $id_list_file
 	done
@@ -281,6 +274,13 @@ fetch_all_classes() {
 	#$1 is intance name
 	cls_list_file=$($cmktemp)
 	$curl_raw "$(_base_uri $1)/list_classes" | grep -v Abstract |sed -nE 's/^ *<li> +<a href="show_class([^"]+)".*$/\1/p'|cut -d"=" -f2 > $cls_list_file
+	if [ -z "$(cat $cls_list_file)" ]
+	then
+		echo "Unable to fetch class list for $1" >&2
+		echo "Request was : $curl_raw '$(_base_uri $1)/list_classes'" >&2
+		rm $cls_list_file
+		exit 1
+	fi
 	echo $cls_list_file
 }
 
@@ -353,10 +353,30 @@ run_bg_with_param() {
 	rm -v $pidlist
 }
 
-run_bg_with_param "mass_creation" $instance_list $n_create
-run_bg_with_param "mass_link_edit" $instance_list $n_edit
-run_bg_with_param "mass_deletion" $instance_list $n_delete
+get_queries_with_params() {
+	#$1 is the function name to run
+	#$2 is the instance_list filename
+	#other parameters are given to the function
+	fun=$1
+	instance_list=$2
+	shift;shift
+	counter=0
+	for iname in $(cat $instance_list| sort)
+	do
+		echo "Running $fun $iname $@" >&2
+		beg=$(date "+%s")
+		$fun $iname $@
+		tsecs=$(expr $(date "+%s") - $beg)
+		left=$(expr $(cat $instance_list |wc -l) - $counter)
+		counter=$(expr $counter + 1)
+		tleft=$(expr $left \* $tsecs)
+		percent_done=$(echo "2k ${counter}.0 100.0 * $(cat $instance_list |wc -l).0 2k/ f" | dc)
+		echo -e "Done in ${tsecs}s\t$fun ${percent_done}% done ~$tleft secs" >&2
 
-echo ""
-echo "Logs can be found in $logdir"
+	done | shuf
+}
+
+get_queries_with_params "mass_creation" $instance_list $n_create
+get_queries_with_params "mass_link_edit" $instance_list $n_edit
+get_queries_with_params "mass_deletion" $instance_list $n_delete
 
