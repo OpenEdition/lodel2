@@ -28,7 +28,7 @@ def get_component_html(type='text', params={}):
     return template_loader.render_to_html(template_file='components/components.html', template_vars=params)
 
 def index(request):
-    return get_response('listing/collections')
+    return get_response('index/index.html')
 
 
 def not_found(request):
