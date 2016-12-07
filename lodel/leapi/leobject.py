@@ -17,6 +17,7 @@ LodelContext.expose_modules(globals(), {
         'LeApiQueryErrors'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.exceptions': ['LodelFatalError'],
     'lodel.plugin.hooks': ['LodelHook'],
     'lodel.plugin': ['Plugin', 'DatasourcePlugin'],
     'lodel.leapi.datahandlers.base_classes': ['DatasConstructor', 'Reference']})
@@ -166,7 +167,7 @@ class LeObject(object):
     def reference_handlers(cls, with_backref = True):
         return {    fname: fdh 
                     for fname, fdh in cls.fields(True).items()
-                    if issubclass(fdh.__class__, Reference) and \
+                    if fdh.is_reference() and \
                         (not with_backref or fdh.back_reference is not None)}
     
     ##@brief Return a LeObject child class from a name

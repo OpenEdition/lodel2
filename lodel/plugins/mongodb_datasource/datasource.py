@@ -303,7 +303,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             old_datas_l = self.__collection(target).find(
                 mongo_filters)
             old_datas_l = list(old_datas_l)
-            
+        
         uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
         for old_datas in old_datas_l:
             self.__update_backref(
@@ -366,7 +366,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 continue
             bref_cls = fdh.back_reference[0]
             bref_fname = fdh.back_reference[1]
-            if issubclass(fdh.__class__, MultipleRef):
+            if not fdh.is_singlereference():
                 #fdh is a multiple ref. So the update preparation will be
                 #divided into two loops :
                 #- one loop for deleting old datas
@@ -479,7 +479,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         newdd = 'new' in values
         if bref_val is None:
             bref_val = bref_dh.empty()
-        if issubclass(bref_dh.__class__, MultipleRef):
+        if not bref_dh.is_singlereference():
             if oldd and newdd:
                 if tuid not in bref_val:
                     raise MongoDbConsistencyError("The value we want to \
@@ -546,7 +546,7 @@ value : in %s field %s" % (bref_leo,fname))
             raise MongoDbConsistencyError("Unable to get the object we make \
 reference to : %s with uid = %s" % (bref_cls, repr(uidv)))
         bref_dh = bref_leo.data_handler(bref_fname)
-        if not isinstance(bref_dh, Reference):
+        if not bref_dh.is_reference():
             raise LodelFatalError("Found a back reference field that \
 is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
         bref_val = bref_leo.data(bref_fname)
