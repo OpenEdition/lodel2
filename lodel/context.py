@@ -123,6 +123,7 @@ site_id set to None when we are in MULTISITE beahavior")
                 self.__class__._current = self.__class__._contexts = self
                 self.__pkg_name = 'lodel'
                 self.__package = lodel
+                self.__instance_path = os.getcwd()
                 return
         else:
             #Multisite instanciation
@@ -145,6 +146,7 @@ instance path")
                 """
                 warnings.warn("It can be a really BAD idea to create a \
 a context without a path......")
+                self.__instance_path = None
             else:
                 self.__instance_path = os.path.realpath(instance_path)
             #Importing the site package to trigger its creation

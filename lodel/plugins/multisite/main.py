@@ -75,16 +75,23 @@ class LodelWSGIHandler(wsgiref.simple_server.WSGIRequestHandler):
         self.request.close()
         super().close()
 
-##@brief WSGIServer implementing ForkingTCPServer.
-#
-#Same features than wsgiref.simple_server.WSGIServer but process each requests
-#in a child process
-class ForkingWSGIServer(
-        wsgiref.simple_server.WSGIServer, socketserver.ForkingTCPServer):
-    
+   
+class CustomForkingTCPServer(socketserver.ForkingTCPServer):
     ##@brief static property indicating the max number of childs allowed
     max_children = 40
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.__class__.active_children is None:
+            self.__class__.active_childer = set()
+    
+    ##@brief Implements max_children limitations
+    def process_request(self, request, client_address):
+        while self.active_children is not None and \
+                len(self.active_children) > self.__class__.max_children:
+            self.collect_children()
+        super().process_request(request, client_address)
+        
     ##@brief Custom reimplementation of shutdown method in order to ensure
     #that we close all listening sockets
     #
@@ -106,6 +113,15 @@ class ForkingWSGIServer(
                 except ChildProcessError:
                     self.active_children.discard(pid)
         self.server_close()
+
+##@brief WSGIServer implementing ForkingTCPServer.
+#
+#Same features than wsgiref.simple_server.WSGIServer but process each requests
+#in a child process
+class ForkingWSGIServer(
+        wsgiref.simple_server.WSGIServer, CustomForkingTCPServer):
+    pass
+ 
 
 ##@brief utility function to extract site id from an url
 def site_id_from_url(url):

@@ -37,6 +37,7 @@ test -f $conffile || badconf
 . $conffile
 test -z "$MONGODB_ADMIN_USER" && badconf
 test -z "$MONGODB_ADMIN_PASSWORD" && badconf
+$MONGODB_HOST=${MONGODB_HOST:="127.0.0.1"}
 
 
 if [ -z "$fixed_name" ]
@@ -65,17 +66,17 @@ fi
 
 if [ -f "/etc/mongodb.conf" ]
 then
-	if cat /etc/mongodb.conf  |grep -E '^ *auth *= *true *$' >/dev/null
-	then
-		echo "OK, auth enabled"
-	else
-		echo "WARNING : auth seems disabled on mongod !" >&2
-	fi
+        if cat /etc/mongodb.conf  |grep -E '^ *auth *= *true *$' >/dev/null
+        then
+                echo "OK, auth enabled"
+        else
+                echo "WARNING : auth seems disabled on mongod !" >&2
+        fi
 else
-	echo "/etc/mongodb.conf not found. Unable to check if auth is on"
+        echo "/etc/mongodb.conf not found. Unable to check if auth is on"
 fi
 
-echo "exit" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin &>/dev/null || mongodb_connfail
+echo "exit" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin &>/dev/null || mongodb_connfail
 
 if [ "$1" == 'purgedb' ]
 then
@@ -88,9 +89,9 @@ then
 	read rep
 	if [ "$rep" = "Y" ]
 	then
-		for dbname in $(echo "show dbs" | mongo -u admin -p pass admin  |grep "^$MONGODB_DB_PREFIX"|cut -f1)
+		for dbname in $(echo "show dbs" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin |grep "^$MONGODB_DB_PREFIX"|cut -f1)
 		do 
-			echo -e "use $dname\ndb.dropDatabase()\nexit\n" | mongo -u $MONGODB_ADMIN_USER -p $MONGODB_ADMIN_PASSWORD --quiet --authenticationDatabase admin $dbname && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
+			echo -e "use $dname\ndb.dropDatabase()\nexit\n" | mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --quiet --authenticationDatabase admin && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
 		done
 		echo "Done."
 	else
@@ -139,13 +140,13 @@ do
 	dbname="${MONGODB_DB_PREFIX}_$iname"
 	dbuser="lodel2_$iname"
 	dbpass=$($rnd_pass_cmd)
-	mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" admin <<EOF
+	mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin <<EOF
 use $dbname
 db.addUser({user:"$dbuser", pwd:"$dbpass", roles:["readWrite", "dbAdmin"]})
 exit
 EOF
 	#Append created db to instance conf
-	slim -n $iname -s --datasource_connectors mongodb --host localhost --user $dbuser --password $dbpass --db_name $dbname || slim_fails "configuring the instance's datasource"
+	slim -n $iname -s --datasource_connectors mongodb --host $MONGODB_HOST --user $dbuser --password $dbpass --db_name $dbname || slim_fails "configuring the instance's datasource"
 
 done
 
