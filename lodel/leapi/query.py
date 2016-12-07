@@ -341,6 +341,7 @@ field to use for the relational filter"
                     err_l[err_key] = ret
                     continue
                 else:
+                    value, error = field_datahandler.check_data_value(value)
                     rel_filters.append((ret, operator, value))
             else:
                 value_orig = value
