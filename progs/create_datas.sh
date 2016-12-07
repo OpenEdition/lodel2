@@ -116,7 +116,7 @@ do
         issue=$(printf "use $dbname\n db.Issue.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" )
        
         # On entre les textes correspondants aux numéros indépendemment des parts
-        NBT=$(shuf '2' '3' '4' '5' '6' '8' | head -n 1)
+        NBT=$(shuf -e '2' '3' '4' '5' '6' '8' | head -n 1)
         for i in `eval echo {1..$NBT}`;
         do
             # Classe Article, champs à remplir : title, subtitle, language, text, pub_date, footnotes, linked_entries, linked_persons, linked_container, abstract, appendix, bibliography, author_note
@@ -168,7 +168,7 @@ do
             ATCAN=$(lenmax=$LNG;wcount=200; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             curl -A "Mozilla/5.0" -L -s -d "field_input_title=$ATCT&field_input_subtitle=$ATCST&field_input_language=$LG&field_input_text=$ATCTXT&field_input_pub_date=$ATCDATE&field_input_footnotes=$ATCFN&field_input_linked_entries=$ATCLE&field_input_linked_persons=$ATCLP&field_input_linked_container=$ATCLC&field_input_abstract=$ATCAB&field_input_appendix=$ATCAP&field_input_bibliography=$ATCBI&field_input_author_note=$ATCAN&classname=Article" http://$host/$instance/admin/create?classname=Article
         done
-        NBR=$(shuf '0' '2' '1' | head -n 1)
+        NBR=$(shuf -e '0' '2' '1' | head -n 1)
         for i in `eval echo {1..$NBR}`;
         do
         # Classe Review, champs à remplir :  title, subtitle, language, text, pub_date, footnotes, linked_entries, linked_persons, linked_container,reference
@@ -242,7 +242,7 @@ do
             part=$(printf "use $dbname\n db.Part.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" )
        
             # On entre les textes correspondants aux  parts
-            NBPANBT=$(shuf '2' '3' '4' | head -n 1)
+            NBPANBT=$(shuf -e '2' '3' '4' | head -n 1)
             for i in `eval echo {1..$NBPANBT}`;
             do
                 # Classe Article, champs à remplir : title, subtitle, language, text, pub_date, footnotes, linked_entries, linked_persons, linked_container, abstract, appendix, bibliography, author_note
@@ -294,7 +294,7 @@ do
                 ATCAN=$(lenmax=$LNG;wcount=200; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 curl -A "Mozilla/5.0" -L -s -d "field_input_title=$ATCT&field_input_subtitle=$ATCST&field_input_language=$LG&field_input_text=$ATCTXT&field_input_pub_date=$ATCDATE&field_input_footnotes=$ATCFN&field_input_linked_entries=$ATCLE&field_input_linked_persons=$ATCLP&field_input_linked_container=$ATCLC&field_input_abstract=$ATCAB&field_input_appendix=$ATCAP&field_input_bibliography=$ATCBI&field_input_author_note=$ATCAN&classname=Article" http://$host/$instance/admin/create?classname=Article
             done
-            NBPANBR=$(shuf '0' '1' '2' | head -n 1)
+            NBPANBR=$(shuf -e '0' '1' '2' | head -n 1)
             for i in `eval echo {1..$NBPANBR}`;
             do
             # Classe Review, champs à remplir :  title, subtitle, language, text, pub_date, footnotes, linked_entries, linked_persons, linked_container,reference
