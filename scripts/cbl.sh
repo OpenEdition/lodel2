@@ -376,7 +376,7 @@ get_queries_with_params() {
 	done | shuf
 }
 
-get_queries_with_params "mass_creation" $instance_list $n_create
-get_queries_with_params "mass_link_edit" $instance_list $n_edit
-get_queries_with_params "mass_deletion" $instance_list $n_delete
+[ "$n_create" -gt 0 ] && get_queries_with_params "mass_creation" $instance_list $n_create
+[ "$n_edit" -gt 0 ] && get_queries_with_params "mass_link_edit" $instance_list $n_edit
+[ "$n_delete" -gt 0 ] && get_queries_with_params "mass_deletion" $instance_list $n_delete
 
