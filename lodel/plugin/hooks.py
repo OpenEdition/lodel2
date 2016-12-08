@@ -65,10 +65,10 @@ class LodelHook(object):
     @classmethod
     def call_hook(cls, hook_name, caller, payload):
         LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
-        logger.info("Calling hook '%s'" % hook_name)
+        logger.debug("Calling hook '%s'" % hook_name)
         if hook_name in cls._hooks:
             for hook in cls._hooks[hook_name]:
-                logger.info("Lodel hook '%s' calls %s" % (
+                logger.debug("Lodel hook '%s' calls %s" % (
                     hook_name, hook))
                 payload = hook(hook_name, caller, payload)
         return payload
