@@ -167,7 +167,7 @@ mass_link_edit() {
 					txt_param=$(head -n $(expr $ltext_count \* $i) $text_ids | tail -n$ltext_count|tr -s "\n" "," | sed 's/,$//')
 					echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $alias_param $txt_param)&uid=$cur_id"
 				done
-				rm -v $text_ids $person_ids $section_ids $subsection_ids
+				rm -v $text_ids $person_ids $section_ids $subsection_ids >&2
 				;;
             
             Collection)
@@ -180,7 +180,7 @@ mass_link_edit() {
                     publication_param=$(head -n $(expr $publications_count \* $i) $publication_ids| tail -n$publications_count|tr -s "\n" ",")
 		    echo "$base_uri/admin/update?classname=$cls&lodel_id=$cur_id POST $(curl_opt_create_$cls $publication_param)&uid=$cur_id"
                 done
-                rm -v $collections_ids $publication_ids
+                rm -v $collections_ids $publication_ids >&2
                 ;;
 
             Publication)
@@ -264,9 +264,9 @@ mass_deletion() {
 			id=$(tail -n $i $id_list_file | head -n1)
 			echo "${base_uri}/admin/delete?classname=$cls&lodel_id=$id"
 		done
-		rm -v $id_list_file
+		rm -v $id_list_file >&2
 	done
-	rm -v $cls_list_file
+	rm -v $cls_list_file >&2
 }
 
 
@@ -278,7 +278,7 @@ fetch_all_classes() {
 	then
 		echo "Unable to fetch class list for $1" >&2
 		echo "Request was : $curl_raw '$(_base_uri $1)/list_classes'" >&2
-		rm $cls_list_file
+		rm $cls_list_file >&2
 		exit 1
 	fi
 	echo $cls_list_file
@@ -350,7 +350,7 @@ run_bg_with_param() {
 	do
 		wait $pid
 	done
-	rm -v $pidlist
+	rm -v $pidlist >&2
 }
 
 get_queries_with_params() {
