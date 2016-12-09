@@ -91,7 +91,7 @@ then
 	then
 		for dbname in $(echo "show dbs" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin |grep "^$MONGODB_DB_PREFIX"|cut -f1)
 		do 
-			echo -e "use $dname\ndb.dropDatabase()\nexit\n" | mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --quiet --authenticationDatabase admin && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
+			echo -e "use $dbname\ndb.dropDatabase()\nexit\n" | mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --quiet --authenticationDatabase admin && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
 		done
 		echo "Done."
 	else
