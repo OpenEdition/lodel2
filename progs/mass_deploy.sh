@@ -90,8 +90,8 @@ then
 	if [ "$rep" = "Y" ]
 	then
 		for dbname in $(echo "show dbs" | mongo $MONGODB_HOST --quiet -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin |grep "^$MONGODB_DB_PREFIX"|cut -f1)
-		do 
-			echo -e "use $dbname\ndb.dropDatabase()\nexit\n" | mongo $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --quiet --authenticationDatabase admin && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
+		do
+			mongo --host $MONGODB_HOST -u "$MONGODB_ADMIN_USER" -p "$MONGODB_ADMIN_PASSWORD" --quiet --eval 'db.dropDatabase()' --authenticationDatabase admin $dbname && echo "$dbname succesfully deleted" || echo "$dbname deletion fails" >&2
 		done
 		echo "Done."
 	else
