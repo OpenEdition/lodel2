@@ -1,7 +1,12 @@
 {% extends "base.html" %}
+{% import 'macros/show_object.html' as show_object %}
 {% import 'components/components.html' as components %}
 {% import "listing/display_obj.html" as edit %}
 {% set my_class = leapi.name2class(classname) %}
+{% set obj = my_class.get_from_uid(lodel_id) %}
+{% if obj is none %}
+    ERROR <!-- conception failure, the controller should test this before calling the template -->
+{% endif %}
 {% set uidfield = my_class.uid_fieldname()[0] %}
 {% set objects = my_class.get(('%s = %s') % (uidfield, lodel_id)) %}
 {% set obj = objects.pop() %}
@@ -18,26 +23,5 @@
   <li class="active">{{ lodel_id }}</li>
 </ol>
 <h1 class="h1_lodel">Lodel 2 - {{ classname }} with uid {{ lodel_id }}</h1>
-<ul>
-    <!-- To get a component HTML code, it is necessary to call : components.<macro_name>(args) -->
-    {% for fieldname, fieldvalue in obj.fields(include_ro = True).items() %}
-        {% if fieldvalue is not none %}
-           {% if fieldvalue.base_type == 'ref' %}
-                {% if obj.data(fieldname) is iterable %}
-                    <li>{{ fieldname }}
-                    {% set l_classe = fieldvalue.allowed_classes[0] %}
-                        <ul>
-                    {% set linked_objs=l_classe.get(("%s in (%s)") % (l_classe.uid_fieldname()[0], obj.data(fieldname)|join(','))) %}
-                    {% for linked_obj in linked_objs %}
-                            {{ edit.display(linked_obj) }}
-                            <br/>
-                    {% endfor %}
-                        </ul></li>
-                {% endif %}
-            {% else %}
-                <li> {{ fieldname }} : {{ obj.data(fieldname) }} </li>
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-</ul>
+    {{ show_object.object_ul(obj, 2) }}
 {% endblock %}
