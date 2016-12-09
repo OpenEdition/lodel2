@@ -48,11 +48,11 @@ class LeQuery(object):
             self._target_class.prepare_datas(datas) #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
-        LodelHook.call_hook(self._hook_prefix+'_pre',
+        LodelHook.call_hook(self._hook_prefix+'pre',
                                 self._target_class,
                                 datas)
         ret = self._query(datas=datas)
-        ret = LodelHook.call_hook(self._hook_prefix+'_post',
+        ret = LodelHook.call_hook(self._hook_prefix+'post',
                                     self._target_class,
                                     ret)
         return ret
