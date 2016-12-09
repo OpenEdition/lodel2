@@ -450,7 +450,7 @@ issue.new_field(    'abstract',
 issue.new_field(    'collection',
                     display_name = {
                         'eng': 'Collection',
-                        'fre': 'Collectin',
+                        'fre': 'Collection',
                     },
                     data_handler = 'link',
                     nullable = True,
