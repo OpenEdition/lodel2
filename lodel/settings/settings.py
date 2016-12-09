@@ -54,7 +54,7 @@ class MetaSettings(type):
 # settings.
 # Here is the conceptual presentation of Settings class initialization stages :
 #   -# Preloading (sets values like lodel2 library path or the plugins path)
-#   -# Ask a @ref lodel.settings.setting_loader.SettingsLoader to load all 
+#   -# Ask a @ref lodel.settings.settings_loader.SettingsLoader to load all
 #configurations files
 #   -# Fetch the list of plugins in the loaded settings
 #   -# Merge plugins settings specification with the global lodel settings 
@@ -80,7 +80,7 @@ class Settings(object, metaclass=MetaSettings):
     
     ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
-    #@param custom_confspec None | dict : if given overwrite default lodel2
+    #@param custom_confspecs None | dict : if given overwrite default lodel2
     #confspecs
     def __init__(self, conf_dir, custom_confspecs = None):
         self.singleton_assert() # check that it is the only instance
@@ -112,6 +112,7 @@ class Settings(object, metaclass=MetaSettings):
 
     ##@brief An utility method that raises if the singleton is not in a good
     # state
+    #@param cls
     #@param expect_instanciated bool : if True we expect that the class is
     # allready instanciated, else not
     # @throw RuntimeError
@@ -125,6 +126,7 @@ class Settings(object, metaclass=MetaSettings):
                 raise RuntimeError("The Settings class is already started")
 
     ##@brief Saves a new configuration for section confname
+    #@param cls
     #@param confname is the name of the modified section
     #@param confvalue is a dict with variables to save
     #@param validator is a dict with adapted validator

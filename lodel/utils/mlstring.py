@@ -58,6 +58,7 @@ class MlString(object):
             self.values[lang] = val
 
     ##@brief Checks that given lang is valid
+    # @param cls MlString
     # @param lang str : the lang
     @classmethod
     def lang_is_valid(cls, lang):
@@ -75,6 +76,7 @@ class MlString(object):
         cls.__default_lang = lang
     
     ##@brief Return a mlstring loaded from a json string
+    # @param cls MlString
     # @param json_str str : Json string
     @classmethod
     def from_json(cls, json_str):

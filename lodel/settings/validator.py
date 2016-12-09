@@ -58,6 +58,7 @@ class SettingValidator(object):
             raise SettingsValidationError(e)
     
     ##@brief Register a new validator
+    # @param cls SettingValidator
     # @param name str : validator name
     # @param callback callable : the function that will validate a value
     # @param description str
@@ -77,6 +78,7 @@ class SettingValidator(object):
         return copy.copy(cls._description)
 
     ##@brief Create and register a list validator
+    # @param cls SettingValidator
     # @param elt_validator callable : The validator that will be used for validate each elt value
     # @param validator_name str
     # @param description None | str
@@ -100,6 +102,7 @@ class SettingValidator(object):
         return cls(validator_name)
  
     ##@brief Create and register a list validator which reads an array and returns a string
+    # @param cls SettingValidator
     # @param elt_validator callable : The validator that will be used for validate each elt value
     # @param validator_name str
     # @param description None | str
@@ -121,6 +124,7 @@ class SettingValidator(object):
         return cls(validator_name)
     
     ##@brief Create and register a regular expression validator
+    # @param cls SettingValidator
     # @param pattern str : regex pattern
     # @param validator_name str : The validator name
     # @param description str : Validator description
@@ -406,7 +410,10 @@ SettingValidator.create_re_validator(
 ##@brief Append a piece of confspec
 #@note orig is modified during the process
 #@param orig dict : the confspec to update
-#@param upd dict : the confspec to add
+#@param section str : the name of the section to add
+#@param key str : the name of the key to add
+#@param validator SettingValidator : The validator to use for this configuration key
+#@param default : the default value for this configuration key
 #@return new confspec
 def confspec_append(orig, section, key, validator, default):
     if section not in orig:
