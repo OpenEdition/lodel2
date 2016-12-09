@@ -628,8 +628,22 @@ construction and consitency when datas are not complete\n")
     #@todo broken multiple UID
     @classmethod
     def get_from_uid(cls, uid):
+        if cls.uid_fieldname() is None:
+            raise LodelFatalError(
+                "No uid defined for class %s" % cls.__name__)
         uidname = cls.uid_fieldname()[0] #Brokes composed UID
         res = cls.get([(uidname,'=', uid)])
+        
+        #dedoublonnage vu que query ou la datasource est bugué
+        if len(res) > 1:
+            res_cp = res
+            res = []
+            while len(res_cp) > 0:
+                cur_res = res_cp.pop()
+                if cur_res.uid() in [ r.uid() for r in res_cp]:
+                    logger.error("DOUBLON detected in query results !!!")
+                else:
+                    res.append(cur_res)
         if len(res) > 1:
             raise LodelFatalError("Get from uid returned more than one \
 object ! For class %s with uid value = %s" % (cls, uid))
