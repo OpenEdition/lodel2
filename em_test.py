@@ -216,7 +216,8 @@ text.new_field(    'linked_entries',
                     data_handler = 'list',
                     nullable = True,
                     allowed_classes = [entry],
-                    back_reference = ('entry', 'linked_texts')
+                    back_reference = ('entry', 'linked_texts'),
+                    default = None
 )
 entry.new_field(    'linked_texts',
                     display_name = {
@@ -227,7 +228,8 @@ entry.new_field(    'linked_texts',
                     nullable = True,
                     allowed_classes = [text],
                     group = editorial_group,
-                    back_reference = ('text', 'linked_entries')
+                    back_reference = ('text', 'linked_entries'),
+                    default = None
 )
 # Classe article
 article = em.new_class( 'article',
@@ -316,7 +318,8 @@ container.new_field(    'linked_directors',
                     data_handler = 'list',
                     nullable = True,
                     allowed_classes = [person],
-                    back_reference = ('person', 'linked_containers')
+                    back_reference = ('person', 'linked_containers'),
+                    default = None
 )
 person.new_field(   'linked_containers',
                     display_name = {
@@ -327,7 +330,8 @@ person.new_field(   'linked_containers',
                     data_handler = 'list',
                     nullable = True,
                     allowed_classes = [container],
-                    back_reference = ('container', 'linked_directors')
+                    back_reference = ('container', 'linked_directors'),
+                    default = None
 )
 container.new_field(    'description',
                     display_name = {
@@ -375,7 +379,8 @@ publication.new_field(  'linked_texts',
                     nullable = True,
                     allowed_classes = [text],
                     group = editorial_group,
-                    back_reference = ('text', 'linked_container')
+                    back_reference = ('text', 'linked_container'),
+                    default = None
 )
 text.new_field(    'linked_container',
                     display_name = {
@@ -386,7 +391,8 @@ text.new_field(    'linked_container',
                     nullable = True,
                     allowed_classes = [publication],
                     group = editorial_group,
-                    back_reference = ('publication', 'linked_texts')
+                    back_reference = ('publication', 'linked_texts'),
+                    default = None
 )
 # Classe Issue
 issue = em.new_class( 'issue',
@@ -456,7 +462,8 @@ issue.new_field(    'collection',
                     nullable = True,
                     allowed_classes = [collection],
                     group = editorial_group,
-                    back_reference = ('collection', 'linked_issues')
+                    back_reference = ('collection', 'linked_issues'),
+                    default = None
 )
 collection.new_field(   'linked_issues',
                         display_name = {
@@ -484,7 +491,8 @@ part.new_field(     'publication',
                     nullable = True,
                     allowed_classes = [publication],
                     group = editorial_group,
-                    back_reference = ('publication', 'linked_parts')
+                    back_reference = ('publication', 'linked_parts'),
+                    default = None
 )
 publication.new_field(  'linked_parts',
                         display_name = {
@@ -495,7 +503,8 @@ publication.new_field(  'linked_parts',
                     nullable = True,
                     allowed_classes = [part],
                     group = editorial_group,
-                    back_reference = ('part', 'publication')
+                    back_reference = ('part', 'publication'),
+                    default = None
 )
 
 #####################

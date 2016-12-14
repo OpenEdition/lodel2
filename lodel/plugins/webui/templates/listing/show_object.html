@@ -33,6 +33,11 @@
                             <li><a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" >{{ rel2 }}</a></li>
                     {% endfor %}
                         </ul></li>
+                {% elif obj.data(fieldname) is not none %}
+                        {% set l_classe = fieldvalue.allowed_classes[0] %}
+                         {% set casttype = l_classe.data_handler(l_classe.uid_fieldname()[0]).cast_type %}
+                            {% set rel2 = casttype(obj.data(fieldname)) %}
+                            <li>{{ fieldname }} : <a href="show_object?classname={{ l_classe.__name__ }}&lodel_id={{ rel2 }}" >{{ obj.data(fieldname) }} </a></li>
                 {% endif %}
             {% else %}
                 <li> {{ fieldname }} : {{ obj.data(fieldname) }} </li>

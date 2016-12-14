@@ -33,6 +33,15 @@
                             <br/>
                     {% endfor %}
                         </ul></li>
+                {% elif obj.data(fieldname) is not none %}
+                    <li>{{ fieldname }}
+                        <ul>
+                        {% set l_classe = fieldvalue.allowed_classes[0] %}
+                        {% set linked_objs=l_classe.get(("%s = %s") % (l_classe.uid_fieldname()[0], obj.data(fieldname))) %}
+                        {{ edit.display(linked_objs.pop()) }}
+                        <br/>
+                        </ul>
+                    </li>
                 {% endif %}
             {% else %}
                 <li> {{ fieldname }} : {{ obj.data(fieldname) }} </li>
