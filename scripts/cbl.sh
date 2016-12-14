@@ -13,13 +13,19 @@
 #
 # Scenario description :
 #
-# mass_creation instance_name iteration_count :
+# mass_creation instance_name iteration_count :
 #	Create iteration_count time a random leobject in given instance_name
 #	note : do note create relation between objects, only populate content
 #	
 #	step 1 : fetch all non abstract class name
 # 	step 2 : loop on creation (using bash function curl_opt_create_CLSNAME)
 #		that return the POST fields (populated with random values)
+#
+# mass_get instance_name :
+#	Create all possible get for an instance
+#	step 1 : fetch all classes
+#	step 2 : for each class fetch all id
+#	step 3 : for all ids generate the gets
 #
 # mass_deletion instance_name iteration_count :
 #	Foreach non asbtracty class delete iteration_count time an object of
@@ -138,6 +144,32 @@ mass_creation() {
 		echo "${base_uri}$(uri_create $cls) POST $(curl_opt_create_$cls)"
 	done
 	rm -v $cls_list_file >&2
+}
+
+mass_get() {
+	#mass get scenario
+	#$1 is instance name
+	cls_list_file=$(fetch_all_classes $1)
+	base_uri=$(_base_uri $1)
+
+	#Get the site root
+	echo "$base_uri/"
+	#Get the site class list
+	echo "$base_uri/list_classes"
+
+	for clsname in $(cat $cls_list_file)
+	do
+		#Get instances list for a class
+		echo "$base_uri/show_class?classname=$clsname"
+		ids_file=$(fetch_all_ids $1 $clsname)
+		for id in $(cat $ids_file)
+		do
+			#Get details on an instance
+			echo "$base_uri/show_object_detailled?classname=${clsname}&lodel_id=$id"
+			#Get base informations on an instance
+			echo "$base_uri/show_object?classname=${clsname}&lodel_id=$id"
+		done
+	done
 }
 
 mass_link_edit() {
@@ -376,6 +408,7 @@ get_queries_with_params() {
 	done | shuf
 }
 
+get_queries_with_params "mass_get" $instance_list
 [ "$n_create" -gt 0 ] && get_queries_with_params "mass_creation" $instance_list $n_create
 [ "$n_edit" -gt 0 ] && get_queries_with_params "mass_link_edit" $instance_list $n_edit
 [ "$n_delete" -gt 0 ] && get_queries_with_params "mass_deletion" $instance_list $n_delete

@@ -2,7 +2,8 @@
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.plugin': ['LodelHook', 'CustomMethod']})
+    'lodel.plugin': ['LodelHook', 'CustomMethod'],
+    'lodel.settings' : 'settings'})
 
 @LodelHook('leapi_get_post')
 @LodelHook('leapi_update_pre')
@@ -12,7 +13,7 @@ LodelContext.expose_modules(globals(), {
 @LodelHook('leapi_insert_pre')
 @LodelHook('leapi_insert_post')
 def dummy_callback(hook_name, caller, payload):
-    if Lodel.settings.Settings.debug:
+    if settings.Settings.debug:
         print("\tHook %s\tcaller %s with %s" % (hook_name, caller, payload))
     return payload
 

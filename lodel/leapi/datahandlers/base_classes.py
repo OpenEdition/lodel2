@@ -2,7 +2,7 @@
 
 ## @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
 #
-# Contains custom exceptions too
+# Contains custom exceptions too
 
 import copy
 import importlib
@@ -14,6 +14,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+    'lodel.leapi.datahandlers.exceptions': ['LodelDataHandlerConsistencyException', 'LodelDataHandlerException'],
     'lodel.logger': 'logger'})
 
 
@@ -25,7 +26,7 @@ class DataHandler(object):
     ##@brief Stores the DataHandler childs classes indexed by name
     _base_handlers = None
     ##@brief Stores custom datahandlers classes indexed by name
-    # @todo do it ! (like plugins, register handlers... blablabla)
+    # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
     help_text = 'Generic Field Data Handler'
@@ -343,6 +344,12 @@ class Reference(DataHandler):
                     logger.warning('Object referenced does not exist')
                     return False
         return True
+    
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@throw NotImplementedError
+    def get_referenced(self, value):
+        raise NotImplementedError
 
 
 ##@brief This class represent a data_handler for single reference to another object
@@ -365,6 +372,17 @@ class SingleRef(Reference):
         #    raise FieldValidationError("List or string expected for a set field")
         return value
 
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@return A LeObject child class instance
+    #@throw LodelDataHandlerConsistencyException if no referenced object found
+    def get_referenced(self, value):
+        for leo_cls in self.linked_classes:
+            res = leo_cls.get_from_uid(value)
+            if res is not None:
+                return res
+        raise LodelDataHandlerConsistencyException("Unable to find \
+referenced object with uid %s" % value)
 
 
 ##@brief This class represent a data_handler for multiple references to another object
@@ -410,6 +428,27 @@ class MultipleRef(Reference):
             raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
         return new_val
 
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@return A list of LeObject child class instance
+    #@throw LodelDataHandlerConsistencyException if some referenced objects
+    #were not found
+    def get_referenced(self, values):
+        if values is None or len(values) == 0:
+            return list()
+        left = set(values)
+        values = set(values)
+        res = list()
+        for leo_cls in self.linked_classes:
+            uidname = leo_cls.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
+            tmp_res = leo_cls.get(('%s in (%s)' % (uidname, ','.join(
+                [str(l) for l in left]))))
+            left ^= set(( leo.uid() for leo in tmp_res))
+            res += tmp_res
+            if len(left) == 0:
+                return res
+        raise LodelDataHandlerConsistencyException("Unable to find \
+some referenced objects. Followinf uid were not found : %s" % ','.join(left))
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #@ingroup lodel2_datahandlers

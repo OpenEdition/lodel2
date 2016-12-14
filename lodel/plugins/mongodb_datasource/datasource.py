@@ -284,13 +284,13 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         return list(res.inserted_ids)
     
     ##@brief Update backref giving an action
-    #@param target leObject child class
-    #@param filters
-    #@param relational_filters,
-    #@param new_datas None | dict : optional new datas if None mean we are deleting
-    #@param old_datas_l None | list : if None fetch old datas from db (usefull
+    # @param target leObject child class
+    # @param filters
+    # @param relational_filters
+    # @param new_datas None | dict : optional new datas if None mean we are deleting
+    # @param old_datas_l None | list : if None fetch old datas from db (usefull
     #when modifications are made on instance before updating backrefs)
-    #@return nothing (for the moment
+    # @return nothing (for the moment
     def __update_backref_filtered(self, target,
             filters, relational_filters, new_datas = None, old_datas_l = None):
         #Getting all the UID of the object that will be deleted in order
@@ -309,41 +309,41 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             self.__update_backref(
                 target, old_datas[uidname], old_datas, new_datas)
 
-    ##@brief Update back references of an object
-    #@ingroup plugin_mongodb_bref_op
+    ## @brief Update back references of an object
+    # @ingroup plugin_mongodb_bref_op
     #
     #old_datas and new_datas arguments are set to None to indicate 
     #insertion or deletion. Calls examples :
-    #@par LeObject insert __update backref call
-    #<pre>
+    # @par LeObject insert __update backref call
+    # <pre>
     #Insert(datas):
     #  self.make_insert(datas)
     #  self.__update_backref(self.__class__, None, datas)
-    #</pre>
-    #@par LeObject delete __update backref call
+    # </pre>
+    # @par LeObject delete __update backref call
     #Delete()
     #  old_datas = self.datas()
     #  self.make_delete()
     #  self.__update_backref(self.__class__, old_datas, None)
-    #@par LeObject update __update_backref call
-    #<pre>
+    # @par LeObject update __update_backref call
+    # <pre>
     #Update(new_datas):
     #  old_datas = self.datas()
     #  self.make_udpdate(new_datas)
     #  self.__update_backref(self.__class__, old_datas, new_datas)
-    #</pre>
+    # </pre>
     #
-    #@param target LeObject child classa
-    #@param tuid mixed : The target UID (the value that will be inserted in
+    # @param target LeObject child classa
+    # @param tuid mixed : The target UID (the value that will be inserted in
     #back references)
-    #@param old_datas dict : datas state before update
-    #@param new_datas dict : datas state after the update process
-    #retun None
+    # @param old_datas dict : datas state before update
+    # @param new_datas dict : datas state after the update process
+    # retun None
     def __update_backref(self, target, tuid, old_datas, new_datas):
         #upd_dict is the dict that will allow to run updates in an optimized
         #way (or try to help doing it)
         #
-        #It's struct looks like :
+        #Its structure looks like :
         # { LeoCLASS : {
         #       UID1: (
         #           LeoINSTANCE,
@@ -470,8 +470,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param fdh DataHandler : the source Reference DataHandler
     #@param tuid mixed : the uid of the Leo that make reference to the backref
     #@param bref_infos tuple : as returned by __bref_get_check() method
-    #@param old mixed : (optional **values) the old value
-    #@param new mixed : (optional **values) the new value
+    #@param values dict : contains the old and new values (optional) with the "old" and "new" keys
     #@return the new back reference field value
     def __back_ref_upd_one_value(self, fname, fdh, tuid, bref_infos, **values):
         bref_cls, bref_leo, bref_dh, bref_val = bref_infos
@@ -600,6 +599,7 @@ on non abstract childs" % act.__name__)
     #MongoDbDatasource::_connections static attribute
     #@param username str
     #@param password str
+    #@param db_name str : database name
     #@param ro bool : If True the Datasource is for read only, else the
     def __connect(self, username, password, db_name, ro):
         conn_string = connection_string(
@@ -763,6 +763,7 @@ on non abstract childs" % act.__name__)
     
     ##@brief Convert lodel2 filters to pymongo conditions
     #@param filters list : list of lodel filters
+    #@param target Datahandler : The datahandler to use to cast the value in the correct type
     #@return dict representing pymongo conditions
     @classmethod
     def __filters2mongo(cls, filters, target):
@@ -802,6 +803,7 @@ by an equality filter")
     #Convertion is done using MongoDbDatasource::lodel2mongo_op_map
     #@param op str : take value in LeFilteredQuery::_query_operators
     #@param value mixed : the value
+    #@param dhdl DataHandler: datahandler used to cast the values before sending them to the database
     #@return a tuple(mongo_op, mongo_value)
     @classmethod
     def __op_value_conv(cls, op, value, dhdl):
@@ -863,6 +865,7 @@ field/operator couple in a query. We will keep only the first one")
     ##@brief Correct some datas before giving them to pymongo
     #
     #For example sets has to be casted to lise
+    #@param cls
     #@param datas
     #@return datas
     @classmethod
