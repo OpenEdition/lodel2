@@ -16,8 +16,7 @@ class Link(SingleRef):
 class List(MultipleRef):
 
     ##@brief instanciates a list reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool
+    # @param max_length
     # @param kwargs
     def __init__(self, max_length = None, **kwargs):
         super().__init__(**kwargs)
@@ -43,8 +42,6 @@ a list : %s" % e)
 class Set(MultipleRef):
 
     ##@brief instanciates a set reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -69,8 +66,6 @@ a set : %s" % e)
 class Map(MultipleRef):
 
     ##@brief instanciates a dict reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool : if False, the field is not internal
     # @param kwargs : Other named arguments
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -97,6 +92,7 @@ class Hierarch(MultipleRef):
     # @param back_reference tuple : Here it is mandatory to have a back ref (like a parent field)
     # @param max_depth int | None :  limit of depth
     # @param max_childs int | Nine : maximum number of childs by nodes
+    # @param kwargs
     def __init__(self, back_reference, max_depth = None, max_childs = None, **kwargs):
         super().__init__(   back_reference = back_reference,
                             max_depth = max_depth,

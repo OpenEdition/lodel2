@@ -16,17 +16,19 @@ LodelContext.expose_modules(globals(), {
 #
 # Structure of a xml file which represents an editorial model:
 # <ul>
-# <li>\<name\>: name of the model, field <b><em>name</em></b>  in class <b><em>EditorialModel</em></b> 
-# <li>\<description\>: field <b><em>description</em></b>  of a composed element, one for each language translation named 
-#               <ul><li>\<fre\> for french, 
-#               <li>\<eng\> for english,
-#               <li>\<esp\> for spanish,
-#               <li>\<ger\> for german</ul>
-# <li>\<classes\>: set of all <b><em>EmClass</em></b> in the model \n
+#   <li>\<name\>: name of the model, field <b><em>name</em></b>  in class <b><em>EditorialModel</em></b>
+#   <li>\<description\>: field <b><em>description</em></b>  of a composed element, one for each language translation named
+#               <ul>
+#                   <li>\<fre\> for french,
+#                   <li>\<eng\> for english,
+#                   <li>\<esp\> for spanish,
+#                   <li>\<ger\> for german
+#               </ul>
+#   <li>\<classes\>: set of all <b><em>EmClass</em></b> in the model \n
 #    for each classe: \n
 #       \<class\><ul>
-#       <li>\<uid\>the class's id
-#       <li>\<display_name\> The name of the class, field <b><em>display_name</em></b>  of the <b><em>EmClass</em></b> , in different languages if they're available :
+#           <li>\<uid\>the class's id
+#           <li>\<display_name\> The name of the class, field <b><em>display_name</em></b>  of the <b><em>EmClass</em></b> , in different languages if they're available :
 #               <ul><li>\<fre\> for french, 
 #               <li>\<eng\> for english,
 #               <li>\<esp\> for spanish,
@@ -43,8 +45,9 @@ LodelContext.expose_modules(globals(), {
 #               <li>\<help_text\> Short explanation of the class's purpose, in different languages, as above
 #               <li>\<group\><b><em>uid</em></b> of the group of the field <b><em>group</em></b> of the <b><em>EmClass</em></b>
 #               <li>\<datahandler_name\> field <b><em>datahandler_name</em></b> of the Emfield, the name of a datahandler
-#               <li>\<datahandler_options\>, a list of xml items, each of them named with an option name and contains its value</ul></ul>
-# <li>\<groups\>: set of all the groups <b><em>EmGroup</em></b> in the model\n
+#               <li>\<datahandler_options\>, a list of xml items, each of them named with an option name and contains its value</ul>
+#               </ul>
+#   <li>\<groups\>: set of all the groups <b><em>EmGroup</em></b> in the model\n
 #    for each group:\n
 #       <ul><li>\<uid\> uid of the <b><em>EmField</em></b>
 #       <li>\<display_name\> field <b><em>display_name</em></b>  of the <b><em>EmField</em></b>, in different languages, as above
@@ -58,7 +61,7 @@ LodelContext.expose_modules(globals(), {
 #           <li>\<emclasses\> all the emclasses with, for each of them:\n
 #               \<emclass\> \n
 #                   <ul><li> \<uid\> <b><em>uid</em></b> of the <b><em>EmClass</em></b></ul></ul></ul>
-
+# </ul>
 
 
 
@@ -66,8 +69,8 @@ LodelContext.expose_modules(globals(), {
 
 ##@brief Saves a model in a xml file
 # @param model EditorialModel : the model to save
-# @param filename str|None : if None display on stdout else writes in the file filename
-
+# @param kwargs dict :
+#    - filename str|None : if None display on stdout else writes in the file filename
 def save(model, **kwargs):
     Em = etree.Element("editorial_model")
     em_name = etree.SubElement(Em, 'name')
@@ -144,9 +147,9 @@ def write_datahandler_xml(etree, elem, dhdl_name, **kwargs):
 # @param uid : the uid of the EmField
 # @param name : the name of the field
 # @param help_text : explanations of the EmField
-# @param group_uid : the uid of a group, can be None
-# @datahandler_name
-# @**kwargs : options of the datahandler
+# @param group : the uid of a group, can be None
+# @param datahandler_name str
+# @param **kwargs : options of the datahandler
 def write_emfield_xml(etree, elem, uid, name, help_text, group, datahandler_name, **kwargs):
     emfield = etree.SubElement(elem,'field')
     emfield_uid = etree.SubElement(emfield, 'uid')
@@ -170,9 +173,11 @@ def write_emfield_xml(etree, elem, uid, name, help_text, group, datahandler_name
 ##@brief Writes a representation of a EmGroup in xml
 # @param etree : the xml object
 # @param elem : the element for the EmGroup
+# @param uid str : lodel unique identifier
 # @param name  : the name of the group
 # @param help_text : explanations of the EmGroup
 # @param requires : a list of the group's uids whose this group depends
+# @param components
 def write_emgroup_xml(etree, elem, uid, name, help_text, requires, components):
     emgroup = etree.SubElement(elem, 'group')
     emgroup_uid = etree.SubElement(emgroup, 'uid')
@@ -207,8 +212,10 @@ def write_emgroup_xml(etree, elem, uid, name, help_text, requires, components):
 ##@brief Writes a representation of a EmClass in xml
 # @param etree : the xml object
 # @param elem : the element for the EmClass
+# @param uid
 # @param name  : the name of the group
 # @param help_text : explanations of the EmClass
+# @param group
 # @param fields : a dict
 # @param parents : a list of EmClass uids
 # @param abstract : a boolean
@@ -245,7 +252,7 @@ def write_emclass_xml(etree, elem, uid, name, help_text, group, fields, parents,
     emclass_parents.text = ",".join(parents_list)
 
 ##@brief Loads a model from a xml file
-# @param model EditorialModel : the model to load
+# @param filename str : file path of the XML file from which the model will be loaded
 # @return a new EditorialModel object
 def load(filename):
 
@@ -452,7 +459,6 @@ def load_group_xml(model, elem):
 
 ##@brief Constructs a MlString from a xml description
 # @param elem : the element which represents the MlString
-# @param model  : the model which will contain the new group
 # @return a new MlString object
 def load_mlstring_xml(elem):
     mlstr = dict()

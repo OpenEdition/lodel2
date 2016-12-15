@@ -294,7 +294,7 @@ class LeObject(object):
 
     ##@brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
-    # @param name str : field name
+    # @param field_name str : field name
     # @return the Value
     # @throw RuntimeError if the field is not initialized yet
     # @throw NameError if name is not an existing field name
@@ -516,6 +516,7 @@ construction and consitency when datas are not complete\n")
     # @warning assert that datas is complete
     # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.prepare_datas() method
+    # @param type_query str : Type of query
     @classmethod
     def make_consistency(cls, datas, type_query = 'insert'):
         for fname, dh in cls._fields.items():
@@ -565,8 +566,8 @@ construction and consitency when datas are not complete\n")
         return result
     
     ## @brief Delete instances of LeObject
-    #@param uids a list: lists of (fieldname, fieldvalue), with fieldname in cls._uids
-    #@returns the 
+    #@param query_filters list: lists of (fieldname, fieldvalue), with fieldname in cls._uids
+    #@returns the number of deleted items
     @classmethod
     def delete_bundle(cls, query_filters):
         deleted = 0
@@ -585,7 +586,6 @@ construction and consitency when datas are not complete\n")
             
     ## @brief Get instances of LeObject
     #
-    #@param target_class LeObject : class of object the query is about
     #@param query_filters dict : (filters, relational filters), with filters is a list of tuples : (FIELD, OPERATOR, VALUE) )
     #@param field_list list|None : list of string representing fields see 
     #@ref leobject_filters
@@ -593,7 +593,6 @@ construction and consitency when datas are not complete\n")
     #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
     #@param limit int : The maximum number of returned results
     #@param offset int : offset
-    #@param Inst
     #@return a list of items (lists of (fieldname, fieldvalue))
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):

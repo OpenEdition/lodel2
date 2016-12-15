@@ -36,10 +36,13 @@ class DataHandler(object):
 
     directly_editable = True
     ##@brief constructor
-    # @param internal False | str : define whether or not a field is internal
-    # @param immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is
-    #                         designed globally and immutable
-    # @param **args
+    # @param **kwargs dict
+    #   - internal False | str : define whether or not a field is internal
+    #   - immutable bool : indicates if the fieldtype has to be defined in child classes of LeObject or if it is designed globally and immutable
+    #   - nullable bool
+    #   - uniq bool
+    #   - primary_key bool
+    #   - default mixed
     # @throw NotImplementedError if it is instanciated directly
     def __init__(self, **kwargs):
         if self.__class__ == DataHandler:
@@ -143,7 +146,7 @@ class DataHandler(object):
     #@param cur_value : the value from the current field (identified by fieldname)
     #@return the value
     #@see construct_data() lodel2_dh_check_impl
-    def _construct_data(self, empcomponent, fname, datas, cur_value):
+    def _construct_data(self, emcomponent, fname, datas, cur_value):
         return cur_value
 
     ##@brief Check datas consistency
@@ -206,21 +209,21 @@ class DataHandler(object):
     # @return DataField child class
     # @note To access custom data handlers it can be cool to prefix the handler name by plugin name for example ? (to ensure name unicity)
     @classmethod
-    def from_name(cls, name):
+    def from_name(cls, fieldtype_name):
         cls.load_base_handlers()
         all_handlers = dict(cls._base_handlers, **cls.__custom_handlers)
-        name = name.lower()
-        if name not in all_handlers:
-            raise NameError("No data handlers named '%s'" % (name,))
-        return all_handlers[name]
+        fieldtype_name = fieldtype_name.lower()
+        if fieldtype_name not in all_handlers:
+            raise NameError("No data handlers named '%s'" % (fieldtype_name,))
+        return all_handlers[fieldtype_name]
 
     ##@brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name
     # @return a str
     @classmethod
-    def module_name(cls, name):
-        name = name.lower()
-        handler_class = cls.from_name(name)
+    def module_name(cls, data_handler_name):
+        data_handler_name = data_handler_name.lower()
+        handler_class = cls.from_name(data_handler_name)
         return '{module_name}.{class_name}'.format(
                                                     module_name=handler_class.__module__,
                                                     class_name=handler_class.__name__
@@ -386,6 +389,7 @@ class MultipleRef(Reference):
 
     ##
     # @param max_item int | None : indicate the maximum number of item referenced by this field, None mean no limit
+    # @param kwargs dict
     def __init__(self, max_item=None, **kwargs):
         self.max_item = max_item
         super().__init__(**kwargs)
@@ -421,7 +425,7 @@ class MultipleRef(Reference):
         return new_val
 
     ##@brief Utility method designed to fetch referenced objects
-    #@param value mixed : the field value
+    #@param values mixed : the field value
     #@return A list of LeObject child class instance
     #@throw LodelDataHandlerConsistencyException if some referenced objects
     #were not found
@@ -453,7 +457,7 @@ some referenced objects. Followinf uid were not found : %s" % ','.join(left))
 class DatasConstructor(object):
 
     ## @brief Init a DatasConstructor
-    # @param lec LeCrud : @ref LeObject child class
+    # @param leobject LeCrud : @ref LeObject child class
     # @param datas dict : dict with field name as key and field values as value
     # @param fields_handler dict : dict with field name as key and data handler instance as value
     def __init__(self, leobject, datas, fields_handler):

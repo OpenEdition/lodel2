@@ -17,7 +17,7 @@ def name2class(name):
 ##@brief Return a dynamically generated class given it's name
 #@note Case insensitive version of name2class
 #@param name str
-#@retrun False or a child class of LeObject
+#@return False or a child class of LeObject
 def lowername2class(name):
     name = name.lower()
     new_dict = {k.lower():v for k,v in dynclasses_dict.items()}

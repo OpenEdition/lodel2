@@ -45,7 +45,8 @@ class Integer(DataField):
 
     ##@brief Check and cast value in appropriate type
     #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
+    #@param strict bool : if True, checks if the given value is strictly of the Integer type, if False, it tries to cast it to an Integer
+    #@throw FieldValidationError if value is unappropriate or can not be cast
     #@return value
     def _check_data_value(self, value, strict = False):
         value = super()._check_data_value(value)
