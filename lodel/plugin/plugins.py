@@ -908,7 +908,6 @@ CustomMethod::STATIC_METHOD, but got %s" % self._type)
     
     ##@brief called just after __init__
     #@param fun function : the decorated function
-    #@param return the function
     def __call__(self, fun):
         if self._method_name is None:
             self._method_name = fun.__name__

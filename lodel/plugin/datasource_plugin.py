@@ -31,7 +31,7 @@ reimplemented by plugin datasource child class")
         self._abs_err()
 
     ##@brief returns a selection of documents from the datasource
-    #@param target_cls Emclass
+    #@param target Emclass
     #@param field_list list
     #@param filters list : List of filters
     #@param rel_filters list : List of relational filters
@@ -231,7 +231,7 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
         return pinstance
 
     ##@brief Return a datasource class given a datasource name
-    #@param ds_name str : datasource plugin name
+    #@param ds_plugin_name str : datasource plugin name
     #@throw PluginError if ds_name is not an existing plugin name
     #@throw PluginTypeError if ds_name is not the name of a DatasourcePlugin
     @classmethod

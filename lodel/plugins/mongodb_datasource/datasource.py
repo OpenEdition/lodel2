@@ -342,7 +342,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     def __update_backref(self, target, tuid, old_datas, new_datas):
         #upd_dict is the dict that will allow to run updates in an optimized
         #way (or try to help doing it)
-        #
+        #<pre>
         #Its structure looks like :
         # { LeoCLASS : {
         #       UID1: (
@@ -351,7 +351,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         #       UID2 (LeoINSTANCE, {fname...}),
         #       },
         #   LeoClass2: {...
-        #
+        #</pre>
         upd_dict = {}
         for fname, fdh in target.reference_handlers().items():
             oldd = old_datas is not None and fname in old_datas and \

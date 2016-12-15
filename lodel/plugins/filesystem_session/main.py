@@ -29,8 +29,9 @@ def generate_token():
 
 
 ## @brief checks the validity of a given session token
+#
+# @exception ClientAuthenticationFailure for invalid or not found session token
 # @param token str
-# @raise ClientAuthenticationFailure for invalid or not found session token
 def check_token(token):
     if len(token) != SESSION_TOKENSIZE:
         raise ClientAuthenticationFailure("Invalid token string")
@@ -51,9 +52,9 @@ def get_token_from_filepath(filepath):
 
 
 ## @brief returns the session's last modification timestamp
+# @exception ValueError if the given token doesn't match with an existing session
 # @param token str
 # @return float
-# @raise ValueError if the given token doesn't match with an existing session
 def get_session_last_modified(token):
     if token in __sessions[token]:
         return os.stat(__sessions[token]).st_mtime

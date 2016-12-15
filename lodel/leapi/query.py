@@ -619,12 +619,13 @@ class LeGetQuery(LeFilteredQuery):
     #@param target_class LeObject : class of object the query is about
     #@param query_filters dict : {OP, list of query filters}
     # or tuple (FIELD, OPERATOR, VALUE) )
-    #@param field_list list|None : list of string representing fields see
+    #@param kwargs dict :
+    # - field_list list|None : list of string representing fields see
     # @ref leobject_filters
-    #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
-    #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
-    #@param limit int : The maximum number of returned results
-    #@param offset int : offset
+    # - order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    # - group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    # - limit int : The maximum number of returned results
+    # - offset int : offset
     def __init__(self, target_class, query_filters, **kwargs):
         super().__init__(target_class, query_filters)
         ##@brief The fields to get
