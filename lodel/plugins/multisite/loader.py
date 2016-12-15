@@ -4,6 +4,11 @@ import sys
 import shlex
 import warnings
 
+#Here we have to bootstrap a minimal __loader__ context in order
+#to be able to load the settings
+#
+#This file (once bootstraped) start a new process for uWSGI. uWSGI then
+#run lodel.plugins.multisite.run.application function
 try:
     from lodel.context import LodelContext
 except ImportError:
@@ -25,10 +30,10 @@ LodelContext.expose_modules(globals(), {
 if not settings.started():
     settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
-##@brief Starts uwsgi in background using options from confs
 LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings']})
 
+##@brief Starts uwsgi in background using settings
 def uwsgi_fork():
     
     sockfile = os.path.join(buildconf.LODEL2VARDIR, 'uwsgi_sockets/')

@@ -3,6 +3,11 @@ import os
 import os.path
 import warnings
 
+#This file expose common function to process a wsgi request and the
+#uWSGI application callback
+
+
+#preloading all instances
 FAST_APP_EXPOSAL_CACHE = dict()
 
 LODEL2_INSTANCES_DIR = '.'
@@ -73,6 +78,11 @@ for lodelsite_path in lodelsites_list:
         del(globals()[name])
     #switch back to loader context
     LodelContext.set(None)
+
+#
+# From here lodel2 multisite instances are loaded and ready to run
+#
+
 
 ##@brief Utility function to return quickly an error
 def http_error(env, start_response, status = '500 internal server error', \
