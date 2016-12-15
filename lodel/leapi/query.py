@@ -266,7 +266,6 @@ class LeFilteredQuery(LeQuery):
     #field of the referenced object the comparison as to be done. If no
     #REF_FIELD is indicated the comparison will be done on identifier.
     #
-    #@param cls
     #@param filters_l list : This list of str or tuple (or both)
     #@return a tuple(FILTERS, RELATIONNAL_FILTERS
     #@todo move this doc in another place (a dedicated page ?)
@@ -485,7 +484,7 @@ abstract LeObject : %s" % target_class)
         super().__init__(target_class)
     
     ## @brief Implements an insert query operation, with only one insertion
-    # @param new_datas : datas to be inserted
+    # @param datas : datas to be inserted
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
         id_inserted = self._rw_datasource.insert(self._target_class, datas)
@@ -544,8 +543,6 @@ target to LeUpdateQuery constructor"
         super().__init__(target_class, query_filters)
 
     ##@brief Implements an update query
-    #@param filters list : see @ref LeFilteredQuery
-    #@param rel_filters list : see @ref LeFilteredQuery
     #@param datas dict : datas to update
     #@returns the number of updated items
     #@todo change stategy for instance update. Datas should be allowed
@@ -599,12 +596,12 @@ class LeDeleteQuery(LeFilteredQuery):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
+    # @param datas
     def execute(self, datas=None):
         return super().execute()
 
     ##@brief Implements delete query operations
-    #@param filters list : see @ref LeFilteredQuery
-    #@param rel_filters list : see @ref LeFilteredQuery
+    # @param datas
     #@returns the number of deleted items
     def _query(self, datas=None):
         filters, rel_filters = self._query_filter
