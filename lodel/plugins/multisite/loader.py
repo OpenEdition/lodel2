@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-import os.path
+import sys
+import shlex
 import warnings
-LODEL2_INSTANCES_DIR = '.'
-EXCLUDE_DIR = {'conf.d'}
 
 try:
     from lodel.context import LodelContext
@@ -11,6 +10,8 @@ except ImportError:
     LODEL_BASE_DIR = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from lodel.context import LodelContext
+
+from lodel import buildconf
 
 LodelContext.init(LodelContext.MULTISITE)
 LodelContext.set(None) #Loading context creation
@@ -24,55 +25,40 @@ LodelContext.expose_modules(globals(), {
 if not settings.started():
     settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
-lodelsites_list = [ os.path.realpath(os.path.join(LODEL2_INSTANCES_DIR,sitename)) 
-    for sitename in os.listdir(LODEL2_INSTANCES_DIR)
-    if os.path.isdir(sitename) and sitename not in EXCLUDE_DIR]
+##@brief Starts uwsgi in background using options from confs
+LodelContext.expose_modules(globals(), {
+    'lodel.settings': ['Settings']})
 
-#Exposed now to allow access to FAST_APP_EXPOSAL_CACHE
-LodelContext.expose_modules(
-    globals(), {'lodel.plugins.multisite.main': 'main'})
-for lodelsite_path in lodelsites_list:
-    ctx_name = LodelContext.from_path(lodelsite_path)
-    #Switch to new context
-    LodelContext.set(ctx_name)
-    os.chdir(lodelsite_path)
-    # Loading settings
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings.settings': [('Settings', 'settings')]})
-    if not settings.started():
-        settings('./conf.d')
-    LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
+def uwsgi_fork():
+    
+    sockfile = os.path.join(buildconf.LODEL2VARDIR, 'uwsgi_sockets/')
+    if not os.path.isdir(sockfile):
+        os.mkdir(sockfile)
+    sockfile = os.path.join(sockfile, 'uwsgi_lodel2_multisite.sock')
+    logfile = os.path.join(
+        buildconf.LODEL2LOGDIR, 'uwsgi_lodel2_multisite.log')
+        
+    cmd='{uwsgi} --plugin python3 --http-socket {addr}:{port} --module \
+lodel.plugins.multisite.run --socket {sockfile} --logto {logfile} -p {uwsgiworkers}'
+    cmd = cmd.format(
+                addr = Settings.server.listen_address,
+                port = Settings.server.listen_port,
+                uwsgi= Settings.server.uwsgicmd,
+                sockfile=sockfile,
+                logfile = logfile,
+                uwsgiworkers = Settings.server.uwsgi_workers)
+    if Settings.server.virtualenv is not None:
+        cmd += " --virtualenv %s" % Settings.webui.virtualenv
 
-    # Loading hooks & plugins
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin': ['LodelHook'],
-        'lodel.plugin.core_hooks': 'core_hooks',
-        'lodel.plugin.core_scripts': 'core_scripts'
-    })
+    try:
+        args = shlex.split(cmd)
+        print("Running %s" % cmd)
+        exit(os.execl(args[0], *args))
+    except Exception as e:
+        print("Webui plugin uwsgi execl fails cmd was '%s' error : " % cmd,
+            e, file=sys.stderr)
+        exit(1)
 
-    #Load plugins
-    LodelContext.expose_modules(globals(), {
-        'lodel.logger': 'logger',
-        'lodel.plugin': ['Plugin']})
-    logger.debug("Loader.start() called")
-    Plugin.load_all()
-    #Import & expose dyncode
-    LodelContext.expose_dyncode(globals())
-    #Next hook triggers dyncode datasource instanciations
-    LodelHook.call_hook('lodel2_plugins_loaded', '__main__', None)
-    #Next hook triggers call of interface's main loop
-    LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
-    #FAST_APP_EXPOSAL_CACHE populate
-    main.FAST_APP_EXPOSAL_CACHE[ctx_name] = LodelContext.module(
-    	'lodel.plugins.webui.run')
-    LodelContext
-    #a dirty & quick attempt to fix context unwanted exite via
-    #hooks
-    for name in ( 'LodelHook', 'core_hooks', 'core_scripts',
-            'Settings', 'settings', 'logger', 'Plugin'):
-        del(globals()[name])
-    #switch back to loader context
-    LodelContext.set(None)
-
-main.main_loop()
-
+if __name__ == '__main__':
+    uwsgi_fork()
+        

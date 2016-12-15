@@ -8,10 +8,12 @@ LODEL2_CONFSPECS = {
         'debug': (True, SettingValidator('bool'))
     },
     'lodel2.server': {
-        'listen_address': ('', SettingValidator('dummy')),
+        'listen_address': ('127.0.0.1', SettingValidator('dummy')),
         #'listen_address': ('', SettingValidator('ip')), #<-- not implemented
         'listen_port': ( 1337, SettingValidator('int')),
-        'max_children': (40, SettingValidator('int')),
+        'uwsgi_workers': (8, SettingValidator('int')),
+        'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
+        'virtualenv': (None, SettingValidator('path', none_is_valid = True)),
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
