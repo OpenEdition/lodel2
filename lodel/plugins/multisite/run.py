@@ -22,6 +22,7 @@ except ImportError:
 
 LodelContext.init(LodelContext.MULTISITE)
 LodelContext.set(None) #Loading context creation
+
 #Multisite instance settings loading
 CONFDIR = os.path.join(os.getcwd(), 'conf.d')
 if not os.path.isdir(CONFDIR):
@@ -32,10 +33,12 @@ LodelContext.expose_modules(globals(), {
 if not settings.started():
     settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
+#Fetching insrtance list from subdirectories
 lodelsites_list = [ os.path.realpath(os.path.join(LODEL2_INSTANCES_DIR,sitename)) 
     for sitename in os.listdir(LODEL2_INSTANCES_DIR)
     if os.path.isdir(sitename) and sitename not in EXCLUDE_DIR]
 
+#Bootstraping instances
 for lodelsite_path in lodelsites_list:
     ctx_name = LodelContext.from_path(lodelsite_path)
     #Switch to new context
@@ -96,6 +99,7 @@ def http_error(env, start_response, status = '500 internal server error', \
 
 
 ##@brief utility function to extract site id from an url
+#@param url str : 
 def site_id_from_url(url):
     res = ''
     for c in url[1:]:
