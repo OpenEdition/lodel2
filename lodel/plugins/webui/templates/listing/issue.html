@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Lodel 2 - Issue {{ lodel_id }} {% endblock %}
+{% set uidfield = my_classes.Issue.uid_fieldname()[0] %}
+{% set objects = my_classes.Issue.get(('%s = %s') % (uidfield, lodel_id)) %}
+{% set person_class = leapi.name2class('Person') %}
+{% set obj = objects.pop() %}
+{% block content %} 
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/">Home</a></li>
+  <li><a href="/{{ root_url }}/collection">Collections</a></li>
+  <li class="active"><a href="/{{ root_url }}/issue?lodel_id={{ lodel_id}}">Collection {{ obj.data('collection') }} - Issue {{lodel_id}}</a></li>
+</ol>
+<h1 class="h1_lodel">Issue {{ obj.data('title') }} </h1>
+<h2>{{ obj.data('subtitle') }}</h2>
+{% set directors=person_class.get(("%s in (%s)") % (person_class.uid_fieldname()[0], obj.data('linked_directors')|join(','))) %}
+<p><strong>Directors : </strong>{% for director in directors %} <a href="/{{ root_url }}/show_object?classname=Person&lodel_id={{ director.uid() }} " target="_blank" >{{ director.data('firstname')}} {{ director.data('lastname')}}</a> ; {% endfor %}</p>
+{% set texts=my_classes.Text.get(("%s in (%s)") % (my_classes.Text.uid_fieldname()[0], obj.data('linked_texts')|join(','))) %}
+{% set parts=my_classes.Part.get(("%s in (%s)") % (my_classes.Part.uid_fieldname()[0], obj.data('linked_parts')|join(','))) %}
+{% if texts is not none: %}
+    <ul>
+     {% for text in texts %}
+          <li>
+              <h3><a href="/{{ root_url }}/show_object?classname={{ text.data('classname') }}&lodel_id={{ text.uid() }}" target="_blank" > {{ text.data('title') }}</a></h3>
+              <h4>{{ text.data('subtitle') }}</h4>
+              {% set authors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], text.data('linked_persons')|join(','))) %}
+              <p>Authors : {% for author in authors %} {{ author.data('firstname')}} {{ author.data('lastname')}} ; {% endfor %} </p>
+            </li>
+    {% endfor %}
+</ul>
+{% endif %}
+<h2>Parties</h2>
+<div style="margin-left:20px;">
+{% if parts is not none: %}
+<ul>
+     {% for part in parts %}
+          <li>
+              <h3><a href="/{{ root_url }}/show_object?classname={{ part.data('classname') }}&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
+              <h4>{{ part.data('subtitle') }}</h4>
+              {% set directors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], part.data('linked_directors')|join(','))) %}
+              <p>Directors : {% for director in directors %} {{ director.data('firstname')}} {{ director.data('lastname')}} ; {% endfor %} </p>
+              {% set p_texts=my_classes.Text.get(("%s in (%s)") % (my_classes.Text.uid_fieldname()[0], part.data('linked_texts')|join(','))) %}
+              {% if texts is not none: %}
+              <ul style="margin-left:20px">
+                 {% for text in p_texts %}
+                      <li>
+                          <h3><a href="/{{ root_url }}/show_object?classname={{ text.data('classname') }}&lodel_id={{ text.uid() }}"  target="_blank"> {{ text.data('title') }}</a></h3>
+                          <h4>{{ text.data('subtitle') }}</h4>
+                          {% set authors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], text.data('linked_persons')|join(','))) %}
+                          <p>Authors : {% for author in authors %} {{ author.data('firstname')}} {{ author.data('lastname')}} ; {% endfor %} </p>
+                        </li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+              <h4>Sous-parties</h4>
+              {% set ss_parts=my_classes.Part.get(("%s in (%s)") % (my_classes.Part.uid_fieldname()[0], part.data('linked_parts')|join(','))) %}
+               {% if parts is not none: %}
+                <ul>
+                     {% for part in ss_parts %}
+                          <li>
+                              <h3><a href="/{{ root_url }}/show_object?classname={{ part.data('classname') }}&lodel_id={{ part.uid() }}" target="_blank"> {{ part.data('title') }}</a></h3>
+                              <h4>{{ part.data('subtitle') }}</h4>
+                              {% set directors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], part.data('linked_directors')|join(','))) %}
+                              <p>Directors : {% for director in directors %} {{ director.data('firstname')}} {{ director.data('lastname')}} ; {% endfor %} </p>
+                              {% set sp_texts=my_classes.Text.get(("%s in (%s)") % (my_classes.Text.uid_fieldname()[0], part.data('linked_texts')|join(','))) %}
+                              {% if texts is not none: %}
+                              <ul style="margin-left:20px">
+                                 {% for text in sp_texts %}
+                                      <li>
+                                          <h3><a href="/{{ root_url }}/show_object?classname={{ text.data('classname') }}&lodel_id={{ text.uid() }}"  target="_blank"> {{ text.data('title') }}</a></h3>
+                                          <h4>{{ text.data('subtitle') }}</h4>
+                                          {% set authors = my_classes.Person.get(("%s in (%s)") % (person_class.uid_fieldname()[0], text.data('linked_persons')|join(','))) %}
+                                          <p>Authors : {% for author in authors %} {{ author.data('firstname')}} {{ author.data('lastname')}} ; {% endfor %} </p>
+                                        </li>
+                                {% endfor %}
+                              </ul>
+                              {% endif %}
+                    </li>
+                    {% endfor %}
+              </ul>
+              {% endif %}
+          </li>
+    {% endfor %}
+</ul>
+{% endif %}
+</div>
+
+{% endblock %} 

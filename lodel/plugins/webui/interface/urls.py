@@ -17,6 +17,8 @@ urls = (
     (r'^/test/?$', test),
     (r'^/list_classes', list_classes),
     (r'^/list_classes?$', list_classes),
+    (r'^/collections', collections),
+    (r'^/collections?$', collections),
     (r'^/show_object?$', show_object),
     (r'^/show_object_detailled?$', show_object_detailled),
     (r'^/show_class?$', show_class),
