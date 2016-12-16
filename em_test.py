@@ -42,6 +42,14 @@ em_object.new_field(    'lodel_id',
                         data_handler = 'uniqid',
                         internal = True,
 )
+em_object.new_field(    'help_text',
+                        display_name = 'Help',
+                        help_text = 'A short text that describe the object',
+                        group = base_group,
+                        internal = True,
+                        data_handler = 'text',
+)
+
 em_object.new_field(    'date_create',
                         display_name = 'Creation date',
                         group = base_group,
@@ -56,6 +64,10 @@ em_object.new_field(    'date_update',
                         now_on_update = True,
                         internal = True,
 )
+
+########################
+# Lodel old classtypes #
+########################
 entitie = em.new_class( 'entitie',
                         display_name = 'entitie',
                         help_text = 'Replace old entity classtype',
@@ -63,13 +75,10 @@ entitie = em.new_class( 'entitie',
                         group = base_group,
                         parents = em_object,
 )
-########################
-# Base group
-########################
 
 person = em.new_class(  'person',
                         display_name = 'Person',
-                        help_text = 'Person type',
+                        help_text = 'Replace old person classtype',
                         abstract = False,
                         group = base_group,
                         parents = em_object,
@@ -91,47 +100,36 @@ person.new_field(   'lastname',
                     data_handler = 'varchar',
                     group = base_group,
 )
+person.new_field(   'fullname',
+                    display_name = {
+                        'eng': 'Fullname',
+                        'fre': 'Nom complet',
+                    },
+                    group = base_group,
+                    data_handler = 'Concat',
+                    field_list = ['firstname', 'lastname'],
+                    immutable = True,
+)
+person.new_field(   'alias',
+                    display_name = 'alias',
+                    help_text = {
+                        'eng': 'Link to other person class instance that represent the same person',
+                        'fre': 'Lien vers un ensemble d\'instances de la classe personne représentant le même individu',
+                    },
+                    data_handler = 'set',
+                    allowed_classes = [person],
+                    default = None,
+                    nullable = True,
+                    group = base_group,
+)
 
-# person.new_field(   'role',
-#                     display_name = {
-#                         'eng': 'Role',
-#                         'fre': 'Rôle',
-#                     },
-#                     data_handler = 'varchar',
-#                     group = base_group,
-# )
 
 entry = em.new_class(   'entry',
                         display_name = 'Entry',
-                        help_text = 'Entry type',
-                        abstract = False,
+                        help_text = 'Replace olf entry classtype',
+                        abstract = True,
                         group = base_group,
                         parents = em_object,
-)
-entry.new_field(    'name',
-                    display_name = {
-                        'eng': 'Name',
-                        'fre': 'Nom',
-                    },
-                    data_handler = 'varchar',
-                    group = base_group,
-)
-entry.new_field(    'description',
-                    display_name = {
-                        'eng': 'Description',
-                        'fre': 'Description',
-                    },
-                    data_handler = 'text',
-                    group = base_group,
-)
-
-entry.new_field(    'role',
-                    display_name = {
-                        'eng': 'Role',
-                        'fre': 'Rôle',
-                    },
-                    data_handler = 'varchar',
-                    group = base_group,
 )
 
 #####################
@@ -147,7 +145,6 @@ editorial_group = em.new_group( 'editorial_abstract',
                                 depends = (base_group,)
 )
 
-################################### Texts ##########################################################
 # Classe texte
 text = em.new_class(   'text',
                         display_name = 'Text',
@@ -160,7 +157,7 @@ text = em.new_class(   'text',
 text.new_field(    'title',
                     display_name = {'eng': 'Title', 'fre': 'Titre'},
                     group = editorial_group,
-                    data_handler = 'text',
+                    data_handler = 'varchar',
                     nullable = True,)
 text.new_field(    'subtitle',
                     display_name = {
@@ -168,344 +165,76 @@ text.new_field(    'subtitle',
                         'fre': 'Sous-titre',
                     },
                     group = editorial_group,
-                    data_handler = 'text',
-                    nullable = True,
-                    default = None)
-text.new_field(    'language',
-                    display_name = {
-                        'eng': 'Language',
-                        'fre': 'Langue',
-                    },
-                    group = editorial_group,
                     data_handler = 'varchar',
                     nullable = True,
                     default = None)
-text.new_field(    'text',
-                    display_name = {
-                        'eng': 'Text',
-                        'fre': 'Texte',
-                    },
-                    group = editorial_group,
-                    data_handler = 'text',
-                    nullable = True,
-                    default = None)
-text.new_field(    'pub_date',
-                    display_name = {
-                        'eng': 'Publication date',
-                        'fre': 'Date de publication',
-                    },
-                    group = editorial_group,
-                    data_handler = 'datetime',
-                    nullable = True,
-                    default = None)
-text.new_field(    'footnotes',
-                    display_name = {
-                        'eng': 'Footnotes',
-                        'fre': 'Notes de bas de page',
-                    },
-                    group = editorial_group,
-                    data_handler = 'text',
-                    nullable = True,
-                    default = None)
-text.new_field(    'linked_entries',
-                    display_name = {
-                        'eng': 'Related entries',
-                        'fre': 'Indices liés',
-                    },
-                    group = editorial_group,
-                    data_handler = 'list',
-                    nullable = True,
-                    allowed_classes = [entry],
-                    back_reference = ('entry', 'linked_texts'),
-                    default = None
-)
-entry.new_field(    'linked_texts',
-                    display_name = {
-                        'eng': 'Related text',
-                        'fre': 'Texte lié ',
-                    },
-                    data_handler = 'list',
-                    nullable = True,
-                    allowed_classes = [text],
-                    group = editorial_group,
-                    back_reference = ('text', 'linked_entries'),
-                    default = None
-)
-# Classe article
-article = em.new_class( 'article',
-                        display_name = 'Article',
-                        group = editorial_group,
-                        abstract = False,
-                        parents = text)
-article.new_field(  'abstract',
-                    display_name = {
-                        'eng': 'Abstract',
-                        'fre': 'Résumé',
-                    },
-                    group = editorial_group,
-                    data_handler = 'text'
-)
-article.new_field(  'appendix',
-                    display_name = {
-                        'eng': 'Appendix',
-                        'fre': 'Appendice',
-                    },
-                    group = editorial_group,
-                    data_handler = 'text'
-)
-article.new_field(  'bibliography',
-                    display_name = {
-                        'eng': 'Bibliography',
-                        'fre': 'Bibliographie',
-                    },
-                    group = editorial_group,
-                    data_handler = 'text'
-)
-article.new_field(  'author_note',
-                    display_name = {
-                        'eng': 'Author note',
-                        'fre': "Note de l'auteur",
-                    },
-                    group = editorial_group,
-                    data_handler = 'text'
-)
-# Classe Review 
-review = em.new_class( 'review',
-                        display_name = 'Review',
-                        group = editorial_group,
-                        abstract = False,
-                        parents = text)
-review.new_field(   'reference',
-                    display_name = {
-                        'eng': 'Reference',
-                        'fre': "Référence",
-                    },
-                    group = editorial_group,
-                    data_handler = 'text'
-)
-
-###################################### Containers ###########################################
-# Classe container
-container = em.new_class(  'container',
-                            display_name = 'Container',
-                            group = editorial_group,
-                            abstract = True,
-                            parents = entitie)
-container.new_field(   'title',
-                        display_name = 'Title',
-                        group = editorial_group,
-                        data_handler = 'text'
-)
-container.new_field(   'subtitle',
-                        display_name = 'Subtitle',
-                        group = editorial_group,
-                        data_handler = 'text'
-)
-container.new_field(   'language',
-                        display_name = {
-                            'eng' : 'Language',
-                            'fre' : 'Langue',
-                        },
-                        group = editorial_group,
-                        data_handler = 'varchar'
-)
-container.new_field(    'linked_directors',
-                    display_name = {
-                        'eng': 'Directors',
-                        'fre': 'Directeurs',
-                    },
-                    group = editorial_group,
-                    data_handler = 'list',
-                    nullable = True,
-                    allowed_classes = [person],
-                    back_reference = ('person', 'linked_containers'),
-                    default = None
-)
-person.new_field(   'linked_containers',
-                    display_name = {
-                        'eng': 'Director of ',
-                        'fre': 'Directeur de ',
-                    },
-                    group = editorial_group,
-                    data_handler = 'list',
-                    nullable = True,
-                    allowed_classes = [container],
-                    back_reference = ('container', 'linked_directors'),
-                    default = None
-)
-container.new_field(    'description',
-                    display_name = {
-                        'eng': 'Description',
-                        'fre': 'Description',
-                    },
-                    data_handler = 'text',
-                    group = editorial_group,
-)
-container.new_field(    'publisher_note',
-                    display_name = {
-                        'eng': 'Publisher note',
-                        'fre': "Note de l'éditeur",
-                    },
-                    data_handler = 'text',
-                    group = editorial_group,
-)
 
 # Classe collection
 collection = em.new_class(  'collection',
                             display_name = 'Collection',
                             group = editorial_group,
                             abstract = False,
-                            parents = container)
-collection.new_field(    'issn',
-                    display_name = {
-                        'eng': 'ISSN',
-                        'fre': "ISSN",
-                    },
-                    data_handler = 'varchar',
-                    group = editorial_group,
+                            parents = entitie)
+collection.new_field(   'title',
+                        display_name = 'Title',
+                        group = editorial_group,
+                        data_handler = 'varchar'
 )
-# Classe Publication : Pour gérer les back_references vers issue ou part
+
+# Classe publication
 publication = em.new_class(  'publication',
                             display_name = 'Publication',
                             group = editorial_group,
-                            abstract = True,
-                            parents = container)
-publication.new_field(  'linked_texts',
-                        display_name = {
-                            'eng': 'Text',
-                            'fre': 'Texte',
-                        },
-                      data_handler = 'list',
-                    nullable = True,
-                    allowed_classes = [text],
-                    group = editorial_group,
-                    back_reference = ('text', 'linked_container'),
-                    default = None
-)
-text.new_field(    'linked_container',
-                    display_name = {
-                        'eng': 'Container',
-                        'fre': 'Conteneur',
-                    },
-                    data_handler = 'link',
-                    nullable = True,
-                    allowed_classes = [publication],
-                    group = editorial_group,
-                    back_reference = ('publication', 'linked_texts'),
-                    default = None
-)
-# Classe Issue
-issue = em.new_class( 'issue',
-                        display_name = 'Issue',
+                            abstract = False,
+                            parents = entitie,)
+publication.new_field(  'collection',
+                        display_name = 'Collection',
                         group = editorial_group,
-                        abstract = False,
-                        parents = publication)
-issue.new_field(    'isbn',
-                  display_name = 'ISBN',
-                  data_handler = 'varchar',
-                  group = editorial_group,
-)
-issue.new_field(    'print_isbn',
-                  display_name = {
-                    'eng': 'Printed ISBN',
-                    'fre': "ISBN imprimé",
-                  },
-                  data_handler = 'varchar',
-                  group = editorial_group,
-)
-issue.new_field(    'number',
-                    display_name = {
-                        'eng': 'Number',
-                        'fre': 'Numéro',
-                    },
-                  data_handler = 'varchar',
-                  group = editorial_group,
-)
-issue.new_field(    'cover',
-                    display_name = {
-                        'eng': 'Cover',
-                        'fre': 'Couverture',
-                    },
-                  data_handler = 'varchar',
-                  group = editorial_group,
-)
-issue.new_field(    'print_pub_date',
-                    display_name = {
-                        'eng': 'Print date',
-                        'fre': "Date d'impression",
-                    },
-                  data_handler = 'datetime',
-                  group = editorial_group,
-)     
-issue.new_field(    'e_pub_date',
-                    display_name = {
-                        'eng': 'Electronic publication date',
-                        'fre': 'Date de publication électronique',
-                    },
-                  data_handler = 'datetime',
-                  group = editorial_group,
-)  
-issue.new_field(    'abstract',
-                    display_name = {
-                        'eng': 'Abstract',
-                        'fre': 'Résumé',
-                    },
-                  data_handler = 'text',
-                  group = editorial_group,
-) 
-issue.new_field(    'collection',
-                    display_name = {
-                        'eng': 'Collection',
-                        'fre': 'Collection',
-                    },
-                    data_handler = 'link',
-                    nullable = True,
-                    allowed_classes = [collection],
-                    group = editorial_group,
-                    back_reference = ('collection', 'linked_issues'),
-                    default = None
-)
-collection.new_field(   'linked_issues',
-                        display_name = {
-                        'eng': 'Linked issues',
-                        'fre': 'Numéros',
-                    },
-                    data_handler = 'hierarch',
-                    back_reference = ('Issue', 'collection'),
-                    group = editorial_group,
-                    allowed_classes = [issue],
-                    default = None,
-                    nullable = True)
-# Classe Part
-part = em.new_class(  'part',
-                            display_name = 'Part',
+                        data_handler = 'link',
+                        default = None,
+                        nullable = True,
+                        allowed_classes = [collection],
+                        back_reference = ('collection', 'publications'))
+collection.new_field(   'publications',
+                        display_name = 'Publications',
+                        group = editorial_group,
+                        data_handler = 'list',
+                        allowed_classes = [publication],
+                        back_reference = ('publication', 'collection'))
+
+#########################
+#   Texte definition    #
+#########################
+
+section = em.new_class(    'section',
+                            display_name = 'Section',
                             group = editorial_group,
                             abstract = False,
-                            parents = publication,)
-part.new_field(     'publication',
-                    display_name = {
-                        'eng': 'Publication',
-                        'fre': 'Publication',
-                    },
-                    data_handler = 'link',
-                    nullable = True,
-                    allowed_classes = [publication],
+                            parents = text)
+
+subsection = em.new_class(  'subsection',
+                            display_name = 'Subsection',
+                            group = editorial_group,
+                            abstract = False,
+                            parents = section)
+
+section.new_field(  'childs',
+                    display_name = 'Next section',
                     group = editorial_group,
-                    back_reference = ('publication', 'linked_parts'),
-                    default = None
-)
-publication.new_field(  'linked_parts',
-                        display_name = {
-                            'eng': 'Parts',
-                            'fre': 'Parties',
-                        },
-                      data_handler = 'hierarch',
-                    nullable = True,
-                    allowed_classes = [part],
-                    group = editorial_group,
-                    back_reference = ('part', 'publication'),
-                    default = None
-)
+                    data_handler = 'hierarch',
+                    allowed_classes = [subsection],
+                    back_reference = ('subsection', 'parent'),
+                    default = None,
+                    nullable = True)
+
+subsection.new_field(   'parent',
+                        display_name = 'Parent',
+                        group = editorial_group,
+                        data_handler = 'link',
+                        default = None,
+                        nullable = True,
+                        allowed_classes = [section],
+                        back_reference = ('section', 'childs'))
 
 #####################
 # Persons & authors #
@@ -514,8 +243,8 @@ publication.new_field(  'linked_parts',
 editorial_person_group = em.new_group(  'editorial_person',
                                         display_name = 'Editorial person',
                                         help_text = {
-                                            'eng': 'Introduce the concept of editorial person (author, translator, director)',
-                                            'fre': 'Contient les classes servant à la gestion des personnes éditoriales (auteur, traducteur, directeur...)',
+                                            'eng': 'Introduce the concept of editorial person (authors, translator etc)',
+                                            'fre': 'Contient les classes servant à la gestion des personnes editorials (auteurs, traducteur...)',
                                         },
                                         depends = (editorial_group,)
 )
@@ -608,7 +337,7 @@ index_name = index_abstract.new_field(
     display_name = {
         'eng': 'name',
         'fre': 'nom'},
-    data_handler = 'text',
+    data_handler = 'varchar',
     group = index_group)
 
 index_value = index_abstract.new_field(

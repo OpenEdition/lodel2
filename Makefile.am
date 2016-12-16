@@ -43,9 +43,16 @@ deb: dist
 em_test: em_test.py
 	$(python) em_test.py
 
+# 23/11 Editoral model update
+em_simple: editorial_models/em_simple.py
+	$(python) editorial_models/em_simple.py
+	
 # generate leapi dynamic code
-dyncode: examples/em_test.pickle
+dyncode: examples/em_test.pickle 
 	$(python) scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
+
+dyncode_simple: examples/em_simple.pickle 
+	$(python) scripts/refreshdyn.py examples/em_simple.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
 # run tests
 checks: runtest
