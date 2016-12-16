@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 
-from lodel.exceptions import LodelExceptions, LodelException
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.exceptions': ['LodelExceptions', 'LodelException']})
 
 class LeApiError(LodelException):
     pass

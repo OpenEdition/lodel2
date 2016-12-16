@@ -1,5 +1,5 @@
-SUBDIRS = lodel progs plugins
-EXTRA_DIST = plugins runtest examples tests runtest.sh debian
+SUBDIRS = lodel progs lodelsites
+EXTRA_DIST = runtest examples tests debian
 CLEANFILES = runtest
 
 lodel2_localstate_DATA =
@@ -27,7 +27,7 @@ doc_graphviz:
 
 do_subst = sed -e 's,\[@\]INSTALLMODEL_DIR\[@\],$(install_model_dir),g' 
 
-runtest: runtest.sh
+runtest: ./runtest.sh
 	$(do_subst) < $(srcdir)/runtest.sh > runtest
 	chmod +x runtest
 
@@ -43,9 +43,17 @@ deb: dist
 em_test: em_test.py
 	$(python) em_test.py
 
+# Test em update ( examples/em_test.pickle )
+em_simple: editorial_models/em_simple.py
+	$(python) editorial_models/em_simple.py
+	
 # generate leapi dynamic code
 dyncode: examples/em_test.pickle
 	$(python) scripts/refreshdyn.py examples/em_test.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
+
+# generate leapi dynamic code
+dyncode_simple: examples/em_simple.pickle
+	$(python) scripts/refreshdyn.py examples/em_simple.pickle $(dyncode_filename) && echo -e "\n\nCode generated in $(dyncode_filename)"
 
 # run tests
 checks: runtest

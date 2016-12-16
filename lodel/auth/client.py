@@ -5,12 +5,14 @@ import sys
 import warnings
 import inspect
 
-from lodel.settings import Settings
-from lodel import logger
-from lodel.plugin.hooks import LodelHook
-from lodel.plugin import SessionHandlerPlugin as SessionHandler
-from .exceptions import *
-from ..leapi.query import LeGetQuery
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.settings': ['Settings'],
+    'lodel.logger': 'logger',
+    'lodel.plugin': [('SessionHandlerPlugin', 'SessionHandler')],
+    'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
+        'ClientPermissionDenied', 'ClientAuthenticationError'],
+    'lodel.leapi.query': ['LeGetQuery'],})
 
 ##@brief Client metaclass designed to implements container accessor on 
 #Client Class
@@ -241,7 +243,7 @@ a session is allready started !!!")
     #informations on login and password location (LeApi object & field)
     @classmethod
     def fetch_settings(cls):
-        from lodel import dyncode
+        LodelContext.expose_dyncode(globals(), 'dyncode')
         if cls._infos_fields is None:
             cls._infos_fields = list()
         else:

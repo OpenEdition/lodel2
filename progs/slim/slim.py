@@ -65,7 +65,8 @@ def run_make(target, names):
             
 
 ##@brief Set configuration given args
-#@param args as returned by argparse
+#@param name str : instance name
+#@param args : as returned by argparse
 def set_conf(name, args):
     validate_names([name])
     conffile = get_conffile(name)
@@ -74,7 +75,7 @@ def set_conf(name, args):
     config = configparser.ConfigParser(interpolation=None)
     config.read(conffile)
 
-
+    #Interface options
     if args.interface is not None:
         iarg = args.interface
         if iarg not in ('web', 'python'):
@@ -103,7 +104,8 @@ def set_conf(name, args):
 Selected interface is not the web iterface")
         if 'lodel.webui' in config:
             del(config['lodel2.webui'])
-
+    
+    #Datasource options
     if args.datasource_connectors is not None:
         darg = args.datasource_connectors
         if darg not in ('dummy', 'mongodb'):
@@ -144,6 +146,33 @@ Selected interface is not the web iterface")
                 config[dbconfname]['db_name'] = str(args.db_name)
         else:
             config['lodel2.datasource.dummy_datasource.default'] = {'dummy':''}
+    #Logger options
+    if args.set_logger is not None:
+        #Purge existing loggers
+        for k in [ k for k in config if k.startswith('lodel2.logging.')]:
+            del(config[k])
+        if isinstance(args.set_logger, str):
+            specs = [ args.set_logger ]
+        else:
+            specs = args.set_logger
+        #Add the new one
+        for log_spec in specs:
+            spl = log_spec.split(':')
+            if len(spl) == 3:
+                loggername, loglevel, logfile = log_spec.split(':')
+            else:
+                raise ValueError(
+                    "Invalid format for logger spec : %s" % log_spec)
+                
+            loggerkey = 'lodel2.logging.%s' % loggername
+            if '%s' in logfile:
+                logfile = logfile.replace('%s', name)
+            if '%l' in logfile:
+                logfile = logfile.replace('%l', loglevel.lower())
+            config[loggerkey] = {
+                'level': loglevel,
+                'filename': logfile,
+                'context': True }
     #Now config should be OK to be written again in conffile
     with open(conffile, 'w+') as cfp:
         config.write(cfp)
@@ -494,6 +523,15 @@ to 1 instance")
         help="Select the database name on which datasource will be connect")
     confs.add_argument('--uwsgi-workers', type=int, default='2',
         metavar = 'N', help="Number of workers to spawn at the start of uwsgi")
+
+    confs.add_argument('--set-logger', type=str, default='default:INFO:-',
+        metavar = 'LOGGERSPEC', nargs='*',
+        help='Set a logger given a logger spec. A logger spec is a string \
+with this form : LOGGERNAME:LOGLEVEL:LOGFILE with LOGLEVEL one of DEBUG, \
+INFO, WARNING, SECURITY, ERROR or FATAL. LOGFILE can be a path to a logfile \
+or - to indicate stderr, else you can put a "%s" in the string that will \
+be replaced by instance name and a "%l" that will be replaced by the \
+loglevel.')
     return parser
 
 if __name__ == '__main__':
@@ -591,7 +629,7 @@ specified")
     elif args.set_option:
         names = None
         if args.all:
-            names = list(get_store_datas().values())
+            names = list(get_store_datas().keys())
         elif args.name is not None:
             names = args.name
         if names is None:

@@ -2,14 +2,20 @@
 
 ## @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
 #
-# Contains custom exceptions too
+# Contains custom exceptions too
 
 import copy
 import importlib
 import inspect
 import warnings
-from lodel.exceptions import *
-from lodel import logger
+
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(), {
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+    'lodel.leapi.datahandlers.exceptions': ['LodelDataHandlerConsistencyException', 'LodelDataHandlerException'],
+    'lodel.logger': 'logger'})
 
 
 ##@brief Base class for all data handlers
@@ -20,7 +26,7 @@ class DataHandler(object):
     ##@brief Stores the DataHandler childs classes indexed by name
     _base_handlers = None
     ##@brief Stores custom datahandlers classes indexed by name
-    # @todo do it ! (like plugins, register handlers... blablabla)
+    # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
     help_text = 'Generic Field Data Handler'
@@ -330,6 +336,12 @@ class Reference(DataHandler):
             logger.warning('Object referenced does not exist')
             return False
         return True
+    
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@throw NotImplementedError
+    def get_referenced(self, value):
+        raise NotImplementedError
 
 
 ##@brief This class represent a data_handler for single reference to another object
@@ -338,7 +350,7 @@ class Reference(DataHandler):
 class SingleRef(Reference):
 
     def __init__(self, allowed_classes=None, **kwargs):
-        super().__init__(allowed_classes=allowed_classes)
+        super().__init__(allowed_classes=allowed_classes, **kwargs)
 
 
     ##@brief Check and cast value in appropriate type
@@ -352,6 +364,17 @@ class SingleRef(Reference):
         #    raise FieldValidationError("List or string expected for a set field")
         return value
 
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@return A LeObject child class instance
+    #@throw LodelDataHandlerConsistencyException if no referenced object found
+    def get_referenced(self, value):
+        for leo_cls in self.linked_classes:
+            res = leo_cls.get_from_uid(value)
+            if res is not None:
+                return res
+        raise LodelDataHandlerConsistencyException("Unable to find \
+referenced object with uid %s" % value)
 
 
 ##@brief This class represent a data_handler for multiple references to another object
@@ -397,70 +420,27 @@ class MultipleRef(Reference):
             raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
         return new_val
 
-    ##@brief Construct a multiple ref data
-    def construct_data(self, emcomponent, fname, datas, cur_value):
-        cur_value = super().construct_data(emcomponent, fname, datas, cur_value)
-        if cur_value is not None:
-            if self.back_reference is not None:
-                br_class = self.back_reference[0]
-                for br_id in cur_value:
-                    query_filters = list()
-                    query_filters.append((br_class.uid_fieldname()[0], '=', br_id))
-                    br_obj = br_class.get(query_filters)
-                    if len(br_obj) != 0:
-                        br_list = br_obj[0].data(self.back_reference[1])
-                        if br_list is None:
-                            br_list = list()
-                        if br_id not in br_list:
-                            br_list.append(br_id)
-        return cur_value
-
-    ## @brief Checks the backreference, updates it if it is not complete
-    # @param emcomponent EmComponent : An EmComponent child class instance
-    # @param fname : the field name
-    # @param datas dict : dict storing fields values
-    # @note Not done in case of delete
-    def make_consistency(self, emcomponent, fname, datas, type_query):
-        dh = emcomponent.field(fname)
-        logger.info('Warning : multiple uid capabilities are broken here')
-        uid = datas[emcomponent.uid_fieldname()[0]]
-        if self.back_reference is not None:
-            target_class = self.back_reference[0]
-            target_field = self.back_reference[1]
-            target_uidfield = target_class.uid_fieldname()[0]
-            l_value = datas[fname]
-
-            if l_value is not None:
-                for value in l_value:
-                    query_filters = list()
-                    query_filters.append((target_uidfield, '=', value))
-                    obj = target_class.get(query_filters)
-                    if len(obj) == 0:
-                        logger.warning('Object referenced does not exist')
-                        return False
-                    l_uids_ref = obj[0].data(target_field)
-                    if l_uids_ref is None:
-                        l_uids_ref = list()
-                    if uid not in l_uids_ref:
-                        l_uids_ref.append(uid)
-                        obj[0].set_data(target_field, l_uids_ref)
-                        obj[0].update()
-
-            if type_query == 'update':
-                query_filters = list()
-                query_filters.append((uid, ' in ', target_field))
-                objects = target_class.get(query_filters)
-                if l_value is None:
-                    l_value = list()
-                if len(objects) != len(l_value):
-                    for obj in objects:
-                        l_uids_ref = obj.data(target_field)
-                        if obj.data(target_uidfield) not in l_value:
-                            l_uids_ref.remove(uid)
-                            obj.set_data(target_field, l_uids_ref)
-                            obj.update()
-
-
+    ##@brief Utility method designed to fetch referenced objects
+    #@param value mixed : the field value
+    #@return A list of LeObject child class instance
+    #@throw LodelDataHandlerConsistencyException if some referenced objects
+    #were not found
+    def get_referenced(self, values):
+        if values is None or len(values) == 0:
+            return list()
+        left = set(values)
+        values = set(values)
+        res = list()
+        for leo_cls in self.linked_classes:
+            uidname = leo_cls.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
+            tmp_res = leo_cls.get(('%s in (%s)' % (uidname, ','.join(
+                [str(l) for l in left]))))
+            left ^= set(( leo.uid() for leo in tmp_res))
+            res += tmp_res
+            if len(left) == 0:
+                return res
+        raise LodelDataHandlerConsistencyException("Unable to find \
+some referenced objects. Followinf uid were not found : %s" % ','.join(left))
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #@ingroup lodel2_datahandlers

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import 'macros/show_object.html' as show_object %}
+{% import 'components/components.html' as components %}
+{% set my_class = leapi.name2class(classname) %}
+{% set obj = my_class.get_from_uid(lodel_id) %}
+{% if obj is none %}
+    ERROR <!-- conception failure, the controller should test this before calling the template -->
+{% endif %}
+{% if my_class.is_abstract() %}
+{% set classname = obj.data('classname') %}
+{% set my_class = my_class.name2class(classname) %}
+{% endif %}
+{% block title %}Object {{ lodel_id }} {% endblock %}
+{% block content %}
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/">Home</a></li>
+  <li><a href="/{{ root_url }}/list_classes">Types</a></li>
+  <li><a href="/{{ root_url }}/show_class?classname={{ classname }}">{{ classname }}</a></li>
+  <li class="active">{{ lodel_id }}</li>
+</ol>
+<h1 class="h1_lodel">Lodel 2 - {{ classname }} with uid {{ lodel_id }}</h1>
+    {{ show_object.object_ul(obj) }}
+{% endblock %}

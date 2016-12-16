@@ -42,3 +42,4 @@ class DataNoneValid(Exception):
 #@note Designed to be raised in DataHandler
 class FieldValidationError(Exception):
     pass
+

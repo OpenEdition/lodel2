@@ -1,8 +1,12 @@
-from .plugins import Plugin
-from .exceptions import *
-from lodel.settings.validator import SettingValidator
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.plugins': ['Plugin'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.settings.validator': ['SettingValidator']})
 
 _glob_typename = 'ui'
+
 
 ##@brief Handles interfaces plugin
 #@note It's a singleton class. Only 1 interface allowed by instance.

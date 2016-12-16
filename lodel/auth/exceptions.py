@@ -1,5 +1,8 @@
-from lodel import logger
-from lodel.plugin.hooks import LodelHook
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.plugin.hooks': ['LodelHook']})
 
 ##@brief Handles common errors with a Client
 class ClientError(Exception):

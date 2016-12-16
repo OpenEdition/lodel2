@@ -9,11 +9,12 @@ import warnings
 import copy
 import hashlib
 
-from lodel.utils.mlstring import MlString
-
-from lodel.settings import Settings
-from lodel.editorial_model.exceptions import *
-from lodel.leapi.leobject import CLASS_ID_FIELDNAME
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.utils.mlstring': ['MlString'],
+    'lodel.settings': ['Settings'],
+    'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
+    'lodel.leapi.leobject': ['CLASS_ID_FIELDNAME']})
 
 ##@brief Abstract class to represent editorial model components
 # @see EmClass EmField

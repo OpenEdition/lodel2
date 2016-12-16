@@ -5,12 +5,17 @@ import os.path
 import importlib
 import copy
 import json
-from importlib.machinery import SourceFileLoader, SourcelessFileLoader
+from importlib.machinery import SourceFileLoader
 
-from lodel import logger
-from lodel.settings.utils import SettingsError
-from .exceptions import *
-from lodel.exceptions import *
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.settings.utils': ['SettingsError'],
+    'lodel.plugin.hooks': ['LodelHook'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 ## @package lodel.plugins Lodel2 plugins management
 #@ingroup lodel2_plugins
@@ -50,7 +55,7 @@ ACTIVATE_METHOD_NAME = '_activate'
 ##@brief Discover stage cache filename
 DISCOVER_CACHE_FILENAME = '.plugin_discover_cache.json'
 ##@brief Default & failover value for plugins path list
-DEFAULT_PLUGINS_PATH_LIST = ['./plugins']
+DEFAULT_PLUGINS_PATH_LIST = [os.path.join(LodelContext.context_dir(),'plugins')]
 
 ##@brief List storing the mandatory variables expected in a plugin __init__.py
 #file
@@ -292,13 +297,7 @@ class Plugin(object, metaclass=MetaPlugType):
         # Importing __init__.py infos in it
         plugin_module = '%s.%s' % (VIRTUAL_PACKAGE_NAME,
                                     plugin_name)
-
-        init_source = os.path.join(self.path, INIT_FILENAME)
-        try:
-            loader = SourceFileLoader(plugin_module, init_source)
-            self.module = loader.load_module()
-        except (ImportError,FileNotFoundError) as e:
-             raise PluginError("Failed to load plugin '%s'. It seems that the plugin name is not valid or the plugin do not exists" % plugin_name)
+        self.module = LodelContext.module(plugin_module)
 
         # loading confspecs
         try:
@@ -374,6 +373,11 @@ name differ from the one found in plugin's init file"
     #@throw AttributeError if varname not found
     #@throw ImportError if the file fails to be imported
     #@throw PluginError if the filename was not valid
+    #@todo Some strange things append :
+    #when loading modules in test self.module.__name__ does not contains
+    #the package... but in prod cases the self.module.__name__ is 
+    #the module fullname... Just a reminder note to explain the dirty
+    #if on self_modname
     def _import_from_init_var(self, varname):
         # Read varname
         try:
@@ -392,11 +396,15 @@ name differ from the one found in plugin's init file"
                 fname = filename,
                 name = self.name)
             raise PluginError(msg)
-        # importing the file in varname
-        module_name = self.module.__name__+"."+varname
-        filename = os.path.join(self.path, filename)
-        loader = SourceFileLoader(module_name, filename)
-        return loader.load_module()
+        #See the todo
+        if len(self.module.__name__.split('.')) == 1:
+            self_modname = self.module.__package__
+        else:
+            self_modname = self.module.__name__
+        #extract module name from filename
+        base_mod = '.'.join(filename.split('.')[:-1])
+        module_name = self_modname+"."+base_mod
+        return importlib.import_module(module_name)
    
     ##@brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
@@ -426,7 +434,6 @@ name differ from the one found in plugin's init file"
     #
     # @note Maybe we have to exit everything if a plugin cannot be loaded...
     def activable(self):
-        from lodel import logger
         try:
             test_fun = getattr(self.module, ACTIVATE_METHOD_NAME)
         except AttributeError:
@@ -448,7 +455,6 @@ name differ from the one found in plugin's init file"
     def _load(self):
         if self.loaded:
             return
-        from lodel import logger
         #Test that plugin "wants" to be activated
         activable = self.activable()
         if not(activable is True):
@@ -520,7 +526,6 @@ name differ from the one found in plugin's init file"
                 msg += "\n\t%20s : %s" % (name,e)
             msg += "\n"
             raise PluginError(msg)
-        from lodel.plugin.hooks import LodelHook
         LodelHook.call_hook(
             "lodel2_plugins_loaded", cls, cls._plugin_instances)
    
@@ -548,7 +553,8 @@ name differ from the one found in plugin's init file"
     # etc...
     @classmethod
     def plugin_list_confspec(cls):
-        from lodel.settings.validator import confspec_append
+        LodelContext.expose_modules(globals(), {
+            'lodel.settings.validator': ['confspec_append']})
         res = dict()
         for pcls in cls.plugin_types():
             plcs = pcls.plist_confspec()
@@ -705,7 +711,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                 #dropped
                 pass
         result = {'path_list': paths, 'plugins': result}
-        print("DEUG ",result['plugins'])
         #Writing to cache
         if not no_cache:
             with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
@@ -810,6 +815,8 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Import init file from a plugin path
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
+    #@todo replace by LodelContext usage !!! (not mandatory, this fun
+    #is only used in plugin discover method)
     @classmethod
     def import_init(cls, path):
         cls._mod_cnt += 1 # in order to ensure module name unicity
@@ -828,11 +835,21 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             raise PluginError("Unable to import initfile")
         return (res_module, temp_module)
 
+    @classmethod
+    def debug_wrapper(cls, updglob = None):
+        if updglob is not None:
+            for k, v in updglob.items():
+                globals()[k] = v
+        print(logger)
+
     ##@brief Reccursiv plugin discover given a path
     #@param path str : the path to walk through
     #@return A dict with plugin_name as key and {'path':..., 'version':...} as value
     @classmethod
     def _discover(cls, path):
+        #Ensure plugins symlink creation
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugins': 'plugins'})
         res = []
         to_explore = [path]
         while len(to_explore) > 0:
@@ -849,6 +866,8 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                         to_explore.append(f_path)
         return res
 
+def debug_wrapper_mod():
+    print("MOD : ",logger)
 
 ##@brief Decorator class designed to allow plugins to add custom methods
 #to LeObject childs (dyncode objects)
@@ -961,3 +980,6 @@ with %s" % (custom_method._method_name, custom_method))
                         custom_method.__get_method())
                     logger.debug(
                         "Custom method %s added to target" % custom_method)
+
+def wrapper_debug_fun():
+    print(logger)

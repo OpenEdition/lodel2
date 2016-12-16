@@ -5,9 +5,13 @@ import copy
 import inspect
 import warnings
 
-from .exceptions import *
-from lodel.plugin.hooks import LodelHook
-from lodel import logger
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors', 
+        'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
+        'LeApiQueryErrors'],
+    'lodel.plugin.hooks': ['LodelHook'],
+    'lodel.logger': ['logger']})
 
 
 ##@todo check datas when running query
@@ -44,11 +48,11 @@ class LeQuery(object):
             self._target_class.prepare_datas(datas) #not yet implemented
         if self._hook_prefix is None:
             raise NotImplementedError("Abstract method")
-        LodelHook.call_hook(self._hook_prefix+'_pre',
+        LodelHook.call_hook(self._hook_prefix+'pre',
                                 self._target_class,
                                 datas)
         ret = self._query(datas=datas)
-        ret = LodelHook.call_hook(self._hook_prefix+'_post',
+        ret = LodelHook.call_hook(self._hook_prefix+'post',
                                     self._target_class,
                                     ret)
         return ret

@@ -1,6 +1,10 @@
-from .plugins import Plugin, MetaPlugType
-from .exceptions import *
-from lodel.settings.validator import SettingValidator
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.plugins': ['Plugin', 'MetaPlugType'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.settings.validator': ['SettingValidator']})
+
 
 ##@brief SessionHandlerPlugin metaclass designed to implements a wrapper
 #between SessionHandlerPlugin classmethod and plugin loader functions

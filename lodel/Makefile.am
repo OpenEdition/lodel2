@@ -1,5 +1,5 @@
-SUBDIRS=auth editorial_model leapi plugin settings utils
-
+SUBDIRS=auth editorial_model leapi plugin settings utils plugins
+EXTRA_DIST = plugins
 lodel_PYTHON = *.py
 CLEANFILES = buildconf.py
 

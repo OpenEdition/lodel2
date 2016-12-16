@@ -6,10 +6,14 @@ usage() {
 	exit 1
 }
 
-cp_loader() {
-	cp -Rv $install_tpl/loader.py $instdir/
+loader_update() {
+	libdir=$1
+	install_tpl=$2
+	instdir=$3
+	lib_abs_path=$(dirname $libdir)
+	cp -Rv $install_tpl/loader.py $instdir/loader.py
 	# Adding lib path to loader
-	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$libdir'#" "$loader"
+	sed -i -E "s#^(LODEL2_LIB_ABS_PATH = )None#\1'$lib_abs_path'#" "$instdir/loader.py"
 }
 
 
@@ -27,6 +31,11 @@ instdir="$2"
 libdir="$5"
 libdir=${libdir:=[@]PKGPYTHONDIR[@]}
 install_tpl="$3"
+
+if [ $name == "monosite" ];then
+    name=""
+fi
+
 if [ -z "$install_tpl" ]
 then
 	echo -e "Install template $install_tpl not found.\n" >&2
@@ -45,6 +54,7 @@ libdir=$(realpath $libdir)
 install_tpl=$(realpath $install_tpl)
 em_file=$(realpath $em_file)
 
+echo "LIBDIR : $libdir"
 
 if test ! -d $install_tpl
 then
@@ -53,14 +63,13 @@ then
 	usage
 fi
 
-loader="$instdir/loader.py"
 conf="$instdir/conf.d/lodel2.ini"
 
 if [ $1 = '-u' ]
 then
-	#Update instance
-	cp_loader
-	exit 0
+      #Update instance
+      loader_update "$libdir" "$install_tpl" "$instdir"
+      exit 0
 fi
 
 if [ -e "$instdir" ]
@@ -80,11 +89,12 @@ cp -Rv $em_file $instdir/editorial_model.pickle
 ln -sv $install_tpl/Makefile $instdir/Makefile
 ln -sv $install_tpl/lodel_admin.py $instdir/lodel_admin.py
 ln -sv $libdir/plugins $instdir/plugins
-cp_loader
+loader_update "$libdir" "$install_tpl" "$instdir"
+
 # Adding instance name to conf
 sed -i -E "s#^sitename = noname#sitename = $name#" "$conf"
 
 
-echo -e "\nInstance successfully created in $instdir"
+echo -e "\nSite successfully created in $instdir"
 echo -e "============================\n"
 echo "Now you should edit files in '${instdir}/conf.d/' and then run : cd $instdir && make dyncode"

@@ -8,11 +8,15 @@ import warnings
 import types # for dynamic bindings
 from collections import namedtuple
 
-from lodel import logger
-from lodel.settings.utils import SettingsError, SettingsErrors
-from lodel.settings.validator import SettingValidator, LODEL2_CONF_SPECS, \
-    confspec_append
-from lodel.settings.settings_loader import SettingsLoader
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(),{
+    'lodel.logger': 'logger',
+    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
+    'lodel.settings.validator': ['SettingValidator', 'LODEL2_CONF_SPECS',
+        'confspec_append'],
+    'lodel.settings.settings_loader':['SettingsLoader']})
+    
 
 ## @package lodel.settings.settings Lodel2 settings module
 #
@@ -76,13 +80,15 @@ class Settings(object, metaclass=MetaSettings):
     
     ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
-    def __init__(self, conf_dir):
+    #@param custom_confspec None | dict : if given overwrite default lodel2
+    #confspecs
+    def __init__(self, conf_dir, custom_confspecs = None):
         self.singleton_assert() # check that it is the only instance
         Settings.instance = self
         ## @brief Configuration specification
         #
         # Initialized by Settings.__bootstrap() method
-        self.__conf_specs = None
+        self.__conf_specs = custom_confspecs
         ## @brief Stores the configurations in namedtuple tree
         self.__confs = None
         self.__conf_dir = conf_dir
@@ -130,9 +136,14 @@ class Settings(object, metaclass=MetaSettings):
 
     ##@brief This method handles Settings instance bootstraping
     def __bootstrap(self):
-        from lodel.plugin.plugins import Plugin, PluginError
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugin.plugins': ['Plugin', 'PluginError']})
         logger.debug("Settings bootstraping")
-        lodel2_specs = LODEL2_CONF_SPECS
+        if self.__conf_specs is None:
+            lodel2_specs = LODEL2_CONF_SPECS
+        else:
+            lodel2_specs = self.__conf_specs
+            self.__conf_specs = None
         loader = SettingsLoader(self.__conf_dir) 
         plugin_list = []
         for ptype_name,ptype in Plugin.plugin_types().items():

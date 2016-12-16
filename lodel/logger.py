@@ -13,17 +13,21 @@ handlers = dict() # Handlers list (generated from settings)
 ##@brief Stores sent messages until module is able to be initialized
 msg_buffer = []
 
-# Fetching default root logger
-logger = logging.getLogger()
+# Fetching logger for current context
+from lodel.context import LodelContext
+logger = logging.getLogger(LodelContext.get_name())
 
 ##@brief Module initialisation from settings
 #@return True if inited else False
 def __init_from_settings():
+    from lodel.context import LodelContext
     try:
-        from lodel.settings import Settings
+        LodelContext.expose_modules(globals(), {
+            'lodel.settings': ['Settings']})
     except Exception:
         return False
-    from lodel.settings.settings import Settings as Lodel2Settings
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings.settings': [('Settings', 'Lodel2Settings')]})
     if not Lodel2Settings.started():
         return False
     # capture warning disabled, because the custom format raises error (unable
@@ -49,7 +53,7 @@ def __init_from_settings():
 # @param name str : The handler name
 # @param logging_opt dict : dict containing options ( see above )
 def add_handler(name, logging_opt):
-    logger = logging.getLogger()
+    logger = logging.getLogger(LodelContext.get_name())
     if name in handlers:
         raise KeyError("A handler named '%s' allready exists")
     
@@ -115,6 +119,9 @@ def log(lvl, msg, *args, **kwargs):
         else:
             for s_kwargs, args in msg_buffer:
                 log(*args, **s_kwargs)
+    from lodel.context import LodelContext
+    if LodelContext.multisite():
+        msg = "CTX(%s) %s" % (LodelContext.get_name(), msg)
     caller = logger.findCaller() # Opti warning : small overhead
     extra = {
         '_pathname': os.path.abspath(caller[0]),

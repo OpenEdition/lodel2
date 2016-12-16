@@ -90,6 +90,9 @@ NOTE: You have to run in root to use this below
 		- generate a nginx conf for all instances :
 			slim -a --nginx-conf
 
+		- set logger to warning level and log in file :
+			slim -a -s --set-logger test:WARNING:/var/log/lodel2/%l.%s.log
+
 		- get some help for more options & actions :
 			slim -h
 
@@ -130,18 +133,38 @@ Mass deployments tricks & tips:
 	#Reactivate auth
 	sed -i -e 's/^noauth = /#noauth =/' -e 's/^#auth = /auth =/' /etc/mongodb.conf
 	#Test connection
-	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
+	echo "exit" | mongo --quiet -u $mongoadmin -p $mongopass admin && echo "Connection ok" || echo "connection fails"
 	#Indicate mongodb credentials to mass_deploy
 	echo -e "MONGODB_ADMIN_USER='$mongoadmin'\nMONGODB_ADMIN_PASSWORD='$mongopass'\n" >> /etc/lodel2/mass_deploy.cfg
 	#Deploying 50 instances
 	NINSTANCE=50
 	#Running mass_deploy
 	/usr/share/lodel2/scripts/mass_deploy $NINSTANCE
+
+	#FOLLOWING INSTRUCTIONS ARE FOR STARTING APPS WITH UWSGI
+	# for standalone instructions see bellow
+
 	#Updating nginx conf (delete /etc/nginx/sites-enabled/default if exists)
 	slim --nginx-conf -a > /etc/nginx/sites-enabled/lodel2
 	/etc/init.d/nginx reload
 	#Start all instances and check if they managed to start
 	slim --start -a && sleep 2 && slim -l
+
+	# FOLLOWING INSTRUCTIONS ARE FOR STANDALONE LODEL2 WEBSERVER
+	
+	#Configure nginx & restart it
+	export lodel2_install_dir="/usr/lib/python3/dist-packages";
+	echo -e "server {\n\tlisten 80 default_server;\n\tlisten [::]:80 default_server;\n\tlocation / {\n\t\tproxy_pass http://localhost:1337/;\n\t}\n\t\n\tlocation /static/ {\n\t\talias $lodel2_install_dir/lodel/plugins/webui/templates/;\n\t}\n\t\n}\n" > /etc/nginx/sites-enabled/default
+	/etc/init.d/nginx restart
+	#Build dyncode for instances
+	slim -a -m
+	#Copy the multisite loader in lodel instances root folder
+	cp /usr/lib/python3/dist-packages/lodel/plugins/multisite/loader.py /tmp/lodel2_instances/
+	cd /tmp/lodel2_instances/
+	#Start the server
+	python3 loader.py
+	#Now you can access to the app in HTTP via nginx throught port 80 
+	#or directly via the python server throught the port 1337
 
 
 	Cleaning mongodb + instances :

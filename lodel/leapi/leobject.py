@@ -4,16 +4,23 @@ import importlib
 import warnings
 import copy
 
-from lodel import logger
-from lodel.settings import Settings
-from lodel.settings.utils import SettingsError
-from .query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
-from .exceptions import *
-from lodel.plugin.exceptions import *
-from lodel.plugin.hooks import LodelHook
-from lodel.plugin import Plugin, DatasourcePlugin
-from lodel.leapi.datahandlers.base_classes import DatasConstructor
-from lodel.leapi.datahandlers.base_classes import Reference
+from lodel.context import LodelContext
+
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.settings': 'Settings',
+    'lodel.settings.utils': 'SettingsError',
+    'lodel.leapi.query': ['LeInsertQuery', 'LeUpdateQuery', 'LeDeleteQuery',
+        'LeGetQuery'],
+    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors',
+        'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
+        'LeApiQueryErrors'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
+        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.exceptions': ['LodelFatalError'],
+    'lodel.plugin.hooks': ['LodelHook'],
+    'lodel.plugin': ['Plugin', 'DatasourcePlugin'],
+    'lodel.leapi.datahandlers.base_classes': ['DatasConstructor', 'Reference']})
 
 ##@brief Stores the name of the field present in each LeObject that indicates
 #the name of LeObject subclass represented by this object
@@ -160,7 +167,7 @@ class LeObject(object):
     def reference_handlers(cls, with_backref = True):
         return {    fname: fdh 
                     for fname, fdh in cls.fields(True).items()
-                    if issubclass(fdh.__class__, Reference) and \
+                    if fdh.is_reference() and \
                         (not with_backref or fdh.back_reference is not None)}
     
     ##@brief Return a LeObject child class from a name
@@ -621,8 +628,22 @@ construction and consitency when datas are not complete\n")
     #@todo broken multiple UID
     @classmethod
     def get_from_uid(cls, uid):
+        if cls.uid_fieldname() is None:
+            raise LodelFatalError(
+                "No uid defined for class %s" % cls.__name__)
         uidname = cls.uid_fieldname()[0] #Brokes composed UID
         res = cls.get([(uidname,'=', uid)])
+        
+        #dedoublonnage vu que query ou la datasource est bugué
+        if len(res) > 1:
+            res_cp = res
+            res = []
+            while len(res_cp) > 0:
+                cur_res = res_cp.pop()
+                if cur_res.uid() in [ r.uid() for r in res_cp]:
+                    logger.error("DOUBLON detected in query results !!!")
+                else:
+                    res.append(cur_res)
         if len(res) > 1:
             raise LodelFatalError("Get from uid returned more than one \
 object ! For class %s with uid value = %s" % (cls, uid))

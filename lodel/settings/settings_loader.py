@@ -4,12 +4,13 @@ import os
 import glob
 import copy
 
-from lodel import logger
-from lodel.settings.utils import *
-from lodel.settings.validator import SettingsValidationError
-from lodel.settings.utils import SettingsError, SettingsErrors
+from lodel.context import LodelContext
 
-   
+LodelContext.expose_modules(globals(), {
+    'lodel.logger': 'logger',
+    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
+    'lodel.settings.validator': ['SettingsValidationError']})
+
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
     

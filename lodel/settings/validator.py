@@ -7,7 +7,10 @@ import socket
 import inspect
 import copy
 
-from lodel.exceptions import *
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.exceptions': ['LodelException', 'LodelExceptions',
+        'LodelFatalError', 'FieldValidationError']})
 
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
@@ -24,6 +27,7 @@ class SettingsValidationError(Exception):
 # Class instance are callable objects that takes a value argument (the value to validate). It raises
 # a SettingsValidationError if validation fails, else it returns a properly
 # casted value.
+#@todo implement an IP validator and use it in multisite confspec
 class SettingValidator(object):
     
     _validators = dict()
@@ -180,7 +184,7 @@ def directory_val(value):
 
 ##@brief Validate a loglevel value
 def loglevel_val(value):
-    valids = ['DEBUG', 'INFO', 'SECURITY', 'ERROR', 'CRITICAL']
+    valids = ['DEBUG', 'INFO', 'WARNING', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
         raise SettingsValidationError(
                 "The value '%s' is not a valid loglevel" % value)
@@ -238,8 +242,10 @@ def host_val(value):
 ##@brief Validator for Editorial model component
 #
 # Designed to validate a conf that indicate a class.field in an EM
+#@todo modified the hardcoded dyncode import (it's a warning)
 def emfield_val(value):
-    from lodel.plugin.hooks import LodelHook
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
@@ -248,7 +254,7 @@ def emfield_val(value):
     #Late validation hook
     @LodelHook('lodel2_dyncode_bootstraped')
     def emfield_conf_check(hookname, caller, payload):
-        from lodel import dyncode
+        import leapi_dyncode as dyncode # <-- dirty & quick
         classnames = { cls.__name__.lower():cls for cls in dyncode.dynclasses}
         if value[0].lower() not in classnames:
             msg = "Following dynamic class do not exists in current EM : %s"
@@ -263,12 +269,14 @@ def emfield_val(value):
 #
 #Able to check that the value is a plugin and if it is of a specific type
 def plugin_validator(value, ptype = None):
-    from lodel.plugin.hooks import LodelHook
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
     value = copy.copy(value)
     @LodelHook('lodel2_dyncode_bootstraped')
     def plugin_type_checker(hookname, caller, payload):
-        from lodel.plugin.plugins import Plugin
-        from lodel.plugin.exceptions import PluginError
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugin.plugins': ['Plugin'],
+            'lodel.plugin.exceptions': ['PluginError']})
         if value is None:
             return
         try:
@@ -422,12 +430,12 @@ LODEL2_CONF_SPECS = {
                     SettingValidator('loglevel')),
         'context': (    False,
                         SettingValidator('bool')),
-        'filename': (   None,
-                        SettingValidator('errfile', none_is_valid = True)),
-        'backupcount': (    None,
-                            SettingValidator('int', none_is_valid = True)),
-        'maxbytes': (   None,
-                        SettingValidator('int', none_is_valid = True)),
+        'filename': (   "-",
+                        SettingValidator('errfile', none_is_valid = False)),
+        'backupcount': (    5,
+                            SettingValidator('int', none_is_valid = False)),
+        'maxbytes': (   1024*10,
+                        SettingValidator('int', none_is_valid = False)),
     },
     'lodel2.editorialmodel': {
         'emfile': ( 'em.pickle', SettingValidator('strip')),

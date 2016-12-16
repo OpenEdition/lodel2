@@ -3,9 +3,13 @@
 import lxml
 import os
 from lxml import etree
-from lodel.editorial_model.model import EditorialModel
-from lodel.editorial_model.components import *
-from lodel.utils.mlstring import MlString
+
+from lodel.context import LodelContext
+LodelContext.expose_modules(globals(), {
+    'lodel.editorial_model.model': ['EditorialModel'],
+    'lodel.editorial_model.components': ['EmComponent', 'EmClass', 'EmField',
+        'EmGroup'],
+    'lodel.utils.mlstring': ['MlString']})
 
 ##@package lodel.editorial_model.translator.xmlfile Translator module designed
 #to load & save EM in XML

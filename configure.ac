@@ -15,7 +15,8 @@ AC_CONFIG_FILES([Makefile \
 	lodel/utils/Makefile \
 	progs/Makefile \
 	progs/slim/Makefile \
-	plugins/Makefile \
+	lodel/plugins/Makefile \
+	lodelsites/Makefile \
 ])
 
 

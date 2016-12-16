@@ -6,3 +6,5 @@ settings_local.py
 doc/html
 doc/*.sqlite3.db
 .*.swp
+Makefile
+Makefile.in

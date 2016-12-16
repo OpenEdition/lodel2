@@ -59,8 +59,10 @@ if [ ! -d "$install_model_dir" ]
 then
 	install_model_dir="$(dirname $0)/progs/slim/install_model/"
 fi
+libdir="$(dirname $(realpath $0))/lodel"
 rmdir $testdir
-./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle $(dirname $0)
+./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
+echo ./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
 cp -R examples $testdir
 cp -R tests $testdir
 cd $testdir
