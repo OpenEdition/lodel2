@@ -1,27 +1,30 @@
 import unittest
 
-from lodel.leapi.datahandlers.datas import Concat, Varchar
-from lodel.editorial_model.components import EmClass
-from lodel.leapi.datahandlers.base_classes import DatasConstructor
+from lodel.leapi.datahandlers.datas import Concat as Testee
+
 
 class ConcatTestCase(unittest.TestCase):
-
-    # @TODO use Data Constructors
-    def test_construct_data(self):
-        test_class = EmClass('testing', display_name='testing class')
-        test_class.new_field('field1', 'varchar')
-        test_class.new_field('field2', 'varchar')
-
-        datas = {'field1': 'o'*5, 'field2': 'k'*4}
-        datas2 = {'field1': 'o'*5, 'field2': 'k'*10}
-
-        test_concat = Concat(['field1', 'field2'], '*')
-        concat_string_value = test_concat.construct_data(test_class, 'field', datas, '')
-        self.assertEqual('%s*%s' % ('o'*5, 'k'*4), concat_string_value)
-
-        test_concat.max_length=10
-        concat_string_value = test_concat.construct_data(test_class, 'field', datas2, '')
-        test_value = '%s*%s' % ('o'*5, 'k'*10)
-        self.assertNotEqual(test_value, concat_string_value)
-        self.assertEqual(len(concat_string_value), test_concat.max_length)
-        self.assertTrue(concat_string_value in test_value)
+    
+    
+    def test_has_base_type_property(self):
+        self.assertTrue(hasattr(Testee, 'base_type'))
+        
+        
+    def test_base_type_is_char(self):
+        self.assertEqual(Testee.base_type, 'char')
+        
+        
+    def test_has_help_property(self):
+        self.assertTrue(hasattr(Testee, 'help'))
+        
+        
+    def test_help_property_str_is_set(self):
+        self.assertEqual(type(Testee.help), str)
+        
+    
+    def test_sets_correct_format_string(self):
+        separator = '-'
+        field_list  = ['', '', '']
+        testee = Testee(field_list, separator)
+        
+        self.assertEqual(testee._format_string, separator.join(['%s' for _ in field_list]))
