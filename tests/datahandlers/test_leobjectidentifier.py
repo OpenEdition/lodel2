@@ -40,14 +40,12 @@ class LeresultectSubclassIdentifierTestCase(unittest.TestCase):
         result = Testee.construct_data(None, object, None, None, None)
         
         self.assertEqual(result, object .__name__)
-        self.assertEqual(type(result), str)
         
         
     def test_passing_instance_returns_class_name(self):
         result = Testee.construct_data(None,  object(), None, None, None)
         
         self.assertTrue(result, object.__name__)
-        self.assertEqual(type(result), str)
         
         
     def test_passing_instance_and_class_same_result(self):
