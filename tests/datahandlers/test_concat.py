@@ -6,23 +6,15 @@ from lodel.leapi.datahandlers.datas import Concat as Testee
 class ConcatTestCase(unittest.TestCase):
     
     
-    def test_has_base_type_property(self):
-        self.assertTrue(hasattr(Testee, 'base_type'))
-        
-        
     def test_base_type_is_char(self):
         self.assertEqual(Testee.base_type, 'char')
-        
-        
-    def test_has_help_property(self):
-        self.assertTrue(hasattr(Testee, 'help'))
         
         
     def test_help_property_str_is_set(self):
         self.assertEqual(type(Testee.help), str)
         
     
-    def test_sets_correct_format_string(self):
+    def test_correctly_sets_format_string(self):
         separator = '-'
         field_list  = ['', '', '']
         testee = Testee(field_list, separator)
