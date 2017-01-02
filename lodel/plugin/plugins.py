@@ -597,7 +597,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #@throw PluginError
     @classmethod
     def register(cls, plugin_name):
-        from .datasource_plugin import DatasourcePlugin
         if plugin_name in cls._plugin_instances:
             msg = "Plugin allready registered with same name %s"
             msg %= plugin_name
