@@ -608,8 +608,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             raise PluginError("No plugin named %s found" % plugin_name)
         pinfos = pdcache['plugins'][plugin_name]
         ptype = pinfos['type']
-        if ptype not in MetaPlugType.all_ptype_names():
-            raise PluginError("Unknown plugin type '%s'" % ptype)
         pcls = MetaPlugType.type_from_name(ptype)
         plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
