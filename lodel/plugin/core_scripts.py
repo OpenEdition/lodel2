@@ -88,19 +88,23 @@ class PluginManager(lodel_script.LodelScript):
             default = list(),
             help="Indicate a plugin name to uninstall",
             type=str)
-        parser.add_argument('-f', '--file', nargs='*',
+        parser.add_argument('-a', '--archive', nargs='*',
             default = list(),
-            help="Specify a tarball containing a plugin to install",
+            help="(NOT IMPLEMENTED) Specify a tarball containing a plugin \
+to install",
             type=str)
         parser.add_argument('-d', '--directory', nargs='*',
             default = list(),
             help="Specify a plugin by its directory",
             type=str)
+        parser.add_argument('-f', '--force', action="store_true",
+            help="Force plugin directory deletion in case of check errors")
 
     @classmethod
     def run(cls, args):
         if args.clean:
-            if args.uninstall or len(args.directory) > 0 or len(args.file) > 0:
+            if args.uninstall or len(args.directory) > 0 \
+                    or len(args.archive) > 0:
                 raise RuntimeError("When using -c --clean option you can \
 only use option -n --name to clean plugins with specified names")
             return cls.clean(args)
@@ -119,7 +123,7 @@ only use option -n --name to clean plugins with specified names")
 We do not know where to find it...")
         plist = Plugin.discover()
         errors = dict()
-        if len(args.file) > 0:
+        if len(args.archive) > 0:
             raise NotImplementedError("Not supported yet")
         
         plugins_infos = {}
@@ -178,16 +182,60 @@ in %s" % (orig_path, dst_path))
             print(msg)
     
     ##@brief Handles plugins uninstall
+    #@todo uninstall by path is broken
     @classmethod
     def uninstall(cls, args):
-        raise NotImplementedError("Not yet implemented")
+        import lodel.plugin.plugins
+        from lodel.plugin.plugins import Plugin
+        if len(args.archive) > 0:
+            raise RuntimeError("Cannot uninstall plugin using -f --file \
+oprtions. Use -d --directory instead")
+        to_delete = dict() #Path to delete accumulator
+        errors = dict()
+        if len(args.directory) > 0:
+            #processing & checking -d --directory arguments
+            for path in args.directory:
+                apath = os.path.abspath(path)
+                if not apath.startswith(lodel.plugin.plugins.PLUGINS_PATH):
+                    errors[path] = "Not a subdir of %s"
+                    errors[path] %= lodel.plugin.plugins.PLUGINS_PATH
+                    continue
+                try:
+                    pinfos = Plugin.dir_is_plugin(apath)
+                except Exception as e:
+                    if not args.force:
+                        errors[path] = e
+                        continue
+                to_delete[path] = pinfos
+
+        if len(args.plugin_name) > 0:
+            #Processing -n --plugin-name arguments
+            plist = Plugin._discover(lodel.plugin.plugins.PLUGINS_PATH)
+            for pinfos in plist:
+                if pinfos['name'] in args.plugin_name:
+                    to_delete[pinfos['path']] = pinfos
+        
+        if len(errors) > 0:
+            msg = "Following errors detected before begining deletions :\n"
+            for path, errmsg in errors.items():
+                msg += "\t- For %s : %s" % (path, errmsg)
+            print(msg)
+            if not args.force:
+                exit(1)
+        
+        print("Begining deletion :")
+        for path, pinfos in to_delete.items():
+            #shutil.rmtree(path)
+            print("rm -R %s" % path)
+            print("\t%s(%s) in %s deleted" % (
+                pinfos['name'], pinfos['version'], pinfos['path']))
 
     ##@brief Handles plugins clean
     @classmethod
     def clean(cls, args):
         import lodel.plugin.plugins
         from lodel.plugin.plugins import Plugin
-        if len(args.file) > 0:
+        if len(args.archive) > 0:
             raise RuntimeError("Cannot specify plugins to uninstall using \
 -f --file option. You have to use -d --directory or -n --name")
         if len(args.plugin_name) > 0:
