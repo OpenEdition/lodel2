@@ -81,6 +81,9 @@ class PluginManager(lodel_script.LodelScript):
         parser.add_argument('-u', '--uninstall',
             help="Uninstall specified plugin",
             action='store_true')
+        parser.add_argument('-c', '--clean',
+            help="Uninstall duplicated plugins with smallest version number",
+            action="store_true")
         parser.add_argument('-n', '--plugin-name', nargs='*',
             default = list(),
             help="Indicate a plugin name to uninstall",
@@ -96,6 +99,11 @@ class PluginManager(lodel_script.LodelScript):
 
     @classmethod
     def run(cls, args):
+        if args.clean:
+            if args.uninstall or len(args.directory) > 0 or len(args.file) > 0:
+                raise RuntimeError("When using -c --clean option you can \
+only use option -n --name to clean plugins with specified names")
+            return cls.clean(args)
         if args.uninstall:
             return cls.uninstall(args)
         return cls.install(args)
@@ -136,7 +144,7 @@ We do not know where to find it...")
                 #Found an installed plugin with the same name
                 #Cehcking both versions
                 if plist[pname]['version'] == pinfos['version']:
-                    errors[pinfos['path']] = 'Abording installation of %s\
+                    errors[pinfos['path']] = 'Abording installation of %s \
 found in %s because it seems to be allready installed in %s' % (
     pname, pinfos['path'], plist[pname]['path'])
                     continue
@@ -163,12 +171,58 @@ in %s" % (orig_path, dst_path))
             shutil.copytree(pinfos['path'], dst_path, symlinks = False)
             print("%s(%s) installed in %s" % (
                 pname, pinfos['version'], dst_path))
+        if len(errors) > 0:
+            msg = "Following errors occurs during instalation process :\n"
+            for path, error_msg in errors.items():
+                msg += "\t- For '%s' : %s" % (path, error_msg)
+            print(msg)
     
-    ##@brief Handles plugin uninstall
+    ##@brief Handles plugins uninstall
     @classmethod
     def uninstall(cls, args):
-        pass
-        
+        raise NotImplementedError("Not yet implemented")
+
+    ##@brief Handles plugins clean
+    @classmethod
+    def clean(cls, args):
+        import lodel.plugin.plugins
+        from lodel.plugin.plugins import Plugin
+        if len(args.file) > 0:
+            raise RuntimeError("Cannot specify plugins to uninstall using \
+-f --file option. You have to use -d --directory or -n --name")
+        if len(args.plugin_name) > 0:
+            names = args.plugin_name
+        else:
+            names = list(Plugin.discover().keys())
+        #_dicover do not remove duplicated names
+        full_list = Plugin._discover(lodel.plugin.plugins.PLUGINS_PATH)
+        #Casting into a dict with list of plugins infos
+        pdict = dict()
+        for pinfos in full_list:
+            if pinfos['name'] in names:
+                if pinfos['name'] in pdict:
+                    pdict[pinfos['name']].append(pinfos)
+                else:
+                    pdict[pinfos['name']] = [pinfos]
+        to_clean = list()
+        clean_count = 0
+        for pname, pinfos_l in pdict.items():
+            if len(pinfos_l) > 1:
+                #There are some plugins to clean
+                tmp_l = sorted(pinfos_l, key=lambda item: item['version'])
+                to_clean += tmp_l[:-1]
+                msg = "Found %s(%s). Cleaning " % (
+                    pname, tmp_l[-1]['version'])
+                for pinfos in to_clean:
+                    clean_count += 1
+                    str_info = '%s(%s)' % (pname, pinfos['version'])
+                    msg += "%s, " % (str_info)
+                    shutil.rmtree(pinfos['path'])
+                print(msg)
+        if clean_count > 0:
+            print("%d plugins were uninstalled" % clean_count)
+        else:
+            print("Allready clean")
 
 
 ##@brief Implements lodel_admin.py **hooks-list** action
