@@ -52,10 +52,8 @@ LOADER_FILENAME_VARNAME = '__loader__'
 PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ##@brief Name of the optionnal activate method
 ACTIVATE_METHOD_NAME = '_activate'
-##@brief Discover stage cache filename
-DISCOVER_CACHE_FILENAME = '.plugin_discover_cache.json'
 ##@brief Default & failover value for plugins path list
-DEFAULT_PLUGINS_PATH_LIST = [os.path.join(LodelContext.context_dir(),'plugins')]
+PLUGINS_PATH = os.path.join(LodelContext.context_dir(),'plugins')
 
 ##@brief List storing the mandatory variables expected in a plugin __init__.py
 #file
@@ -240,9 +238,6 @@ class MetaPlugType(type):
 # 3. the loader call load_all to register hooks etc
 class Plugin(object, metaclass=MetaPlugType):
     
-    ##@brief Stores plugin directories paths
-    _plugin_directories = None
-    
     ##@brief Stores Plugin instances indexed by name
     _plugin_instances = dict()
     
@@ -252,9 +247,6 @@ class Plugin(object, metaclass=MetaPlugType):
 
     ##@brief Attribute that stores plugins list from discover cache file
     _plugin_list = None
-    
-    ##@brief Store dict representation of discover cache content
-    _discover_cache = None
     
     #@brief Designed to store, in child classes, the confspec indicating \
     #where plugin list is stored
@@ -295,8 +287,7 @@ class Plugin(object, metaclass=MetaPlugType):
         self.loaded = False
         
         # Importing __init__.py infos in it
-        plugin_module = '%s.%s' % (VIRTUAL_PACKAGE_NAME,
-                                    plugin_name)
+        plugin_module = self.module_name()
         self.module = LodelContext.module(plugin_module)
 
         # loading confspecs
@@ -406,6 +397,19 @@ name differ from the one found in plugin's init file"
         module_name = self_modname+"."+base_mod
         return importlib.import_module(module_name)
    
+    ##@brief Return associated module name
+    def module_name(self):
+        if not self.path.startswith('./plugins'):
+            raise PluginError("Bad path for plugin %s : %s" % (
+                self.name, self.path))
+        mod_name = ''
+        pathbuff = self.path
+        while pathbuff != '.':
+            mod_name = os.path.basename(pathbuff) + '.' + mod_name
+            pathbuff = os.path.dirname(pathbuff)
+        #removing trailing '.' and add leading lodel.
+        return 'lodel.'+mod_name[:-1]
+
     ##@brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
     def check_deps(self):
@@ -561,35 +565,6 @@ name differ from the one found in plugin's init file"
             confspec_append(res, plcs)
         return res
 
-    ##@brief Attempt to read plugin discover cache
-    #@note If no cache yet make a discover with default plugin directory
-    #@return a dict (see @ref _discover() )
-    @classmethod
-    def plugin_cache(cls):
-        if cls._discover_cache is None:
-            if not os.path.isfile(DISCOVER_CACHE_FILENAME):
-                cls.discover()
-            with open(DISCOVER_CACHE_FILENAME) as pdcache_fd:
-                res = json.load(pdcache_fd)
-            #Check consistency of loaded cache
-            if 'path_list' not in res:
-                raise LodelFatalError("Malformed plugin's discover cache file \
-: '%s'. Unable to find plugin's paths list." % DISCOVER_CACHE_FILENAME)
-            expected_keys = ['type', 'path', 'version']
-            for pname in res['plugins']:
-                for ekey in expected_keys:
-                    if ekey not in res['plugins'][pname]:
-                        #Bad cache !
-                        logger.warning("Malformed plugin's discover cache \
-file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
-                        cls._discover_cache = cls.discover(res['path_list'])
-                        break
-            else:
-                #The cache we just read was OK
-                cls._discover_cache = res
-                
-        return cls._discover_cache
-
     ##@brief Register a new plugin
     # 
     #@param plugin_name str : The plugin name
@@ -602,11 +577,10 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             msg %= plugin_name
             raise PluginError(msg)
         #Here we check that previous discover found a plugin with that name
-        pdcache = cls.plugin_cache()
-        if plugin_name not in pdcache['plugins']:
+        pdcache = cls.discover()
+        if plugin_name not in pdcache:
             raise PluginError("No plugin named %s found" % plugin_name)
-        pinfos = pdcache['plugins'][plugin_name]
-        ptype = pinfos['type']
+        ptype = pdcache[plugin_name]['type']
         pcls = MetaPlugType.type_from_name(ptype)
         plugin = pcls(plugin_name)
         cls._plugin_instances[plugin_name] = plugin
@@ -632,7 +606,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     # @return the plugin directory path
     @classmethod
     def plugin_path(cls, plugin_name):
-        
         plist = cls.plugin_list()
         if plugin_name not in plist:
             raise PluginError("No plugin named '%s' found" % plugin_name)
@@ -651,6 +624,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #Typically composed like VIRTUAL_PACKAGE_NAME.PLUGIN_NAME
     #@param plugin_name str : a plugin name
     #@return a string representing a module name
+    #@todo check if used, else delete it
     @classmethod
     def plugin_module_name(cls, plugin_name):
         return "%s.%s" % (VIRTUAL_PACKAGE_NAME, plugin_name)
@@ -668,8 +642,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     ##@brief Attempt to "restart" the Plugin class
     @classmethod
     def clear(cls):
-        if cls._plugin_directories is not None:
-            cls._plugin_directories = None
         if cls._plugin_instances != dict():
             cls._plugin_instances = dict()
         if cls._load_called != []:
@@ -682,20 +654,18 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
         pass
     
     ##@brief Reccursively walk throught paths to find plugin, then stores
-    #found plugin in a file...
-    #@param paths list : list of directory paths
-    #@param no_cache bool : if true only return a list of found plugins 
-    #without modifying the cache file
-    #@return a dict {'path_list': [...], 'plugins': { see @ref _discover }}
-    #@todo add max_depth and symlink following options
+    #found plugin in a static var
+    #
+    #Found plugins are stored in cls._plugin_list
+    #@note The discover is run only if no cached datas are found
+    #@return a list of dict with plugin infos { see @ref _discover }
+    #@todo add max_depth and no symlink following feature
     @classmethod
-    def discover(cls, paths = None, no_cache = False):
+    def discover(cls):
+        if cls._plugin_list is not None:
+            return cls._plugin_list
         logger.info("Running plugin discover")
-        if paths is None:
-            paths = DEFAULT_PLUGINS_PATH_LIST
-        tmp_res = []
-        for path in paths:
-            tmp_res += cls._discover(path)
+        tmp_res = cls._discover(PLUGINS_PATH)
         #Formating and dedoubloning result
         result = dict()
         for pinfos in tmp_res:
@@ -707,11 +677,7 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
             else:
                 #dropped
                 pass
-        result = {'path_list': paths, 'plugins': result}
-        #Writing to cache
-        if not no_cache:
-            with open(DISCOVER_CACHE_FILENAME, 'w+') as pdcache:
-                pdcache.write(json.dumps(result))
+        cls._plugin_list = result
         return result
     
     ##@brief Return discover result
@@ -722,17 +688,6 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     #from the plugin's discover cache
     @classmethod
     def plugin_list(cls, refresh = False):
-        try:
-            infos = cls._load_discover_cache()
-            path_list = infos['path_list']
-        except PluginError:
-            refresh = True
-            path_list = DEFAULT_PLUGINS_PATH_LIST
-
-        if cls._plugin_list is None or refresh:
-            if not os.path.isfile(DISCOVER_CACHE_FILENAME) or refresh:
-                infos = cls.discover(path_list)
-        cls._plugin_list = infos['plugins']
         return cls._plugin_list
 
     ##@brief Return a list of child Class Plugin
@@ -740,32 +695,16 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
     def plugin_types(cls):
         return MetaPlugType.all_types()
 
-    ##@brief Attempt to open and load plugin discover cache
-    #@return discover cache
-    #@throw PluginError when open or load fails
-    @classmethod
-    def _load_discover_cache(cls):
-        try:
-            pdcache = open(DISCOVER_CACHE_FILENAME, 'r')
-        except Exception as e:
-            msg = "Unable to open discover cache : %s"
-            msg %= e
-            raise PluginError(msg)
-        try:
-            res = json.load(pdcache)
-        except Exception as e:
-            msg = "Unable to load discover cache : %s"
-            msg %= e
-            raise PluginError(msg)
-        pdcache.close()
-        return res
-
     ##@brief Check if a directory is a plugin module
     #@param path str : path to check
     #@return a dict with name, version and path if path is a plugin module, else False
     @classmethod
     def dir_is_plugin(cls, path):
         log_msg = "%s is not a plugin directory because : " % path
+        #Check that path is a subdir of PLUGINS_PATH
+        abspath = os.path.abspath(path)
+        if not abspath.startswith(os.path.abspath(PLUGINS_PATH)):
+            raise PluginError("%s is not a subdir of %s" % log_msg, PLUGINS_PATH)
         #Checks that path exists
         if not os.path.isdir(path):
             raise ValueError(
@@ -857,7 +796,8 @@ file : '%s'. Running discover again..." % DISCOVER_CACHE_FILENAME)
                     #Check if it is a plugin directory
                     test_result = cls.dir_is_plugin(f_path)
                     if not (test_result is False):
-                        logger.info("Plugin found in %s" % f_path)
+                        logger.info("Plugin '%s' found in %s" % (
+                            test_result['name'],f_path))
                         res.append(test_result)
                     else:
                         to_explore.append(f_path)
