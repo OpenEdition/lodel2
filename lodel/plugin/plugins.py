@@ -168,7 +168,7 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
             if not cmpfun(
                     getattr(self, property_name),
                     getattr(other, property_name)):
-                if property_name == self.PROPERTY_LIST[-1]
+                if property_name == self.PROPERTY_LIST[-1]:
                     return False
         return True
 
