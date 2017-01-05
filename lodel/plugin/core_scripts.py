@@ -1,3 +1,4 @@
+import operator
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.plugin.scripts': 'lodel_script'})
@@ -8,38 +9,49 @@ LodelContext.expose_modules(globals(), {
 #@ingroup lodel2_script
 
 
-##@brief Implements lodel_admin.py **discover-plugin** action
+##@brief Implements lodel_admin.py list-plugins action
 #@ingroup lodel2_plugins
 #@ingroup lodel2_script
 #
-#In depth directory scan to find plugins in order to build a plugin list.
-class DiscoverPlugin(lodel_script.LodelScript):
-    _action = 'discover-plugin'
-    _description = 'Walk through given folders looking for plugins'
-    
+class ListPlugins(lodel_script.LodelScript):
+    _action = 'list-plugins'
+    _description = "List all installed plugins"
+
     @classmethod
     def argparser_config(cls, parser):
-        #parser.add_argument('-d', '--directory',
-        parser.add_argument('PLUGIN_PATH',
-            help="Directory to walk through looking for lodel2 plugins",
-            nargs='+')
-        parser.add_argument('-l', '--list-only', default=False,
-            action = 'store_true',
-            help="Use this option to print a list of discovered plugins \
-without modifying existing cache")
+        parser.add_argument('-v', '--verbose',
+            help="Display more informations on installed plugins",
+            action='store_true')
+        parser.add_argument('-c', '--csv',
+            help="Format output in CSV format",
+            action='store_true')
 
     @classmethod
     def run(cls, args):
         from lodel.plugin.plugins import Plugin
-        if args.PLUGIN_PATH is None or len(args.PLUGIN_PATH) == 0:
-            cls.help_exit("Specify a least one directory")
-        no_cache = args.list_only
-        res = Plugin.discover(args.PLUGIN_PATH, no_cache)
-        print("Found plugins in : %s" % ', '.join(args.PLUGIN_PATH))
-        for pname, pinfos in res['plugins'].items():
-            print("\t- %s(%s) in %s" % (
-                pname, pinfos['version'], pinfos['path']))
-            
+        plist = Plugin.discover()
+        if args.csv:
+            if args.verbose:
+                res = "name,version,path\n"
+                fmt = "%s,%s,%s\n"
+            else:
+                res = "name,version\n"
+                fmt = "%s,%s\n"
+        else:
+            res = "Installed plugins list :\n"
+            if args.verbose:
+                fmt = "\t- %s(%s) in %s\n"
+            else:
+                fmt = "\t- %s(%s)\n"
+        for pname in sorted(plist.keys()):
+            pinfos = plist[pname]
+            if args.verbose:
+                res += fmt % (
+                    pinfos['name'], pinfos['version'], pinfos['path'])
+            else:
+                res += fmt % (pinfos['name'], pinfos['version'])
+        print(res)
+
 ##@brief Implements lodel_admin.py **hooks-list** action
 #@ingroup lodel2_script
 #@ingroup lodel2_hooks
