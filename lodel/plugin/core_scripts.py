@@ -18,7 +18,7 @@ LodelContext.expose_modules(globals(), {
 #@ingroup lodel2_script
 #
 class ListPlugins(lodel_script.LodelScript):
-    _action = 'list-plugins'
+    _action = 'plugins-list'
     _description = "List all installed plugins"
 
     @classmethod
@@ -32,8 +32,23 @@ class ListPlugins(lodel_script.LodelScript):
 
     @classmethod
     def run(cls, args):
+        import lodel.plugin.plugins
         from lodel.plugin.plugins import Plugin
-        plist = Plugin.discover()
+        if args.verbose:
+            #_discover do not returns duplicated names
+            tmp_plist = Plugin._discover(lodel.plugin.plugins.PLUGINS_PATH)
+            plist = []
+            #ordering the list by plugin's name
+            for pname in sorted(set([d['name'] for d in tmp_plist])):
+                for pinfos in tmp_plist:
+                    if pinfos['name'] == pname:
+                        plist.append(pinfos)
+        else:
+            pdict = Plugin.discover()
+            #casting to a list ordered by names
+            plist = []
+            for pname in sorted(pdict.keys()):
+                plist.append(pdict[pname])
         if args.csv:
             if args.verbose:
                 res = "name,version,path\n"
@@ -47,8 +62,7 @@ class ListPlugins(lodel_script.LodelScript):
                 fmt = "\t- %s(%s) in %s\n"
             else:
                 fmt = "\t- %s(%s)\n"
-        for pname in sorted(plist.keys()):
-            pinfos = plist[pname]
+        for pinfos in plist:
             if args.verbose:
                 res += fmt % (
                     pinfos['name'], pinfos['version'], pinfos['path'])
