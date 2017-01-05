@@ -25,6 +25,16 @@ LodelContext.expose_modules(globals(), {
 # - {{__init__.py}}} containing informations like full_name, authors, licence etc.
 # - main.py containing hooks registration etc
 # - confspec.py containing a configuration specification dictionary named CONFSPEC
+#
+# All plugins are expected to be found in multiple locations :
+# - in the lodel package (lodel.plugins)
+# - in the context directorie in a plugins/ dir (symlink to lodel.plugins) <-
+#this is obsolete now, since we enforce ALL plugins to be in the lodel package
+#
+#@todo Check if the symlink in the lodelcontext dir is obsolete !!!
+#@warning The plugins dir is at two locations : in lodel package and in
+#instance directory. Some stuff seems to still needs plugins to be in 
+#the instance directory but it seems to be a really bad idea...
 
 ##@defgroup plugin_init_specs Plugins __init__.py specifications
 #@ingroup lodel2_plugins
@@ -622,8 +632,10 @@ name differ from the one found in plugin's init file"
     #This module name is the "virtual" module where we imported the plugin.
     #
     #Typically composed like VIRTUAL_PACKAGE_NAME.PLUGIN_NAME
+    #@warning Brokes subdire feature
     #@param plugin_name str : a plugin name
     #@return a string representing a module name
+    #@todo fix broken subdir capabilitie ( @see module_name() )
     #@todo check if used, else delete it
     @classmethod
     def plugin_module_name(cls, plugin_name):
