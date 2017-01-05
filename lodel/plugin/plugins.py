@@ -709,14 +709,18 @@ name differ from the one found in plugin's init file"
 
     ##@brief Check if a directory is a plugin module
     #@param path str : path to check
+    #@param assert_in_package bool : if False didn't check that path is
+    #a subdir of PLUGINS_PATH
     #@return a dict with name, version and path if path is a plugin module, else False
     @classmethod
-    def dir_is_plugin(cls, path):
+    def dir_is_plugin(cls, path, assert_in_package = True):
         log_msg = "%s is not a plugin directory because : " % path
-        #Check that path is a subdir of PLUGINS_PATH
-        abspath = os.path.abspath(path)
-        if not abspath.startswith(os.path.abspath(PLUGINS_PATH)):
-            raise PluginError("%s is not a subdir of %s" % log_msg, PLUGINS_PATH)
+        if assert_in_package:
+            #Check that path is a subdir of PLUGINS_PATH
+            abspath = os.path.abspath(path)
+            if not abspath.startswith(os.path.abspath(PLUGINS_PATH)):
+                raise PluginError(
+                    "%s is not a subdir of %s" % log_msg, PLUGINS_PATH)
         #Checks that path exists
         if not os.path.isdir(path):
             raise ValueError(

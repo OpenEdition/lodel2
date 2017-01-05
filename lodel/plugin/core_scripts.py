@@ -1,7 +1,11 @@
 import operator
+import shutil
+import tempfile
+import os, os.path
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.plugin.scripts': 'lodel_script'})
+    'lodel.plugin.scripts': 'lodel_script',
+    'lodel.logger': 'logger'})
 
 ##@package lodel.plugin.core_scripts
 #@brief Lodel2 internal scripts declaration
@@ -51,6 +55,107 @@ class ListPlugins(lodel_script.LodelScript):
             else:
                 res += fmt % (pinfos['name'], pinfos['version'])
         print(res)
+
+
+##@brief Handle install & uninstall of lodel plugins
+class PluginManager(lodel_script.LodelScript):
+    _action = 'plugins'
+    _description = "Install/Uninstall plugins"
+
+    @classmethod
+    def argparser_config(cls, parser):
+        parser.add_argument('-u', '--uninstall',
+            help="Uninstall specified plugin",
+            action='store_true')
+        parser.add_argument('-n', '--plugin-name', nargs='*',
+            default = list(),
+            help="Indicate a plugin name to uninstall",
+            type=str)
+        parser.add_argument('-f', '--file', nargs='*',
+            default = list(),
+            help="Specify a tarball containing a plugin to install",
+            type=str)
+        parser.add_argument('-d', '--directory', nargs='*',
+            default = list(),
+            help="Specify a plugin by its directory",
+            type=str)
+
+    @classmethod
+    def run(cls, args):
+        if args.uninstall:
+            return cls.uninstall(args)
+        return cls.install(args)
+    
+    ##@brief Handles plugins install
+    @classmethod
+    def install(cls, args):
+        import lodel.plugin.plugins
+        from lodel.plugin.plugins import Plugin
+        from lodel.plugin.exceptions import PluginError
+        if len(args.plugin_name) > 0:
+            raise RuntimeError("Unable to install a plugin from its name !\
+We do not know where to find it...")
+        plist = Plugin.discover()
+        errors = dict()
+        if len(args.file) > 0:
+            raise NotImplementedError("Not supported yet")
+        
+        plugins_infos = {}
+        for cur_dir in args.directory:
+            try:
+                res = Plugin.dir_is_plugin(cur_dir, assert_in_package = False)
+                if res is False:
+                    errors[cur_dir] = PluginError("Not a plugin")
+                else:
+                    plugins_infos[res['name']] = res
+            except Exception as e:
+                errors[cur_dir] = e
+        #Abording because of previous errors
+        if len(errors) > 0:
+            msg = "Abording installation because of following errors :\n"
+            for path, expt in errors.items():
+                msg += ("\t- For path '%s' : %s\n" % (path, expt))
+            raise RuntimeError(msg)
+        #No errors continuing to install
+        for pname, pinfos in plugins_infos.items():
+            if pname in plist:
+                #Found an installed plugin with the same name
+                #Cehcking both versions
+                if plist[pname]['version'] == pinfos['version']:
+                    errors[pinfos['path']] = 'Abording installation of %s\
+found in %s because it seems to be allready installed in %s' % (
+    pname, pinfos['path'], plist[pname]['path'])
+                    continue
+                if plist[pname]['version'] > pinfos['version']:
+                    errors[pinfos['path']] = 'Abording installation of %s \
+found in %s because the same plugins with a greater version seems to be \
+installed in %s' % (pname, pinfos['path'], plist[pname]['path'])
+                    continue
+                logger.info("Found a plugin with the same name but with an \
+inferior version. Continuing to install")
+            #Checking that we can safely copy our plugin
+            dst_path = os.path.join(lodel.plugin.plugins.PLUGINS_PATH,
+                os.path.basename(os.path.dirname(pinfos['path'])))
+            orig_path = dst_path
+            if os.path.isdir(dst_path):
+                dst_path = tempfile.mkdtemp(
+                    prefix = os.path.basename(dst_path)+'_',
+                    dir = lodel.plugin.plugins.PLUGINS_PATH)
+                logger.warning("A plugin allready exists in %s. Installing \
+in %s" % (orig_path, dst_path))
+                shutil.rmtree(dst_path)
+                
+            #Installing the plugin
+            shutil.copytree(pinfos['path'], dst_path, symlinks = False)
+            print("%s(%s) installed in %s" % (
+                pname, pinfos['version'], dst_path))
+    
+    ##@brief Handles plugin uninstall
+    @classmethod
+    def uninstall(cls, args):
+        pass
+        
+
 
 ##@brief Implements lodel_admin.py **hooks-list** action
 #@ingroup lodel2_script
