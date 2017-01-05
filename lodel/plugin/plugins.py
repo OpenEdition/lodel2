@@ -95,11 +95,19 @@ class PluginVersion(object):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, str):
+                #Casting from string to version numbers
                 spl = arg.split('.')
                 invalid = False
                 if len(spl) > 3:
                     raise PluginError("The string '%s' is not a valid plugin \
 version number" % arg)
+                if len(spl) < 3:
+                    spl += [ 0 for _ in range(3-len(spl))]
+                try:
+                    self.__version = [int(s) for s in spl]
+                except (ValueError, TypeError):
+                    raise PluginError("The string '%s' is not a valid lodel2 \
+plugin version number" % arg)
             else:
                 try:
                     if len(arg) >= 1:
@@ -107,8 +115,8 @@ version number" % arg)
                             raise PluginError("Expected maximum 3 value to \
 create a plugin version number but found '%s' as argument" % arg)
                         for i, v in enumerate(arg):
-                            self.__version[i] = arg[i]
-                except TypeError:
+                            self.__version[i] = int(arg[i])
+                except (TypeError, ValueError):
                     raise PluginError("Unable to convert argument into plugin \
 version number" % arg)
         elif len(args) > 3:
@@ -116,8 +124,8 @@ version number" % arg)
 but %d arguments found" % len(args))
         else: 
             for i,v in enumerate(args):
-                self.__version[i] = v
-    
+                self.__version[i] = int(v)
+
     ##@brief Property to access major version number
     @property
     def major(self):
@@ -157,8 +165,11 @@ a PluginVerison instance" % other)
             raise LodelFatalError("Invalid comparison callback given \
 to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
         for property_name in self.PROPERTY_LIST:
-            if not cmpfun(getattr(self, pname), getattr(other, pname)):
-                return False
+            if not cmpfun(
+                    getattr(self, property_name),
+                    getattr(other, property_name)):
+                if property_name == self.PROPERTY_LIST[-1]
+                    return False
         return True
 
     def __lt__(self, other):
@@ -183,7 +194,7 @@ to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
         return '%d.%d.%d' % tuple(self.__version)
 
     def __repr__(self):
-        return {'major': self.major, 'minor': self.minor,
+        return "%s" % {'major': self.major, 'minor': self.minor,
             'revision': self.revision}
 
 ##@brief Plugin metaclass that allows to "catch" child class declaration
@@ -760,7 +771,7 @@ name differ from the one found in plugin's init file"
             ptype = DEFAULT_PLUGIN_TYPE
         pname = getattr(initmod, PLUGIN_NAME_VARNAME)
         return {'name': pname,
-            'version': pversion,
+            'version': PluginVersion(pversion),
             'path': path,
             'type': ptype}
     
