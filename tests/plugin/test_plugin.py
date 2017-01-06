@@ -2,7 +2,8 @@
 
 import unittest
 
-from lodel.plugin.plugins import Plugin, PluginError
+from lodel.plugin.plugins import Plugin, PluginError, MetaPlugType,\
+    VIRTUAL_PACKAGE_NAME, DEFAULT_PLUGINS_PATH_LIST
 from lodel.plugin.datasource_plugin import DatasourcePlugin
 from lodel.plugin.sessionhandler import SessionHandlerPlugin
 from lodel.plugin.interface import InterfacePlugin
@@ -10,28 +11,109 @@ from lodel.plugin.extensions import Extension
 from lodel.settings.settings import Settings
 import tests.loader_utils
 
+from unittest.mock import patch
+
 ##@todo write tests about discovering
+##@todo finish tests for plugin_path
+##@todo finish tests for check_deps
+##@todo write tests for loader_module
+##@todo write tests for load_all (ran upon problems as "dummy_datasource"
+##      already is "pre-loaded" (I guess), but cannot be found in
+##      _plugin_instances (without doing some other work before, I guess)
 class PluginTestCase(unittest.TestCase):
-    """ Test case grouping all tests on Plugin class init procedures """
 
     def setUp(self):
         Plugin.clear()
+        self.working_plugins_list = ['dummy', 'dummy_datasource']
+    
+    
+    def test_check_deps_returns_empty_list_if_no_dependencies(self):
+        self.assertEqual(list(), Plugin('dummy').check_deps())    
+    
+    
+    def test_loader_module_if_plugin_not_yet_loaded_throws_RuntimeError(self):
+        self.assertRaises(RuntimeError, Plugin('dummy').loader_module)
+    
 
-    def test_start(self):
-        """ Testing plugin registration with a valid list of plugins name """
-        Plugin.start(['dummy', 'dummy_datasource'])
+    def test_start_calls_register_for_each_plugins_from_array(self):
+        plugin_class = Plugin
+        with patch.object(Plugin, 'register', wraps=plugin_class.register) as register_wrap:
+            Plugin.start(self.working_plugins_list)
+            self.assertEqual(len(self.working_plugins_list), register_wrap.call_count)
 
-    def test_double_start(self):
-        """ Testing clas behavior when starting it twice """
-        Plugin.start(['dummy', 'dummy_datasource'])
-        with self.assertRaises(PluginError):
-            Plugin.start(['dummy', 'dummy_datasource'])
 
-    def test_clear(self):
-        """ Testing that clear allow to start again Plugin """
-        Plugin.start(['dummy', 'dummy_datasource'])
+    def test_clear_effectively_allow_fresh_new_plugin_reloading(self):
+        Plugin.start(self.working_plugins_list)
         Plugin.clear()
-        Plugin.start(['dummy', 'dummy_datasource'])
+        Plugin.start(self.working_plugins_list)
+        
+        
+    def test_register_if_plugin_already_registered_throws_PluginError(self):
+        Plugin.register('dummy')
+        self.assertRaises(PluginError, Plugin.register, 'dummy')
+    
+    
+    def test_register_if_plugin_name_not_in_cache_throws_PluginError(self):
+        self.assertRaises(PluginError, Plugin.register, 'azerty')
+    
+    
+    def test_register_if_ptype_not_known_throws_PluginError(self):
+        with patch.object(MetaPlugType, 'all_ptype_names', return_value=[]) as mock_method:
+            self.assertRaises(PluginError, Plugin.register, 'dummy')
+    
+        
+    def test_register_returns_Plugin_child_object(self):
+        self.assertTrue(issubclass(Plugin.register('dummy_datasource').__class__, Plugin))
+        
+        
+    def test_get_if_no_plugin_found_throws_KeyError(self):
+        self.assertRaises(PluginError, Plugin.get, 'foo')
+        
+        
+    def test_get_returns_proper_plugin_instance(self):
+        Plugin.register('dummy')
+        self.assertTrue(Plugin.get('dummy').__class__, Plugin)
+        
+    
+    def test_plugin_path_if_no_plugin_name_found_throws_PluginError(self):
+        self.assertRaises(PluginError, Plugin.plugin_path, 'foo')
+    
+    
+    def test_plugin_module_name_correctly_returns_module_name_string_from_plugin_name(self):
+        self.assertEqual(Plugin.plugin_module_name('foo'), "%s.%s" % (VIRTUAL_PACKAGE_NAME, 'foo'))
+        
+        
+    def test_discover_if_paths_is_none_default_is_used(self):
+        with patch.object(Plugin, '_discover', wraps=Plugin._discover) as _discover_wrap:
+            Plugin.discover(DEFAULT_PLUGINS_PATH_LIST)
+            _discover_wrap.assert_called_with(DEFAULT_PLUGINS_PATH_LIST[-1])
+            
+        
+    def test_discover_if_paths_is_set_properly_search_in(self):
+        paths = ['.', '.']
+        with patch.object(Plugin, '_discover', wraps=Plugin._discover) as _discover_wrap:
+            Plugin.discover(paths)
+            _discover_wrap.assert_called_with(paths[-1])
+            
+            
+    def test_discover_if_no_plugins_found_still_returns_searched_paths(self):
+        paths = ['/home/quentin/Pictures']
+        dfoi = Plugin.discover(paths)
+        self.assertEqual(dfoi['path_list'], paths)
+        
+            
+    def test_discover_if_no_plugins_found_returns_empty_plugin_dict(self):
+        dfoi = Plugin.discover(['/home/quentin/Pictures'])
+        self.assertEqual(dfoi['plugins'], {})
+        
+            
+    def test_discover_if_no_plugins_found_returns_empty_plugin(self):
+        dfoi = Plugin.discover(['./plugins'])
+        self.maxDiff = None
+        self.assertEqual(dfoi['plugins'], {})
+        
+
+
 
 class PluginStartedTestCase(unittest.TestCase):
     """ Test case grouping all tests on a started Plugin class """

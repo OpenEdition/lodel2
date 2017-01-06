@@ -5,7 +5,7 @@ from lodel.leapi.datahandlers.datas import Boolean, Varchar, Integer
 
 
 test_boolean = Boolean()
-class BooleanTestCase(unittest.TestCase):
+class BooleanTestCase(unittest.TestCase): 
 
     def test_boolean_good_check_data_value(self):
         for test_value in [True, False]:
