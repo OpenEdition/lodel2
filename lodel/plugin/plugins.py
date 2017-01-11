@@ -12,8 +12,8 @@ LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError'],
     'lodel.plugin.hooks': ['LodelHook'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
+    'lodel.plugin.exceptions': ['PluginError', 'PluginVersionError',
+        'PluginTypeError', 'LodelScriptError', 'DatasourcePluginError'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
@@ -99,25 +99,25 @@ class PluginVersion(object):
                 spl = arg.split('.')
                 invalid = False
                 if len(spl) > 3:
-                    raise PluginError("The string '%s' is not a valid plugin \
+                    raise PluginVersionError("The string '%s' is not a valid plugin \
 version number" % arg)
                 if len(spl) < 3:
                     spl += [ 0 for _ in range(3-len(spl))]
                 try:
                     self.__version = [int(s) for s in spl]
                 except (ValueError, TypeError):
-                    raise PluginError("The string '%s' is not a valid lodel2 \
+                    raise PluginVersionError("The string '%s' is not a valid lodel2 \
 plugin version number" % arg)
             else:
                 try:
                     if len(arg) >= 1:
                         if len(arg) > 3:
-                            raise PluginError("Expected maximum 3 value to \
+                            raise PluginVersionError("Expected maximum 3 value to \
 create a plugin version number but found '%s' as argument" % arg)
                         for i, v in enumerate(arg):
                             self.__version[i] = int(arg[i])
                 except (TypeError, ValueError):
-                    raise PluginError("Unable to convert argument into plugin \
+                    raise PluginVersionError("Unable to convert argument into plugin \
 version number" % arg)
         elif len(args) > 3:
             raise PluginError("Expected between 1 and 3 positional arguments \
@@ -125,6 +125,10 @@ but %d arguments found" % len(args))
         else: 
             for i,v in enumerate(args):
                 self.__version[i] = int(v)
+        #Checks that version numbering is correct
+        for v in self.__version:
+            if v < 0:
+                raise PluginVersionError("No negative version number allowed !")
 
     ##@brief Property to access major version number
     @property
@@ -154,48 +158,55 @@ but %d arguments found" % len(args))
 a PluginVerison instance" % other)
         return other
     
-    ##@brief Generic comparison function
-    #@param other PluginVersion or iterable
-    #@param cmp_fun_name function : interger comparison function
-    def __generic_cmp(self, other, cmp_fun_name):
-        other = self.__cmp_check(other)
+    ##@brief Allow accessing to versions parts using interger index
+    #@param key int : index
+    #@return major for key == 0, minor for key == 1, revision for key == 2
+    def __getitem__(self, key):
         try:
-            cmpfun = getattr(int, cmp_fun_name)
-        except AttributeError:
-            raise LodelFatalError("Invalid comparison callback given \
-to generic PluginVersion comparison function : '%s'" % cmp_fun_name)
-        for property_name in self.PROPERTY_LIST:
-            if not cmpfun(
-                    getattr(self, property_name),
-                    getattr(other, property_name)):
-                if property_name == self.PROPERTY_LIST[-1]:
-                    return False
-        return True
+            key = int(key)
+        except (ValueError, TypeError):
+            raise ValueError("Expected an int as key")
+        if key < 0 or key > 2:
+            raise ValueError("Key is expected to be in [0..2]")
+        return self.__version[key]
 
     def __lt__(self, other):
-        return self.__generic_cmp(other, '__lt__')
-
-    def __le__(self, other):
-        return self.__generic_cmp(other, '__le__')
+        for i in range(3):
+            if self[i] < other[i]:
+                return True
+            elif self[i] > other[i]:
+                return False
+        return False
 
     def __eq__(self, other):
-        return self.__generic_cmp(other, '__eq__')
-
-    def __ne__(self, other):
-        return self.__generic_cmp(other, '__ne__')
+        for i in range(3):
+            if self[i] != other[i]:
+                return False
+        return True
 
     def __gt__(self, other):
-        return self.__generic_cmp(other, '__gt__')
+        for i in range(3):
+            if self[i] > other[i]:
+                return True
+            elif self[i] < other[i]:
+                return False
+        return False
+
+    def __le__(self, other):
+        return self < other or self == other
+
+    def __ne__(self, other):
+        return not(self == other)
 
     def __ge__(self, other):
-        return self.__generic_cmp(other, '__ge__')
+        return self > other or self == other
 
     def __str__(self):
         return '%d.%d.%d' % tuple(self.__version)
 
     def __repr__(self):
-        return "%s" % {'major': self.major, 'minor': self.minor,
-            'revision': self.revision}
+        return "{'major': %d, 'minor': %d, 'revision': %d}" % tuple(
+            self.__version)
 
 ##@brief Plugin metaclass that allows to "catch" child class declaration
 #@ingroup lodel2_plugins
