@@ -15,7 +15,7 @@
 #
 #   higher verbosity
 #
-# -d 0 : results are stored in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp (default)
+# -d 0 : results are not displayed but stored in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp (default)
 # -d 1 : results are displayed when tests finish and kept in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp
 # -d 2 : results are displayed when tests finish, they are not stored
 #
@@ -31,7 +31,7 @@ then
 	exit 1
 fi
 
-logdisplay=0;
+logdisplay=2;
 
 while getopts ":d:" opt; do
     case $opt in
