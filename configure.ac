@@ -25,6 +25,7 @@ AC_CONFIG_FILES([Makefile \
 #
 #pyconfigure macros are prefixed by PC_
 ###
+AC_PROG_LN_S
 m4_include([m4/python.m4]) # Patched version of aclocal python.m4 file
 m4_include([m4/python_pyconfigure.m4]) #Renamed because we use a patched version of aclocal python.m4 file
 m4_define(python_min_ver, 3.4.2)

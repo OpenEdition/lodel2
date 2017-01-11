@@ -37,7 +37,8 @@ install-data-hook:
 
 #Making debian package
 deb: dist
-	mkdir debian_package; tar -xvf ${PACKAGE}-${VERSION}.tar.gz -C ./debian_package; cd debian_package/${PACKAGE}-${VERSION}; dpkg-buildpackage -rfakeroot;
+	
+	mkdir debian_package; tar -xvf ${PACKAGE}-${VERSION}.tar.gz -C ./debian_package; cd debian_package/${PACKAGE}-${VERSION}; echo "$(pkgpythondir)/plugins $(sysconfdir)/lodel2/plugins" > debian/lodel2.links; dpkg-buildpackage -rfakeroot;
 
 # Test em update ( examples/em_test.pickle )
 em_test: em_test.py
