@@ -37,8 +37,10 @@ install-data-hook:
 
 #Making debian package
 deb: dist
-	
-	mkdir debian_package; tar -xvf ${PACKAGE}-${VERSION}.tar.gz -C ./debian_package; cd debian_package/${PACKAGE}-${VERSION}; echo "$(pkgpythondir)/plugins $(sysconfdir)/lodel2/plugins" > debian/lodel2.links; dpkg-buildpackage -rfakeroot;
+	mkdir debian_package;\
+	tar -xvf ${PACKAGE}-${VERSION}.tar.gz -C ./debian_package;\
+	cd debian_package/${PACKAGE}-${VERSION};\
+	dpkg-buildpackage -rfakeroot;
 
 # Test em update ( examples/em_test.pickle )
 em_test: em_test.py
@@ -71,6 +73,7 @@ cleandoc:
 #other cleans
 distclean-local:
 	-rm -vR debian_package ${PACKAGE}-${VERSION}.tar.gz
+	-find . -name Makefile.in -delete
 
 gitclean: distclean cleandoc
 	-rm -vR autom4te.cache/ aclocal.m4 install-sh missing py-compile configure; find ./ -name Makefile.in |xargs rm -v
