@@ -3,42 +3,21 @@
 # Usage : ./runtest [OPTIONS] [test_module[.test_class][ test_module2[.test_class2]...]
 #########
 #
-# Options list :
-################
-#
-# -b, --buffer
-#
-#    The standard output and standard error streams are buffered during the test run. Output during a passing test is discarded. Output is echoed normally on test fail or error and is added to the failure messages.
-#
-# -c, --catch
-#
-#    Control-C during the test run waits for the current test to end and then reports all the results so far. A second control-C raises the normal KeyboardInterrupt exception.
-#
-#
-# -f, --failfast
-#
-#    Stop the test run on the first error or failure.
-#
-# -h, --help
-#
-#    Get some help
-#
-# -v, --verbose
-#
-#   higher verbosity
-#
-# Examples :
-############
-#
 # Running all discoverables tests :
 # ./runtest
 #
-# Running only Em test about component object (only tests about the __init__ and modify_rank methods) with higher verbosity and failfast :
-# ./runtest -fv EditorialModel.test.test_component.TestInit EditorialModel.test.test_component.TestModifyRank
+# Options
+################
+# -f, --failfast
 #
+#    Stop the test run on the first error or failure.
+# -v --verbose
 #
-# Running only Em tests
-# ./runtest discover EditorialModel
+#   higher verbosity
+#
+# -d 0 : results are stored in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp (default)
+# -d 1 : results are displayed when tests finish and kept in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp
+# -d 2 : results are displayed when tests finish, they are not stored
 #
 # More details :
 ################
@@ -52,24 +31,47 @@ then
 	exit 1
 fi
 
-PYTHON='env python3'
-testdir=$(mktemp -td "lodel2_unittest_instance_XXXXXXXX")
-install_model_dir="[@]INSTALLMODEL_DIR[@]"
-if [ ! -d "$install_model_dir" ]
-then
-	install_model_dir="$(dirname $0)/progs/slim/install_model/"
-fi
-libdir="$(dirname $(realpath $0))/lodel"
-rmdir $testdir
-./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
-echo ./progs/create_instance test_instance $testdir "$install_model_dir" ./examples/em_test.pickle "$libdir"
-cp -R examples $testdir
-cp -R tests $testdir
-cd $testdir
-chmod +x lodel_admin.py
-rm -R conf.d && mv tests/tests_conf.d conf.d
-make
-make refresh_plugins
-$PYTHON loader.py $@
+logdisplay=0;
 
-rm -Rf $testdir
+while getopts ":d:" opt; do
+    case $opt in
+        d)
+          logdisplay=$OPTARG
+          ;;
+        :)
+          echo "Option -$OPTARG requires an argument, as it does not have we assume 0"
+          ;;
+    esac
+done
+
+if [[ $logdisplay -eq 2 ]]
+then
+    echo $logdisplay
+    logdir=$(mktemp -td "lodel2_log_unittest_XXXXXXX")
+else 
+    if [ ! -d ./tmp ]
+    then
+        mkdir ./tmp
+    fi
+    timestamp=$(date +%s)
+    logdir="$(dirname $(realpath $0))/tmp/log$timestamp"
+    mkdir $logdir
+fi
+
+PYTHON='env python3'
+$PYTHON ./nocontext_tests.py $logdir $@
+./runtest_context.sh $logdir $@
+
+if [[ $logdisplay -eq 1 || $logdisplay -eq 2 ]]
+then
+    logfiles=$(ls $logdir)
+    for logfile in $logfiles
+    do
+        more $logdir/$logfile
+    done
+    if [[ $logdisplay -eq 2 ]]
+    then 
+        rm -rf $logdir
+    fi
+fi
+

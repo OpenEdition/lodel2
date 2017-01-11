@@ -63,11 +63,12 @@ if __name__ == '__main__':
         import tests
         loader = unittest.TestLoader()
         test_dir = os.path.join(LODEL2_LIB_ABS_PATH, 'tests')
-        suite = loader.discover(test_dir)
-        runner = unittest.TextTestRunner(
-            failfast = '-f' in sys.argv,
-            verbosity = 2 if '-v' in sys.argv else 1)
-        runner.run(suite)
+        suite = loader.discover(test_dir, pattern='test*.py')
+        with open(sys.argv[1]+'/context_tests.log', 'w') as logfile:
+            unittest.TextTestRunner(
+                logfile,
+                failfast = '-f' in sys.argv,
+                verbosity = 2 if '-v' in sys.argv else 1).run(suite)
         exit()
 
     lodel = LodelContext.get()
