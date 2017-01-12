@@ -6,7 +6,6 @@
 # Running all discoverables tests :
 # ./runtest
 #
-# Options
 ################
 # -f, --failfast
 #
@@ -19,6 +18,11 @@
 # -d 1 : results are displayed when tests finish and kept in logfiles in /tmp/logXXXXXXX repository, with XXXXXXX a timestamp
 # -d 2 : results are displayed when tests finish, they are not stored
 #
+# Furthermore
+################
+# Most of the tests need an install of lodel for dependencies reasons
+# For those which not need, prefix the python file by 'nc_' (example nc_test_query.py)
+# they will be executed outside a lodel install
 # More details :
 ################
 #

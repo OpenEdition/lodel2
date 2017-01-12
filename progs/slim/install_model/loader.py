@@ -5,6 +5,9 @@
 #@note If you want to avoid settings loading you can set the environment
 #variable LODEL2_NO_SETTINGS_LOAD (see @ref install.lodel_admin.update_plugin_discover_cache()
 #
+# @note In tests case, you can pass the path to write results file, context_tests.log 
+# It has to be at first, otherwise it will not be taken 
+# and the default one, current directory, will be used.
 
 import sys, os, os.path
 #
@@ -64,6 +67,10 @@ if __name__ == '__main__':
         loader = unittest.TestLoader()
         test_dir = os.path.join(LODEL2_LIB_ABS_PATH, 'tests')
         suite = loader.discover(test_dir, pattern='test*.py')
+        if ((len(sys.argv) > 1) and (sys.argv[1].startswith('-')) is False):
+            dpath = sys.argv[1]
+        else:
+            dpath = '.'
         with open(sys.argv[1]+'/context_tests.log', 'w') as logfile:
             unittest.TextTestRunner(
                 logfile,
