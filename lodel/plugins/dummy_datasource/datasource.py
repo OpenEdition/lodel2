@@ -18,10 +18,10 @@ class DummyDatasource(AbstractDatasource):
         pass
 
     ##@brief returns a selection of documents from the datasource
-    #@param target_cls Emclass
+    #@param target Emclass
     #@param field_list list
     #@param filters list : List of filters
-    #@param rel_filters list : List of relational filters
+    #@param relational_filters list : List of relational filters
     #@param order list : List of column to order. ex: order = [('title', 'ASC'),]
     #@param group list : List of tupple representing the column to group together. ex: group = [('title', 'ASC'),]
     #@param limit int : Number of records to be returned

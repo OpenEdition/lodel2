@@ -81,7 +81,7 @@ class LodelScript(object, metaclass=MetaLodelScript):
         raise NotImplementedError("Static class")
     
     ##@brief Virtual method. Designed to initialize arguement parser.
-    #@param argparser ArgumentParser : Child class argument parser instance
+    #@param parser ArgumentParser : Child class argument parser instance
     #@return MUST return the argument parser (NOT SURE ABOUT THAT !! Maybe it \
     #works by reference)
     @classmethod

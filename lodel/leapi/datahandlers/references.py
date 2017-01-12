@@ -16,9 +16,11 @@ class Link(SingleRef):
 class List(MultipleRef):
 
     ##@brief instanciates a list reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool
+    # @param max_length int
     # @param kwargs
+    #   - allowed_classes list | None : list of allowed em classes if None no restriction
+    #   - internal bool
+
     def __init__(self, max_length = None, **kwargs):
         super().__init__(**kwargs)
 
@@ -43,9 +45,9 @@ a list : %s" % e)
 class Set(MultipleRef):
 
     ##@brief instanciates a set reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool : if False, the field is not internal
-    # @param kwargs : Other named arguments
+    # @param kwargs : named arguments
+    #   - allowed_classes list | None : list of allowed em classes if None no restriction
+    #   - internal bool : if False, the field is not internal
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -69,9 +71,9 @@ a set : %s" % e)
 class Map(MultipleRef):
 
     ##@brief instanciates a dict reference
-    # @param allowed_classes list | None : list of allowed em classes if None no restriction
-    # @param internal bool : if False, the field is not internal
-    # @param kwargs : Other named arguments
+    # @param kwargs : named arguments
+    #   - allowed_classes list | None : list of allowed em classes if None no restriction
+    #   - internal bool : if False, the field is not internal
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

@@ -421,7 +421,7 @@ class MultipleRef(Reference):
         return new_val
 
     ##@brief Utility method designed to fetch referenced objects
-    #@param value mixed : the field value
+    #@param values mixed : the field values
     #@return A list of LeObject child class instance
     #@throw LodelDataHandlerConsistencyException if some referenced objects
     #were not found
@@ -453,7 +453,7 @@ some referenced objects. Followinf uid were not found : %s" % ','.join(left))
 class DatasConstructor(object):
 
     ## @brief Init a DatasConstructor
-    # @param lec LeCrud : @ref LeObject child class
+    # @param leobject LeCrud : @ref LeObject child class
     # @param datas dict : dict with field name as key and field values as value
     # @param fields_handler dict : dict with field name as key and data handler instance as value
     def __init__(self, leobject, datas, fields_handler):

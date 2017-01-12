@@ -485,7 +485,7 @@ abstract LeObject : %s" % target_class)
         super().__init__(target_class)
     
     ## @brief Implements an insert query operation, with only one insertion
-    # @param new_datas : datas to be inserted
+    # @param datas : datas to be inserted
     def _query(self, datas):
         datas = self._target_class.prepare_datas(datas, True, False)
         id_inserted = self._rw_datasource.insert(self._target_class, datas)
@@ -544,8 +544,6 @@ target to LeUpdateQuery constructor"
         super().__init__(target_class, query_filters)
 
     ##@brief Implements an update query
-    #@param filters list : see @ref LeFilteredQuery
-    #@param rel_filters list : see @ref LeFilteredQuery
     #@param datas dict : datas to update
     #@returns the number of updated items
     #@todo change stategy for instance update. Datas should be allowed
@@ -599,12 +597,12 @@ class LeDeleteQuery(LeFilteredQuery):
         super().__init__(target_class, query_filter)
 
     ## @brief Execute the delete query
+    # @param datas
     def execute(self, datas=None):
         return super().execute()
 
     ##@brief Implements delete query operations
-    #@param filters list : see @ref LeFilteredQuery
-    #@param rel_filters list : see @ref LeFilteredQuery
+    # @param datas
     #@returns the number of deleted items
     def _query(self, datas=None):
         filters, rel_filters = self._query_filter
@@ -619,12 +617,12 @@ class LeGetQuery(LeFilteredQuery):
     #@param target_class LeObject : class of object the query is about
     #@param query_filters dict : {OP, list of query filters}
     # or tuple (FIELD, OPERATOR, VALUE) )
-    #@param field_list list|None : list of string representing fields see
-    # @ref leobject_filters
-    #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
-    #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
-    #@param limit int : The maximum number of returned results
-    #@param offset int : offset
+    #@param kwargs dict : other query-related arguments and options
+    #   - field_list list|None : list of string representing fields see @ref leobject_filters
+    #   - order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #   - group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
+    #   - limit int : The maximum number of returned results
+    #   - offset int : offset
     def __init__(self, target_class, query_filters, **kwargs):
         super().__init__(target_class, query_filters)
         ##@brief The fields to get

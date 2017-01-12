@@ -21,7 +21,6 @@ build its content'
     
     ##@brief Build its content with a field list and a format string
     # @param format_string str
-    # @param max_length int : the maximum length of the handled value
     # @param field_list list : List of field to use
     # @param **kwargs
     def __init__(self, format_string, field_list, **kwargs):
@@ -115,7 +114,6 @@ class Concat(FormatString):
     
     ##@brief Build its content with a field list and a separator
     # @param field_list list : List of field to use
-    # @param max_length int : the maximum length of the handled value
     # @param separator str
     # @param **kwargs    
     def __init__(self, field_list, separator = ' ', **kwargs):

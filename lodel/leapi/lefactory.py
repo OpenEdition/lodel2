@@ -115,7 +115,6 @@ def forge_optval(optval):
 
 ##@brief Generate dyncode from an EmClass
 # @param model EditorialModel : 
-# @param emclass EmClass : EmClass instance
 # @todo delete imports. It is never use, consequently changed return parameters.
 # @return a tuple with emclass python code, a set containing modules name to import, and a list of python instruction to bootstrap dynamic code, in this order
 def generate_classes(model):

@@ -44,9 +44,10 @@ class Integer(DataField):
         super().__init__( **kwargs)
 
     ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    # @param value *
+    # @param strict bool : tells if the value must be an integer or a value that can be converted into an integer
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value, strict = False):
         value = super()._check_data_value(value)
         if (strict and not isinstance(value, int)):

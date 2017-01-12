@@ -80,7 +80,7 @@ class Settings(object, metaclass=MetaSettings):
     
     ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
-    #@param custom_confspec None | dict : if given overwrite default lodel2
+    #@param custom_confspecs None | dict : if given overwrite default lodel2
     #confspecs
     def __init__(self, conf_dir, custom_confspecs = None):
         self.singleton_assert() # check that it is the only instance

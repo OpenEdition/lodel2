@@ -281,6 +281,7 @@ def get_pid(name):
 
 ##@brief Start an instance
 #@param names list : instance name list
+#@param foreground bool
 def start_instances(names, foreground):
     pids = get_pids()
     store_datas = get_store_datas()

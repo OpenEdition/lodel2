@@ -406,7 +406,10 @@ SettingValidator.create_re_validator(
 ##@brief Append a piece of confspec
 #@note orig is modified during the process
 #@param orig dict : the confspec to update
-#@param upd dict : the confspec to add
+#@param section str : section name
+#@param key str
+#@param validator SettingValidator : the validator to use to check this configuration key's value
+#@param default
 #@return new confspec
 def confspec_append(orig, section, key, validator, default):
     if section not in orig:
