@@ -647,7 +647,7 @@ or with -a)")
             print("\nPlease specify at least 1 instance with the --start \
 option", file=sys.stderr)
         elif args.foreground and len(names) > 1:
-            parser.prin_help()
+            parser.print_help()
             print("\nOnly 1 instance allowed with the use of the --forground \
 argument")
         start_instances(names, args.foreground)

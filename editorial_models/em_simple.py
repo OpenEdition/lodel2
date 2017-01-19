@@ -150,7 +150,7 @@ editorial_group = em.new_group( 'editorial_abstract',
                                 depends = (base_group,)
 )
 
-################################### Texts ##########################################################
+################################ Texts #############################
 # Classe texte
 text = em.new_class(   'text',
                         display_name = 'Text',
@@ -287,7 +287,7 @@ review.new_field(   'reference',
                     data_handler = 'text'
 )
 
-###################################### Containers ###########################################
+###################################### Containers ##################
 # Classe container
 container = em.new_class(  'container',
                             display_name = 'Container',
