@@ -257,7 +257,7 @@ class Reference(DataHandler):
     # @param **kwargs : other arguments
     def __init__(self, allowed_classes=None, back_reference=None, internal=False, **kwargs):
         self.__allowed_classes = set() if allowed_classes is None else set(allowed_classes)
-        self.allowed_classes = list() if allowed_classes is None else allowed_classes
+        self.allowed_classes = list() if allowed_classes is None else allowed_classes # For now usefull to jinja 2
         if back_reference is not None:
             if len(back_reference) != 2:
                 raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
@@ -318,8 +318,6 @@ class Reference(DataHandler):
     #@param datas dict : dict storing fields values
     #@return an Exception instance if fails else True
     #@todo check for performance issue and check logics
-    #@todo Implements consistency checking on value : Check that the given value
-    #points onto an allowed class
     #@warning composed uid capabilities broken here
     def check_data_consistency(self, emcomponent, fname, datas):
         rep = super().check_data_consistency(emcomponent, fname, datas)
@@ -329,6 +327,9 @@ class Reference(DataHandler):
             return True
         # !! Reimplement instance fetching in construct data !!
         target_class = self.back_reference[0]
+        if target_class not in self.__allowed_class:
+            logger.warning('Class of the back_reference given is not an allowed class')
+            return False
         target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
         value = datas[fname]
         obj = target_class.get([(target_uidfield, '=', value)])
@@ -359,9 +360,6 @@ class SingleRef(Reference):
     #@return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
-        logger.warning("A vérifier..provisoire pour les tests")
-        #if (expt is None and (len(val)>1)):
-        #    raise FieldValidationError("List or string expected for a set field")
         return value
 
     ##@brief Utility method designed to fetch referenced objects
