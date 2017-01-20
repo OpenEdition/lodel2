@@ -327,7 +327,7 @@ class Reference(DataHandler):
             return True
         # !! Reimplement instance fetching in construct data !!
         target_class = self.back_reference[0]
-        if target_class not in self.__allowed_class:
+        if target_class not in self.__allowed_classes:
             logger.warning('Class of the back_reference given is not an allowed class')
             return False
         target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
