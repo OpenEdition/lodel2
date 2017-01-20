@@ -530,8 +530,8 @@ to 1 instance")
         help='Set a logger given a logger spec. A logger spec is a string \
 with this form : LOGGERNAME:LOGLEVEL:LOGFILE with LOGLEVEL one of DEBUG, \
 INFO, WARNING, SECURITY, ERROR or FATAL. LOGFILE can be a path to a logfile \
-or - to indicate stderr, else you can put a "%s" in the string that will \
-be replaced by instance name and a "%l" that will be replaced by the \
+or - to indicate stderr, else you can put a "%%s" in the string that will \
+be replaced by instance name and a "%%l" that will be replaced by the \
 loglevel.')
     return parser
 
