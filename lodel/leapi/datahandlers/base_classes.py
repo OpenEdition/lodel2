@@ -245,8 +245,7 @@ class DataField(DataHandler):
 # editorial object
 #@todo Construct data implementation : transform the data into a LeObject
 #instance
-#@todo Check data consistency implementation : check that LeObject instance
-#is from an allowed class
+
 class Reference(DataHandler):
     base_type = "ref"
 
