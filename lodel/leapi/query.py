@@ -13,6 +13,17 @@ LodelContext.expose_modules(globals(), {
     'lodel.plugin.hooks': ['LodelHook'],
     'lodel.logger': ['logger']})
 
+##@brief Tool to check if a target_class's object exists and is stored
+#@param target_class : class where the object is supposed to be
+#@param uid : a unique id in target_class
+#@returns true if an object with unique id uid exists in target_class, false if not
+def is_exist(target_class, uid):
+	from .leobject import LeObject
+	if not inspect.isclass(target_class) or not issubclass(target_class, LeObject):
+		raise TypeError("target class has to be a child class of LeObject but %s was given"% target_class)
+	datasource = target_class._ro_datasource
+	return datasource.is_exist(target_class,uid)
+
 
 ##@todo check datas when running query
 class LeQuery(object):

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+object# -*- coding: utf-8 -*-
 
 import re
 import warnings
@@ -874,3 +874,13 @@ field/operator couple in a query. We will keep only the first one")
                 #with sets
                 datas[dname] = list(datas[dname])
         return datas
+
+    ##@brief Tool to check if a record with unique id uid is set in the target_class representation
+    #@param target_class : class to check in 
+    #@param uid : a unique id in target_class
+    #@returns true if a record with unique id uid exists in the target_class representation, false if not
+    def is_exist(self, target_class, uid):
+    # retrouver la table qui correspond à target_class
+    # vérifier qu'il existe, ou pas, un enregistrement contenant uid
+        result = self.select(self, target_class, [target_class.uid_fieldname], filters = [(target_class.uid_fieldname, '=', uid)])
+        return len(result) == 1
