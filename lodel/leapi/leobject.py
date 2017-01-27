@@ -651,6 +651,12 @@ object ! For class %s with uid value = %s" % (cls, uid))
             return None
         return res[0]
 
-        
-        
+    ##@brief Checks if an object exists
+    @classmethod
+    def is_exist(cls, uid):
+        if cls.uid_fieldname() is None:
+            raise LodelFatalError(
+                "No uid defined for class %s" % cls.__name__)
+        from .query import is_exist
+        return is_exist(cls, uid)
 

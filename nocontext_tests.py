@@ -21,7 +21,6 @@
 
 import sys, os, os.path
 import unittest
-import nocontext_tests
 
 loader = unittest.TestLoader()
 

@@ -91,10 +91,7 @@ def admin_update(request):
     else:
         # Check if the object actually exists
         # We get it from the database
-        query_filters = list()
-        query_filters.append((uid_field,'=',lodel_id))
-        obj = target_leo.get(query_filters)
-        if len(obj) == 0:
+        if not target_leo.is_exist(lodel_id):
             raise HttpException(404)
     return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
 

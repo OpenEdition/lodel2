@@ -329,12 +329,15 @@ class Reference(DataHandler):
         if target_class not in self.__allowed_classes:
             logger.warning('Class of the back_reference given is not an allowed class')
             return False
-        target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
         value = datas[fname]
-        obj = target_class.get([(target_uidfield, '=', value)])
-        if len(obj) == 0:
+        if not target_class.is_exist(value):
             logger.warning('Object referenced does not exist')
             return False
+        #target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
+        #obj = target_class.get([(target_uidfield, '=', value)])
+        #if len(obj) == 0:
+        #    logger.warning('Object referenced does not exist')
+        #    return False
         return True
     
     ##@brief Utility method designed to fetch referenced objects
@@ -437,7 +440,7 @@ class MultipleRef(Reference):
             if len(left) == 0:
                 return res
         raise LodelDataHandlerConsistencyException("Unable to find \
-some referenced objects. Followinf uid were not found : %s" % ','.join(left))
+some referenced objects. Following uids were not found : %s" % ','.join(left))
 
 ## @brief Class designed to handle datas access will fieldtypes are constructing datas
 #@ingroup lodel2_datahandlers
@@ -446,7 +449,7 @@ some referenced objects. Followinf uid were not found : %s" % ','.join(left))
 #
 # In theory it's able to detect circular dependencies
 # @todo test circular deps detection
-# @todo test circulat deps false positiv
+# @todo test circular deps false positive
 class DatasConstructor(object):
 
     ## @brief Init a DatasConstructor

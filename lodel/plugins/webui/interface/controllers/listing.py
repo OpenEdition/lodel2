@@ -82,10 +82,7 @@ def show_object(request):
     if not test_valid:
         raise HttpException(400)
     else:
-        query_filters = list()
-        query_filters.append((uid_field,'=',lodel_id))
-        obj = target_leo.get(query_filters)
-        if len(obj) == 0:
+        if not target_leo.is_exist(lodel_id):
             raise HttpException(404)
     return get_response('listing/show_object.html', lodel_id=lodel_id, classname=classname)
 
@@ -121,10 +118,7 @@ def show_object_detailled(request):
     if not test_valid:
         raise HttpException(400)
     else:
-        query_filters = list()
-        query_filters.append((uid_field,'=',lodel_id))
-        obj = target_leo.get(query_filters)
-        if len(obj) == 0:
+        if not target_leo.is_exist(lodel_id):
             raise HttpException(404)
 
     return get_response('listing/show_object_detailled.html', lodel_id=lodel_id, classname=classname)
