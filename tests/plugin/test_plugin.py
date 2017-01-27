@@ -3,7 +3,7 @@
 import unittest
 
 from lodel.plugin.plugins import Plugin, PluginError, MetaPlugType,\
-    VIRTUAL_PACKAGE_NAME, DEFAULT_PLUGINS_PATH_LIST
+    VIRTUAL_PACKAGE_NAME, PLUGINS_PATH
 from lodel.plugin.datasource_plugin import DatasourcePlugin
 from lodel.plugin.sessionhandler import SessionHandlerPlugin
 from lodel.plugin.interface import InterfacePlugin
@@ -83,38 +83,6 @@ class PluginTestCase(unittest.TestCase):
         self.assertEqual(Plugin.plugin_module_name('foo'), "%s.%s" % (VIRTUAL_PACKAGE_NAME, 'foo'))
         
         
-    def test_discover_if_paths_is_none_default_is_used(self):
-        with patch.object(Plugin, '_discover', wraps=Plugin._discover) as _discover_wrap:
-            Plugin.discover(DEFAULT_PLUGINS_PATH_LIST)
-            _discover_wrap.assert_called_with(DEFAULT_PLUGINS_PATH_LIST[-1])
-            
-        
-    def test_discover_if_paths_is_set_properly_search_in(self):
-        paths = ['.', '.']
-        with patch.object(Plugin, '_discover', wraps=Plugin._discover) as _discover_wrap:
-            Plugin.discover(paths)
-            _discover_wrap.assert_called_with(paths[-1])
-            
-            
-    def test_discover_if_no_plugins_found_still_returns_searched_paths(self):
-        paths = ['/home/quentin/Pictures']
-        dfoi = Plugin.discover(paths)
-        self.assertEqual(dfoi['path_list'], paths)
-        
-            
-    def test_discover_if_no_plugins_found_returns_empty_plugin_dict(self):
-        dfoi = Plugin.discover(['/home/quentin/Pictures'])
-        self.assertEqual(dfoi['plugins'], {})
-        
-            
-    def test_discover_if_no_plugins_found_returns_empty_plugin(self):
-        dfoi = Plugin.discover(['./plugins'])
-        self.maxDiff = None
-        self.assertEqual(dfoi['plugins'], {})
-        
-
-
-
 class PluginStartedTestCase(unittest.TestCase):
     """ Test case grouping all tests on a started Plugin class """
 
