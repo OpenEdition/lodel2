@@ -121,7 +121,26 @@ class Concat(FormatString):
         super().__init__(
             format_string = format_string, field_list = field_list, **kwargs)
 
+
+
 class Password(Varchar):
     help = 'Handle passwords'
     base_type = 'password'
     pass
+
+
+
+class VarcharList(Varchar):
+    help = 'DataHandler designed to make a list out of a string.'
+    base_type = 'varchar'
+    
+    def __init__(self, delimiter=' ', **kwargs):
+        if not isinstance(delimiter, str):
+            raise LodelException("The delimiter has to be a string, %s given" % type(delimiter))
+        self.delimiter = str(delimiter)
+        super().__init__(**kwargs)
+
+
+    def construct_data(self, emcomponent, fname, datas, cur_value):
+        result = cur_value.split(self.delimiter)
+        return result

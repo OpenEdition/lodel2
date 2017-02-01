@@ -22,8 +22,7 @@ base_group = em.new_group(
 
 em_lodel_site = em.new_class(
     'LodelSite',
-    group = base_group,
-    abstract=True
+    group = base_group
 )
 
 em_lodel_site.new_field(
@@ -49,8 +48,8 @@ em_lodel_site.new_field(
     display_text = 'lodeSiteExtensions',
     help_text = 'Lodel site extensions',
     group = base_group,
-    data_handler = 'list',
-    back_reference = ('Plugin', 'plugin_name') 
+    data_handler = 'varcharlist',
+    delimiter = ' '
 )
 
 em_lodel_site.new_field(
