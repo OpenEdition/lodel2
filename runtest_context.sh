@@ -70,6 +70,8 @@ chmod +x lodel_admin.py
 rm -R conf.d && mv tests/tests_conf.d conf.d
 make
 make refresh_plugins
-$PYTHON loader.py $@
+$PYTHON loader.py $@ && ret_status=0 || ret_status=1
 
 rm -Rf $testdir
+
+exit $ret_status

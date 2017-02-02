@@ -72,11 +72,14 @@ if __name__ == '__main__':
         else:
             dpath = '.'
         with open(sys.argv[1]+'/context_tests.log', 'w') as logfile:
-            unittest.TextTestRunner(
+            tests_res = unittest.TextTestRunner(
                 logfile,
                 failfast = '-f' in sys.argv,
                 verbosity = 2 if '-v' in sys.argv else 1).run(suite)
-        exit()
+        if tests_res.wasSuccessful():
+            exit(0)
+        else:
+            exit(1)
 
     lodel = LodelContext.get()
     import leapi_dyncode as dyncode
