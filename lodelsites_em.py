@@ -61,6 +61,39 @@ em_lodel_site.new_field(
     data_handler = 'text',
 )
 
+
+
+
+user_group = em.new_group(
+    'users',
+    display_name = 'Lodel users',
+    help_text = 'Group that handle users en perm'
+)
+
+
+user = em.new_class(
+    'User',
+    group = user_group
+)
+
+user.new_field(
+    'login',
+    display_name = 'User login',
+    help_text = 'login',
+    group = user_group,
+    data_handler = 'varchar',
+    primary_key = True
+)
+
+user.new_field(
+    'password',
+    display_name = 'Password',
+    help_text = 'User password',
+    group = user_group,
+    data_handler = 'password',
+)
+
+
 pickle_file_path = 'examples/lodelsites_em.pickle'
 xml_file_path = 'examples/lodelsites_em.xml'
 
