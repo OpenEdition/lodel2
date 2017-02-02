@@ -41,7 +41,7 @@ em_lodel_site.new_field(
     data_handler = 'regex',
     max_length = 5,
     regex = '^[0-9a-z_-]+$',
-    uniq = True
+    primary_key = True
 )
 
 em_lodel_site.new_field(
