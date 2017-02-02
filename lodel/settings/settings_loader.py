@@ -9,7 +9,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.settings.validator': ['SettingsValidationError']})
+    'lodel.settings.validator': ['SettingValidationError']})
 
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
@@ -107,7 +107,7 @@ class SettingsLoader(object):
                                         key_id = section+'.'+keyname)
                 self.__errors_list.append(expt)
             else:
-                expt = SettingsValidationError(
+                expt = ValidationError(
                                                 "For %s.%s : %s" % 
                                                 (section, keyname,e)
                 )
