@@ -71,7 +71,7 @@ then
     logfiles=$(ls $logdir)
     for logfile in $logfiles
     do
-        more $logdir/$logfile
+        cat $logdir/$logfile
     done
     if [[ $logdisplay -eq 2 ]]
     then 
