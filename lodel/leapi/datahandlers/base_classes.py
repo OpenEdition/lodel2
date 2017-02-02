@@ -64,6 +64,7 @@ class DataHandler(object):
 
     def check_options(self):
         for option_name, option_value in self.options_values.items():
+            # TODO Change the call to self.options_spec if the specifications are passed as tuple
             self.options_values[option_name] = self.options_spec[option_name].check_value(option_value)
 
     @property
