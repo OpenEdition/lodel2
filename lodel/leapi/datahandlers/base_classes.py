@@ -50,6 +50,7 @@ class DataHandler(object):
         self.immutable = False
         self.primary_key = False
         self.internal = False
+        
         if 'default' in kwargs:
             self.default, error = self.check_data_value(kwargs['default'])
             if error:
@@ -58,8 +59,11 @@ class DataHandler(object):
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
             
-        if self.is_primary_key() and not self.is_uniq():
-            raise LodelException("'primary_key' field has to be uniq")
+        if self.is_primary_key():
+            if 'uniq' in kwargs and not self.is_uniq():
+                message = "Parameter 'uniq' has to be set to True when 'primary_key' is not False"
+                raise LodelException(message)
+            self.uniq = False
 
     ## Fieldtype name
     @classmethod
