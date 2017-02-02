@@ -31,9 +31,8 @@ class EmComponent(MlNamedObject):
         if self.__class__ == EmComponent:
             raise NotImplementedError('EmComponent is an abstract class')
         self.uid = uid
-        self.display_name = None if display_name is None else MlString(display_name)
-        self.help_text = None if help_text is None else MlString(help_text)
         self.group = group
+        super().__init__(display_name, help_text)
     
     def __str__(self):
         if self.display_name is None:
@@ -285,9 +284,8 @@ class EmGroup(MlNamedObject):
         self.require = dict()
         ##@brief Stores the list of EmComponent instances contained in this group
         self.__components = set()
+        super().__init__(display_name, help_text)
 
-        self.display_name = None if display_name is None else MlString(display_name)
-        self.help_text = None if help_text is None else MlString(help_text)
         if depends is not None:
             for grp in depends:
                 if not isinstance(grp, EmGroup):

@@ -9,6 +9,7 @@ import copy
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
+    'lodel.mlnamedobject': ['MlNamedObject'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'FieldValidationError']})
 
@@ -28,7 +29,7 @@ class ValidationError(Exception):
 # a ValidationError if validation fails, else it returns a properly
 # casted value.
 #@todo implement an IP validator and use it in multisite confspec
-class Validator(object):
+class Validator(MlNamedObject):
     
     _validators = dict()
     _description = dict()
@@ -37,12 +38,15 @@ class Validator(object):
     #@param name str : validator name
     #@param none_is_valid bool : if True None will be validated
     #@param **kwargs : more arguement for the validator
-    def __init__(self, name, none_is_valid = False, **kwargs):
+    def __init__(self, name, none_is_valid = False, display_name = None, help_text = None, **kwargs):
         if name is not None and name not in self._validators:
             raise LodelFatalError("No validator named '%s'" % name)
         self.__none_is_valid = none_is_valid
         self.__name = name
         self._opt_args = kwargs
+        if display_name is None:
+            display_name = name
+        super().__init__(display_name, help_text)
 
     ##@brief Call the validator
     # @param value *

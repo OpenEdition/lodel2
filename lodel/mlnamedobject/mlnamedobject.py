@@ -9,7 +9,7 @@ LodelContext.expose_modules(globals(), {
 
 class MlNamedObject(object):
     
-    def __init__(self, display_name, help_text):
-        self.display_name = MlString(display_name)
-        self.help_text = MlString(help_text)
+    def __init__(self, display_name = None, help_text = None):
+        self.display_name = None if display_name is None else MlString(display_name)
+        self.help_text = None if help_text is None else MlString(help_text)
         

@@ -22,7 +22,7 @@ class EditorialModel(MlNamedObject):
     ##@brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
     # @param description MlString|str|dict : the editorial model description
-    def __init__(self, name, description = None):
+    def __init__(self, name, description = None, display_name = None, help_text = None):
         self.name = MlString(name)
         self.description = MlString(description)
         ##@brief Stores all groups indexed by id
@@ -34,6 +34,11 @@ class EditorialModel(MlNamedObject):
         ## @brief Stores all activated classes indexed by id
         self.__active_classes = dict()
         self.__set_actives()
+        if display_name is None:
+            display_name = name
+        if help_text is None:
+            help_text = description
+        super().__init__(display_name, help_text)
     
     ##@brief EmClass uids accessor
     #@return a dict of emclasses
