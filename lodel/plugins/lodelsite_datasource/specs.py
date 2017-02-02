@@ -4,7 +4,7 @@
 #@note isolated in order to be usable by __init__.py and main.py
 
 LEO_NAME = 'Lodelsite'
-MANDATORY_FIELDNAMES = [ 'shortname', 'extensions', 'groups' ]
+MANDATORY_FIELDNAMES = [ 'shortname', 'extensions', 'em_groups' ]
 
 ##@brief Checks that given emcomponent is compatible with datasource
 #behavior
@@ -12,11 +12,11 @@ MANDATORY_FIELDNAMES = [ 'shortname', 'extensions', 'groups' ]
 #@param emcomp LeObject subclass (or instance)
 #@return a tuple (bool, reason_str)
 def check(leo):
-    if hasattr(leo, '__class__'):
+    if not hasattr(leo, '__name__'):
         leo = leo.__class__
     if leo.__name__ != LEO_NAME:
         return (False, 'bad name')
-    missings = MANDATORY_FIELDNAMES - set(leo.fieldnames())
+    missings = set(MANDATORY_FIELDNAMES) - set(leo.fieldnames())
     if len(missings) > 0:
         return (False, 'missing fields : ' + (', '.join(missings)))
     return (True, 'ok')

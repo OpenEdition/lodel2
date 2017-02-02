@@ -7,7 +7,7 @@ import shutil
 from lodel.context import LodelContext
 from lodel import buildconf #No need to protect it in Contexts
 
-LodelContext.expose_module(globals(), {
+LodelContext.expose_modules(globals(), {
     'lodel.plugin.datasource_plugin': ['AbstractDatasource', 'DatasourcePlugin'],
     'lodel.exceptions': ['LodelFatalError'],
     'lodel.settings': 'Settings'})
@@ -16,7 +16,7 @@ from .exceptions import *
 
 LODELSITE_DATAS_PATH = os.path.join(buildconf.LODEL2VARDIR,'sites_datas')
 LODELSITE_CONTEXTS_PATH = os.path.join(
-    buildconf.LODEL2VARDIRE, '.sites_contexts')
+    buildconf.LODEL2VARDIR, '.sites_contexts')
 
 ##@brief Define directories architecture
 #
@@ -46,14 +46,14 @@ def name2paths(name):
 def site_exists(name):
     paths = name2paths(name)
     for path in paths:
-        if os.path.is_file(path):
+        if os.path.isfile(path):
             msg = 'Will trying to determine if a lodesite "%s" exists we \
 found that "%s" is a file, but a directory was expected' % (name, path)
             raise LodelSiteDatasourceInconsistency(msg)
 
     res = [False, False]
-    res = [os.is_dir(paths[0]),
-        os.is_dir(paths[1])]
+    res = [os.path.isdir(paths[0]),
+        os.path.isdir(paths[1])]
     if res[0] != res[1]:
         msg = 'Inconsistency detected on filesystem will trying to determine \
 wether a lodelsite exists or not : '
@@ -81,24 +81,24 @@ allready exists' % name)
     try:
         os.mkdir(data_path)
     except FileExistsError:
-        logger.fatal('This should never append ! We just checked that this \
+        logger.critical('This should never append ! We just checked that this \
 directory do not exists. BAILOUT !')
         raise LodelFatalError('Unable to create data directory for lodelsite \
 "%s", file exists')
     except Exception as e:
-        raise LodelFataError(('Unable to create data directory for lodelsite \
-"%s" : ' % name) + e)
+        raise LodelFatalError('Unable to create data directory for lodelsite \
+"%s" : %s' % (name,e))
     #Context dir
     try:
         os.mkdir(ctx_path)
-    except FileExistsErrpr:
-        logger.fatal('This should never append ! We just checked that this \
+    except FileExistsError:
+        logger.critical('This should never append ! We just checked that this \
 directory do not exists. BAILOUT !')
         raise LodelFatalError('Unable to create context directory for \
 lodelsite "%s", file exists')
     except Exception as e:
-        raise LodelFataError(('Unable to create context directory for \
-lodelsite "%s" : ' % name) + e)
+        raise LodelFatalError('Unable to create context directory for \
+lodelsite "%s" : %s' % (name, e))
     
     #Child directories
     for mname, ccd in (('datas', data_path), ('ctx', ctx_path)):
@@ -108,11 +108,11 @@ lodelsite "%s" : ' % name) + e)
             try:
                 os.mkdir(to_create)
             except FileExistsError:
-                logger.fatal('This should never append ! We just created parent \
+                logger.critical('This should never append ! We just created parent \
 directory. BAILOUT !')
             except Exception as e:
-                raise LodelFatalError(('Unable to create %s directory for \
-lodelsite "%s" : ' % (d,name)) + e)
+                raise LodelFatalError('Unable to create %s directory for \
+lodelsite "%s" : %s' % (d,name, e))
     
 ##@brief Generate conffile containing informations set by lodelsites EM
 #

@@ -14,7 +14,6 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.settings.validator': ['SettingValidator'],
     'lodel.logger': 'logger'})
-from .datasource import DummyDatasource as Datasource
 from .specs import check
 
 __plugin_type__ = 'datasource'

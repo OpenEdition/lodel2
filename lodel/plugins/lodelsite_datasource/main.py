@@ -1,7 +1,7 @@
 import os.path
 from lodel.context import LodelContext
 
-LodelContext.expose_module(globals(), {
+LodelContext.expose_modules(globals(), {
     'lodel.plugin.datasource_plugin': ['AbstractDatasource', 'DatasourcePlugin'],
     'lodel.logger': 'logger',
     'lodel.exceptions': ['LodelFatalError'],
@@ -24,7 +24,7 @@ class Datasource(AbstractDatasource):
     #@param db_datasource_ro str : read only datasource identitifer
     def __init__(self, db_datasource, db_datasource_ro = None):
         if db_datasource_ro is None:
-            db_datasource = db_datasource_ro
+            db_datasource_ro = db_datasource
         self._child_ds = DatasourcePlugin.init_datasource(
             db_datasource, False)
         self._child_ds_ro = DatasourcePlugin.init_datasource(
@@ -41,7 +41,7 @@ class Datasource(AbstractDatasource):
         res, reason = check_leo(leo)
         if not res:
             msg = 'Bad leo given : %s because %s' % (leo, reason)
-            logger.fatal(msg)
+            logger.critical(msg)
             raise LodelFatalError(msg)
 
     ##@brief Provide a new uniq numeric ID
@@ -104,15 +104,15 @@ existing site with a new name')
         
         datas = self.select(
             target,
-            ['shortname', 'groups', 'extensions'],
+            ['shortname', 'em_groups', 'extensions'],
             filters,
             relational_filters)
 
         for data in datas:
-            if 'groups' in upd_datas:
-                groups = upd_datas['groups']
+            if 'em_groups' in upd_datas:
+                groups = upd_datas['em_groups']
             else:
-                groups = data['groups']
+                groups = data['em_groups']
             if 'extensions' in upd_datas:
                 extensions = upd_datas['extensions']
             else:
@@ -120,7 +120,7 @@ existing site with a new name')
 
             update_conf(**{
                 'sitename': data['shortname'],
-                'groups': groups,
+                'em_groups': groups,
                 'extensions': extensions})
         
         return self._child_ds.update(
@@ -138,7 +138,7 @@ allready exists' % (new_datas['shortname']))
         site_directories_creation(new_datas['shortname'])
         generate_conf(
             new_datas['shortname'],
-            new_datas['groups'],
+            new_datas['em_groups'],
             new_datas['extensions'])
         return self._child_ds.insert(target, new_datas)
 
