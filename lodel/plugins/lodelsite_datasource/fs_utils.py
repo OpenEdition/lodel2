@@ -150,7 +150,7 @@ def update_conf(sitename, groups, extensions):
         logger.warning('Unable to delete generated conf %s when trying to \
 update it %s' % (autoconf, e))
     with open(autoconf, 'w+') as cfp:
-        cfp.write(generate_conf(sitename, groups, extensions)
+        cfp.write(generate_conf(sitename, groups, extensions))
     logger.info('Generated configuration file update for %s' % sitename)
 
 ##@brief Copy conffile from model and generate a conffile from given infos

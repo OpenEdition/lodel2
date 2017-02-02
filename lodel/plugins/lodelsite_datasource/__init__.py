@@ -29,6 +29,7 @@ CONFSPEC = {
             SettingValidator('string')),
         'db_datasource_ro': (None,
             SettingValidator('string', none_is_valid = True)),
+    }
 }
 
 
