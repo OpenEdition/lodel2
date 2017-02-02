@@ -10,6 +10,7 @@ import inspect
 import warnings
 
 from lodel.context import LodelContext
+from .exceptions import LodelDataHandlerNotAllowedOptionException
 
 LodelContext.expose_modules(globals(), {
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
@@ -62,13 +63,15 @@ class DataHandler(object):
             setattr(self, argname, argval)
         self.check_options()
 
+    ## @brief Sets properly casted and checked options for the datahandler
+    # @raises LodelDataHandlerNotAllowedOptionException when a passed option is not in the option specifications of the datahandler
     def check_options(self):
         for option_name, option_value in self.options_values.items():
             # TODO Change the call to self.options_spec if the specifications are passed as tuple
             if option_name in self.options_spec:
                 self.options_values[option_name] = self.options_spec[option_name].check_value(option_value)
             else:
-                pass  # TODO decide what kind of exception should be raised here
+                raise LodelDataHandlerNotAllowedOptionException()
 
     @property
     def options(self):
