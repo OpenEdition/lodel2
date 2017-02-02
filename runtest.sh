@@ -63,8 +63,10 @@ else
 fi
 
 PYTHON='env python3'
-$PYTHON ./nocontext_tests.py $logdir $@
-./runtest_context.sh $logdir $@
+ret_status=0
+
+$PYTHON ./nocontext_tests.py $logdir $@ || ret_status=1
+./runtest_context.sh $logdir $@ || ret_status=1
 
 if [[ $logdisplay -eq 1 || $logdisplay -eq 2 ]]
 then
@@ -79,3 +81,4 @@ then
     fi
 fi
 
+exit $ret_status
