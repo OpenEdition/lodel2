@@ -63,7 +63,7 @@ class DataHandler(object):
             if 'uniq' in kwargs and not self.is_uniq():
                 message = "Parameter 'uniq' has to be set to True when 'primary_key' is not False"
                 raise LodelException(message)
-            self.uniq = False
+            self.uniq = True
 
     ## Fieldtype name
     @classmethod
