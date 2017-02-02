@@ -57,6 +57,9 @@ class DataHandler(object):
             del(kwargs['default'])
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
+            
+        if self.is_primary_key() and not self.is_uniq():
+            raise LodelException("'primary_key' field has to be uniq")
 
     ## Fieldtype name
     @classmethod
@@ -73,6 +76,9 @@ class DataHandler(object):
 
     def is_primary_key(self):
         return self.primary_key
+    
+    def is_uniq(self):
+        return self.uniq
 
     ##@brief checks if a fieldtype is internal
     # @return bool
