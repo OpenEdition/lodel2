@@ -488,3 +488,36 @@ class DatasConstructor(object):
         self._datas[fname] = value
         warnings.warn("Setting value of an DatasConstructor instance")
 
+
+## @brief Class designed to handle an option of a DataHandler
+class DatahandlerOption(object):
+
+    ## @brief instanciates a new Datahandler option object
+    #
+    # @param id str
+    # @param display_name MlString
+    # @param help_text MlString
+    # @param validator function
+    def __init__(self, id, display_name, help_text, validator):
+        self.__id = id
+        self.__display_name = display_name
+        self.__help_text = help_text
+        self.__validator = validator
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def display_name(self):
+        return self.__display_name
+
+    @property
+    def help_text(self):
+        return self.__help_text
+
+    ## @brief checks a value corresponding to this option is valid
+    # @param value
+    # @return casted value
+    def check_value(self, value):
+        return self.__validator(value)
