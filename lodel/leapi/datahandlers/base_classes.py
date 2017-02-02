@@ -30,6 +30,9 @@ class DataHandler(object):
     __custom_handlers = dict()
 
     help_text = 'Generic Field Data Handler'
+    display_name = "Generic Field"
+    options_spec = dict()
+    options_values = dict()
 
     ##@brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
@@ -57,6 +60,15 @@ class DataHandler(object):
             del(kwargs['default'])
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
+        self.check_options()
+
+    def check_options(self):
+        for option_name, option_value in self.options_values.items():
+            self.options_values[option_name] = self.options_spec[option_name].check_value(option_value)
+
+    @property
+    def options(self):
+        return self.options_values
 
     ## Fieldtype name
     @classmethod
