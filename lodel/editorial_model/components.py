@@ -12,6 +12,7 @@ import hashlib
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString'],
+    'lodel.mlnamedobject': ['MlNamedObject'],
     'lodel.settings': ['Settings'],
     'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
     'lodel.leapi.leobject': ['CLASS_ID_FIELDNAME']})
@@ -20,7 +21,7 @@ LodelContext.expose_modules(globals(), {
 # @see EmClass EmField
 # @todo forbid '.' in uid
 #@ingroup lodel2_em
-class EmComponent(object):
+class EmComponent(MlNamedObject):
     
     ##@brief Instanciate an EmComponent
     # @param uid str : uniq identifier
@@ -268,7 +269,7 @@ class EmField(EmComponent):
 
 ##@brief Handles functionnal group of EmComponents
 #@ingroup lodel2_em
-class EmGroup(object):
+class EmGroup(MlNamedObject):
         
     ##@brief Create a new EmGroup
     # @note you should NEVER call the constructor yourself. Use Model.add_group instead

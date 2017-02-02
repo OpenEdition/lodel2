@@ -7,6 +7,7 @@ import copy
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString'],
+    'lodel.mlnamedobject': ['MlNamedObject'],
     'lodel.logger': 'logger',
     'lodel.settings': ['Settings'],
     'lodel.settings.utils': ['SettingsError'],
@@ -16,7 +17,7 @@ LodelContext.expose_modules(globals(), {
 
 ##@brief Describe an editorial model
 #@ingroup lodel2_em
-class EditorialModel(object):
+class EditorialModel(MlNamedObject):
     
     ##@brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
