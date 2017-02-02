@@ -2,10 +2,11 @@
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.utils.mlstring': ['MlString'],
-    'lodel.logger': 'logger',
-    'lodel.settings': ['Settings'],
-    'lodel.settings.utils': ['SettingsError']})
+    'lodel.utils.mlstring': ['MlString']})
+
+## @package lodel.mlnamedobject Lodel2 description of objects module
+#
+# Display name and Description of a lodel2 object
 
 class MlNamedObject(object):
     

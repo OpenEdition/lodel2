@@ -9,7 +9,7 @@ import copy
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.mlnamedobject': ['MlNamedObject'],
+    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'FieldValidationError']})
 

@@ -7,7 +7,7 @@ import copy
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString'],
-    'lodel.mlnamedobject': ['MlNamedObject'],
+    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
     'lodel.logger': 'logger',
     'lodel.settings': ['Settings'],
     'lodel.settings.utils': ['SettingsError'],

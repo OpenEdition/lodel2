@@ -12,7 +12,7 @@ import hashlib
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString'],
-    'lodel.mlnamedobject': ['MlNamedObject'],
+    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
     'lodel.settings': ['Settings'],
     'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
     'lodel.leapi.leobject': ['CLASS_ID_FIELDNAME']})
