@@ -38,8 +38,9 @@ em_lodel_site.new_field(
     display_text = 'lodelSiteShortName',
     help_text = 'Lodel site short string identifier',
     group = base_group,
-    data_handler = 'varchar',
+    data_handler = 'regex',
     max_length = 5,
+    regex = '^[0-9a-z_-]+$',
     uniq = True
 )
 
