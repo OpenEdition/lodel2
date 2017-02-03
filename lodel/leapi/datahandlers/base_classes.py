@@ -31,8 +31,8 @@ class DataHandler(MlNamedObject):
     # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
-    #help_text = 'Generic Field Data Handler'
-    #display_name = "Generic Field"
+    help_text = 'Generic Field Data Handler'
+    display_name = "Generic Field"
     options_spec = dict()
     options_values = dict()
 
@@ -63,6 +63,7 @@ class DataHandler(MlNamedObject):
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
         self.check_options()
+        super().__init__(self.display_name, self.help_text)
 
     ## @brief Sets properly casted and checked options for the datahandler
     # @raises LodelDataHandlerNotAllowedOptionException when a passed option is not in the option specifications of the datahandler
@@ -523,7 +524,7 @@ class DatahandlerOption(MlNamedObject):
         self.__display_name = display_name
         self.__help_text = help_text
         self.__validator = validator
-
+        super().__init__(self.__display_name, self.__help_text)
     @property
     def id(self):
         return self.__id
