@@ -4,7 +4,3 @@ def LodelDataHandlerException(Exception):
 
 def LodelDataHandlerConsistencyException(LodelDataHandlerException):
     pass
-
-
-def LodelDataHandlerNotAllowedOptionException(LodelDataHandlerException):
-    pass

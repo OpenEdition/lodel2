@@ -22,8 +22,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.mlnamedobject':['MlNamedObject'],
     'lodel.leapi.datahandlers.exceptions': [
         'LodelDataHandlerConsistencyException',
-        'LodelDataHandlerException',
-        'LodelDataHandlerNotAllowedOptionException'
+        'LodelDataHandlerException'
     ],
     'lodel.logger': 'logger'})
 
@@ -76,12 +75,13 @@ class DataHandler(MlNamedObject):
     ## @brief Sets properly casted and checked options for the datahandler
     # @raises LodelDataHandlerNotAllowedOptionException when a passed option is not in the option specifications of the datahandler
     def check_options(self):
-        for option_name, option_value in self.options_values.items():
-            # TODO Change the call to self.options_spec if the specifications are passed as tuple
-            if option_name in self.options_spec:
-                self.options_values[option_name] = self.options_spec[option_name].check_value(option_value)
+        for option_name, option_datas in self.options_spec.items():
+            if option_name in self.options_values:
+                # There is a configured option, we check its value
+                self.options_values[option_name] = option_datas[1].check_value(self.options_values[option_name])
             else:
-                raise LodelDataHandlerNotAllowedOptionException()
+                # This option was not configured, we get the default value from the specs
+                self.options_values[option_name] = option_datas[0]
 
     @property
     def options(self):
