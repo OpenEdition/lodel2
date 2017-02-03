@@ -64,10 +64,10 @@ class Datasource(AbstractDatasource):
     #@param offset int: used with limit to choose the start record
     #@param instanciate bool : If true, the records are returned as instances, else they are returned as dict
     #@return list
-    def select(self, target, field_list, filters, rel_filters=None, order=None, group=None, limit=None, offset=0,
-               instanciate=True):
+    def select(self, target, field_list, filters, relational_filters=None, 
+    	order=None, group=None, limit=None, offset=0, instanciate=True):
         return self._child_ds_ro.select(
-            target, field_list, rel_filters, order, group, limit, offset)
+            target, field_list, relational_filters, order, group, limit, offset)
 
     ##@brief Deletes records according to given filters
     #@note lazy filters evaluation implementation : to evaluate filters &

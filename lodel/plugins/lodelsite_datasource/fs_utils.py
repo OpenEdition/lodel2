@@ -8,6 +8,7 @@ from lodel.context import LodelContext
 from lodel import buildconf #No need to protect it in Contexts
 
 LodelContext.expose_modules(globals(), {
+    'lodel.logger' : 'logger',
     'lodel.plugin.datasource_plugin': ['AbstractDatasource', 'DatasourcePlugin'],
     'lodel.exceptions': ['LodelFatalError'],
     'lodel.settings': 'Settings'})
@@ -101,7 +102,7 @@ lodelsite "%s", file exists')
 lodelsite "%s" : %s' % (name, e))
     
     #Child directories
-    for mname, ccd in (('datas', data_path), ('ctx', ctx_path)):
+    for mname, ccd in [('datas', data_path), ('ctx', ctx_path)]:
         ccd = data_path
         for d in LODELSITE_INSTALL_MODEL[mname]:
             to_create = os.path.join(ccd, d)
@@ -178,7 +179,7 @@ def make_confs(sitename, groups, extensions):
 ##@brief Delete all files related to a site
 #@warning can lead to dirty bugs if the site is running...
 def purge(sitename):
-    for todel in name2paths:
+    for todel in name2paths(sitename):
         try:
             shutil.rmtree(todel)
         except Exception as e:
