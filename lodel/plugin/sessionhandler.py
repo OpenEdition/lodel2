@@ -3,7 +3,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin', 'MetaPlugType'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 
 ##@brief SessionHandlerPlugin metaclass designed to implements a wrapper
@@ -53,7 +53,7 @@ class SessionHandlerPlugin(Plugin, metaclass=SessionPluginWrapper):
         'section': 'lodel2',
         'key': 'session_handler',
         'default': None,
-        'validator': SettingValidator(
+        'validator': Validator(
             'plugin', none_is_valid=False,ptype = _glob_typename)}
 
     _type_conf_name = _glob_typename

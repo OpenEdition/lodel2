@@ -3,7 +3,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.settings.validator': ['SettingValidator'],
+    'lodel.validator.validator': ['Validator'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
@@ -97,7 +97,7 @@ class DatasourcePlugin(Plugin):
         'section': 'lodel2',
         'key': 'datasource_connectors',
         'default': 'dummy_datasource',
-        'validator': SettingValidator(
+        'validator': Validator(
             'custom_list', none_is_valid = False,
             validator_name = 'plugin', validator_kwargs = {
                 'ptype': _glob_typename,
@@ -280,13 +280,13 @@ but %s is a %s" % (ds_name, pinstance.__class__.__name__))
 #CONFSPEC = {
 #                'lodel2.datasource.mysql.*' : {
 #                    'host': (   'localhost',
-#                                SettingValidator('host')),
+#                                Validator('host')),
 #                    'db_name': (    'lodel',
-#                                    SettingValidator('string')),
+#                                    Validator('string')),
 #                    'username': (   None,
-#                                    SettingValidator('string')),
+#                                    Validator('string')),
 #                    'password': (   None,
-#                                    SettingValidator('string')),
+#                                    Validator('string')),
 #                }
 #}
 #</pre>

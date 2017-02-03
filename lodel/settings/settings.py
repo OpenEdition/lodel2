@@ -13,7 +13,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(),{
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.settings.validator': ['SettingValidator', 'LODEL2_CONF_SPECS',
+    'lodel.validator.validator': ['Validator', 'LODEL2_CONF_SPECS',
         'confspec_append'],
     'lodel.settings.settings_loader':['SettingsLoader']})
     

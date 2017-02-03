@@ -341,3 +341,124 @@ Validator.create_re_validator(
     r'^https?://[^\./]+.[^\./]+/?.*$',
     'http_url',
     'Url validator')
+##@brief Validator for Editorial model component
+#
+# Designed to validate a conf that indicate a class.field in an EM
+#@todo modified the hardcoded dyncode import (it's a warning)
+def emfield_val(value):
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
+    spl = value.split('.')
+    if len(spl) != 2:
+        msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
+        raise SettingsValidationError(msg % value)
+    value = tuple(spl)
+    #Late validation hook
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def emfield_conf_check(hookname, caller, payload):
+        import leapi_dyncode as dyncode # <-- dirty & quick
+        classnames = { cls.__name__.lower():cls for cls in dyncode.dynclasses}
+        if value[0].lower() not in classnames:
+            msg = "Following dynamic class do not exists in current EM : %s"
+            raise SettingsValidationError(msg % value[0])
+        ccls = classnames[value[0].lower()]
+        if value[1].lower() not in ccls.fieldnames(True):
+            msg = "Following field not found in class %s : %s"
+            raise SettingsValidationError(msg % value)
+    return value
+
+##@brief Validator for plugin name & optionnaly type
+#
+#Able to check that the value is a plugin and if it is of a specific type
+def plugin_validator(value, ptype = None):
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook']})
+    value = copy.copy(value)
+    @LodelHook('lodel2_dyncode_bootstraped')
+    def plugin_type_checker(hookname, caller, payload):
+        LodelContext.expose_modules(globals(), {
+            'lodel.plugin.plugins': ['Plugin'],
+            'lodel.plugin.exceptions': ['PluginError']})
+        if value is None:
+            return
+        try:
+            plugin = Plugin.get(value)
+        except PluginError:
+            msg = "No plugin named %s found"
+            msg %= value
+            raise ValidationError(msg)
+        if plugin._type_conf_name.lower() != ptype.lower():
+            msg = "A plugin of type '%s' was expected but found a plugin \
+named  '%s' that is a '%s' plugin"
+            msg %= (ptype, value, plugin._type_conf_name)
+            raise ValidationError(msg)
+    return value
+
+
+Validator.register_validator(
+    'plugin',
+    plugin_validator,
+    'plugin name & type validator')
+
+Validator.register_validator(
+    'emfield',
+    emfield_val,
+    'EmField name validator')
+
+#
+#   Lodel 2 configuration specification
+#
+
+##@brief Append a piece of confspec
+#@note orig is modified during the process
+#@param orig dict : the confspec to update
+#@param section str : section name
+#@param key str
+#@param validator Validator : the validator to use to check this configuration key's value
+#@param default
+#@return new confspec
+def confspec_append(orig, section, key, validator, default):
+    if section not in orig:
+        orig[section] = dict()
+    if key not in orig[section]:
+        orig[section][key] = (default, validator)
+    return orig
+
+##@brief Global specifications for lodel2 settings
+LODEL2_CONF_SPECS = {
+    'lodel2': {
+        'debug': (  True,
+                    Validator('bool')),
+        'sitename': (   'noname',
+                        Validator('strip')),
+        'runtest': (    False,
+                        Validator('bool')),
+    },
+    'lodel2.logging.*' : {
+        'level': (  'ERROR',
+                    Validator('loglevel')),
+        'context': (    False,
+                        Validator('bool')),
+        'filename': (   "-",
+                        Validator('errfile', none_is_valid = False)),
+        'backupcount': (    5,
+                            Validator('int', none_is_valid = False)),
+        'maxbytes': (   1024*10,
+                        Validator('int', none_is_valid = False)),
+    },
+    'lodel2.editorialmodel': {
+        'emfile': ( 'em.pickle', Validator('strip')),
+        'emtranslator': ( 'picklefile', Validator('strip')),
+        'dyncode': ( 'leapi_dyncode.py', Validator('strip')),
+        'groups': ( '', Validator('list')),
+        'editormode': ( False, Validator('bool')),
+    },
+    'lodel2.datasources.*': {
+        'read_only': (False, Validator('bool')),
+        'identifier': ( None, Validator('string')),
+    },
+    'lodel2.auth': {
+        'login_classfield': ('user.login', Validator('emfield')),
+        'pass_classfield': ('user.password', Validator('emfield')),
+    },
+}

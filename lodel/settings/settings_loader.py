@@ -9,7 +9,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.settings.validator': ['SettingValidationError']})
+    'lodel.validator.validator': ['ValidationError']})
 
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
