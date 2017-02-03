@@ -98,8 +98,8 @@ class Datasource(AbstractDatasource):
     #@return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
         if 'shortname' in upd_datas:
-            raise LodelSiteDatasourceError('Not able to update the \
-shortname, its a site identifier. The good way of doing this is to copy \
+            raise LodelSiteDatasourceError('Unable to update the \
+shortname, it is a site identifier. The right way for doing so is to copy \
 existing site with a new name')
         
         datas = self.select(
@@ -134,7 +134,7 @@ existing site with a new name')
         self.__assert_good_leo(target)
         if site_exists(new_datas['shortname']):
             raise LodelSiteDatasourceError('A site with "%s" as shortname \
-allready exists' % (new_datas['shortname']))
+already exists' % (new_datas['shortname']))
         site_directories_creation(new_datas['shortname'])
         generate_conf(
             new_datas['shortname'],

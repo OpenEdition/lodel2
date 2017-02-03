@@ -1,4 +1,4 @@
-##@brief This module contains usefull function to handle lodelsites on FS
+##@brief This module contains usefull functions to handle lodelsites on FS
 
 import os
 import os.path
@@ -37,7 +37,7 @@ def name2paths(name):
     return (os.path.join(LODELSITE_DATAS_PATH, name),
         os.path.join(LODELSITE_CONTEXTS_PATH, name))
 
-##@brief Util function that indicate if a site exists or not
+##@brief Util function that indicates if a site exists or not
 #
 #This function only checks that both paths returned by name2path are
 #existing directories
@@ -69,12 +69,12 @@ wether a lodelsite exists or not : '
 #@param name str : site shortname
 #@return None
 #@throws LodelSiteDatasourceError if something fails
-#@throws LodelSiteDatasourceError if the site allready exists
+#@throws LodelSiteDatasourceError if the site already exists
 #@todo make uploads directory name configurable
 def site_directories_creation(name):
     if site_exists(name):
         raise LodelSiteDatasourceError('This site identified by "%s" \
-allready exists' % name)
+already exists' % name)
 
     data_path, ctx_path = name2paths(name)
     #Starting by creating both directories
@@ -82,8 +82,8 @@ allready exists' % name)
     try:
         os.mkdir(data_path)
     except FileExistsError:
-        logger.critical('This should never append ! We just checked that this \
-directory do not exists. BAILOUT !')
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
         raise LodelFatalError('Unable to create data directory for lodelsite \
 "%s", file exists')
     except Exception as e:
@@ -93,8 +93,8 @@ directory do not exists. BAILOUT !')
     try:
         os.mkdir(ctx_path)
     except FileExistsError:
-        logger.critical('This should never append ! We just checked that this \
-directory do not exists. BAILOUT !')
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
         raise LodelFatalError('Unable to create context directory for \
 lodelsite "%s", file exists')
     except Exception as e:
@@ -109,8 +109,8 @@ lodelsite "%s" : %s' % (name, e))
             try:
                 os.mkdir(to_create)
             except FileExistsError:
-                logger.critical('This should never append ! We just created parent \
-directory. BAILOUT !')
+                logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
             except Exception as e:
                 raise LodelFatalError('Unable to create %s directory for \
 lodelsite "%s" : %s' % (d,name, e))
@@ -154,7 +154,7 @@ update it %s' % (autoconf, e))
         cfp.write(generate_conf(sitename, groups, extensions))
     logger.info('Generated configuration file update for %s' % sitename)
 
-##@brief Copy conffile from model and generate a conffile from given infos
+##@brief Copies conffile from model and generates a conffile from given info
 #@param sitename str : site shortname
 #@param em_groups list : list of str -> selected em_groups
 #@param extensions list : list of str -> activated extensions
@@ -176,7 +176,7 @@ def make_confs(sitename, groups, extensions):
         cfp.write(generate_conf(sitename, groups, extensions))
     logger.info("Configuration file %s generated" % (autoconf))
 
-##@brief Delete all files related to a site
+##@brief Deletes all files related to a site
 #@warning can lead to dirty bugs if the site is running...
 def purge(sitename):
     for todel in name2paths(sitename):
