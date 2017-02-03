@@ -525,6 +525,7 @@ class DatahandlerOption(MlNamedObject):
         self.__help_text = help_text
         self.__validator = validator
         super().__init__(self.__display_name, self.__help_text)
+
     @property
     def id(self):
         return self.__id
