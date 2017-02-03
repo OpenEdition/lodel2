@@ -26,11 +26,12 @@ em_lodel_site = em.new_class(
 )
 
 em_lodel_site.new_field(
-    'name',
-    display_name = 'lodelSiteName',
-    help_text = 'Lodel site full name',
+    'id',
+    display_name = 'Site id',
+    help_text = 'Numeric uniq ID for a Lodel site',
     group = base_group,
-    data_handler = 'varchar'
+    data_handler = 'uniqid',
+    internal = True
 )
 
 em_lodel_site.new_field(
@@ -39,9 +40,17 @@ em_lodel_site.new_field(
     help_text = 'Lodel site short string identifier',
     group = base_group,
     data_handler = 'regex',
-    max_length = 5,
+    max_length = 16,
     regex = '^[0-9a-z_-]+$',
-    primary_key = True
+    uniq = True
+)
+
+em_lodel_site.new_field(
+    'name',
+    display_name = 'lodelSiteName',
+    help_text = 'Lodel site full name',
+    group = base_group,
+    data_handler = 'varchar'
 )
 
 em_lodel_site.new_field(
@@ -63,13 +72,15 @@ em_lodel_site.new_field(
 
 
 
-
+#
+#This class & fields becomes mandatory when the auth process was integrated
+#into lodel2 engine
+#
 user_group = em.new_group(
     'users',
     display_name = 'Lodel users',
     help_text = 'Group that handle users en perm'
 )
-
 
 user = em.new_class(
     'User',
