@@ -102,7 +102,6 @@ lodelsite "%s" : %s' % (name, e))
     
     #Child directories
     for mname, ccd in (('datas', data_path), ('ctx', ctx_path)):
-        ccd = data_path
         for d in LODELSITE_INSTALL_MODEL[mname]:
             to_create = os.path.join(ccd, d)
             try:
