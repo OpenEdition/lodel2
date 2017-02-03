@@ -27,7 +27,8 @@ LodelContext.expose_modules(globals(), {
     'lodel.validator.validator': [
         'ValidationError'
     ],
-    'lodel.logger': 'logger'})
+    'lodel.logger': 'logger',
+    'lodel.utils.mlstring': ['MlString']})
 
 
 ## @brief Base class for all data handlers
@@ -74,7 +75,10 @@ class DataHandler(MlNamedObject):
         for argname, argval in kwargs.items():
             setattr(self, argname, argval)
         self.check_options()
-        super().__init__(self.display_name, self.help_text)
+
+        display_name = kwargs.get('display_name',MlString(self.display_name))
+        help_text = kwargs.get('help_text', MlString(self.help_text))
+        super().__init__(display_name, help_text)
 
     ## @brief Sets properly casted and checked options for the datahandler
     # @raises LodelDataHandlerNotAllowedOptionException when a passed option is not in the option
@@ -376,7 +380,7 @@ class Reference(DataHandler):
         #    logger.warning('Object referenced does not exist')
         #    return False
         return True
-    
+
     ## @brief Utility method designed to fetch referenced objects
     # @param value mixed : the field value
     # @throw NotImplementedError
@@ -445,7 +449,7 @@ class MultipleRef(Reference):
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
-        new_val = list() 
+        new_val = list()
         error_list = list()
         for i, v in enumerate(value):
             try:
