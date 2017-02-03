@@ -15,13 +15,14 @@ from .exceptions import LodelDataHandlerNotAllowedOptionException
 LodelContext.expose_modules(globals(), {
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+    'lodel.mlnamedobject':['MlNamedObject'],
     'lodel.leapi.datahandlers.exceptions': ['LodelDataHandlerConsistencyException', 'LodelDataHandlerException'],
     'lodel.logger': 'logger'})
 
 
 ##@brief Base class for all data handlers
 #@ingroup lodel2_datahandlers
-class DataHandler(object):
+class DataHandler(MlNamedObject):
     base_type = "type"
     _HANDLERS_MODULES = ('datas_base', 'datas', 'references')
     ##@brief Stores the DataHandler childs classes indexed by name
@@ -30,8 +31,8 @@ class DataHandler(object):
     # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
-    help_text = 'Generic Field Data Handler'
-    display_name = "Generic Field"
+    #help_text = 'Generic Field Data Handler'
+    #display_name = "Generic Field"
     options_spec = dict()
     options_values = dict()
 
@@ -509,7 +510,7 @@ class DatasConstructor(object):
 
 
 ## @brief Class designed to handle an option of a DataHandler
-class DatahandlerOption(object):
+class DatahandlerOption(MlNamedObject):
 
     ## @brief instanciates a new Datahandler option object
     #
