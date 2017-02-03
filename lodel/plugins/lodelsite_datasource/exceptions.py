@@ -1,4 +1,4 @@
-class LodesSiteDatasourceError(Exception):
+class LodelSiteDatasourceError(Exception):
     pass
 
 class LodelSiteDatasourceInconsistency(LodesSiteDatasourceError):
