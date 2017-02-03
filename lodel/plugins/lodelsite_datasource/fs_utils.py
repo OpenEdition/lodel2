@@ -73,7 +73,7 @@ wether a lodelsite exists or not : '
 def site_directories_creation(name):
     if site_exists(name):
         raise LodelSiteDatasourceError('This site identified by "%s" \
-allready exists' % name)
+already exists' % name)
 
     data_path, ctx_path = name2paths(name)
     #Starting by creating both directories
@@ -81,8 +81,8 @@ allready exists' % name)
     try:
         os.mkdir(data_path)
     except FileExistsError:
-        logger.critical('This should never append ! We just checked that this \
-directory do not exists. BAILOUT !')
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
         raise LodelFatalError('Unable to create data directory for lodelsite \
 "%s", file exists')
     except Exception as e:
@@ -92,8 +92,8 @@ directory do not exists. BAILOUT !')
     try:
         os.mkdir(ctx_path)
     except FileExistsError:
-        logger.critical('This should never append ! We just checked that this \
-directory do not exists. BAILOUT !')
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
         raise LodelFatalError('Unable to create context directory for \
 lodelsite "%s", file exists')
     except Exception as e:
@@ -108,8 +108,8 @@ lodelsite "%s" : %s' % (name, e))
             try:
                 os.mkdir(to_create)
             except FileExistsError:
-                logger.critical('This should never append ! We just created parent \
-directory. BAILOUT !')
+                logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
             except Exception as e:
                 raise LodelFatalError('Unable to create %s directory for \
 lodelsite "%s" : %s' % (d,name, e))
