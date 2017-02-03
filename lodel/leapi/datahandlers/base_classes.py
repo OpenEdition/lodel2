@@ -83,10 +83,6 @@ class DataHandler(MlNamedObject):
                 # This option was not configured, we get the default value from the specs
                 self.options_values[option_name] = option_datas[0]
 
-    @property
-    def options(self):
-        return self.options_values
-
     ## Fieldtype name
     @classmethod
     def name(cls):
@@ -530,15 +526,11 @@ class DatahandlerOption(MlNamedObject):
     def __init__(self, id, display_name, help_text, validator):
         self.__id = id
         self.__validator = validator
-        super().__init__(self.__display_name, self.__help_text)
+        super().__init__(display_name, help_text)
 
     @property
-    def display_name(self):
-        return self.__display_name
-
-    @property
-    def help_text(self):
-        return self.__help_text
+    def id(self):
+        return self.__id
 
     ## @brief checks a value corresponding to this option is valid
     # @param value
