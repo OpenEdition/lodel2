@@ -1,4 +1,4 @@
-##@brief This module contains usefull function to handle lodelsites on FS
+##@brief This module contains usefull functions to handle lodelsites on FS
 
 import os
 import os.path
@@ -36,7 +36,7 @@ def name2paths(name):
     return (os.path.join(LODELSITE_DATAS_PATH, name),
         os.path.join(LODELSITE_CONTEXTS_PATH, name))
 
-##@brief Util function that indicate if a site exists or not
+##@brief Util function that indicates if a site exists or not
 #
 #This function only checks that both paths returned by name2path are
 #existing directories
@@ -68,7 +68,7 @@ wether a lodelsite exists or not : '
 #@param name str : site shortname
 #@return None
 #@throws LodelSiteDatasourceError if something fails
-#@throws LodelSiteDatasourceError if the site allready exists
+#@throws LodelSiteDatasourceError if the site already exists
 #@todo make uploads directory name configurable
 def site_directories_creation(name):
     if site_exists(name):
@@ -153,7 +153,7 @@ update it %s' % (autoconf, e))
         cfp.write(generate_conf(sitename, groups, extensions))
     logger.info('Generated configuration file update for %s' % sitename)
 
-##@brief Copy conffile from model and generate a conffile from given infos
+##@brief Copies conffile from model and generates a conffile from given info
 #@param sitename str : site shortname
 #@param em_groups list : list of str -> selected em_groups
 #@param extensions list : list of str -> activated extensions
@@ -175,7 +175,7 @@ def make_confs(sitename, groups, extensions):
         cfp.write(generate_conf(sitename, groups, extensions))
     logger.info("Configuration file %s generated" % (autoconf))
 
-##@brief Delete all files related to a site
+##@brief Deletes all files related to a site
 #@warning can lead to dirty bugs if the site is running...
 def purge(sitename):
     for todel in name2paths:
