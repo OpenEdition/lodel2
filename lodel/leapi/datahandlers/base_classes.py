@@ -19,7 +19,7 @@ LodelContext.expose_modules(globals(), {
         'DataNoneValid',
         'FieldValidationError'
     ],
-    'lodel.mlnamedobject':['MlNamedObject'],
+    'lodel.mlnamedobject.mlnamedobject':['MlNamedObject'],
     'lodel.leapi.datahandlers.exceptions': [
         'LodelDataHandlerConsistencyException',
         'LodelDataHandlerException'
@@ -529,14 +529,8 @@ class DatahandlerOption(MlNamedObject):
     # @param validator function
     def __init__(self, id, display_name, help_text, validator):
         self.__id = id
-        self.__display_name = display_name
-        self.__help_text = help_text
         self.__validator = validator
         super().__init__(self.__display_name, self.__help_text)
-
-    @property
-    def id(self):
-        return self.__id
 
     @property
     def display_name(self):
