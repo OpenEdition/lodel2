@@ -10,13 +10,21 @@ import inspect
 import warnings
 
 from lodel.context import LodelContext
-from .exceptions import LodelDataHandlerNotAllowedOptionException
 
 LodelContext.expose_modules(globals(), {
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+    'lodel.exceptions': [
+        'LodelException',
+        'LodelExceptions',
+        'LodelFatalError',
+        'DataNoneValid',
+        'FieldValidationError'
+    ],
     'lodel.mlnamedobject':['MlNamedObject'],
-    'lodel.leapi.datahandlers.exceptions': ['LodelDataHandlerConsistencyException', 'LodelDataHandlerException'],
+    'lodel.leapi.datahandlers.exceptions': [
+        'LodelDataHandlerConsistencyException',
+        'LodelDataHandlerException',
+        'LodelDataHandlerNotAllowedOptionException'
+    ],
     'lodel.logger': 'logger'})
 
 
