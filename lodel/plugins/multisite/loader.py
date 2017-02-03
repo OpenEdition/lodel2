@@ -4,11 +4,24 @@ import sys
 import shlex
 import warnings
 
+##@brief Preloader for a multisite process
+#
+#This loader is a kind of fake loader. In fact it only read configurations
+#for the multisite instance and then run a UWSGI process that will run
+#the run.py file.
+#
+#If you want to see the "real" multisite loading process see
+#@ref lodel/plugins/multisite/run.py file
+#
+#@par Implementation details 
 #Here we have to bootstrap a minimal __loader__ context in order
 #to be able to load the settings
 #
 #This file (once bootstraped) start a new process for uWSGI. uWSGI then
 #run lodel.plugins.multisite.run.application function
+#@note the uwsgi process in started using the execl function when UWSGI
+#will exit this process will stop too
+#
 try:
     from lodel.context import LodelContext
 except ImportError:

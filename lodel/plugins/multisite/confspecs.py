@@ -5,7 +5,9 @@ LodelContext.expose_modules(globals(), {
 #Define a minimal confspec used by multisite loader
 LODEL2_CONFSPECS = {
     'lodel2': {
-        'debug': (True, SettingValidator('bool'))
+        'debug': (True, SettingValidator('bool')),
+        'sites_handler_name': (None,
+            SettingValidator('string', none_is_valid = False)),
     },
     'lodel2.server': {
         'listen_address': ('127.0.0.1', SettingValidator('dummy')),
