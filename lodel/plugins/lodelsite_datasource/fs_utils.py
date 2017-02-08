@@ -11,14 +11,13 @@ LodelContext.expose_modules(globals(), {
     'lodel.logger' : 'logger',
     'lodel.plugin.datasource_plugin': ['AbstractDatasource', 'DatasourcePlugin'],
     'lodel.exceptions': ['LodelFatalError'],
-    'lodel.settings': 'Settings'})
+    'lodel.settings': ['Settings']})
 
 from .exceptions import *
 
-LODELSITE_PATH = os.path.join(buildconf.LODEL2VARDIR, Settings.Settings.sitename)
+LODELSITE_PATH = os.path.join(buildconf.LODEL2VARDIR, Settings.sitename)
 LODELSITE_DATAS_PATH = os.path.join(LODELSITE_PATH,'sites_datas')
-LODELSITE_CONTEXTS_PATH = os.path.join(
-    LODELSITE_PATH, '.sites_contexts')
+LODELSITE_CONTEXTS_PATH = os.path.join(LODELSITE_PATH, '.sites_contexts')
 
 ##@brief Define directories architecture
 #
@@ -47,6 +46,11 @@ def name2paths(name):
 #@throws LodelSiteDatasourceInconsistency if inconsistency detected on FS
 def site_exists(name):
     paths = name2paths(name)
+    
+    if name == Settings.sitename:
+        msg = 'Site shortname "%s" is conflicting with the Lodelsites isntance name' % name
+        raise LodelSiteDatasourceError(msg)
+    
     for path in paths:
         if os.path.isfile(path):
             msg = 'Will trying to determine if a lodesite "%s" exists we \
