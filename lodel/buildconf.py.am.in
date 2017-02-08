@@ -6,3 +6,8 @@ WEBUI=@WEBUI@
 #Populated by make
 LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
 LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"
+
+import os
+
+MULTISITE_DATADIR = os.path.join(LODEL2VARDIR, 'sites_datas')
+MULTISITE_CONTEXTDIR = os.path.join(LODEL2VARDIR, '.sites_context')

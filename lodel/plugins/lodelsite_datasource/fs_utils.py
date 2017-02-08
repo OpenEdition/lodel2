@@ -15,9 +15,10 @@ LodelContext.expose_modules(globals(), {
 
 from .exceptions import *
 
-LODELSITE_PATH = os.path.join(buildconf.LODEL2VARDIR, Settings.sitename)
-LODELSITE_DATAS_PATH = os.path.join(LODELSITE_PATH,'sites_datas')
-LODELSITE_CONTEXTS_PATH = os.path.join(LODELSITE_PATH, '.sites_contexts')
+LODELSITE_DATAS_PATH = os.path.join(
+    buildconf.MULTISITE_DATADIR, Settings.sitename)
+LODELSITE_CONTEXTS_PATH = os.path.join(
+    buildconf.MULTISITE_CONTEXTDIR, Settings.sitename)
 
 ##@brief Define directories architecture
 #

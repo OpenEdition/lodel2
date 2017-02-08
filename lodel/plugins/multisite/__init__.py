@@ -1,3 +1,22 @@
+##@brief 
+#
+#@par Notes on FS organisation
+#
+#The plan is as follow :
+#
+#The autotools deploiment chain or the debian package will create a var 
+#folder dedicated for lodel2 ( for example /var/lodel2 ). This folder will
+#contains folder named as the lodesites instances (lodelsites is a lodel site
+#that handles lodel site as content). We will call this folder multisite
+#folder or lodelsites folder.
+#The multisite folder contains 2 settings folders :
+#- lodelsites.conf.d : the lodelsites configuration
+#- server.conf.d : the multisite process configuration
+#- datas : a folder containing datas for each site handled by the lodelsites
+#- .contexts : a folder containing context stuff for each site handlers by
+#the lodelsites ( the lodel package symlink + dyncode.py)
+#
+
 from lodel.context import LodelContext, ContextError
 try:
     LodelContext.expose_modules(globals(), {
