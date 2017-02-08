@@ -112,7 +112,19 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
 #that will be itself added to sys.path in order to be able to import
 #lodelsites
 #
-#This class is also responsible to expose leapi_dyncode module.
+#@par Notes about dyncode exposure
+#In MULTISITE mode the dyncode will be stored as a python module in 
+#buildconf.MULTISITE_CONTEXTDIR/SITE_ID/leapi_dyncode.py . The dyncode
+#exposale process in MULTISITE mode is simply done by asking LodelContext
+#to expose a module named leapi_dyncode. The LodelContext::_translate()
+#method is able to produce a correct name for this module.
+#In MONOSITE mode the dyncode will be stored as a python module in 
+#the site directory. In this case the _translate method will do the same
+#transformation than for the others modules. But in MONOSITE mode the 
+#module preffix is empty. Resulting in import leapi_dyncode. This will
+#work asserting that cwd in MONOSITE mode is the instance directory.
+#
+#
 #
 #@note a dedicated context named LOAD_CTX is used as context for the 
 #loading process
@@ -132,6 +144,13 @@ class LodelContext(object):
 
     ##@brief Flag indicating if the classe is initialized
     __initialized = False
+
+    ##@brief Stores path used by MULTISITE instance
+    #
+    #This variable is a tuple with 2 elements (in this order):
+    #- lodelsites datadir (ex: /var/lodel2/MULTISITE_NAME/datadir/)
+    #- lodelsites contextdir (ex: /varL/lodel2/MULTISITE_NAME/.ctx/lodelsites)
+    __lodelsites_paths = None
 
     ##@brief Create a new context
     #@see LodelContext.new()
@@ -224,6 +243,11 @@ site_id set to None when we are in MULTISITE beahavior")
                 raise ContextError("Cannot have a context with \
     site_id set when we are in MONOSITE beahavior")
     
+    ##@return identifier for current context
+    @classmethod
+    def current_id(cls):
+        return cls._current.__id
+
     ##@return True if the class is in MULTISITE mode
     @classmethod
     def multisite(cls):
@@ -258,9 +282,18 @@ site_id set to None when we are in MULTISITE beahavior")
 : '%s'" % site_id)
         if site_id not in cls._contexts:
             raise ContextError("No context named '%s' found." % site_id)
+        if cls.current_id != LOAD_CTX and site_id != LOAD_CTX:
+            raise ContextError("Not allowed to switch into a site context \
+from another site context. You have to switch back to LOAD_CTX before")
+        if site_id != LOAD_CTX and cls.__lodelsites_paths is None:
+            #The paths are not set yet. That mean that we switch into another
+            #context for the first time. We should be able to access the 
+            #LOAD_CTX settings (containing the sites_handler_name)
+            cls._generate_lodelsites_path()
+
         wanted_ctx = cls._contexts[site_id]
         if hasattr(wanted_ctx, '__instance_path'):
-            os.chdir(self.__instance_path) #May cause problems
+            os.chdir(self.__instance_path) #May cause problems and may be obsolete
         cls._current = wanted_ctx
         return cls._current
     
@@ -324,6 +357,9 @@ site_id set to None when we are in MULTISITE beahavior")
     
     ##@brief Return a module from current context
     #@param fullname str : module fullname
+    #@todo check if not globals are set when getting a module ! (if so
+    #checks all calls to this method to check that this assertion was not 
+    #made)
     @classmethod
     def module(cls, fullname):
         return cls.get().get_module(fullname)
@@ -355,13 +391,7 @@ initialize it anymore")
             #Create and set __loader__ context
             cls.new(LOAD_CTX)
             cls.set(LOAD_CTX)
-            #Modifying sys.path in order to be able to import 
-            #context specific packages
-            sys.path.append(MULTISITE_CONTEXTDIR)
-            if 'lodelsites' not in sys.modules:
-                import lodelsites
-            else:
-                globals()['lodelsites'] = sys.modules['lodelsites']
+            
         else:
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
@@ -433,8 +463,39 @@ MONOSITE mode")
                 "Unable to create a context named '%s'" % site_id)
         cls.new(site_id, path)
         return site_id
+    
+    ##@brief Return a tuple containing lodelsites datadir & contextdir (
+    #in this order)
+    @classmethod
+    def lodelsites_paths(cls):
+        return copy.copy(cls.__lodelsites_paths)
 
-
+    ##@brief Generate lodelsites paths from LOAD_CTX configuration
+    #
+    #@warning Handles import of the lodelsites package
+    #
+    #Called when the first context switch outside LOAD_CTX is done
+    @classmethod
+    def _generate_lodelsites_path(cls):
+        if cls.__current.__id != LOAD_CTX:
+            raise ContextError("Not allowed when not in LOAD_CTX !!!")
+        if cls.__lodelsites_paths is not None:
+            raise ContextError("Allready done !!!")
+        load_ctx_settings = cls.module('lodel.settings.setting.SettingsRO')
+        lodesites_name = load_ctx_settings.sites_handler_name
+        del(globals()['lodel.settings.setting.SettingsRO']) #Not sure !
+        lodelsites_path = os.path.join(
+            buildconf.LODEL2VARDIR, lodelsites_name)
+        cls.__lodelsites_paths = (
+            os.path.join(lodelsites_path, buildconf.MULTISITE_DATADIR),
+            os.path.join(lodelsites_path, os.path.join(
+                buildconf.MULTISITE_CONTEXTDIR, 'lodelsites')))
+        #Now we are able to import lodelsites package
+        sys.path.append(cls.__lodelsites_paths[1])
+        if 'lodelsites' not in sys.modules:
+            import lodelsites
+        else:
+            globals()['lodelsites'] = sys.modules['lodelsites']
 
     ##@brief Utility method to expose a module with an alias name in globals
     #@param globs globals() : concerned globals dict
