@@ -16,10 +16,12 @@ if 'lodel' not in sys.modules:
 else:
     globals()['lodel'] = sys.modules['lodel']
 
-if 'lodelsites' not in sys.modules:
-    import lodelsites
-else:
+if 'lodelsites' in sys.modules:
+    #This should be true since LodelContext init method is called
+    #for a MULTISITE context handling
     globals()['lodelsites'] = sys.modules['lodelsites']
+
+from lodel import buildconf
 
 ##@brief Name of the package that will contains all the virtual lodel
 #packages
@@ -60,6 +62,7 @@ def dir_for_context(site_identifier):
 #to represent the lodel package os the FS and then we make python import
 #files from the symlink.
 #
+#
 #@note Current implementation is far from perfection. In fact no deletion
 #mechanisms is written and the virtual package cannot be a subpackage of
 #the lodel package for the moment...
@@ -68,6 +71,13 @@ def dir_for_context(site_identifier):
 #lodelsites/SITENAME/ folder
 class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     
+    ##@brief implements the find_spec method of MetaPathFinder
+    #
+    #@param fullname str : module fullname
+    #@param path str : with be the value of __path__ of the parent package
+    #@param target module : is a module object that the finder may use to
+    #make a more educated guess about what spec to return
+    #@see https://docs.python.org/3/library/importlib.html#importlib.abc.MetaPathFinder
     def find_spec(fullname, path, target = None):
         if fullname.startswith(CTX_PKG):
             spl = fullname.split('.')
@@ -83,6 +93,26 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
 
 ##@brief Class designed to handle context switching and virtual module
 #exposure
+#
+#The main entrypoint of this class is the expose_module method. A kind of
+#equivalent of the various import X [as Y], from X import Y [as Z] etc.
+#existing in Python.
+#The expose_module method add a preffix to the module fullname in order
+#to make it reconizable by the LodelMetaPathfinder::find_spec() method.
+#All module names are translated before import. The preffix is set at
+#__init__ call in __pkg_name. The resulting name is __pkg_name + fullname
+#
+#@par examples 
+#When asking for lodel.leapi.leobject :
+#- in MONOSITE resulting module will be lodel.leapi.leobject
+#- in MULTISITE resulting module name will be 
+#lodelsites.SITE_ID.lodel.leapi.leobject
+#
+#The lodelsites package will be a subdir of buildconf.MULTISITE_CONTEXTDIR
+#that will be itself added to sys.path in order to be able to import
+#lodelsites
+#
+#This class is also responsible to expose leapi_dyncode module.
 #
 #@note a dedicated context named LOAD_CTX is used as context for the 
 #loading process
@@ -102,7 +132,7 @@ class LodelContext(object):
 
     ##@brief Flag indicating if the classe is initialized
     __initialized = False
-    
+
     ##@brief Create a new context
     #@see LodelContext.new()
     def __init__(self, site_id, instance_path = None):
@@ -121,7 +151,7 @@ site_id set to None when we are in MULTISITE beahavior")
             else:
                 #More verification can be done here (singleton specs ? )
                 self.__class__._current = self.__class__._contexts = self
-                self.__pkg_name = 'lodel'
+                self.__pkg_name = ''
                 self.__package = lodel
                 self.__instance_path = os.getcwd()
                 return
@@ -137,7 +167,7 @@ site_id when we are in MONOSITE beahvior")
                 raise ContextError(
                     "A context named '%s' allready exists." % site_id)
             self.__id = site_id
-            self.__pkg_name = '%s.%s' % (CTX_PKG, site_id)
+            self.__pkg_name = '%s.%s.%s.' % (CTX_PKG, site_id)
 
             if instance_path is None:
                 """
@@ -208,11 +238,20 @@ site_id set to None when we are in MULTISITE beahavior")
         return cls.get(target_ctx_id)
 
     ##@brief Set a context as active
+    #
+    #This method handle the context switching operations. Some static 
+    #attributes are set at this step.
+    #@note if not in LOAD_CTX a sys.path update is done
+    #@warning Inconsistency with lodelsites_datasource, we build again the
+    #site context dir path using site_id. This information should come
+    #from only one source
     #@param site_id str : site identifier (identify a context)
+    #@todo unify the generation of the site specific context dir path
     @classmethod
     def set(cls, site_id):
         if cls._type == cls.MONOSITE:
             raise ContextError("Context cannot be set in MONOSITE beahvior")
+
         site_id = LOAD_CTX if site_id is None else site_id
         if not cls.validate_identifier(site_id):
             raise ContextError("Given context name is not a valide identifier \
@@ -292,12 +331,13 @@ site_id set to None when we are in MULTISITE beahavior")
     ##@brief Expose leapi_dyncode module
     @classmethod
     def expose_dyncode(cls, globs, alias = 'leapi_dyncode'):
-        cls.get()._expose_dyncode(globs, alias)
+        cls.get().expose_module(globs, 'leapi_dyncode')
 
     ##@brief Initialize the context manager
     #
     #@note Add the LodelMetaPathFinder class to sys.metapath if type is
     #LodelContext.MULTISITE
+    #@note lodelsites package name is hardcoded and has to be
     #@param type FLAG : takes value in LodelContext.MONOSITE or
     #LodelContext.MULTISITE
     @classmethod
@@ -315,6 +355,13 @@ initialize it anymore")
             #Create and set __loader__ context
             cls.new(LOAD_CTX)
             cls.set(LOAD_CTX)
+            #Modifying sys.path in order to be able to import 
+            #context specific packages
+            sys.path.append(MULTISITE_CONTEXTDIR)
+            if 'lodelsites' not in sys.modules:
+                import lodelsites
+            else:
+                globals()['lodelsites'] = sys.modules['lodelsites']
         else:
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
@@ -420,27 +467,22 @@ MONOSITE mode")
             msg = "Module %s does not have any of [%s] as attribute" % (
                 fullname, ','.join(errors))
             raise ImportError(msg)
-    
-    ##@brief Implements LodelContext::expose_dyncode()
-    #@todo change hardcoded leapi_dyncode.py filename
-    def _expose_dyncode(self, globs, alias = 'leapi_dyncode'):
-        fullname = '%s.%s.dyncode' % (CTX_PKG, self.__id)
-        if fullname in sys.modules:
-            dyncode = sys.modules[fullname]
-        else:
-            path = os.path.join(self.__instance_path, 'leapi_dyncode.py')
-            sfl = importlib.machinery.SourceFileLoader(fullname, path)
-            dyncode = sfl.load_module()
-        self.safe_exposure(globs, dyncode, alias)
-    
+
     ##@brief Translate a module fullname to the context equivalent
+    #
+    #Two transformation are possible :
+    #- we are importing a submodule of the lodel package : resulting module
+    #name will be : self.__pkg_name + module_fullname
+    #- we are importing the dyncode : resulting module name is :
+    #self.__pkg_name + dyncode_modulename
     #@param module_fullname str : a module fullname
     #@return The module name in the current context
     def _translate(self, module_fullname):
-        if not module_fullname.startswith('lodel'):
-            raise ContextModuleError("Given module is not lodel or any \
-submodule : '%s'" % module_fullname)
-        return module_fullname.replace('lodel', self.__pkg_name)
+        if not module_fullname.startswith('lodel') and \
+                not module_fullname.startswith('leapi_dyncode'):
+            raise ContextModuleError("Given module is not lodel nor dyncode \
+or any submodule : '%s'" % module_fullname)
+        return self.__pkg_name+module_fullname
 
     ##@brief Implements the with statement behavior
     #@see https://www.python.org/dev/peps/pep-0343/

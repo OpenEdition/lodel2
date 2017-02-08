@@ -7,7 +7,13 @@ WEBUI=@WEBUI@
 LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
 LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"
 
+
+#Static declarations
+
+MULTISITE_DYNCODE_MODULENAME = 'leapi_dyncode'
+
 import os
 
 MULTISITE_DATADIR = os.path.join(LODEL2VARDIR, 'sites_datas')
 MULTISITE_CONTEXTDIR = os.path.join(LODEL2VARDIR, '.sites_context')
+
