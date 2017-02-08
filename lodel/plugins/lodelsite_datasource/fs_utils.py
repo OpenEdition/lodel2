@@ -11,14 +11,14 @@ LodelContext.expose_modules(globals(), {
     'lodel.logger' : 'logger',
     'lodel.plugin.datasource_plugin': ['AbstractDatasource', 'DatasourcePlugin'],
     'lodel.exceptions': ['LodelFatalError'],
-    'lodel.settings': 'Settings'})
+    'lodel.settings': ['Settings']})
 
 from .exceptions import *
 
-LODELSITE_PATH = os.path.join(buildconf.LODEL2VARDIR, Settings.Settings.sitename)
-LODELSITE_DATAS_PATH = os.path.join(LODELSITE_PATH,'sites_datas')
+LODELSITE_DATAS_PATH = os.path.join(
+    buildconf.MULTISITE_DATADIR, Settings.sitename)
 LODELSITE_CONTEXTS_PATH = os.path.join(
-    LODELSITE_PATH, '.sites_contexts')
+    buildconf.MULTISITE_CONTEXTDIR, Settings.sitename)
 
 ##@brief Define directories architecture
 #
