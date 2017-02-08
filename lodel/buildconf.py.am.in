@@ -7,8 +7,14 @@ WEBUI=@WEBUI@
 LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
 LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"
 
-import os
 
+<<<<<<< HEAD
 MULTISITE_DATADIR = os.path.join(LODEL2VARDIR, 'sites_datas')
 MULTISITE_CONTEXTDIR = os.path.join(LODEL2VARDIR, '.sites_context')
 LODEL_PKG_PATH = '/usr/lib/python3/dist-package/lodel'
+=======
+MULTISITE_DATADIR = 'sites_datas'
+MULTISITE_CONTEXTDIR = '.site_contexts'
+MULTISITE_DYNCODE_MODULENAME = 'leapi_dyncode'
+
+>>>>>>> branch 'lodelsites-dev' of git@git.labocleo.org:lodel2
