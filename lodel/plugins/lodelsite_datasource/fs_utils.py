@@ -1,6 +1,7 @@
 ##@brief This module contains usefull functions to handle lodelsites on FS
 
 import os
+import os.symlink
 import os.path
 import shutil
 
@@ -15,17 +16,15 @@ LodelContext.expose_modules(globals(), {
 
 from .exceptions import *
 
-LODELSITE_DATAS_PATH = os.path.join(
-    buildconf.MULTISITE_DATADIR, Settings.sitename)
-LODELSITE_CONTEXTS_PATH = os.path.join(
-    buildconf.MULTISITE_CONTEXTDIR, Settings.sitename)
+LODELSITE_DATA_PATH, LODELSITE_CONTEXTS_PATH = LodelContext.lodelsites_paths()
+
 
 ##@brief Define directories architecture
 #
 #@note useless because a lot of those stuff would be hardcoded
 LODELSITE_INSTALL_MODEL = {
     'datas' : ['uploads', 'conf.d'], #For datadir
-    'ctx': ['lodel_pkg'] #for context dir
+    'ctx': ['leapi_dyncode'] #for context dir
 }
 
 CONF_MODELS = os.path.join(os.path.dirname(__file__),'model_conf.d/')
@@ -34,10 +33,9 @@ CONF_AUTOCONF_FILENAME = 'lodelsites_autoconfig.ini'
 ##@brief Util function that returns both datadir and contextdir paths
 #@param name str : the site shortname
 #@return a tuple (datadir, contextdir)
-def name2paths(name):
-    return (os.path.join(LODELSITE_DATAS_PATH, name),
-        os.path.join(LODELSITE_CONTEXTS_PATH, name))
-
+def name2path(name):
+    return (os.path.join(LODELSITE_DATA_PATH, name),
+            os.path.join(LODELSITE_CONTEXTS_PATH, name))
 ##@brief Util function that indicates if a site exists or not
 #
 #This function only checks that both paths returned by name2path are
@@ -49,7 +47,7 @@ def site_exists(name):
     paths = name2paths(name)
     
     if name == Settings.sitename:
-        msg = 'Site shortname "%s" is conflicting with the Lodelsites isntance name' % name
+        msg = 'Site shortname "%s" is conflicting with the Lodelsites instance name' % name
         raise LodelSiteDatasourceError(msg)
     
     for path in paths:
@@ -102,24 +100,52 @@ directory does not exist. BAILOUT !')
         logger.critical('This should never happen ! We just checked that this \
 directory does not exist. BAILOUT !')
         raise LodelFatalError('Unable to create context directory for \
-lodelsite "%s", file exists')
+lodelsite "%s", file exists' % name)
     except Exception as e:
         raise LodelFatalError('Unable to create context directory for \
 lodelsite "%s" : %s' % (name, e))
     
-    #Child directories
-    for mname, ccd in [('datas', data_path), ('ctx', ctx_path)]:
-        ccd = data_path
-        for d in LODELSITE_INSTALL_MODEL[mname]:
-            to_create = os.path.join(ccd, d)
-            try:
-                os.mkdir(to_create)
-            except FileExistsError:
-                logger.critical('This should never happen ! We just checked that this \
+    #Creates lodel site data subdirectories
+    for data_subdirectory in LODELSITE_INSTALL_MODEL['datas']:
+        to_create = os.path.join(data_path, data_subdirectory)
+        try:
+            os.mkdir(to_create)
+        except FileExistsError:
+            logger.critical('This should never happen ! We just checked that this \
 directory does not exist. BAILOUT !')
-            except Exception as e:
-                raise LodelFatalError('Unable to create %s directory for \
+        except Exception as e:
+            raise LodelFatalError('Unable to create %s directory for \
 lodelsite "%s" : %s' % (d,name, e))
+    
+    
+def site_lodelpkg_link_creation(name):
+    dst_path = os.path.join(name2path(name)[1], lodel)
+    src_path = LODEL_PKG_PATH
+    
+    try:
+        os.symlink(src_path, dst_path)
+    except FileExistsError:
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
+        raise LodelFatalError('Unable to create lodel package symlink for \
+lodelsite "%s", link exists in dir %s' % (name, directory))
+    except Exception as e:
+        raise LodelFatalError('Unable to create lodel package symlink for \
+lodelsite "%s" : %s' % (name, e))
+    
+def site_context_init_creation(name):
+    directory = name2path(name)[1]
+    try:
+        open('x', os.path.join(directory, '__init__.py')).close()
+    except FileExistsError:
+        logger.critical('This should never happen ! We just checked that this \
+directory does not exist. BAILOUT !')
+        raise LodelFatalError('Unable to create python __init__ file for \
+lodelsite context "%s", file exists in dir %s' % (name, directory))
+    except Exception as e:
+        raise LodelFatalError('Unable to create python _init__ file for \
+lodelsite "%s" : %s' % (name, e))
+    
     
 ##@brief Generate conffile containing informations set by lodelsites EM
 #

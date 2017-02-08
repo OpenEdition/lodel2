@@ -136,6 +136,8 @@ existing site with a new name')
             raise LodelSiteDatasourceError('A site with "%s" as shortname \
 already exists' % (new_datas['shortname']))
         site_directories_creation(new_datas['shortname'])
+        site_lodelpkg_link_creation(new_datas['shortname'])
+        site_context_init_creation(new_datas['shortname'])
         generate_conf(
             new_datas['shortname'],
             new_datas['em_groups'],

@@ -11,3 +11,4 @@ import os
 
 MULTISITE_DATADIR = os.path.join(LODEL2VARDIR, 'sites_datas')
 MULTISITE_CONTEXTDIR = os.path.join(LODEL2VARDIR, '.sites_context')
+LODEL_PKG_PATH = '/usr/lib/python3/dist-package/lodel'
