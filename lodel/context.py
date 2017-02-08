@@ -186,7 +186,7 @@ site_id when we are in MONOSITE beahvior")
                 raise ContextError(
                     "A context named '%s' allready exists." % site_id)
             self.__id = site_id
-            self.__pkg_name = '%s.%s.%s.' % (CTX_PKG, site_id)
+            self.__pkg_name = '%s.%s.' % (CTX_PKG, site_id)
 
             if instance_path is None:
                 """
@@ -482,7 +482,7 @@ MONOSITE mode")
         if cls.__lodelsites_paths is not None:
             raise ContextError("Allready done !!!")
         load_ctx_settings = cls.module('lodel.settings.setting.SettingsRO')
-        lodesites_name = load_ctx_settings.sites_handler_name
+        lodesites_name = load_ctx_settings.lodelsites.name
         del(globals()['lodel.settings.setting.SettingsRO']) #Not sure !
         lodelsites_path = os.path.join(
             buildconf.LODEL2VARDIR, lodelsites_name)

@@ -6,8 +6,18 @@ LodelContext.expose_modules(globals(), {
 LODEL2_CONFSPECS = {
     'lodel2': {
         'debug': (True, SettingValidator('bool')),
-        'sites_handler_name': (None,
-            SettingValidator('string', none_is_valid = False)),
+    },
+    'lodel2.lodelsites': {
+        'name': (None,
+            SettingValidator('string', none_is_valid = False)), #Bad validator
+        'lodelsites_emfile': (None,
+            SettingValidator('string', none_is_valid = False)), #Bad validator
+        'lodelsites_emtranslator': ('picklefile',
+            SettingValidator('strip', none_is_valid = False)), #Bad validator
+        'sites_emfile': (None,
+            SettingValidator('string', none_is_valid = False)), #Bad validator
+        'site_emtranslator': ('picklefile',
+            SettingValidator('string', none_is_valid = False)), #Bad validator
     },
     'lodel2.server': {
         'listen_address': ('127.0.0.1', SettingValidator('dummy')),
