@@ -47,7 +47,8 @@ class ContextModuleError(ContextError):
     pass
 
 def dir_for_context(site_identifier):
-    return os.path.join(lodelsites.__path__[0], site_identifier)
+    _, ctx_path = LodelContext.lodelsites_paths()
+    return os.path.join(ctx_path, site_identifier)
     
 
 ##@brief Designed to permit dynamic packages creation from the lodel package
@@ -79,7 +80,7 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
     #make a more educated guess about what spec to return
     #@see https://docs.python.org/3/library/importlib.html#importlib.abc.MetaPathFinder
     def find_spec(fullname, path, target = None):
-        if fullname.startswith(CTX_PKG):
+        if fullname.startswith(CTX_PKG+'.'):
             spl = fullname.split('.')
             site_identifier = spl[1]
             #creating a symlink to represent the lodel site package
@@ -89,6 +90,7 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
             #Cache invalidation after we "created" the new package
             #importlib.invalidate_caches()
         return None
+    #def invalidate_caches(): pass
 
 
 ##@brief Class designed to handle context switching and virtual module
@@ -170,7 +172,7 @@ site_id set to None when we are in MULTISITE beahavior")
             else:
                 #More verification can be done here (singleton specs ? )
                 self.__class__._current = self.__class__._contexts = self
-                self.__pkg_name = ''
+                self.__pkg_name = 'lodel'
                 self.__package = lodel
                 self.__instance_path = os.getcwd()
                 return
@@ -186,7 +188,7 @@ site_id when we are in MONOSITE beahvior")
                 raise ContextError(
                     "A context named '%s' allready exists." % site_id)
             self.__id = site_id
-            self.__pkg_name = '%s.%s.' % (CTX_PKG, site_id)
+            self.__pkg_name = '%s.%s' % (CTX_PKG, site_id)
 
             if instance_path is None:
                 """
@@ -199,7 +201,8 @@ a context without a path......")
             else:
                 self.__instance_path = os.path.realpath(instance_path)
             #Importing the site package to trigger its creation
-            self.__package = importlib.import_module(self.__pkg_name)
+            self.__package = importlib.import_module(
+                self.__pkg_name)
             self.__class__._contexts[site_id] = self
         #Designed to be use by with statement
         self.__previous_ctx = None
@@ -285,12 +288,6 @@ site_id set to None when we are in MULTISITE beahavior")
         if cls.current_id != LOAD_CTX and site_id != LOAD_CTX:
             raise ContextError("Not allowed to switch into a site context \
 from another site context. You have to switch back to LOAD_CTX before")
-        if site_id != LOAD_CTX and cls.__lodelsites_paths is None:
-            #The paths are not set yet. That mean that we switch into another
-            #context for the first time. We should be able to access the 
-            #LOAD_CTX settings (containing the sites_handler_name)
-            cls._generate_lodelsites_path()
-
         wanted_ctx = cls._contexts[site_id]
         if hasattr(wanted_ctx, '__instance_path'):
             os.chdir(self.__instance_path) #May cause problems and may be obsolete
@@ -385,13 +382,24 @@ initialize it anymore")
             raise ContextError("Invalid flag given : %s" % type)
         cls._type = type
         if cls._type == cls.MULTISITE:
+            #Woot hardcoded stuff with no idea of what it implies :-P
+            lodelsites_path = os.getcwd() #Same assert in the loader
+            cls.__lodelsites_paths = (
+                os.path.join(lodelsites_path, buildconf.MULTISITE_DATADIR),
+                os.path.join(lodelsites_path, os.path.join(
+                    buildconf.MULTISITE_CONTEXTDIR, 'lodelsites')))
+            #Now we are able to import lodelsites package
+            sys.path.append(os.path.dirname(cls.__lodelsites_paths[1]))
+            if 'lodelsites' not in sys.modules:
+                import lodelsites
+            globals()['lodelsites'] = sys.modules['lodelsites']
+            #End of Woot
             cls._contexts = dict()
             #Add custom MetaPathFinder allowing implementing custom imports
             sys.meta_path = [LodelMetaPathFinder] + sys.meta_path
             #Create and set __loader__ context
             cls.new(LOAD_CTX)
             cls.set(LOAD_CTX)
-            
         else:
             #Add a single context with no site_id
             cls._contexts = cls._current = cls(None)
@@ -407,7 +415,8 @@ initialize it anymore")
     def context_dir(cls):
         if cls._type == cls.MONOSITE:
             return './'
-        return dir_for_context(cls._current.__id)
+        return os.path.join(cls.__lodelsites_paths[1],
+            cls._current.__id)
         
 
     ##@brief Validate a context identifier
@@ -468,34 +477,9 @@ MONOSITE mode")
     #in this order)
     @classmethod
     def lodelsites_paths(cls):
+        if cls.__lodelsites_paths is None:
+            raise ContextError('No paths available')
         return copy.copy(cls.__lodelsites_paths)
-
-    ##@brief Generate lodelsites paths from LOAD_CTX configuration
-    #
-    #@warning Handles import of the lodelsites package
-    #
-    #Called when the first context switch outside LOAD_CTX is done
-    @classmethod
-    def _generate_lodelsites_path(cls):
-        if cls.__current.__id != LOAD_CTX:
-            raise ContextError("Not allowed when not in LOAD_CTX !!!")
-        if cls.__lodelsites_paths is not None:
-            raise ContextError("Allready done !!!")
-        load_ctx_settings = cls.module('lodel.settings.setting.SettingsRO')
-        lodesites_name = load_ctx_settings.lodelsites.name
-        del(globals()['lodel.settings.setting.SettingsRO']) #Not sure !
-        lodelsites_path = os.path.join(
-            buildconf.LODEL2VARDIR, lodelsites_name)
-        cls.__lodelsites_paths = (
-            os.path.join(lodelsites_path, buildconf.MULTISITE_DATADIR),
-            os.path.join(lodelsites_path, os.path.join(
-                buildconf.MULTISITE_CONTEXTDIR, 'lodelsites')))
-        #Now we are able to import lodelsites package
-        sys.path.append(cls.__lodelsites_paths[1])
-        if 'lodelsites' not in sys.modules:
-            import lodelsites
-        else:
-            globals()['lodelsites'] = sys.modules['lodelsites']
 
     ##@brief Utility method to expose a module with an alias name in globals
     #@param globs globals() : concerned globals dict
@@ -539,11 +523,12 @@ MONOSITE mode")
     #@param module_fullname str : a module fullname
     #@return The module name in the current context
     def _translate(self, module_fullname):
-        if not module_fullname.startswith('lodel') and \
-                not module_fullname.startswith('leapi_dyncode'):
-            raise ContextModuleError("Given module is not lodel nor dyncode \
+        if module_fullname.startswith('lodel'):
+            return module_fullname.replace('lodel', self.__pkg_name)
+        if module_fullname.startswith('leapi_dyncode'):
+            return self.__pkg_name+'.'+module_fullname
+        raise ContextModuleError("Given module is not lodel nor dyncode \
 or any submodule : '%s'" % module_fullname)
-        return self.__pkg_name+module_fullname
 
     ##@brief Implements the with statement behavior
     #@see https://www.python.org/dev/peps/pep-0343/
