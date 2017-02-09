@@ -8,6 +8,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.settings': 'Settings'})
 
 from .fs_utils import *
+from .sites_utils import update_dyncode
 from .specs import check as check_leo
 from .exceptions import *
 
@@ -110,7 +111,9 @@ existing site with a new name')
 
         for data in datas:
             if 'em_groups' in upd_datas:
+                #groups update, dyncode refresh
                 groups = upd_datas['em_groups']
+                update_dyncode(data['shortname'], upd_datas['em_groups'])
             else:
                 groups = data['em_groups']
             if 'extensions' in upd_datas:
@@ -142,7 +145,9 @@ already exists' % (new_datas['shortname']))
             new_datas['shortname'],
             new_datas['em_groups'],
             new_datas['extensions'])
-        return self._child_ds.insert(target, new_datas)
+        ret = self._child_ds.insert(target, new_datas)
+        update_dyncode(new_datas['shortname'], new_datas['em_groups'])
+        return ret
 
     ## @brief Inserts a list of records in a given collection
     #@note Here is a simple implementation : a for loop triggering
