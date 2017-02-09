@@ -17,7 +17,16 @@ LodelContext.expose_modules(globals(), {
 ##@brief Describe an editorial model
 #@ingroup lodel2_em
 class EditorialModel(object):
-    
+
+    ##@brief if true we are in editor mode (all groups visible & loaded)
+    #@note Usually comes from settings but can be overriden at runtime.
+    #It as been implemented this way in order to allow to load EM
+    #in lodelsites context (to generate dyncode for handled sites)
+    _editormode = Settings.editorialmodel.editormode
+    ##@brief When non in editor mode indicates the groups that we have to load
+    #in our EM
+    _groups = Settings.editorialmodel.groups
+
     ##@brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
     # @param description MlString|str|dict : the editorial model description
@@ -33,7 +42,7 @@ class EditorialModel(object):
         ## @brief Stores all activated classes indexed by id
         self.__active_classes = dict()
         self.__set_actives()
-    
+
     ##@brief EmClass uids accessor
     #@return a dict of emclasses
     def all_classes(self, uid = None):
@@ -44,7 +53,9 @@ class EditorialModel(object):
                 return copy.copy(self.__classes[uid])
             except KeyError:
                 raise EditorialModelException("EmClass not found : '%s'" % uid)
-                
+    
+    ##@brief EmClass instances accessor
+    #@return a list of EmClass instances or a single EmClass instance
     def all_classes_ref(self, uid = None):
         if uid is None:
             return self.__classes
@@ -111,6 +122,18 @@ class EditorialModel(object):
                 res.append(cls)
         return set(res)
 
+    ##@brief Allow to override class attributes _editormode and 
+    #_groups in order to control groups exposure
+    #
+    #A typicall usage of this method is for lodelsites when updating
+    #dyncode for handled sites. We have to set both attribute in order to
+    #load the EM as wanted by the handled site.
+    @classmethod
+    def _override_settings(cls, editormode = False, groups = []):
+        logger.warning("EM settings overriding ! If not in lodelsites \
+context this is a REALLY BAD idea !")
+        cls.__editormode = editormode
+        cls.__groups = groups
 
     ##@brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
@@ -130,7 +153,7 @@ class EditorialModel(object):
     ##@brief Update the EditorialModel.__active_groups and
     #EditorialModel.__active_classes attibutes
     def __set_actives(self):
-        if Settings.editorialmodel.editormode:
+        if self._editormode:
             logger.warning("All EM groups active because editormode in ON")
             # all groups & classes actives because we are in editor mode
             self.__active_groups = self.__groups
@@ -139,7 +162,7 @@ class EditorialModel(object):
             #determine groups first
             self.__active_groups = dict()
             self.__active_classes = dict()
-            for agrp in Settings.editorialmodel.groups:
+            for agrp in self._groups:
                 if agrp not in self.__groups:
                     raise SettingsError('Invalid group found in settings : %s' % agrp)
                 logger.debug("Set group '%s' as active" % agrp)
@@ -227,7 +250,7 @@ class EditorialModel(object):
     ##@brief Raise an error if lodel is not in EM edition mode
     @staticmethod
     def raise_if_ro():
-        if not Settings.editorialmodel.editormode:
+        if not self._editormode:
             raise EditorialModelError("Lodel in not in EM editor mode. The EM is in read only state")
 
     ##@brief Load a model
