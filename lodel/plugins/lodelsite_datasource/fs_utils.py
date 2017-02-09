@@ -1,7 +1,6 @@
 ##@brief This module contains usefull functions to handle lodelsites on FS
 
 import os
-import os.symlink
 import os.path
 import shutil
 
