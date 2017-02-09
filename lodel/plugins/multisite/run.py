@@ -166,7 +166,7 @@ This should not append !' % ctx_name
         LodelContext.set(None)
         logger.critical(msg)
         raise LodelFatalError(msg)
-    settings(os.path.join('./', confdir_basename)
+    settings(os.path.join('./', confdir_basename))
     #
     #Loading hooks & plugins
     #
