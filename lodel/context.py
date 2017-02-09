@@ -524,7 +524,7 @@ MONOSITE mode")
     #@return The module name in the current context
     def _translate(self, module_fullname):
         if module_fullname.startswith('lodel'):
-            return module_fullname.replace('lodel', self.__pkg_name)
+            return self.__pkg_name + module_fullname[5:]
         if module_fullname.startswith('leapi_dyncode'):
             return self.__pkg_name+'.'+module_fullname
         raise ContextModuleError("Given module is not lodel nor dyncode \

@@ -431,6 +431,9 @@ name differ from the one found in plugin's init file"
    
     ##@brief Return associated module name
     def module_name(self):
+        #WOOT WE LOVE DIRTY WORKAROUNDS !!!
+        return "lodel.plugins."+os.path.basename(self.path)
+        #END OF DIRTY WORKAROUND
         if not self.path.startswith('./plugins'):
             raise PluginError("Bad path for plugin %s : %s" % (
                 self.name, self.path))
