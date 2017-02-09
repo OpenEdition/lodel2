@@ -55,6 +55,9 @@ else
 	random_name="$fixed_name"
 fi
 
+random_name=${random_name,,}
+
+
 #Check for the presence of mongo and its conf
 if hash mongo 2>/dev/null
 then
