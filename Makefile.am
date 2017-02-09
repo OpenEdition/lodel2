@@ -1,4 +1,4 @@
-SUBDIRS = lodel progs lodelsites
+SUBDIRS = lodel progs
 EXTRA_DIST = runtest examples tests debian
 CLEANFILES = runtest
 
