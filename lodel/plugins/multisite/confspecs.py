@@ -16,7 +16,7 @@ LODEL2_CONFSPECS = {
             SettingValidator('strip', none_is_valid = False)), #Bad validator
         'sites_emfile': (None,
             SettingValidator('string', none_is_valid = False)), #Bad validator
-        'site_emtranslator': ('picklefile',
+        'sites_emtranslator': ('picklefile',
             SettingValidator('string', none_is_valid = False)), #Bad validator
     },
     'lodel2.server': {
