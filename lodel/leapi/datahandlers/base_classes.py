@@ -24,6 +24,9 @@ LodelContext.expose_modules(globals(), {
         'LodelDataHandlerConsistencyException',
         'LodelDataHandlerException'
     ],
+    'lodel.validator.validator': [
+        'ValidationError'
+    ],
     'lodel.logger': 'logger'})
 
 
@@ -78,7 +81,10 @@ class DataHandler(MlNamedObject):
         for option_name, option_datas in self.options_spec.items():
             if option_name in self.options_values:
                 # There is a configured option, we check its value
-                self.options_values[option_name] = option_datas[1].check_value(self.options_values[option_name])
+                try:
+                    self.options_values[option_name] = option_datas[1].check_value(self.options_values[option_name])
+                except ValueError:
+                    pass  # TODO Deal with the case where the value used for an option has not been validated
             else:
                 # This option was not configured, we get the default value from the specs
                 self.options_values[option_name] = option_datas[0]
@@ -536,4 +542,7 @@ class DatahandlerOption(MlNamedObject):
     # @param value
     # @return casted value
     def check_value(self, value):
-        return self.__validator(value)
+        try:
+            return self.__validator(value)
+        except ValidationError:
+            raise ValueError()
