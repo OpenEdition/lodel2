@@ -9,8 +9,7 @@ LodelContext.expose_modules(globals(), {
 # Display name and Description of a lodel2 object
 
 class MlNamedObject(object):
-    
-    def __init__(self, display_name = None, help_text = None):
+
+    def __init__(self, display_name = None, help_text = None, toto=None):
         self.display_name = None if display_name is None else MlString(display_name)
         self.help_text = None if help_text is None else MlString(help_text)
-        
