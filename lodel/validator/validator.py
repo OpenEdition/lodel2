@@ -11,7 +11,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'FieldValidationError']})
+    'LodelFatalError', 'FieldValidationError']})
 
 ## @package lodel.settings.validator Lodel2 settings validators/cast module
 #
@@ -30,15 +30,15 @@ class ValidationError(Exception):
 # casted value.
 #@todo implement an IP validator and use it in multisite confspec
 class Validator(MlNamedObject):
-    
+
     _validators = dict()
     _description = dict()
-    
+
     ##@brief Instanciate a validator
     #@param name str : validator name
     #@param none_is_valid bool : if True None will be validated
     #@param **kwargs : more arguement for the validator
-    def __init__(self, name, none_is_valid = False, display_name = None, help_text = None, **kwargs):
+    def __init__(self, name, none_is_valid=False, display_name=None, help_text=None, **kwargs):
         if name is not None and name not in self._validators:
             raise LodelFatalError("No validator named '%s'" % name)
         self.__none_is_valid = none_is_valid
@@ -58,9 +58,9 @@ class Validator(MlNamedObject):
         try:
             ret = self._validators[self.__name](value, **self._opt_args)
             return ret
-        except Exception as e:
-            raise ValidationError(e)
-    
+        except Exception as exp:
+            raise ValidationError(exp)
+
     ##@brief Register a new validator
     # @param name str : validator name
     # @param callback callable : the function that will validate a value
@@ -74,7 +74,7 @@ class Validator(MlNamedObject):
             raise TypeError("Callable expected but got %s" % type(callback))
         cls._validators[name] = callback
         cls._description[name] = description
-    
+
     ##@brief Get the validator list associated with description
     @classmethod
     def validators_list(cls):
@@ -87,22 +87,18 @@ class Validator(MlNamedObject):
     # @param separator str : The element separator
     # @return A Validator instance
     @classmethod
-    def create_list_validator(cls, validator_name, elt_validator, description = None, separator = ','):
+    def create_list_validator(cls, validator_name, elt_validator, description=None, separator=','):
         def list_validator(value):
             res = list()
-            errors = list()
             for elt in value.split(separator):
                 elt = elt_validator(elt)
                 if len(elt) > 0:
                     res.append(elt)
             return res
         description = "Convert value to an array" if description is None else description
-        cls.register_validator(
-                                validator_name,
-                                list_validator,
-                                description)
+        cls.register_validator(validator_name, list_validator, description)
         return cls(validator_name)
- 
+
     ##@brief Create and register a list validator which reads an array and returns a string
     # @param elt_validator callable : The validator that will be used for validate each elt value
     # @param validator_name str
@@ -110,39 +106,35 @@ class Validator(MlNamedObject):
     # @param separator str : The element separator
     # @return A Validator instance
     @classmethod
-    def create_write_list_validator(cls, validator_name, elt_validator, description = None, separator = ','):
+    def create_write_list_validator(cls, validator_name, elt_validator, description=None, separator=','):
         def write_list_validator(value):
             res = ''
-            errors = list()
             for elt in value:
                 res += elt_validator(elt) + ','
             return res[:len(res)-1]
         description = "Convert value to a string" if description is None else description
-        cls.register_validator(
-                                validator_name,
-                                write_list_validator,
-                                description)
+        cls.register_validator(validator_name, write_list_validator, description)
         return cls(validator_name)
-    
+
     ##@brief Create and register a regular expression validator
     # @param pattern str : regex pattern
     # @param validator_name str : The validator name
     # @param description str : Validator description
     # @return a Validator instance
     @classmethod
-    def create_re_validator(cls, pattern, validator_name, description = None):
+    def create_re_validator(cls, pattern, validator_name, description=None):
         def re_validator(value):
             if not re.match(pattern, value):
-                raise ValidationError("The value '%s' doesn't match the following pattern '%s'" % pattern)
+                raise ValidationError(\
+                    "The value '%s' doesn't match the following pattern '%s'" \
+                    % pattern)
             return value
         #registering the validator
-        cls.register_validator(
-                                validator_name,
-                                re_validator,
-                                ("Match value to '%s'" % pattern) if description is None else description)
+        cls.register_validator(validator_name, re_validator, \
+            ("Match value to '%s'" % pattern) \
+            if description is None else description)
         return cls(validator_name)
 
-    
     ## @return a list of registered validators
     @classmethod
     def validators_list_str(cls):
@@ -183,22 +175,22 @@ def boolean_val(value):
 def directory_val(value):
     res = Validator('strip')(value)
     if not os.path.isdir(res):
-        raise ValidationError("Folowing path don't exists or is not a directory : '%s'"%res)
+        raise ValidationError("Following path don't exists or is not a directory : '%s'"%res)
     return res
 
 ##@brief Validate a loglevel value
 def loglevel_val(value):
     valids = ['DEBUG', 'INFO', 'WARNING', 'SECURITY', 'ERROR', 'CRITICAL']
     if value.upper() not in valids:
-        raise ValidationError(
-                "The value '%s' is not a valid loglevel" % value)
+        raise ValidationError( \
+            "The value '%s' is not a valid loglevel" % value)
     return value.upper()
 
 ##@brief Validate a path
 def path_val(value):
     if value is None or not os.path.exists(value):
-        raise ValidationError(
-                "path '%s' doesn't exists" % value)
+        raise ValidationError( \
+            "path '%s' doesn't exists" % value)
     return value
 
 ##@brief Validate None
@@ -211,8 +203,8 @@ def none_val(value):
 def str_val(value):
     try:
         return str(value)
-    except Exception as e:
-        raise ValidationError("Not able to convert value to string : " + str(e))
+    except Exception as exp:
+        raise ValidationError("Can't to convert value to string: " + str(exp))
 
 ##@brief Validate using a regex
 def regex_val(value, pattern):
@@ -229,21 +221,21 @@ def host_val(value):
     try:
         socket.inet_aton(value)
         return value
-    except (TypeError,OSError):
+    except (TypeError, OSError):
         pass
     try:
         socket.inet_pton(socket.AF_INET6, value)
         return value
-    except (TypeError,OSError):
+    except (TypeError, OSError):
         pass
     try:
         socket.getaddrinfo(value, 80)
         return value
-    except (TypeError,socket.gaierror):
+    except (TypeError, socket.gaierror):
         msg = "The value '%s' is not a valid host"
         raise ValidationError(msg % value)
 
-def custom_list_validator(value, validator_name, validator_kwargs = None):
+def custom_list_validator(value, validator_name, validator_kwargs=None):
     validator_kwargs = dict() if validator_kwargs is None else validator_kwargs
     validator = Validator(validator_name, **validator_kwargs)
     for item in value.split():
@@ -254,100 +246,65 @@ def custom_list_validator(value, validator_name, validator_kwargs = None):
 #   Default validators registration
 #
 
-Validator.register_validator(
-    'custom_list',
-    custom_list_validator,
+Validator.register_validator('custom_list', custom_list_validator, \
     'A list validator that takes a "validator_name" as argument')
 
-Validator.register_validator(
-    'dummy',
-    lambda value:value,
-    'Validate anything')
+Validator.register_validator('dummy', lambda value: value, 'Validate anything')
 
-Validator.register_validator(
-    'none',
-    none_val,
-    'Validate None')
+Validator.register_validator('none', none_val, 'Validate None')
 
-Validator.register_validator(
-    'string',
-    str_val,
-    'Validate string values')
+Validator.register_validator('string', str_val, 'Validate string values')
 
-Validator.register_validator(
-    'strip',
-    str.strip,
-    'String trim')
+Validator.register_validator('strip', str.strip, 'String trim')
 
-Validator.register_validator(
-    'int',
-    int_val,
-    'Integer value validator')
+Validator.register_validator('int', int_val, 'Integer value validator')
 
-Validator.register_validator(
-    'bool',
-    boolean_val,
-    'Boolean value validator')
+Validator.register_validator('bool', boolean_val, 'Boolean value validator')
 
-Validator.register_validator(
-    'errfile',
-    file_err_output,
+Validator.register_validator('errfile', file_err_output,\
     'Error output file validator (return stderr if filename is "-")')
 
-Validator.register_validator(
-    'directory',
-    directory_val,
+Validator.register_validator('directory', directory_val, \
     'Directory path validator')
 
-Validator.register_validator(
-    'loglevel',
-    loglevel_val,
-    'Loglevel validator')
+Validator.register_validator('loglevel', loglevel_val, 'Loglevel validator')
 
-Validator.register_validator(
-    'path',
-    path_val,
-    'path validator')
+Validator.register_validator('path', path_val, 'path validator')
 
-Validator.register_validator(
-    'host',
-    host_val,
-    'host validator')
+Validator.register_validator('host', host_val, 'host validator')
 
-Validator.register_validator(
-    'regex',
-    regex_val,
+Validator.register_validator('regex', regex_val, \
     'RegEx name validator (take re as argument)')
 
-Validator.create_list_validator(
-    'list',
-    Validator('strip'),
-    description = "Simple list validator. Validate a list of values separated by ','",
-    separator = ',')
+Validator.create_list_validator('list', Validator('strip'), description=\
+    "Simple list validator. Validate a list of values separated by ','", \
+    separator=',')
 
-Validator.create_list_validator(
-    'directory_list',
-    Validator('directory'),
-    description = "Validator for a list of directory path separated with ','",
-    separator = ',')
+Validator.create_list_validator( \
+    'directory_list', \
+    Validator('directory'), \
+    description="Validator for a list of directory path separated with ','", \
+    separator=',')
 
-Validator.create_write_list_validator(
-    'write_list',
-    Validator('directory'),
-    description = "Validator for an array of values which will be set in a string, separated by ','",
-    separator = ',')
+Validator.create_write_list_validator( \
+    'write_list', \
+    Validator('directory'), \
+    description="Validator for an array of values \
+        which will be set in a string, separated by ','",
+    separator=',')
 
-Validator.create_re_validator(
-    r'^https?://[^\./]+.[^\./]+/?.*$',
-    'http_url',
+Validator.create_re_validator( \
+    r'^https?://[^\./]+.[^\./]+/?.*$', \
+    'http_url', \
     'Url validator')
+
 ##@brief Validator for Editorial model component
 #
 # Designed to validate a conf that indicate a class.field in an EM
 #@todo modified the hardcoded dyncode import (it's a warning)
 def emfield_val(value):
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin.hooks': ['LodelHook']})
+    LodelContext.expose_modules(globals(), \
+        {'lodel.plugin.hooks': ['LodelHook']})
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
@@ -357,7 +314,7 @@ def emfield_val(value):
     @LodelHook('lodel2_dyncode_bootstraped')
     def emfield_conf_check(hookname, caller, payload):
         import leapi_dyncode as dyncode # <-- dirty & quick
-        classnames = { cls.__name__.lower():cls for cls in dyncode.dynclasses}
+        classnames = { cls.__name__.lower(): cls for cls in dyncode.dynclasses}
         if value[0].lower() not in classnames:
             msg = "Following dynamic class do not exists in current EM : %s"
             raise SettingsValidationError(msg % value[0])
@@ -370,14 +327,14 @@ def emfield_val(value):
 ##@brief Validator for plugin name & optionnaly type
 #
 #Able to check that the value is a plugin and if it is of a specific type
-def plugin_validator(value, ptype = None):
-    LodelContext.expose_modules(globals(), {
+def plugin_validator(value, ptype=None):
+    LodelContext.expose_modules(globals(), { \
         'lodel.plugin.hooks': ['LodelHook']})
     value = copy.copy(value)
     @LodelHook('lodel2_dyncode_bootstraped')
     def plugin_type_checker(hookname, caller, payload):
-        LodelContext.expose_modules(globals(), {
-            'lodel.plugin.plugins': ['Plugin'],
+        LodelContext.expose_modules(globals(), { \
+            'lodel.plugin.plugins': ['Plugin'], \
             'lodel.plugin.exceptions': ['PluginError']})
         if value is None:
             return
@@ -395,14 +352,14 @@ named  '%s' that is a '%s' plugin"
     return value
 
 
-Validator.register_validator(
-    'plugin',
-    plugin_validator,
+Validator.register_validator( \
+    'plugin', \
+    plugin_validator, \
     'plugin name & type validator')
 
-Validator.register_validator(
-    'emfield',
-    emfield_val,
+Validator.register_validator( \
+    'emfield', \
+    emfield_val, \
     'EmField name validator')
 
 #
@@ -427,35 +384,27 @@ def confspec_append(orig, section, key, validator, default):
 ##@brief Global specifications for lodel2 settings
 LODEL2_CONF_SPECS = {
     'lodel2': {
-        'debug': (  True,
-                    Validator('bool')),
-        'sitename': (   'noname',
-                        Validator('strip')),
-        'runtest': (    False,
-                        Validator('bool')),
+        'debug': (True, Validator('bool')),
+        'sitename': ('noname', Validator('strip')),
+        'runtest': (False, Validator('bool')),
     },
     'lodel2.logging.*' : {
-        'level': (  'ERROR',
-                    Validator('loglevel')),
-        'context': (    False,
-                        Validator('bool')),
-        'filename': (   "-",
-                        Validator('errfile', none_is_valid = False)),
-        'backupcount': (    5,
-                            Validator('int', none_is_valid = False)),
-        'maxbytes': (   1024*10,
-                        Validator('int', none_is_valid = False)),
+        'level': ('ERROR', Validator('loglevel')),
+        'context': (False, Validator('bool')),
+        'filename': ("-", Validator('errfile', none_is_valid=False)),
+        'backupcount': (5, Validator('int', none_is_valid=False)),
+        'maxbytes': (1024*10, Validator('int', none_is_valid=False)),
     },
     'lodel2.editorialmodel': {
-        'emfile': ( 'em.pickle', Validator('strip')),
-        'emtranslator': ( 'picklefile', Validator('strip')),
-        'dyncode': ( 'leapi_dyncode.py', Validator('strip')),
-        'groups': ( '', Validator('list')),
-        'editormode': ( False, Validator('bool')),
+        'emfile': ('em.pickle', Validator('strip')),
+        'emtranslator': ('picklefile', Validator('strip')),
+        'dyncode': ('leapi_dyncode.py', Validator('strip')),
+        'groups': ('', Validator('list')),
+        'editormode': (False, Validator('bool')),
     },
     'lodel2.datasources.*': {
         'read_only': (False, Validator('bool')),
-        'identifier': ( None, Validator('string')),
+        'identifier': (None, Validator('string')),
     },
     'lodel2.auth': {
         'login_classfield': ('user.login', Validator('emfield')),
