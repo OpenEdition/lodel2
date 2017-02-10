@@ -3,7 +3,7 @@ SUBDIRS=slim
 lodel2_scripts_dir = $(datadir)/lodel2/scripts
 lodel2_scripts__DATA = create_instance create_multisite mass_deploy
 CLEANFILES = create_instance mass_deploy mass_deploy.cfg
-EXTRA_DIST = create_instance.sh mass_deploy.sh
+EXTRA_DIST = create_instance.sh create_multisite.sh mass_deploy.sh
 
 lodel2conf_DATA = mass_deploy.cfg
 lodel2confdir=$(sysconfdir)/lodel2
