@@ -1,0 +1,9 @@
+##@brief Stores constant evaluated at build time
+#@note Populated by ./configure
+#@warning This file HAS TO be safely importable outside any lodel context
+
+PYMONGO=False
+WEBUI=False
+#Populated by make
+LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
+LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"

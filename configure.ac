@@ -31,7 +31,7 @@ m4_include([m4/python_pyconfigure.m4]) #Renamed because we use a patched version
 m4_define(python_min_ver, 3.4.2)
 
 AM_PATH_PYTHON([3.4.2]) #init aclocal's default python support
-PC_INIT([3.4.2], [3.5]) #init pyconfigure aclocal's macro
+PC_INIT([3.4.2], [3.6]) #init pyconfigure aclocal's macro
 
 PC_PYTHON_VERIFY_VERSION([>=], python_min_ver, ,
 	[AC_MSG_ERROR(Python interpreter too old)])

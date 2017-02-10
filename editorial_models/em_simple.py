@@ -691,7 +691,7 @@ user.new_field(
     group = user_group, data_handler = 'password', internal = False)
 
 
-#em.save('xmlfile', filename = 'examples/em_test.xml')
+em.save('xmlfile', filename = 'examples/em_test.xml')
 pickle_file = 'examples/em_simple.pickle'
 em.save('picklefile', filename = pickle_file)
 print("Output written in %s" % pickle_file)

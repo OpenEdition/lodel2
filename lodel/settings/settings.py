@@ -14,9 +14,9 @@ LodelContext.expose_modules(globals(),{
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
     'lodel.settings.validator': ['SettingValidator', 'LODEL2_CONF_SPECS',
-        'confspec_append'],
+                                 'confspec_append'],
     'lodel.settings.settings_loader':['SettingsLoader']})
-    
+
 
 ## @package lodel.settings.settings Lodel2 settings module
 #
@@ -25,8 +25,8 @@ LodelContext.expose_modules(globals(),{
 ##@brief A default python system lib path
 PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 
-                                                major = sys.version_info.major,
-                                                minor = sys.version_info.minor)
+    major = sys.version_info.major,
+    minor = sys.version_info.minor)
 
 class MetaSettings(type):
     @property
@@ -77,7 +77,7 @@ class Settings(object, metaclass=MetaSettings):
 
     ## @brief Stores the singleton instance
     instance = None
-    
+
     ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
     #@param custom_confspecs None | dict : if given overwrite default lodel2
@@ -94,12 +94,12 @@ class Settings(object, metaclass=MetaSettings):
         self.__conf_dir = conf_dir
         self.__started = False
         self.__bootstrap()
-    
+
     ## @brief Get the named tuple representing configuration
     @property
     def settings(self):
         return self.__confs.lodel2
-    
+
     ## @brief Delete the singleton instance
     @classmethod
     def stop(cls):
@@ -144,7 +144,7 @@ class Settings(object, metaclass=MetaSettings):
         else:
             lodel2_specs = self.__conf_specs
             self.__conf_specs = None
-        loader = SettingsLoader(self.__conf_dir) 
+        loader = SettingsLoader(self.__conf_dir)
         plugin_list = []
         for ptype_name,ptype in Plugin.plugin_types().items():
             pls = ptype.plist_confspecs()
@@ -186,7 +186,7 @@ class Settings(object, metaclass=MetaSettings):
         self.__conf_specs = self.__merge_specs(specs)
         self.__populate_from_specs(self.__conf_specs, loader)
         self.__started = True
-    
+
     ##@brief Produce a configuration specification dict by merging all specifications
     #
     # Merges global lodel2 conf spec from @ref lodel.settings.validator.LODEL2_CONF_SPECS
@@ -208,7 +208,7 @@ class Settings(object, metaclass=MetaSettings):
                         raise SettingsError("Duplicated key '%s' in section '%s'" % (kname, section))
                     res[section.lower()][kname] = copy.copy(spec[section][kname])
         return res
-    
+
     ##@brief Populate the Settings instance with options values fetched with the loader from merged specs
     #
     # Populate the __confs attribute
@@ -238,7 +238,7 @@ class Settings(object, metaclass=MetaSettings):
 
         self.__confs_to_namedtuple()
         pass
-    
+
     ##@brief Transform the __confs attribute into imbricated namedtuple
     #
     # For example an option named "foo" in a section named "hello.world" will
@@ -269,7 +269,7 @@ class Settings(object, metaclass=MetaSettings):
 
         path = [ ('root', section_tree) ]
         visited = set()
-        
+
         curname = 'root'
         nodename = 'Lodel2Settings'
         cur = section_tree
@@ -278,7 +278,7 @@ class Settings(object, metaclass=MetaSettings):
             left = [    (kname, cur[kname])
                         for kname in cur
                         if nodename+'.'+kname.title() not in visited and isinstance(cur[kname], dict)
-                    ]
+                        ]
             if len(left) == 0:
                 name, leaf = path.pop()
                 typename = nodename.replace('.', '')
@@ -294,7 +294,7 @@ class Settings(object, metaclass=MetaSettings):
                 curname, cur = left[0]
                 path.append( (curname, cur) )
                 nodename += '.' + curname.title()
-    
+
     ##@brief Forge a named tuple given a conftree node
     # @param conftree dict : A conftree node
     # @param name str
@@ -306,7 +306,7 @@ class Settings(object, metaclass=MetaSettings):
 class MetaSettingsRO(type):
     def __getattr__(self, name):
         return getattr(Settings.s, name)
-        
+
 
 ## @brief A class that provide . notation read only access to configurations
 class SettingsRO(object, metaclass=MetaSettingsRO):
