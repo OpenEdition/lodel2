@@ -22,12 +22,12 @@ from lodel.editorial_model.model import EditorialModel
 
 em = EditorialModel('LodelSites', 'LodelSites editorial model')
 
+
 import settings
 
 app = Flask(__name__)
 
 # Lodel EditorialModel initialization
-
 
 @app.route('/')
 def meeditor(methods=['GET']):
