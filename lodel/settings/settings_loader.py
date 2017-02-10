@@ -181,7 +181,7 @@ class SettingsLoader(object):
         for key_id, filename in remains.items():
             err_l.append(SettingsError(msg="Invalid configuration key", \
                                     key_id=key_id, \
-                                    filename=filename))
+                                    filename =filename))
         if len(err_l) > 0:
             raise SettingsErrors(err_l)
         else:

@@ -4,11 +4,13 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString']})
 
-## @package lodel.mlnamedobject Lodel2 description of objects module
+# @package lodel.mlnamedobject Lodel2 description of objects module
 #
 # Display name and Description of a lodel2 object
 
-##@brief Class allows dislpay name and help text for lodel2 objects and fields
+# @brief Class allows display name and help text for lodel2 objects and fields
+
+
 class MlNamedObject(object):
 
     def __init__(self, display_name=None, help_text=None):
