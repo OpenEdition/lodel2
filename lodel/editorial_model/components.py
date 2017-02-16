@@ -249,7 +249,7 @@ class EmField(EmComponent):
         
     ##@brief Returns data_handler_cls attribute
     def get_data_handler_cls(self):
-        return copy.copy(selfdata_handler_cls)
+        return copy.copy(self.data_handler_cls)
     
     ##@brief Returne the uid of the emclass which contains this field
     def get_emclass_uid(self):
