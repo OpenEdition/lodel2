@@ -272,7 +272,7 @@ article.new_field(  'author_note',
                     group = editorial_group,
                     data_handler = 'text'
 )
-# Classe Review 
+# Classe Review
 review = em.new_class( 'review',
                         display_name = 'Review',
                         group = editorial_group,
@@ -439,7 +439,7 @@ issue.new_field(    'print_pub_date',
                     },
                   data_handler = 'datetime',
                   group = editorial_group,
-)     
+)
 issue.new_field(    'e_pub_date',
                     display_name = {
                         'eng': 'Electronic publication date',
@@ -447,7 +447,7 @@ issue.new_field(    'e_pub_date',
                     },
                   data_handler = 'datetime',
                   group = editorial_group,
-)  
+)
 issue.new_field(    'abstract',
                     display_name = {
                         'eng': 'Abstract',
@@ -455,7 +455,7 @@ issue.new_field(    'abstract',
                     },
                   data_handler = 'text',
                   group = editorial_group,
-) 
+)
 issue.new_field(    'collection',
                     display_name = {
                         'eng': 'Collection',
@@ -691,7 +691,7 @@ user.new_field(
     group = user_group, data_handler = 'password', internal = False)
 
 
-#em.save('xmlfile', filename = 'examples/em_test.xml')
+em.save('xmlfile', filename = 'editorial_models/em_simple.xml')
 pickle_file = 'examples/em_simple.pickle'
 em.save('picklefile', filename = pickle_file)
 print("Output written in %s" % pickle_file)
