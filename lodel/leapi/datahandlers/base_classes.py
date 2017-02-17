@@ -254,17 +254,19 @@ class DataHandler(MlNamedObject):
         return all_handlers[name]
 
     # @brief List all datahandlers
-    # @return
+    # @return a dict with, display_name for keys, and a dict for value 
     @classmethod
     def list_data_handlers(cls):
         cls.load_base_handlers()
         all_handlers = dict(cls._base_handlers, **cls.__custom_handlers)
         list_dh = dict()
         for hdl in all_handlers:
-            list_dh[hdl] = (display_name=hdl.display_name, \
-                            help_text=hdl.help_text, nullable=hdl.nullable, \
-                            internal=hdl.internal, immutable=hdl.immutable, \
-                            primary_key=hdl.primary_key, options=self.options_spec)
+            list_dh[hdl.display_name] = {'help_text' : hdl.help_text,
+                            'nullable' : hdl.nullable, \
+                            'internal' : hdl.internal,
+                            'immutable' : hdl.immutable, \
+                            'primary_key' : hdl.primary_key, \
+                            'options' : self.options_spec}
 
         return list_dh
 

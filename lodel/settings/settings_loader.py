@@ -8,8 +8,7 @@ from lodel.context import LodelContext
 
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
-    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.validator.validator': ['ValidationError']})
+    'lodel.settings.utils': ['SettingsError', 'SettingsErrors']})
 
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
@@ -104,7 +103,7 @@ class SettingsLoader(object):
                                     key_id=section+'.'+keyname)
                 self.__errors_list.append(expt)
             else:
-                expt = ValidationError("For %s.%s : %s" % (section, keyname, e))
+                #expt = ValidationError("For %s.%s : %s" % (section, keyname, e))
                 expt2 = SettingsError(msg=str(expt), \
                                         key_id=section+'.'+keyname, \
                                         filename=sec[keyname]['file'])
