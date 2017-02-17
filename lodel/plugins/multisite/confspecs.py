@@ -1,34 +1,34 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 #Define a minimal confspec used by multisite loader
 LODEL2_CONFSPECS = {
     'lodel2': {
-        'debug': (True, SettingValidator('bool'))
+        'debug': (True, Validator('bool'))
     },
     'lodel2.server': {
-        'listen_address': ('127.0.0.1', SettingValidator('dummy')),
-        #'listen_address': ('', SettingValidator('ip')), #<-- not implemented
-        'listen_port': ( 1337, SettingValidator('int')),
-        'uwsgi_workers': (8, SettingValidator('int')),
-        'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
-        'virtualenv': (None, SettingValidator('path', none_is_valid = True)),
+        'listen_address': ('127.0.0.1', Validator('dummy')),
+        #'listen_address': ('', Validator('ip')), #<-- not implemented
+        'listen_port': ( 1337, Validator('int')),
+        'uwsgi_workers': (8, Validator('int')),
+        'uwsgicmd': ('/usr/bin/uwsgi', Validator('dummy')),
+        'virtualenv': (None, Validator('path', none_is_valid = True)),
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
-                    SettingValidator('loglevel')),
+                    Validator('loglevel')),
         'context': (    False,
-                        SettingValidator('bool')),
+                        Validator('bool')),
         'filename': (   None,
-                        SettingValidator('errfile', none_is_valid = True)),
+                        Validator('errfile', none_is_valid = True)),
         'backupcount': (    10,
-                            SettingValidator('int', none_is_valid = False)),
+                            Validator('int', none_is_valid = False)),
         'maxbytes': (   1024*10,
-                        SettingValidator('int', none_is_valid = False)),
+                        Validator('int', none_is_valid = False)),
     },
     'lodel2.datasources.*': {
-        'read_only': (False, SettingValidator('bool')),
-        'identifier': ( None, SettingValidator('string')),
+        'read_only': (False, Validator('bool')),
+        'identifier': ( None, Validator('string')),
     }
 }

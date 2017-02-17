@@ -1,7 +1,7 @@
 from lodel.context import LodelContext, ContextError
 try:
     LodelContext.expose_modules(globals(), {
-        'lodel.settings.validator': ['SettingValidator']})
+        'lodel.validator.validator': ['Validator']})
 
     __plugin_name__ = "multisite"
     __version__ = '0.0.1' #or __version__ = [0,0,1]
@@ -13,8 +13,8 @@ try:
 
     CONFSPEC = {
         'lodel2.server': {
-            'port': (80,SettingValidator('int')),
-            'listen_addr': ('', SettingValidator('string')),
+            'port': (80,Validator('int')),
+            'listen_addr': ('', Validator('string')),
         }
     }
 

@@ -3,7 +3,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 _glob_typename = 'extension'
 
@@ -14,7 +14,7 @@ class Extension(Plugin):
         'section': 'lodel2',
         'key': 'extensions',
         'default': None,
-        'validator': SettingValidator(
+        'validator': Validator(
             'custom_list', none_is_valid = True,
             validator_name = 'plugin', validator_kwargs = {
                 'ptype': _glob_typename,
