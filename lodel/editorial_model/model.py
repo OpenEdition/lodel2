@@ -11,6 +11,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings': ['Settings'],
     'lodel.settings.utils': ['SettingsError'],
+    'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
     'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
     'lodel.editorial_model.components': ['EmClass', 'EmField', 'EmGroup']})
 
@@ -275,3 +276,9 @@ class EditorialModel(MlNamedObject):
             hashlib.md5(bytes(payload, 'utf-8')).digest(),
             byteorder='big'
         )
+
+    # @brief Returns a list of all datahandlers
+    # @return a list of all datahandlers
+    @staticmethod
+    def list_datahandlers():
+        return DataHandler.list_data_handlers()

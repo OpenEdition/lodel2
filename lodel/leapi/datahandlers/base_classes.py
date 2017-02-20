@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-## @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
+#  @package lodel.leapi.datahandlers.base_classes Define all base/abstract class for data handlers
 #
 # Contains custom exceptions too
 
@@ -31,14 +31,14 @@ LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString']})
 
 
-## @brief Base class for all data handlers
+# @brief Base class for all data handlers
 # @ingroup lodel2_datahandlers
 class DataHandler(MlNamedObject):
     base_type = "type"
     _HANDLERS_MODULES = ('datas_base', 'datas', 'references')
-    ## @brief Stores the DataHandler childs classes indexed by name
+    # @brief Stores the DataHandler childs classes indexed by name
     _base_handlers = None
-    ## @brief Stores custom datahandlers classes indexed by name
+    # @brief Stores custom datahandlers classes indexed by name
     # @todo do it ! (like plugins, register handlers... blablabla)
     __custom_handlers = dict()
 
@@ -47,12 +47,12 @@ class DataHandler(MlNamedObject):
     options_spec = dict()
     options_values = dict()
 
-    ## @brief List fields that will be exposed to the construct_data_method
+    # @brief List fields that will be exposed to the construct_data_method
     _construct_datas_deps = []
 
     directly_editable = True
 
-    ## @brief constructor
+    # @brief constructor
     #
     # @param internal False | str : define whether or not a field is internal
     # @param immutable bool : indicates if the fieldtype has to be defined in child classes of
@@ -76,11 +76,11 @@ class DataHandler(MlNamedObject):
             setattr(self, argname, argval)
         self.check_options()
 
-        display_name = kwargs.get('display_name',MlString(self.display_name))
+        display_name = kwargs.get('display_name', MlString(self.display_name))
         help_text = kwargs.get('help_text', MlString(self.help_text))
         super().__init__(display_name, help_text)
 
-    ## @brief Sets properly casted and checked options for the datahandler
+    # @brief Sets properly casted and checked options for the datahandler
     # @raises LodelDataHandlerNotAllowedOptionException when a passed option is not in the option
     # specifications of the datahandler
     def check_options(self):
@@ -96,7 +96,7 @@ class DataHandler(MlNamedObject):
                 # This option was not configured, we get the default value from the specs
                 self.options_values[option_name] = option_datas[0]
 
-    ## Fieldtype name
+    # Fieldtype name
     @classmethod
     def name(cls):
         return cls.__module__.split('.')[-1]
@@ -112,12 +112,12 @@ class DataHandler(MlNamedObject):
     def is_primary_key(self):
         return self.primary_key
 
-    ## @brief checks if a fieldtype is internal
+    # @brief checks if a fieldtype is internal
     # @return bool
     def is_internal(self):
         return self.internal is not False
 
-    ## @brief check if a value can be nullable
+    # @brief check if a value can be nullable
     # @param value *
     # @throw DataNoneValid if value is None and nullable. LodelExceptions if not nullable
     # @return value (if not None)
@@ -129,7 +129,7 @@ class DataHandler(MlNamedObject):
             raise DataNoneValid("None with a nullable. This exeption is allowed")
         return value
 
-    ## @brief calls the data_field (defined in derived class) _check_data_value() method
+    # @brief calls the data_field (defined in derived class) _check_data_value() method
     # @param value *
     # @return tuple (value|None, None|error) value can be cast if NoneError
     def check_data_value(self, value):
@@ -141,7 +141,7 @@ class DataHandler(MlNamedObject):
             return None, expt
         return value, None
 
-    ## @brief checks if this class can override the given data handler
+    # @brief checks if this class can override the given data handler
     # @param data_handler DataHandler
     # @return bool
     def can_override(self, data_handler):
@@ -149,7 +149,7 @@ class DataHandler(MlNamedObject):
             return False
         return True
 
-    ## @brief Build field value
+    # @brief Build field value
     # @ingroup lodel2_dh_checks
     # @warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
     # @ref _construct_data() and @ref lodel2_dh_check_impl )
@@ -174,7 +174,7 @@ class DataHandler(MlNamedObject):
             new_val = None
         return self._construct_data(emcomponent, fname, datas, new_val)
 
-    ## @brief Designed to be reimplemented by child classes
+    # @brief Designed to be reimplemented by child classes
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname str : The field name
     # @param datas dict : dict storing fields values (from the component)
@@ -184,7 +184,7 @@ class DataHandler(MlNamedObject):
     def _construct_data(self, empcomponent, fname, datas, cur_value):
         return cur_value
 
-    ## @brief Check datas consistency
+    # @brief Check datas consistency
     # @ingroup lodel2_dh_checks
     # @warning DO NOT REIMPLEMENT THIS METHOD IN A CUSTOM DATAHANDLER (see
     # @ref _construct_data() and @ref lodel2_dh_check_impl )
@@ -199,7 +199,7 @@ class DataHandler(MlNamedObject):
     def check_data_consistency(self, emcomponent, fname, datas):
         return self._check_data_consistency(emcomponent, fname, datas)
 
-    ## @brief Designed to be reimplemented by child classes
+    # @brief Designed to be reimplemented by child classes
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
@@ -208,7 +208,7 @@ class DataHandler(MlNamedObject):
     def _check_data_consistency(self, emcomponent, fname, datas):
         return True
 
-    ## @brief make consistency after a query
+    # @brief make consistency after a query
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
@@ -217,7 +217,7 @@ class DataHandler(MlNamedObject):
     def make_consistency(self, emcomponent, fname, datas):
         pass
 
-    ## @brief This method is use by plugins to register new data handlers
+    # @brief This method is use by plugins to register new data handlers
     @classmethod
     def register_new_handler(cls, name, data_handler):
         if not inspect.isclass(data_handler):
@@ -226,7 +226,7 @@ class DataHandler(MlNamedObject):
             raise ValueError("A data handler HAS TO be a child class of DataHandler")
         cls.__custom_handlers[name] = data_handler
 
-    ## @brief Load all datahandlers
+    # @brief Load all datahandlers
     @classmethod
     def load_base_handlers(cls):
         if cls._base_handlers is None:
@@ -239,7 +239,7 @@ class DataHandler(MlNamedObject):
                         cls._base_handlers[name.lower()] = obj
         return copy.copy(cls._base_handlers)
 
-    ## @brief given a field type name, returns the associated python class
+    # @brief given a field type name, returns the associated python class
     # @param fieldtype_name str : A field type name (not case sensitive)
     # @return DataField child class
     # @note To access custom data handlers it can be cool to prefix the handler name by plugin
@@ -254,23 +254,22 @@ class DataHandler(MlNamedObject):
         return all_handlers[name]
 
     # @brief List all datahandlers
-    # @return a dict with, display_name for keys, and a dict for value 
+    # @return a dict with, display_name for keys, and a dict for value
     @classmethod
     def list_data_handlers(cls):
         cls.load_base_handlers()
         all_handlers = dict(cls._base_handlers, **cls.__custom_handlers)
         list_dh = dict()
         for hdl in all_handlers:
-            list_dh[hdl.display_name] = {'help_text' : hdl.help_text,
-                            'nullable' : hdl.nullable, \
-                            'internal' : hdl.internal,
-                            'immutable' : hdl.immutable, \
-                            'primary_key' : hdl.primary_key, \
-                            'options' : self.options_spec}
+            options = dict({'nullable': hdl.nullable,
+                            'internal': hdl.internal,
+                            'immutable': hdl.immutable,
+                            'primary_key': hdl.primary_key}, hdl.options_spec)
+            list_dh[hdl.display_name] = {'help_text': hdl.help_text, 'options': options}
 
         return list_dh
 
-    ## @brief Return the module name to import in order to use the datahandler
+    # @brief Return the module name to import in order to use the datahandler
     # @param data_handler_name str : Data handler name
     # @return a str
     @classmethod
@@ -282,20 +281,22 @@ class DataHandler(MlNamedObject):
             class_name=handler_class.__name__
         )
 
-    ## @brief __hash__ implementation for fieldtypes
+    # @brief __hash__ implementation for fieldtypes
     def __hash__(self):
         hash_dats = [self.__class__.__module__]
         for kdic in sorted([k for k in self.__dict__.keys() if not k.startswith('_')]):
             hash_dats.append((kdic, getattr(self, kdic)))
         return hash(tuple(hash_dats))
 
-## @brief Base class for datas data handler (by opposition with references)
+# @brief Base class for datas data handler (by opposition with references)
 # @ingroup lodel2_datahandlers
+
+
 class DataField(DataHandler):
     pass
 
 
-## @brief Abstract class for all references
+# @brief Abstract class for all references
 # @ingroup lodel2_datahandlers
 #
 # References are fields that stores a reference to another
@@ -304,7 +305,7 @@ class DataField(DataHandler):
 class Reference(DataHandler):
     base_type = "ref"
 
-    ## @brief Instanciation
+    # @brief Instanciation
     # @param allowed_classes list | None : list of allowed em classes if None no restriction
     # @param back_reference tuple | None : tuple containing (LeObject child class, fieldname)
     # @param internal bool : if False, the field is not internal
@@ -315,7 +316,8 @@ class Reference(DataHandler):
         self.allowed_classes = list() if allowed_classes is None else allowed_classes
         if back_reference is not None:
             if len(back_reference) != 2:
-                raise ValueError("A tuple (classname, fieldname) expected but got '%s'" % back_reference)
+                raise ValueError(
+                    "A tuple (classname, fieldname) expected but got '%s'" % back_reference)
             # if not issubclass(lodel.leapi.leobject.LeObject, back_reference[0])
             # or not isinstance(back_reference[1], str):
             # raise TypeError("Back reference was expected to be a tuple(<class LeObject>, str)
@@ -323,18 +325,18 @@ class Reference(DataHandler):
         self.__back_reference = back_reference
         super().__init__(internal=internal, **kwargs)
 
-    ## @brief Method designed to return an empty value for this kind of
+    # @brief Method designed to return an empty value for this kind of
     # multipleref
     @classmethod
     def empty(cls):
         return None
 
-    ## @brief Property that takes value of a copy of the back_reference tuple
+    # @brief Property that takes value of a copy of the back_reference tuple
     @property
     def back_reference(self):
         return copy.copy(self.__back_reference)
 
-    ## @brief Property that takes value of datahandler of the backreference or
+    # @brief Property that takes value of datahandler of the backreference or
     # None
     @property
     def back_ref_datahandler(self):
@@ -346,11 +348,11 @@ class Reference(DataHandler):
     def linked_classes(self):
         return copy.copy(self.__allowed_classes)
 
-    ## @brief Set the back reference for this field.
+    # @brief Set the back reference for this field.
     def _set_back_reference(self, back_reference):
         self.__back_reference = back_reference
 
-    ## @brief Check and cast value in appropriate type
+    # @brief Check and cast value in appropriate type
     # @param value *
     # @throw FieldValidationError if value is an appropriate type
     # @return value
@@ -362,14 +364,15 @@ class Reference(DataHandler):
                 issubclass(value.__class__, LeObject)):
             if self.__allowed_classes:
                 rcls = list(self.__allowed_classes)[0]
-                uidname = rcls.uid_fieldname()[0]# TODO multiple uid is broken
+                uidname = rcls.uid_fieldname()[0]  # TODO multiple uid is broken
                 uiddh = rcls.data_handler(uidname)
                 value = uiddh._check_data_value(value)
             else:
-                raise FieldValidationError("Reference datahandler can not check this value %s if any allowed_class is allowed." % value)
+                raise FieldValidationError(
+                    "Reference datahandler can not check this value %s if any allowed_class is allowed." % value)
         return value
 
-    ## @brief Check datas consistency
+    # @brief Check datas consistency
     # @param emcomponent EmComponent : An EmComponent child class instance
     # @param fname : the field name
     # @param datas dict : dict storing fields values
@@ -398,14 +401,14 @@ class Reference(DataHandler):
         #    return False
         return True
 
-    ## @brief Utility method designed to fetch referenced objects
+    # @brief Utility method designed to fetch referenced objects
     # @param value mixed : the field value
     # @throw NotImplementedError
     def get_referenced(self, value):
         raise NotImplementedError
 
 
-## @brief This class represent a data_handler for single reference to another object
+# @brief This class represent a data_handler for single reference to another object
 #
 # The fields using this data handlers are like "foreign key" on another object
 class SingleRef(Reference):
@@ -413,8 +416,7 @@ class SingleRef(Reference):
     def __init__(self, allowed_classes=None, **kwargs):
         super().__init__(allowed_classes=allowed_classes, **kwargs)
 
-
-    ## @brief Check and cast value in appropriate type
+    # @brief Check and cast value in appropriate type
     # @param value: *
     # @throw FieldValidationError if value is unappropriate or can not be cast
     # @return value
@@ -422,7 +424,7 @@ class SingleRef(Reference):
         value = super()._check_data_value(value)
         return value
 
-    ## @brief Utility method designed to fetch referenced objects
+    # @brief Utility method designed to fetch referenced objects
     # @param value mixed : the field value
     # @return A LeObject child class instance
     # @throw LodelDataHandlerConsistencyException if no referenced object found
@@ -435,26 +437,26 @@ class SingleRef(Reference):
 referenced object with uid %s" % value)
 
 
-## @brief This class represent a data_handler for multiple references to another object
+# @brief This class represent a data_handler for multiple references to another object
 # @ingroup lodel2_datahandlers
 #
 # The fields using this data handlers are like SingleRef but can store multiple references in one field
 # @note for the moment split on ',' chars
 class MultipleRef(Reference):
 
-    ## @brief Constructor
+    # @brief Constructor
     # @param max_item int | None : indicate the maximum number of item referenced by this field, None mean no limit
     def __init__(self, max_item=None, **kwargs):
         self.max_item = max_item
         super().__init__(**kwargs)
 
-    ## @brief Method designed to return an empty value for this kind of
+    # @brief Method designed to return an empty value for this kind of
     # multipleref
     @classmethod
     def empty(cls):
         return []
 
-    ## @brief Check and cast value in appropriate type
+    # @brief Check and cast value in appropriate type
     # @param value *
     # @throw FieldValidationError if value is unappropriate or can not be cast
     # @return value
@@ -462,7 +464,8 @@ class MultipleRef(Reference):
     def _check_data_value(self, value):
         value = DataHandler._check_data_value(self, value)
         if not hasattr(value, '__iter__'):
-            raise FieldValidationError("MultipleRef has to be an iterable or a string, '%s' found" % value)
+            raise FieldValidationError(
+                "MultipleRef has to be an iterable or a string, '%s' found" % value)
         if self.max_item is not None:
             if self.max_item < len(value):
                 raise FieldValidationError("Too many items")
@@ -475,10 +478,11 @@ class MultipleRef(Reference):
             except (FieldValidationError):
                 error_list.append(repr(v))
         if len(error_list) > 0:
-            raise FieldValidationError("MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
+            raise FieldValidationError(
+                "MultipleRef have for invalid values [%s]  :" % (",".join(error_list)))
         return new_val
 
-    ## @brief Utility method designed to fetch referenced objects
+    # @brief Utility method designed to fetch referenced objects
     # @param values mixed : the field values
     # @return A list of LeObject child class instance
     # @throw LodelDataHandlerConsistencyException if some referenced objects
@@ -501,7 +505,7 @@ class MultipleRef(Reference):
 some referenced objects. Following uids were not found : %s" % ','.join(left))
 
 
-## @brief Class designed to handle datas access will fieldtypes are constructing datas
+#  @brief Class designed to handle datas access will fieldtypes are constructing datas
 # @ingroup lodel2_datahandlers
 #
 # This class is designed to allow automatic scheduling of construct_data calls.
@@ -511,7 +515,7 @@ some referenced objects. Following uids were not found : %s" % ','.join(left))
 # @todo test circular deps false positive
 class DatasConstructor(object):
 
-    ## @brief Init a DatasConstructor
+    # @brief Init a DatasConstructor
     # @param leobject LeCrud : @ref LeObject child class
     # @param datas dict : dict with field name as key and field values as value
     # @param fields_handler dict : dict with field name as key and data handler instance as value
@@ -527,31 +531,32 @@ class DatasConstructor(object):
         # Stores construct calls list
         self._construct_calls = []
 
-    ## @brief Implements the dict.keys() method on instance
+    # @brief Implements the dict.keys() method on instance
     def keys(self):
         return self._datas.keys()
 
-    ## @brief Allows to access the instance like a dict
+    #  @brief Allows to access the instance like a dict
     def __getitem__(self, fname):
         if fname not in self._constructed:
             if fname in self._construct_calls:
                 raise RuntimeError('Probably circular dependencies in fieldtypes')
             cur_value = self._datas[fname] if fname in self._datas else None
-            self._datas[fname] = self._fields_handler[fname].construct_data(self._leobject, fname, self, cur_value)
+            self._datas[fname] = self._fields_handler[fname].construct_data(
+                self._leobject, fname, self, cur_value)
             self._constructed.append(fname)
         return self._datas[fname]
 
-    ## @brief Allows to set instance values like a dict
+    # @brief Allows to set instance values like a dict
     # @warning Should not append in theory
     def __setitem__(self, fname, value):
         self._datas[fname] = value
         warnings.warn("Setting value of an DatasConstructor instance")
 
 
-## @brief Class designed to handle an option of a DataHandler
+# @brief Class designed to handle an option of a DataHandler
 class DatahandlerOption(MlNamedObject):
 
-    ## @brief instanciates a new Datahandler option object
+    # @brief instanciates a new Datahandler option object
     #
     # @param id str
     # @param display_name MlString
@@ -566,7 +571,7 @@ class DatahandlerOption(MlNamedObject):
     def id(self):
         return self.__id
 
-    ## @brief checks a value corresponding to this option is valid
+    # @brief checks a value corresponding to this option is valid
     # @param value
     # @return casted value
     def check_value(self, value):
