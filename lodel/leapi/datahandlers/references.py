@@ -3,35 +3,37 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.leapi.datahandlers.base_classes': ['Reference', 'MultipleRef',
-        'SingleRef'],
+                                              'SingleRef'],
     'lodel.logger': 'logger',
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+                         'LodelFatalError', 'DataNoneValid',
+                         'FieldValidationError']})
+
 
 class Link(SingleRef):
     pass
 
 
-##@brief Child class of MultipleRef where references are represented in the form of a python list
+## @brief Child class of MultipleRef where references are represented in the form of a python list
 class List(MultipleRef):
 
-    ##@brief instanciates a list reference
+    ## @brief instanciates a list reference
     # @param max_length int
     # @param kwargs
     #   - allowed_classes list | None : list of allowed em classes if None no restriction
     #   - internal bool
 
-    def __init__(self, max_length = None, **kwargs):
+    def __init__(self, max_length=None, **kwargs):
         super().__init__(**kwargs)
 
     @classmethod
     def empty(cls):
         return list()
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         try:
@@ -39,12 +41,12 @@ class List(MultipleRef):
         except Exception as e:
             raise FieldValidationError("Given iterable is not castable in \
 a list : %s" % e)
-        return value
 
-##@brief Child class of MultipleRef where references are represented in the form of a python set
+
+## @brief Child class of MultipleRef where references are represented in the form of a python set
 class Set(MultipleRef):
 
-    ##@brief instanciates a set reference
+    ## @brief instanciates a set reference
     # @param kwargs : named arguments
     #   - allowed_classes list | None : list of allowed em classes if None no restriction
     #   - internal bool : if False, the field is not internal
@@ -55,10 +57,10 @@ class Set(MultipleRef):
     def empty(cls):
         return set()
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         try:
@@ -66,11 +68,12 @@ class Set(MultipleRef):
         except Exception as e:
             raise FieldValidationError("Given iterable is not castable in \
 a set : %s" % e)
-    
-##@brief Child class of MultipleRef where references are represented in the form of a python dict
+
+
+## @brief Child class of MultipleRef where references are represented in the form of a python dict
 class Map(MultipleRef):
 
-    ##@brief instanciates a dict reference
+    ## @brief instanciates a dict reference
     # @param kwargs : named arguments
     #   - allowed_classes list | None : list of allowed em classes if None no restriction
     #   - internal bool : if False, the field is not internal
@@ -81,38 +84,40 @@ class Map(MultipleRef):
     def empty(cls):
         return dict()
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if not isinstance(value, dict):
             raise FieldValidationError("Values for dict fields should be dict")
         return value
 
-##@brief This Reference class is designed to handler hierarchy with some constraint
+
+## @brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
     
     directly_editable = False
-    ##@brief Instanciate a data handler handling hierarchical relation with constraints
+
+    ## @brief Instanciate a data handler handling hierarchical relation with constraints
     # @param back_reference tuple : Here it is mandatory to have a back ref (like a parent field)
     # @param max_depth int | None :  limit of depth
     # @param max_childs int | Nine : maximum number of childs by nodes
-    def __init__(self, back_reference, max_depth = None, max_childs = None, **kwargs):
-        super().__init__(   back_reference = back_reference,
-                            max_depth = max_depth,
-                            max_childs = max_childs,
-                            **kwargs)
+    def __init__(self, back_reference, max_depth=None, max_childs=None, **kwargs):
+        super().__init__(back_reference=back_reference,
+                         max_depth=max_depth,
+                         max_childs=max_childs,
+                         **kwargs)
 
     @classmethod
     def empty(cls):
         return tuple()
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
         if  not (isinstance(value, list) or isinstance(value, str)):

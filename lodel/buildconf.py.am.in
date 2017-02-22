@@ -1,5 +1,6 @@
 ##@brief Stores constant evaluated at build time
 #@note Populated by ./configure
+#@warning This file HAS TO be safely importable outside any lodel context
 
 PYMONGO=@PYMONGO@
 WEBUI=@WEBUI@

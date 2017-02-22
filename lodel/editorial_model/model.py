@@ -7,16 +7,18 @@ import copy
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString'],
+    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
     'lodel.logger': 'logger',
     'lodel.settings': ['Settings'],
     'lodel.settings.utils': ['SettingsError'],
+    'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
     'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
     'lodel.editorial_model.components': ['EmClass', 'EmField', 'EmGroup']})
 
 
-##@brief Describe an editorial model
+# @brief Describe an editorial model
 #@ingroup lodel2_em
-class EditorialModel(object):
+class EditorialModel(MlNamedObject):
 
     ##@brief if true we are in editor mode (all groups visible & loaded)
     #@note Usually comes from settings but can be overriden at runtime.
@@ -30,22 +32,27 @@ class EditorialModel(object):
     ##@brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
     # @param description MlString|str|dict : the editorial model description
-    def __init__(self, name, description = None):
+    def __init__(self, name, description=None, display_name=None, help_text=None):
         self.name = MlString(name)
         self.description = MlString(description)
-        ##@brief Stores all groups indexed by id
+        # @brief Stores all groups indexed by id
         self.__groups = dict()
-        ##@brief Stores all classes indexed by id
+        # @brief Stores all classes indexed by id
         self.__classes = dict()
-        ## @brief Stores all activated groups indexed by id
+        #  @brief Stores all activated groups indexed by id
         self.__active_groups = dict()
-        ## @brief Stores all activated classes indexed by id
+        #  @brief Stores all activated classes indexed by id
         self.__active_classes = dict()
         self.__set_actives()
+        if display_name is None:
+            display_name = name
+        if help_text is None:
+            help_text = description
+        super().__init__(display_name, help_text)
 
-    ##@brief EmClass uids accessor
+    # @brief EmClass uids accessor
     #@return a dict of emclasses
-    def all_classes(self, uid = None):
+    def all_classes(self, uid=None):
         if uid is None:
             return copy.copy(self.__classes)
         else:
@@ -64,16 +71,15 @@ class EditorialModel(object):
                 return self.__classes[uid]
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
-                                
-    ##@brief active EmClass uids accessor
+
+    # @brief active EmClass uids accessor
     #@return a list of class uids
     def active_classes_uids(self):
-            return list(self.__active_classes.keys())
-        
-    
-    ##@brief EmGroups accessor
+        return list(self.__active_classes.keys())
+
+    # @brief EmGroups accessor
     #@return a dict of groups
-    def all_groups(self, uid = None):
+    def all_groups(self, uid=None):
         if uid is None:
             return copy.copy(self.__groups)
         else:
@@ -81,10 +87,10 @@ class EditorialModel(object):
                 return copy.copy(self.__groups[uid])
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
-    
-    ##@brief EmGroups accessor
+
+    # @brief EmGroups accessor
     #@return a dict of groups
-    def all_groups_ref(self, uid = None):
+    def all_groups_ref(self, uid=None):
         if uid is None:
             return self.__groups
         else:
@@ -92,26 +98,26 @@ class EditorialModel(object):
                 return self.__groups[uid]
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
-                
-    ##@brief active EmClass uids accessor
+
+    # @brief active EmClass uids accessor
     #@return a list of class uids
     def active_groups_uids(self):
-            return list(self.__active_groups.keys())
+        return list(self.__active_groups.keys())
 
-    ##@brief EmClass accessor
+    # @brief EmClass accessor
     #@param uid None | str : give this argument to get a specific EmClass
     #@return if uid is given returns an EmClass else returns an EmClass
     # iterator
     #@todo use Settings.editorialmodel.groups to determine wich classes should
     # be returned
-    def classes(self, uid = None):
+    def classes(self, uid=None):
         try:
-            return self.__elt_getter(   self.__active_classes,
-                                        uid)
+            return self.__elt_getter(self.__active_classes,
+                                     uid)
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
-    
-    ##@brief EmClass child list accessor
+
+    # @brief EmClass child list accessor
     #@param uid str : the EmClass uid
     #@return a set of EmClass
     def get_class_childs(self, uid):
@@ -138,20 +144,20 @@ context this is a REALLY BAD idea !")
     ##@brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator
-    def groups(self, uid = None):
+    def groups(self, uid=None):
         try:
-            return self.__elt_getter(   self.__active_groups,
-                                        uid)
+            return self.__elt_getter(self.__active_groups,
+                                     uid)
         except KeyError:
             raise EditorialModelException("EmGroup not found : '%s'" % uid)
-    
-    ##@brief Private getter for __groups or __classes
+
+    # @brief Private getter for __groups or __classes
     # @see classes() groups()
     def __elt_getter(self, elts, uid):
         return list(elts.values()) if uid is None else elts[uid]
-    
-    ##@brief Update the EditorialModel.__active_groups and
-    #EditorialModel.__active_classes attibutes
+
+    # @brief Update the EditorialModel.__active_groups and
+    # EditorialModel.__active_classes attibutes
     def __set_actives(self):
         if self._editormode:
             logger.warning("All EM groups active because editormode in ON")
@@ -159,7 +165,7 @@ context this is a REALLY BAD idea !")
             self.__active_groups = self.__groups
             self.__active_classes = self.__classes
         else:
-            #determine groups first
+            # determine groups first
             self.__active_groups = dict()
             self.__active_classes = dict()
             for agrp in self._groups:
@@ -176,13 +182,13 @@ context this is a REALLY BAD idea !")
                 raise RuntimeError("No active class found. Abording")
             for clsname, acls in self.__active_classes.items():
                 acls._set_active_fields(self.__active_groups)
-    
-    ##@brief EmField getter
+
+    # @brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
     # @return Fals or an EmField instance
     #
     # @todo delete it, useless...
-    def field(self, uid = None):
+    def field(self, uid=None):
         spl = uid.split('.')
         if len(spl) != 2:
             raise ValueError("Malformed EmField identifier : '%s'" % uid)
@@ -198,7 +204,7 @@ context this is a REALLY BAD idea !")
             pass
         return False
 
-    ##@brief Add a class to the editorial model
+    # @brief Add a class to the editorial model
     # @param emclass EmClass : the EmClass instance to add
     # @return emclass
     def add_class(self, emclass):
@@ -210,7 +216,7 @@ context this is a REALLY BAD idea !")
         self.__classes[emclass.uid] = emclass
         return emclass
 
-    ##@brief Add a group to the editorial model
+    # @brief Add a group to the editorial model
     # @param emgroup EmGroup : the EmGroup instance to add
     # @return emgroup
     def add_group(self, emgroup):
@@ -222,15 +228,15 @@ context this is a REALLY BAD idea !")
         self.__groups[emgroup.uid] = emgroup
         return emgroup
 
-    ##@brief Add a new EmClass to the editorial model
+    # @brief Add a new EmClass to the editorial model
     #@param uid str : EmClass uid
-    #@param **kwargs : EmClass constructor options ( 
+    #@param **kwargs : EmClass constructor options (
     # see @ref lodel.editorial_model.component.EmClass.__init__() )
     def new_class(self, uid, **kwargs):
         assert_edit()
         return self.add_class(EmClass(uid, **kwargs))
-    
-    ##@brief Add a new EmGroup to the editorial model
+
+    # @brief Add a new EmGroup to the editorial model
     #@param uid str : EmGroup uid
     #@param *kwargs : EmGroup constructor keywords arguments (
     # see @ref lodel.editorial_model.component.EmGroup.__init__() )
@@ -238,7 +244,7 @@ context this is a REALLY BAD idea !")
         assert_edit()
         return self.add_group(EmGroup(uid, **kwargs))
 
-    ##@brief Save a model
+    # @brief Save a model
     # @param translator module : The translator module to use
     # @param **translator_args
     def save(self, translator, **translator_kwargs):
@@ -246,14 +252,14 @@ context this is a REALLY BAD idea !")
         if isinstance(translator, str):
             translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
-    
-    ##@brief Raise an error if lodel is not in EM edition mode
+
+    # @brief Raise an error if lodel is not in EM edition mode
     @staticmethod
     def raise_if_ro():
         if not self._editormode:
             raise EditorialModelError("Lodel in not in EM editor mode. The EM is in read only state")
 
-    ##@brief Load a model
+    # @brief Load a model
     # @param translator module : The translator module to use
     # @param **translator_args
     @classmethod
@@ -264,7 +270,7 @@ context this is a REALLY BAD idea !")
         res.__set_actives()
         return res
 
-    ##@brief Return a translator module given a translator name
+    # @brief Return a translator module given a translator name
     # @param translator_name str : The translator name
     # @return the translator python module
     # @throw NameError if the translator does not exists
@@ -276,12 +282,12 @@ context this is a REALLY BAD idea !")
         except ImportError:
             raise NameError("No translator named %s")
         return mod
-        
-    ##@brief Lodel hash
+
+    # @brief Lodel hash
     def d_hash(self):
         payload = "%s%s" % (
-                            self.name,
-                            'NODESC' if self.description is None else self.description.d_hash()
+            self.name,
+            'NODESC' if self.description is None else self.description.d_hash()
         )
         for guid in sorted(self.__groups):
             payload += str(self.__groups[guid].d_hash())
@@ -290,7 +296,12 @@ context this is a REALLY BAD idea !")
             payload += str(self.__classes[cuid].d_hash())
 
         return int.from_bytes(
-                                hashlib.md5(bytes(payload, 'utf-8')).digest(),
-                                byteorder='big'
+            hashlib.md5(bytes(payload, 'utf-8')).digest(),
+            byteorder='big'
         )
 
+    # @brief Returns a list of all datahandlers
+    # @return a list of all datahandlers
+    @staticmethod
+    def list_datahandlers():
+        return DataHandler.list_data_handlers()

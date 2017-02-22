@@ -11,77 +11,79 @@ LodelContext.expose_modules(globals(), {
     'lodel.settings': 'Settings',
     'lodel.settings.utils': 'SettingsError',
     'lodel.leapi.query': ['LeInsertQuery', 'LeUpdateQuery', 'LeDeleteQuery',
-        'LeGetQuery'],
+                          'LeGetQuery'],
     'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors',
-        'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
-        'LeApiQueryErrors'],
+                               'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
+                               'LeApiQueryErrors'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
+                                'LodelScriptError', 'DatasourcePluginError'],
     'lodel.exceptions': ['LodelFatalError'],
     'lodel.plugin.hooks': ['LodelHook'],
     'lodel.plugin': ['Plugin', 'DatasourcePlugin'],
     'lodel.leapi.datahandlers.base_classes': ['DatasConstructor', 'Reference']})
 
-##@brief Stores the name of the field present in each LeObject that indicates
-#the name of LeObject subclass represented by this object
+# @brief Stores the name of the field present in each LeObject that indicates
+# the name of LeObject subclass represented by this object
 CLASS_ID_FIELDNAME = "classname"
 
-##@brief Wrapper class for LeObject getter & setter
+# @brief Wrapper class for LeObject getter & setter
 #
-# This class intend to provide easy & friendly access to LeObject fields values 
+# This class intend to provide easy & friendly access to LeObject fields values
 # without name collision problems
 # @note Wrapped methods are : LeObject.data() & LeObject.set_data()
+
+
 class LeObjectValues(object):
-    
-    ##@brief Construct a new LeObjectValues
+
+    # @brief Construct a new LeObjectValues
     # @param fieldnames_callback method
     # @param set_callback method : The LeObject.set_datas() method of corresponding LeObject class
     # @param get_callback method : The LeObject.get_datas() method of corresponding LeObject class
     def __init__(self, fieldnames_callback, set_callback, get_callback):
         self._setter = set_callback
         self._getter = get_callback
-    
-    ##@brief Provide read access to datas values
+
+    # @brief Provide read access to datas values
     # @note Read access should be provided for all fields
     # @param fname str : Field name
     def __getattribute__(self, fname):
         getter = super().__getattribute__('_getter')
         return getter(fname)
-    
-    ##@brief Provide write access to datas values
+
+    # @brief Provide write access to datas values
     # @note Write acces shouldn't be provided for internal or immutable fields
     # @param fname str : Field name
     # @param fval * : the field value
     def __setattribute__(self, fname, fval):
         setter = super().__getattribute__('_setter')
         return setter(fname, fval)
-        
+
 
 class LeObject(object):
- 
-    ##@brief boolean that tells if an object is abtract or not
+
+    # @brief boolean that tells if an object is abtract or not
     _abstract = None
-    ##@brief A dict that stores DataHandler instances indexed by field name
+    # @brief A dict that stores DataHandler instances indexed by field name
     _fields = None
-    ##@brief A tuple of fieldname (or a uniq fieldname) representing uid
-    _uid = None 
-    ##@brief Read only datasource ( see @ref lodel2_datasources )
+    # @brief A tuple of fieldname (or a uniq fieldname) representing uid
+    _uid = None
+    # @brief Read only datasource ( see @ref lodel2_datasources )
     _ro_datasource = None
-    ##@brief Read & write datasource ( see @ref lodel2_datasources )
+    # @brief Read & write datasource ( see @ref lodel2_datasources )
     _rw_datasource = None
-    ##@brief Store the list of child classes
+    # @brief Store the list of child classes
     _child_classes = None
-    ##@brief Name of the datasource plugin
+    # @brief Name of the datasource plugin
     _datasource_name = None
 
     def __new__(cls, **kwargs):
-        
+
         self = object.__new__(cls)
-        ##@brief A dict that stores fieldvalues indexed by fieldname
-        self.__datas = { fname:None for fname in self._fields }
-        ##@brief Store a list of initianilized fields when instanciation not complete else store True
+        # @brief A dict that stores fieldvalues indexed by fieldname
+        self.__datas = {fname: None for fname in self._fields}
+        # @brief Store a list of initianilized fields when instanciation not complete else store True
         self.__initialized = list()
-        ##@brief Datas accessor. Instance of @ref LeObjectValues
+        # @brief Datas accessor. Instance of @ref LeObjectValues
         self.d = LeObjectValues(self.fieldnames, self.set_data, self.data)
         for fieldname, fieldval in kwargs.items():
             self.__datas[fieldname] = fieldval
@@ -90,11 +92,12 @@ class LeObject(object):
         self.__set_initialized()
         return self
 
-    ##@brief Construct an object representing an Editorial component
+    # @brief Construct an object representing an Editorial component
     # @note Can be considered as EmClass instance
     def __init__(self, **kwargs):
         if self._abstract:
-            raise NotImplementedError("%s is abstract, you cannot instanciate it." % self.__class__.__name__ )
+            raise NotImplementedError(
+                "%s is abstract, you cannot instanciate it." % self.__class__.__name__)
 
         # Checks that uid is given
         for uid_name in self._uid:
@@ -105,7 +108,7 @@ class LeObject(object):
             self.__initialized.append(uid_name)
 
         # Processing given fields
-        allowed_fieldnames = self.fieldnames(include_ro = False)
+        allowed_fieldnames = self.fieldnames(include_ro=False)
         err_list = dict()
         for fieldname, fieldval in kwargs.items():
             if fieldname not in allowed_fieldnames:
@@ -119,39 +122,39 @@ class LeObject(object):
                 self.__datas[fieldname] = fieldval
                 self.__initialized.append(fieldname)
         if len(err_list) > 0:
-            raise LeApiErrors(msg = "Unable to __init__ %s" % self.__class__,
-                exceptions = err_list)
+            raise LeApiErrors(msg="Unable to __init__ %s" % self.__class__,
+                              exceptions=err_list)
         self.__set_initialized()
-    
+
     #-----------------------------------#
     #   Fields datas handling methods   #
     #-----------------------------------#
 
-    ##@brief Property method True if LeObject is initialized else False
+    # @brief Property method True if LeObject is initialized else False
     @property
     def initialized(self):
         return self.__is_initialized
-    
-    ##@return The uid field name
+
+    # @return The uid field name
     @classmethod
     def uid_fieldname(cls):
         return cls._uid
 
-    ##@brief Return a list of fieldnames
+    # @brief Return a list of fieldnames
     # @param include_ro bool : if True include read only field names
     # @return a list of str
     @classmethod
-    def fieldnames(cls, include_ro = False):
+    def fieldnames(cls, include_ro=False):
         if not include_ro:
-            return [ fname for fname in cls._fields if not cls._fields[fname].is_internal() ]
+            return [fname for fname in cls._fields if not cls._fields[fname].is_internal()]
         else:
             return list(cls._fields.keys())
- 
+
     @classmethod
     def name2objname(cls, name):
         return name.title()
-    
-    ##@brief Return the datahandler asssociated with a LeObject field
+
+    # @brief Return the datahandler asssociated with a LeObject field
     # @param fieldname str : The fieldname
     # @return A data handler instance
     #@todo update class of exception raised
@@ -160,18 +163,18 @@ class LeObject(object):
         if not fieldname in cls._fields:
             raise NameError("No field named '%s' in %s" % (fieldname, cls.__name__))
         return cls._fields[fieldname]
-    
-    ##@brief Getter for references datahandlers
+
+    # @brief Getter for references datahandlers
     #@param with_backref bool : if true return only references with back_references
     #@return <code>{'fieldname': datahandler, ...}</code>
     @classmethod
-    def reference_handlers(cls, with_backref = True):
-        return {    fname: fdh 
-                    for fname, fdh in cls.fields(True).items()
-                    if fdh.is_reference() and \
-                        (not with_backref or fdh.back_reference is not None)}
-    
-    ##@brief Return a LeObject child class from a name
+    def reference_handlers(cls, with_backref=True):
+        return {fname: fdh
+                for fname, fdh in cls.fields(True).items()
+                if fdh.is_reference() and
+                (not with_backref or fdh.back_reference is not None)}
+
+    # @brief Return a LeObject child class from a name
     # @warning This method has to be called from dynamically generated LeObjects
     # @param leobject_name str : LeObject name
     # @return A LeObject child class
@@ -183,14 +186,14 @@ class LeObject(object):
         mod = importlib.import_module(cls.__module__)
         try:
             return getattr(mod, leobject_name)
-        except (AttributeError, TypeError) :
+        except (AttributeError, TypeError):
             raise LeApiError("No LeObject named '%s'" % leobject_name)
-    
+
     @classmethod
     def is_abstract(cls):
         return cls._abstract
-    
-    ##@brief Field data handler getter
+
+    # @brief Field data handler getter
     #@param fieldname str : The field name
     #@return A datahandler instance
     #@throw NameError if the field doesn't exist
@@ -199,20 +202,22 @@ class LeObject(object):
         try:
             return cls._fields[fieldname]
         except KeyError:
-            raise NameError("No field named '%s' in %s" % ( fieldname,
-                                                            cls.__name__))
-    ##@return A dict with fieldname as key and datahandler as instance
+            raise NameError("No field named '%s' in %s" % (fieldname,
+                                                           cls.__name__))
+    # @return A dict with fieldname as key and datahandler as instance
+
     @classmethod
-    def fields(cls, include_ro = False):
+    def fields(cls, include_ro=False):
         if include_ro:
             return copy.copy(cls._fields)
         else:
-            return {fname:cls._fields[fname] for fname in cls._fields if not cls._fields[fname].is_internal()}
-    
-    ##@brief Return the list of parents classes
+            return {fname: cls._fields[fname] for fname in cls._fields\
+                    if not cls._fields[fname].is_internal()}
+
+    # @brief Return the list of parents classes
     #
     #@note the first item of the list is the current class, the second is it's
-    #parent etc...
+    # parent etc...
     #@param cls
     #@warning multiple inheritance broken by this method
     #@return a list of LeObject child classes
@@ -222,23 +227,22 @@ class LeObject(object):
         res = [cls]
         cur = cls
         while True:
-            cur = cur.__bases__[0] # Multiple inheritance broken HERE
+            cur = cur.__bases__[0]  # Multiple inheritance broken HERE
             if cur in (LeObject, object):
                 break
             else:
                 res.append(cur)
         return res
-    
-    ##@brief Return a tuple a child classes
+
+    # @brief Return a tuple a child classes
     #@return a tuple of child classes
     @classmethod
     def child_classes(cls):
         return copy.copy(cls._child_classes)
-        
 
-    ##@brief Return the parent class that is the "source" of uid
+    # @brief Return the parent class that is the "source" of uid
     #
-    #The method goal is to return the parent class that defines UID.
+    # The method goal is to return the parent class that defines UID.
     #@return a LeObject child class or false if no UID defined
     @classmethod
     def uid_source(cls):
@@ -246,19 +250,19 @@ class LeObject(object):
             return False
         hierarch = cls.hierarch()
         prev = hierarch[0]
-        uid_handlers = set( cls._fields[name] for name in cls._uid )
+        uid_handlers = set(cls._fields[name] for name in cls._uid)
         for pcls in cls.hierarch()[1:]:
             puid_handlers = set(cls._fields[name] for name in pcls._uid)
             if set(pcls._uid) != set(prev._uid) \
-                or puid_handlers != uid_handlers:
+                    or puid_handlers != uid_handlers:
                 break
             prev = pcls
         return prev
-    
-    ##@brief Initialise both datasources (ro and rw)
+
+    # @brief Initialise both datasources (ro and rw)
     #
-    #This method is used once at dyncode load to replace the datasource string
-    #by a datasource instance to avoid doing this operation for each query
+    # This method is used once at dyncode load to replace the datasource string
+    # by a datasource instance to avoid doing this operation for each query
     #@see LeObject::_init_datasource()
     @classmethod
     def _init_datasources(cls):
@@ -266,7 +270,7 @@ class LeObject(object):
             rw_ds = ro_ds = cls._datasource_name
         else:
             ro_ds, rw_ds = cls._datasource_name
-        #Read only datasource initialisation
+        # Read only datasource initialisation
         cls._ro_datasource = DatasourcePlugin.init_datasource(ro_ds, True)
         if cls._ro_datasource is None:
             log_msg = "No read only datasource set for LeObject %s"
@@ -276,7 +280,7 @@ class LeObject(object):
             log_msg = "Read only datasource '%s' initialized for LeObject %s"
             log_msg %= (ro_ds, cls.__name__)
             logger.debug(log_msg)
-        #Read write datasource initialisation
+        # Read write datasource initialisation
         cls._rw_datasource = DatasourcePlugin.init_datasource(rw_ds, False)
         if cls._ro_datasource is None:
             log_msg = "No read/write datasource set for LeObject %s"
@@ -286,14 +290,14 @@ class LeObject(object):
             log_msg = "Read/write datasource '%s' initialized for LeObject %s"
             log_msg %= (ro_ds, cls.__name__)
             logger.debug(log_msg)
-        
-    ##@brief Return the uid of the current LeObject instance
+
+    # @brief Return the uid of the current LeObject instance
     #@return the uid value
     #@warning Broke multiple uid capabilities
     def uid(self):
         return self.data(self._uid[0])
 
-    ##@brief Read only access to all datas
+    # @brief Read only access to all datas
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
     # @param field_name str : field name
     # @return the Value
@@ -303,16 +307,16 @@ class LeObject(object):
         if field_name not in self._fields.keys():
             raise NameError("No such field in %s : %s" % (self.__class__.__name__, field_name))
         if not self.initialized and field_name not in self.__initialized:
-            raise RuntimeError("The field %s is not initialized yet (and have no value)" % field_name)
+            raise RuntimeError(
+                "The field %s is not initialized yet (and have no value)" % field_name)
         return self.__datas[field_name]
-    
-    ##@brief Read only access to all datas
+
+    # @brief Read only access to all datas
     #@return a dict representing datas of current instance
-    def datas(self, internal = False):
-        return {fname:self.data(fname) for fname in self.fieldnames(internal)}
-        
-    
-    ##@brief Datas setter
+    def datas(self, internal=False):
+        return {fname: self.data(fname) for fname in self.fieldnames(internal)}
+
+    # @brief Datas setter
     # @note for fancy data accessor use @ref LeObject.g attribute @ref LeObjectValues instance
     # @param fname str : field name
     # @param fval * : field value
@@ -320,7 +324,7 @@ class LeObject(object):
     # @throw NameError if fname is not valid
     # @throw AttributeError if the field is not writtable
     def set_data(self, fname, fval):
-        if fname not in self.fieldnames(include_ro = False):
+        if fname not in self.fieldnames(include_ro=False):
             if fname not in self._fields.keys():
                 raise NameError("No such field in %s : %s" % (self.__class__.__name__, fname))
             else:
@@ -342,23 +346,23 @@ class LeObject(object):
             # We skip full validation here because the LeObject is not fully initialized yet
             val, err = self._fields[fname].check_data_value(fval)
             if isinstance(err, Exception):
-                #Revert change to be in valid state
+                # Revert change to be in valid state
                 del(self.__datas[fname])
                 del(self.__initialized[-1])
-                raise LeApiErrors("Data check error", {fname:err})
+                raise LeApiErrors("Data check error", {fname: err})
             else:
                 self.__datas[fname] = val
-    
-    ##@brief Update the __initialized attribute according to LeObject internal state
+
+    # @brief Update the __initialized attribute according to LeObject internal state
     #
     # Check the list of initialized fields and set __initialized to True if all fields initialized
     def __set_initialized(self):
         if isinstance(self.__initialized, list):
-            expected_fields = self.fieldnames(include_ro = False) + self._uid
+            expected_fields = self.fieldnames(include_ro=False) + self._uid
             if set(expected_fields) == set(self.__initialized):
                 self.__is_initialized = True
 
-    ##@brief Designed to be called when datas are modified
+    # @brief Designed to be called when datas are modified
     #
     # Make different checks on the LeObject given it's state (fully initialized or not)
     # @return None if checks succeded else return an exception list
@@ -366,7 +370,7 @@ class LeObject(object):
         err_list = dict()
         if self.__initialized is True:
             # Data value check
-            for fname in self.fieldnames(include_ro = False):
+            for fname in self.fieldnames(include_ro=False):
                 val, err = self._fields[fname].check_data_value(self.__datas[fname])
                 if err is not None:
                     err_list[fname] = err
@@ -374,19 +378,19 @@ class LeObject(object):
                     self.__datas[fname] = val
             # Data construction
             if len(err_list) == 0:
-                for fname in self.fieldnames(include_ro = True):
+                for fname in self.fieldnames(include_ro=True):
                     try:
                         field = self._fields[fname]
-                        self.__datas[fname] = field.construct_data(    self,
-                                                                        fname,
-                                                                        self.__datas,
-                                                                        self.__datas[fname]
-                        )
+                        self.__datas[fname] = field.construct_data(self,
+                                                                   fname,
+                                                                   self.__datas,
+                                                                   self.__datas[fname]
+                                                                   )
                     except Exception as exp:
                         err_list[fname] = exp
             # Datas consistency check
             if len(err_list) == 0:
-                for fname in self.fieldnames(include_ro = True):
+                for fname in self.fieldnames(include_ro=True):
                     field = self._fields[fname]
                     ret = field.check_data_consistency(self, fname, self.__datas)
                     if isinstance(ret, Exception):
@@ -404,8 +408,8 @@ class LeObject(object):
     #--------------------#
     #   Other methods    #
     #--------------------#
-    
-    ##@brief Temporary method to set private fields attribute at dynamic code generation
+
+    # @brief Temporary method to set private fields attribute at dynamic code generation
     #
     # This method is used in the generated dynamic code to set the _fields attribute
     # at the end of the dyncode parse
@@ -415,8 +419,8 @@ class LeObject(object):
     @classmethod
     def _set__fields(cls, field_list):
         cls._fields = field_list
-        
-    ## @brief Check that datas are valid for this type
+
+    # @brief Check that datas are valid for this type
     # @param datas dict : key == field name value are field values
     # @param complete bool : if True expect that datas provide values for all non internal fields
     # @param allow_internal bool : if True don't raise an error if a field is internal
@@ -424,10 +428,10 @@ class LeObject(object):
     # @return Checked datas
     # @throw LeApiDataCheckError if errors reported during check
     @classmethod
-    def check_datas_value(cls, datas, complete = False, allow_internal = True):
-        err_l = dict() #Error storing
-        correct = set() #valid fields name
-        mandatory = set() #mandatory fields name
+    def check_datas_value(cls, datas, complete=False, allow_internal=True):
+        err_l = dict()  # Error storing
+        correct = set()  # valid fields name
+        mandatory = set()  # mandatory fields name
         for fname, datahandler in cls._fields.items():
             if allow_internal or not datahandler.is_internal():
                 correct.add(fname)
@@ -436,15 +440,15 @@ class LeObject(object):
         provided = set(datas.keys())
         # searching for unknow fields
         for u_f in provided - correct:
-            #Here we can check if the field is invalid or rejected because
+            # Here we can check if the field is invalid or rejected because
             # it is internel
             err_l[u_f] = AttributeError("Unknown or unauthorized field '%s'" % u_f)
         # searching for missing mandatory fieldsa
         for missing in mandatory - provided:
             err_l[missing] = AttributeError("The data for field '%s' is missing" % missing)
-        #Checks datas
+        # Checks datas
         checked_datas = dict()
-        for name, value in [ (name, value) for name, value in datas.items() if name in correct ]:
+        for name, value in [(name, value) for name, value in datas.items() if name in correct]:
             dh = cls._fields[name]
             res = dh.check_data_value(value)
             checked_datas[name], err = res
@@ -455,10 +459,10 @@ class LeObject(object):
             raise LeApiDataCheckErrors("Error while checking datas", err_l)
         return checked_datas
 
-    ##@brief Check and prepare datas
-    # 
+    # @brief Check and prepare datas
+    #
     # @warning when complete = False we are not able to make construct_datas() and _check_data_consistency()
-    # 
+    #
     # @param datas dict : {fieldname : fieldvalue, ...}
     # @param complete bool : If True you MUST give all the datas
     # @param allow_internal : Wether or not interal fields are expected in datas
@@ -478,7 +482,7 @@ construction and consitency when datas are not complete\n")
             cls._check_datas_consistency(ret_datas)
         return ret_datas
 
-    ## @brief Construct datas values
+    # @brief Construct datas values
     #
     # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.check_datas_value() methods
@@ -488,13 +492,13 @@ construction and consitency when datas are not complete\n")
     def _construct_datas(cls, datas):
         constructor = DatasConstructor(cls, datas, cls._fields)
         ret = {
-                fname:constructor[fname]
-                for fname, ftype in cls._fields.items()
-                if not ftype.is_internal() or ftype.internal != 'autosql'
+            fname: constructor[fname]
+            for fname, ftype in cls._fields.items()
+            if not ftype.is_internal() or ftype.internal != 'autosql'
         }
         return ret
-    
-    ## @brief Check datas consistency
+
+    # @brief Check datas consistency
     # 
     # @warning assert that datas is complete
     # @param cls
@@ -511,29 +515,29 @@ construction and consitency when datas are not complete\n")
 
         if len(err_l) > 0:
             raise LeApiDataCheckError("Datas consistency checks fails", err_l)
-    
-    ## @brief Check datas consistency
+
+    # @brief Check datas consistency
     # 
     # @warning assert that datas is complete
     # @param cls
     # @param datas dict : Datas that have been returned by LeCrud.prepare_datas() method
     # @param type_query str : Type of query to be performed , default value : insert
     @classmethod
-    def make_consistency(cls, datas, type_query = 'insert'):
+    def make_consistency(cls, datas, type_query='insert'):
         for fname, dh in cls._fields.items():
             ret = dh.make_consistency(fname, datas, type_query)
-            
-    ## @brief Add a new instance of LeObject
+
+    # @brief Add a new instance of LeObject
     # @return a new uid en case of success, False otherwise
     @classmethod
     def insert(cls, datas):
         query = LeInsertQuery(cls)
         return query.execute(datas)
 
-    ## @brief Update an instance of LeObject
+    # @brief Update an instance of LeObject
     #
-    #@param datas : list of new datas 
-    def update(self, datas = None):
+    #@param datas : list of new datas
+    def update(self, datas=None):
         datas = self.datas(internal=False) if datas is None else datas
         uids = self._uid
         query_filter = list()
@@ -543,15 +547,15 @@ construction and consitency when datas are not complete\n")
             query = LeUpdateQuery(self.__class__, query_filter)
         except Exception as err:
             raise err
-            
+
         try:
             result = query.execute(datas)
         except Exception as err:
             raise err
 
         return result
-    
-    ## @brief Delete an instance of LeObject
+
+    # @brief Delete an instance of LeObject
     #
     #@return 1 if the objet has been deleted
     def delete(self):
@@ -565,8 +569,8 @@ construction and consitency when datas are not complete\n")
         result = query.execute()
 
         return result
-    
-    ## @brief Delete instances of LeObject
+
+    # @brief Delete instances of LeObject
     #@param query_filters list
     #@returns the number of deleted items
     @classmethod
@@ -576,7 +580,7 @@ construction and consitency when datas are not complete\n")
             query = LeDeleteQuery(cls, query_filters)
         except Exception as err:
             raise err
-                
+
         try:
             result = query.execute()
         except Exception as err:
@@ -584,11 +588,11 @@ construction and consitency when datas are not complete\n")
         if not result is None:
             deleted += result
         return deleted
-            
-    ## @brief Get instances of LeObject
+
+    # @brief Get instances of LeObject
     #
     #@param query_filters dict : (filters, relational filters), with filters is a list of tuples : (FIELD, OPERATOR, VALUE) )
-    #@param field_list list|None : list of string representing fields see 
+    #@param field_list list|None : list of string representing fields see
     #@ref leobject_filters
     #@param order list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
     #@param group list : A list of field names or tuple (FIELDNAME,[ASC | DESC])
@@ -598,49 +602,49 @@ construction and consitency when datas are not complete\n")
     @classmethod
     def get(cls, query_filters, field_list=None, order=None, group=None, limit=None, offset=0):
         if field_list is not None:
-            for uid in [ uidname
-                for uidname in cls.uid_fieldname()
-                if uidname not in field_list ]:
+            for uid in [uidname
+                        for uidname in cls.uid_fieldname()
+                        if uidname not in field_list]:
                 field_list.append(uid)
             if CLASS_ID_FIELDNAME not in field_list:
                 field_list.append(CLASS_ID_FIELDNAME)
         try:
             query = LeGetQuery(
-                cls, query_filters = query_filters, field_list = field_list,
-                order = order, group = group, limit = limit, offset = offset)
+                cls, query_filters=query_filters, field_list=field_list,
+                order=order, group=group, limit=limit, offset=offset)
         except ValueError as err:
             raise err
-            
+
         try:
             result = query.execute()
         except Exception as err:
             raise err
-        
+
         objects = list()
         for res in result:
             res_cls = cls.name2class(res[CLASS_ID_FIELDNAME])
-            inst = res_cls.__new__(res_cls,**res)
+            inst = res_cls.__new__(res_cls, **res)
             objects.append(inst)
-        
+
         return objects
-    
-    ##@brief Retrieve an object given an UID
+
+    # @brief Retrieve an object given an UID
     #@todo broken multiple UID
     @classmethod
     def get_from_uid(cls, uid):
         if cls.uid_fieldname() is None:
             raise LodelFatalError(
                 "No uid defined for class %s" % cls.__name__)
-        uidname = cls.uid_fieldname()[0] #Brokes composed UID
-        res = cls.get([(uidname,'=', uid)])
-        
-        #dedoublonnage vu que query ou la datasource est bugué
+        uidname = cls.uid_fieldname()[0]  # Brokes composed UID
+        res = cls.get([(uidname, '=', uid)])
+
+        # dedoublonnage vu que query ou la datasource est bugué
         if len(res) > 1:
             res_cp = res
             res = []
             while len(res_cp) > 0:
                 cur_res = res_cp.pop()
-                if cur_res.uid() in [ r.uid() for r in res_cp]:
+                if cur_res.uid() in [r.uid() for r in res_cp]:
                     logger.error("DOUBLON detected in query results !!!")
                 else:
                     res.append(cur_res)
@@ -651,7 +655,7 @@ object ! For class %s with uid value = %s" % (cls, uid))
             return None
         return res[0]
 
-    ##@brief Checks if an object exists
+    # @brief Checks if an object exists
     @classmethod
     def is_exist(cls, uid):
         if cls.uid_fieldname() is None:
@@ -659,4 +663,3 @@ object ! For class %s with uid value = %s" % (cls, uid))
                 "No uid defined for class %s" % cls.__name__)
         from .query import is_exist
         return is_exist(cls, uid)
-

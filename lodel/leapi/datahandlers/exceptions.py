@@ -1,5 +1,6 @@
-def LodelDataHandlerException(Exception):
+class LodelDataHandlerException(Exception):
     pass
 
-def LodelDataHandlerConsistencyException(LodelDataHandlerException):
+
+class LodelDataHandlerConsistencyException(LodelDataHandlerException):
     pass

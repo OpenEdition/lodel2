@@ -1,38 +1,38 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 #Define a minimal confspec used by multisite loader
 LODEL2_CONFSPECS = {
     'lodel2': {
-        'debug': (True, SettingValidator('bool')),
+        'debug': (True, Validator('bool')),
     },
     'lodel2.lodelsites': {
         'name': (None,
-            SettingValidator('string', none_is_valid = False)), #Bad validator
+            Validator('string', none_is_valid = False)), #Bad validator
         'lodelsites_emfile': (None,
-            SettingValidator('string', none_is_valid = False)), #Bad validator
+            Validator('string', none_is_valid = False)), #Bad validator
         'lodelsites_emtranslator': ('picklefile',
-            SettingValidator('strip', none_is_valid = False)), #Bad validator
+            Validator('strip', none_is_valid = False)), #Bad validator
         'sites_emfile': (None,
-            SettingValidator('string', none_is_valid = False)), #Bad validator
+            Validator('string', none_is_valid = False)), #Bad validator
         'sites_emtranslator': ('picklefile',
-            SettingValidator('string', none_is_valid = False)), #Bad validator
+            Validator('string', none_is_valid = False)), #Bad validator
     },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
-                    SettingValidator('loglevel')),
+                    Validator('loglevel')),
         'context': (    False,
-                        SettingValidator('bool')),
+                        Validator('bool')),
         'filename': (   None,
-                        SettingValidator('errfile', none_is_valid = True)),
+                        Validator('errfile', none_is_valid = True)),
         'backupcount': (    10,
-                            SettingValidator('int', none_is_valid = False)),
+                            Validator('int', none_is_valid = False)),
         'maxbytes': (   1024*10,
-                        SettingValidator('int', none_is_valid = False)),
+                        Validator('int', none_is_valid = False)),
     },
     'lodel2.datasources.*': {
-        'read_only': (False, SettingValidator('bool')),
-        'identifier': ( None, SettingValidator('string')),
+        'read_only': (False, Validator('bool')),
+        'identifier': ( None, Validator('string')),
     }
 }

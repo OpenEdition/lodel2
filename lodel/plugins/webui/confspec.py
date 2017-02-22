@@ -1,30 +1,30 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 CONFSPEC = {
     'lodel2.webui': {
         'standalone': ( 'False',
-                        SettingValidator('string')),
+                        Validator('string')),
         'listen_address': ( '127.0.0.1',
-                            SettingValidator('dummy')),
+                            Validator('dummy')),
         'listen_port': (    '9090',
-                            SettingValidator('int')),
+                            Validator('int')),
         'static_url': (     'http://127.0.0.1/static/',
-                            SettingValidator('regex', pattern =  r'^https?://[^/].*$')),
+                            Validator('regex', pattern =  r'^https?://[^/].*$')),
         'virtualenv': (None,
-                       SettingValidator('path', none_is_valid=True)),
-        'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
-        'cookie_secret_key': ('ConfigureYourOwnCookieSecretKey', SettingValidator('dummy')),
-        'cookie_session_id': ('lodel', SettingValidator('dummy')),
-        'uwsgi_workers': (2, SettingValidator('int'))
+                       Validator('path', none_is_valid=True)),
+        'uwsgicmd': ('/usr/bin/uwsgi', Validator('dummy')),
+        'cookie_secret_key': ('ConfigureYourOwnCookieSecretKey', Validator('dummy')),
+        'cookie_session_id': ('lodel', Validator('dummy')),
+        'uwsgi_workers': (2, Validator('int'))
     },
     'lodel2.webui.sessions': {
         'directory': (  '/tmp',
-                        SettingValidator('path')),
+                        Validator('path')),
         'expiration': ( 900,
-                        SettingValidator('int')),
+                        Validator('int')),
         'file_template': (  'lodel2_%s.sess',
-                            SettingValidator('dummy')),
+                            Validator('dummy')),
     }
 }

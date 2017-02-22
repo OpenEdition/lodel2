@@ -3,7 +3,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
         'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 _glob_typename = 'ui'
 
@@ -19,7 +19,7 @@ class InterfacePlugin(Plugin):
         'section': 'lodel2',
         'key': 'interface',
         'default': None,
-        'validator': SettingValidator(
+        'validator': Validator(
             'plugin', none_is_valid = True, ptype = _glob_typename)}
 
     _type_conf_name = _glob_typename

@@ -12,6 +12,8 @@ AC_CONFIG_FILES([Makefile \
 		lodel/leapi/datahandlers/Makefile \
 	lodel/plugin/Makefile \
 	lodel/settings/Makefile \
+	lodel/validator/Makefile \
+	lodel/mlnamedobject/Makefile \
 	lodel/utils/Makefile \
 	progs/Makefile \
 	progs/slim/Makefile \
