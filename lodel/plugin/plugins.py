@@ -611,7 +611,7 @@ name differ from the one found in plugin's init file"
         #Here we check that previous discover found a plugin with that name
         pdcache = cls.discover()
         if plugin_name not in pdcache:
-            raise PluginError("No plugin named %s found" % plugin_name)
+            raise PluginError("No plugin named '%s' found" % plugin_name)
         ptype = pdcache[plugin_name]['type']
         pcls = MetaPlugType.type_from_name(ptype)
         plugin = pcls(plugin_name)
@@ -806,7 +806,7 @@ name differ from the one found in plugin's init file"
         try:
             res_module = loader.load_module()
         except Exception as e:
-            raise PluginError("Unable to import initfile")
+            raise PluginError("Unable to import initfile : %s" % e)
         return (res_module, temp_module)
 
     @classmethod
