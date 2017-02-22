@@ -57,6 +57,11 @@ class Validator(MlNamedObject):
     # @return properly casted value
     # @throw ValidationError
     def __call__(self, value):
+        if value is None:
+            if self.__none_is_valid:
+                return None
+            else:
+                raise ValidationError('None is not a valid value')
         if self.__none_is_valid and value is None:
             return None
         try:
@@ -94,6 +99,9 @@ class Validator(MlNamedObject):
     def create_list_validator(cls, validator_name, elt_validator, description=None, separator=','):
         def list_validator(value):
             res = list()
+            if value is None:
+                return res
+            errors = list()
             for elt in value.split(separator):
                 elt = elt_validator(elt)
                 if len(elt) > 0:
@@ -334,7 +342,7 @@ def emfield_val(value):
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
-        raise SettingsValidationError(msg % value)
+        raise ValidationError(msg % value)
     value = tuple(spl)
     # Late validation hook
 
@@ -344,11 +352,11 @@ def emfield_val(value):
         classnames = {cls.__name__.lower(): cls for cls in dyncode.dynclasses}
         if value[0].lower() not in classnames:
             msg = "Following dynamic class do not exists in current EM : %s"
-            raise SettingsValidationError(msg % value[0])
+            raise ValidationError(msg % value[0])
         ccls = classnames[value[0].lower()]
         if value[1].lower() not in ccls.fieldnames(True):
             msg = "Following field not found in class %s : %s"
-            raise SettingsValidationError(msg % value)
+            raise ValidationError(msg % value)
     return value
 
 # @brief Validator for plugin name & optionnaly type

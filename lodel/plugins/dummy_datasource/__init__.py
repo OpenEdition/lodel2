@@ -12,7 +12,7 @@ __plugin_deps__ = []
 CONFSPEC = {
     'lodel2.datasource.dummy_datasource.*' : {
         'dummy': (  None,
-                    Validator('dummy'))}
+                    Validator('dummy', none_is_valid=True))}
 }
 
 

@@ -6,6 +6,7 @@ import os.path
 from lodel.settings.utils import *
 from lodel.plugin.exceptions import *
 from lodel.settings.settings_loader import SettingsLoader
+from lodel.validator.validator import *
 
 
 
@@ -87,11 +88,20 @@ class SettingsLoaderTestCase(unittest.TestCase):
         """ Testing behavior of default value in getoption """
         loader = SettingsLoader('tests/settings/settings_examples/simple.conf.d')
         # for non existing keys in file
-        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42', False)
+        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42')
         self.assertEqual(value, 'hello 42')
         # for non existing section in file
-        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42')
         self.assertEqual(value, 'hello 42')
+
+    def test_geoption_invalid_default_value(self):
+        """ Testing the behavior when the default value is invalid """
+        loader = SettingsLoader('tests/settings/settings_examples/simple.conf.d')
+        mandatory_validator = Validator('string', none_is_valid=False)
+        with self.assertRaises(SettingsErrors):
+            value = loader.getoption(
+                'lodel2.foo.bar', 'foofoofooDEFAULT', mandatory_validator)
+            loader.raise_errors()
 
     def test_getoption_complex(self):
         """ Testing behavior of getoption with less simple files & confs """
@@ -235,10 +245,10 @@ class SettingsLoaderTestCase(unittest.TestCase):
         loader = SettingsLoader('tests/settings/settings_examples/conf_setdef.d')
             
         # for non existing keys in file
-        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42', False)
+        value = loader.getoption('lodel2.foo.bar', 'foofoofoo', dummy_validator, 'hello 42')
         self.assertEqual(value, 'hello 42')
         # for non existing section in file
-        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42', False)
+        value = loader.getoption('lodel2.foofoo', 'foofoofoo', dummy_validator, 'hello 42')
         self.assertEqual(value, 'hello 42')
         
         loader.setoption('lodel2.foo.bar', 'foofoofoo', 'test ok', dummy_validator)
@@ -253,8 +263,3 @@ class SettingsLoaderTestCase(unittest.TestCase):
         
         os.remove('tests/settings/settings_examples/conf_setdef.d/generated.ini')
         
-    def test_invalid_conf(self):
-        from lodel.settings.settings import Settings
-        Settings.stop()
-        with self.assertRaises((SettingsErrors, PluginError)):
-            Settings('tests/settings/settings_examples/bad_conf.d')

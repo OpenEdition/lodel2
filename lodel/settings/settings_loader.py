@@ -8,7 +8,8 @@ from lodel.context import LodelContext
 
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
-    'lodel.settings.utils': ['SettingsError', 'SettingsErrors']})
+    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
+    'lodel.validator.validator': ['ValidationError']})
 
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):
@@ -36,9 +37,9 @@ class SettingsLoader(object):
         l_dir = glob.glob(self.__conf_path+'/*.ini')
         logger.debug("SettingsLoader found those settings files : %s" % (
             ', '.join(l_dir)))
-
         for f_ini in l_dir:
-            config = configparser.ConfigParser(default_section=self.DEFAULT_SECTION, interpolation=None)
+            config = configparser.ConfigParser(
+	    	default_section = self.DEFAULT_SECTION ,interpolation=None)
             config.read(f_ini)
             for section in [s for s in config if s != self.DEFAULT_SECTION]:
                 if section not in conf:
@@ -60,39 +61,24 @@ class SettingsLoader(object):
     # @param keyname str
     # @param validator callable : takes one argument value and raises validation fail
     # @param default_value *
-    # @param mandatory bool
     # @return the option
-    def getoption(self, section, keyname, validator, default_value=None, mandatory=False):
-        conf = self.__conf
+    def getoption(self,section,keyname,validator,default_value=None):
+        conf=self.__conf
         if section not in conf:
             conf[section] = dict()
 
         sec = conf[section]
-        result = None
         if keyname in sec:
             result = sec[keyname]['value']
-            if result is not None:
-                result = result.strip()
-                if len(result) == 0:
-                    result = None
             try:
                 del self.__conf_sv[section + ':' + keyname]
             except KeyError: #allready fetched
                 pass
-        if result is None:
-            if default_value is None and mandatory:
-                msg = "Default value mandatory for option %s" % keyname
-                expt = SettingsError(msg=msg, key_id=section+'.'+keyname, \
-                    filename=sec[keyname]['file'])
-                self.__errors_list.append(expt)
-                return
-            else:
-                sec[keyname] = dict()
-                sec[keyname]['value'] = default_value
-                sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
-                result = default_value
-                logger.debug("Using default value for configuration key %s:%s" \
-                    % (section, keyname))
+        else:
+            #default values
+            sec[keyname] = dict()
+            result = sec[keyname]['value'] = default_value
+            sec[keyname]['file'] = SettingsLoader.DEFAULT_FILENAME
 
         try:
             return validator(result)
@@ -103,7 +89,7 @@ class SettingsLoader(object):
                                     key_id=section+'.'+keyname)
                 self.__errors_list.append(expt)
             else:
-                #expt = ValidationError("For %s.%s : %s" % (section, keyname, e))
+                expt = ValidationError("For %s.%s : %s" % (section, keyname, e))
                 expt2 = SettingsError(msg=str(expt), \
                                         key_id=section+'.'+keyname, \
                                         filename=sec[keyname]['file'])
