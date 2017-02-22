@@ -34,49 +34,40 @@ from lodel import buildconf
 LodelContext.init(LodelContext.MULTISITE)
 LodelContext.set(None) #Loading context creation
 #Multisite instance settings loading
-CONFDIR = os.path.join(os.getcwd(), 'conf.d')
+CONFDIR = os.path.join(os.getcwd(), 'server_conf.d')
 if not os.path.isdir(CONFDIR):
     warnings.warn('%s do not exists, default settings used' % CONFDIR)
 LodelContext.expose_modules(globals(), {
     'lodel.settings.settings': [('Settings', 'settings')],
     'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
 if not settings.started():
-    settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
+    settings('./server_conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
 LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings']})
 
-##@brief Starts uwsgi in background using settings
-def uwsgi_fork():
-    
-    sockfile = os.path.join(buildconf.LODEL2VARDIR, 'uwsgi_sockets/')
-    if not os.path.isdir(sockfile):
-        os.mkdir(sockfile)
-    sockfile = os.path.join(sockfile, 'uwsgi_lodel2_multisite.sock')
-    logfile = os.path.join(
-        buildconf.LODEL2LOGDIR, 'uwsgi_lodel2_multisite.log')
-        
-    cmd='{uwsgi} --plugin python3 --http-socket {addr}:{port} --module \
-lodel.plugins.multisite.run --socket {sockfile} --logto {logfile} -p {uwsgiworkers}'
-    cmd = cmd.format(
-                addr = Settings.server.listen_address,
-                port = Settings.server.listen_port,
-                uwsgi= Settings.server.uwsgicmd,
-                sockfile=sockfile,
-                logfile = logfile,
-                uwsgiworkers = Settings.server.uwsgi_workers)
-    if Settings.server.virtualenv is not None:
-        cmd += " --virtualenv %s" % Settings.webui.virtualenv
+print(Settings.lodelsites)
 
-    try:
-        args = shlex.split(cmd)
-        print("Running %s" % cmd)
-        exit(os.execl(args[0], *args))
-    except Exception as e:
-        print("Webui plugin uwsgi execl fails cmd was '%s' error : " % cmd,
-            e, file=sys.stderr)
-        exit(1)
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.hooks': ['LodelHook'],
+})
 
-if __name__ == '__main__':
-    uwsgi_fork()
-        
+#If an interface that execl to run was loaded it will be run by following
+#hook
+LodelHook.call_hook('multisite_execl_interface', '__main__', None)
+
+#Nothing appened, running default ipython interface
+#The interface as to be run by execl to go out of this partial context
+PYTHON_EXC = '/usr/bin/python3'
+RUNNER_FILE = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    'run.py')
+cmd = '%s "%s"' % (PYTHON_EXC, RUNNER_FILE)
+try:
+    args = shlex.split(cmd)
+    print("\n\nEND LOADER MULTISITE, execl\n\n")
+    exit(os.execl(args[0], *args))
+except Exception as e:
+    print("Multisite std interface execl fails. Command was : '%s' error \
+: %s" % (cmd, e), file=sys.stderr)
+    exit(1)

@@ -19,14 +19,6 @@ LODEL2_CONFSPECS = {
         'sites_emtranslator': ('picklefile',
             SettingValidator('string', none_is_valid = False)), #Bad validator
     },
-    'lodel2.server': {
-        'listen_address': ('127.0.0.1', SettingValidator('dummy')),
-        #'listen_address': ('', SettingValidator('ip')), #<-- not implemented
-        'listen_port': ( 1337, SettingValidator('int')),
-        'uwsgi_workers': (8, SettingValidator('int')),
-        'uwsgicmd': ('/usr/bin/uwsgi', SettingValidator('dummy')),
-        'virtualenv': (None, SettingValidator('path', none_is_valid = True)),
-    },
     'lodel2.logging.*' : {
         'level': (  'ERROR',
                     SettingValidator('loglevel')),
