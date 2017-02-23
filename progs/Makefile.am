@@ -8,7 +8,7 @@ EXTRA_DIST = create_instance.sh create_multisite.sh mass_deploy.sh
 lodel2conf_DATA = mass_deploy.cfg
 lodel2confdir=$(sysconfdir)/lodel2
 lodel2statedir=$(localstatedir)/lodel2
-lodelsites_data_dirname=sites_datas
+lodelsites_data_dirname=sites_data
 lodelsites_ctx_dirname=.sites_context/lodelsites
 
 do_subst = sed -e 's,\[@\]PKGPYTHONDIR\[@\],$(pkgpythondir),g' \
