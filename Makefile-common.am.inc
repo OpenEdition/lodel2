@@ -1,0 +1,2 @@
+lodel2_multisite_data_dirname=sites_data
+lodel2_multisite_ctx_dirname=.sites_contexts/lodelsites

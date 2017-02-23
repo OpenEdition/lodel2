@@ -9,8 +9,8 @@ LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
 LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"
 
 
-MULTISITE_DATADIR = 'sites_datas'
-MULTISITE_CONTEXTDIR = '.sites_contexts'
+MULTISITE_DATADIR = "[@]MULTISITE_DATA_DIRNAME[@]"
+MULTISITE_CONTEXTDIR = "[@]MULTISITE_CTX_DIRNAME[@]"
 MULTISITE_DYNCODE_MODULENAME = 'leapi_dyncode'
 ##@todo to be generated via autotools
 LODEL_PKG_PATH = '/usr/lib/python3/dist-package/lodel'
