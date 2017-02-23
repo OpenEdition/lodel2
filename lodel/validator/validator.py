@@ -362,12 +362,13 @@ def emfield_val(value):
 # @brief Validator for plugin name & optionnaly type
 #
 # Able to check that the value is a plugin and if it is of a specific type
-
-
+#@param value the plugin name
+#@param ptype : plugin type
 def plugin_validator(value, ptype=None):
     LodelContext.expose_modules(globals(), {
         'lodel.plugin.hooks': ['LodelHook']})
-    value = copy.copy(value)
+    value = copy.copy(value.strip())
+    value = None if len(value) == 0 else value
 
     @LodelHook('lodel2_dyncode_bootstraped')
     def plugin_type_checker(hookname, caller, payload):
