@@ -46,8 +46,6 @@ if not settings.started():
 LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings']})
 
-print(Settings.lodelsites)
-
 LodelContext.expose_modules(globals(), {
     'lodel.plugin.hooks': ['LodelHook'],
 })
