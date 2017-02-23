@@ -16,28 +16,34 @@ from lodel import buildconf
 
 logging.basicConfig(level=logging.INFO)
 
-INSTANCES_ABSPATH="/tmp/lodel2_instances"
+INSTANCES_ABSPATH="/var/lodel2"
 LODEL2_INSTALLDIR="/usr/lib/python3/dist-packages"
 CONFFILE='conf.d/lodel2.ini'
 try:
     STORE_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances.json')
     PID_FILE = os.path.join("[@]SLIM_VAR_DIR[@]", 'slim_instances_pid.json')
-    CREATION_SCRIPT = os.path.join("[@]LODEL2_PROGSDIR[@]", 'create_instance')
+    MONOSITE_CREATION_SCRIPT = os.path.join("[@]LODEL2_PROGSDIR[@]", 'create_instance')
+    MULTISITE_CREATION_SCRIPT = os.path.join("[@]LODEL2_PROGSDIR[@]", 'create_multisite')
     INSTALL_TPL = "[@]INSTALLMODEL_DIR[@]"
+    MULTISITE_INSTALL_TPL = "[@]MULTISITE_INSTALLMODEL_DIR[@]"
     EMFILE = os.path.join("[@]SLIM_DATADIR[@]", 'emfile.pickle')
 
 except SyntaxError:
     STORE_FILE='./instances.json'
     PID_FILE = './slim_instances_pid.json'
-    CREATION_SCRIPT='../scripts/create_instance.sh'
+    MONOSITE_CREATION_SCRIPT='../scripts/create_instance.sh'
+    MULTISITE_CREATION_SCRIPT='../scripts/create_multisite.sh'
     INSTALL_TPL = './slim_ressources/slim_install_model'
+    MULTISITE_INSTALL_TPL = './slim_ressources/slim_multisite_install_model'
     EMFILE = './slim_ressources/emfile.pickle'
 
 
 
-    CREATION_SCRIPT=os.path.join(os.path.dirname(__file__), CREATION_SCRIPT)
+    MONOSITE_CREATION_SCRIPT=os.path.join(os.path.dirname(__file__), MONOSITE_CREATION_SCRIPT)
+    MULTISITE_CREATION_SCRIPT=os.path.join(os.path.dirname(__file__), MULTISITE_CREATION_SCRIPT)
     STORE_FILE=os.path.join(os.path.dirname(__file__), STORE_FILE)
     INSTALL_TPL=os.path.join(os.path.dirname(__file__), INSTALL_TPL)
+    MULTISITE_INSTALL_TPL=os.path.join(os.path.dirname(__file__), MULTISITE_INSTALL_TPL)
     EMFILE=os.path.join(os.path.dirname(__file__), EMFILE)
 
 
@@ -202,13 +208,22 @@ def new_instance(name):
     if not os.path.isdir(INSTANCES_ABSPATH):
         logging.info("Instances directory '%s' don't exists, creating it")
         os.mkdir(INSTANCES_ABSPATH)
-    instance_path = os.path.join(INSTANCES_ABSPATH, name)
+    
+    if args.multisite:
+        creation_script = MULTISITE_CREATION_SCRIPT
+        install_tpl = MULTISITE_INSTALL_TPL
+        instance_path = INSTANCES_ABSPATH
+    else:
+        creation_script = MONOSITE_CREATION_SCRIPT
+        install_tpl = INSTALL_TPL
+        instance_path = os.path.join(INSTANCES_ABSPATH, name)
+
     creation_cmd = '{script} "{name}" "{path}" "{install_tpl}" \
 "{emfile}"'.format(
-        script = CREATION_SCRIPT,
+        script = creation_script,
         name = name,
         path = instance_path,
-        install_tpl = INSTALL_TPL,
+        install_tpl = install_tpl,
         emfile = EMFILE)
     res = os.system(creation_cmd)
     if res != 0:
@@ -444,6 +459,7 @@ server {
 """
     print(ret)
     
+    
 ##@brief Returns instanciated parser
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -491,6 +507,12 @@ def get_parser():
     actions.add_argument('--nginx-conf', action='store_const',
         default = False, const=True,
         help="Output a conf for nginx given selected instances")
+    actions.add_argument(
+        '--multisite',
+        default=False,
+        const=True,
+        action='store_const',
+        help="Creates the instance as a multisite one")
 
     startstop.add_argument('--stop', action='store_const', 
         default=False, const=True, help="Stop instances")
@@ -555,6 +577,7 @@ if __name__ == '__main__':
             print("\nAn instance name expected when creating an instance !",
                 file=sys.stderr)
             exit(1)
+            
         for name in args.name:
             new_instance(name)
     elif args.purge:

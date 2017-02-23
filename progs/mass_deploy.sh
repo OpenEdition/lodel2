@@ -101,7 +101,7 @@ then
 		echo "You didn't answer 'Y' (case matters), exiting"
 	fi
 	exit
-elif echo $1 | grep -E "[A-Za-z]" &>/dev/null
+elif ! echo $1 | grep -E "[0-9]" &>/dev/null
 then
 	usage
 	exit 0
