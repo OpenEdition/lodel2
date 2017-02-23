@@ -2,12 +2,12 @@
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 CONFSPEC = {
     'lodel2.sessions':{
-        'directory': ('/tmp/', SettingValidator('path')),
-        'expiration': (900, SettingValidator('int')),
-        'file_template': ('lodel2_%s.sess', SettingValidator('dummy'))
+        'directory': ('/tmp/', Validator('path')),
+        'expiration': (900, Validator('int')),
+        'file_template': ('lodel2_%s.sess', Validator('dummy'))
     }
 }

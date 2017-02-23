@@ -1,6 +1,6 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 from .datasource import DummyDatasource as Datasource
 
 __plugin_type__ = 'datasource'
@@ -12,7 +12,7 @@ __plugin_deps__ = []
 CONFSPEC = {
     'lodel2.datasource.dummy_datasource.*' : {
         'dummy': (  None,
-                    SettingValidator('dummy'))}
+                    Validator('dummy', none_is_valid=True))}
 }
 
 

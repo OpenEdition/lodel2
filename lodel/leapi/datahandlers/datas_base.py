@@ -8,32 +8,33 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.leapi.datahandlers.base_classes': ['DataField'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+                         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 
-##@brief Data field designed to handle boolean values
+## @brief Data field designed to handle boolean values
 class Boolean(DataField):
 
     help = 'A basic boolean field'
     base_type = 'bool'
 
-    ##@brief A boolean field
+    ## @brief A boolean field
     def __init__(self, **kwargs):
         #if 'check_data_value' not in kwargs:
         #    kwargs['check_data_value'] = self._check_data_value
         super().__init__(ftype='bool', **kwargs)
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, bool):
             raise FieldValidationError("The value '%s' is not, and will never, be a boolean" % value)
         return value
 
-##@brief Data field designed to handle integer values
+
+## @brief Data field designed to handle integer values
 class Integer(DataField):
 
     help = 'Basic integer field'
@@ -41,14 +42,14 @@ class Integer(DataField):
     cast_type = int
 
     def __init__(self, **kwargs):
-        super().__init__( **kwargs)
+        super().__init__(**kwargs)
 
-    ##@brief Check and cast value in appropriate type
+    ## @brief Check and cast value in appropriate type
     # @param value *
     # @param strict bool : tells if the value must be an integer or a value that can be converted into an integer
     # @throw FieldValidationError if value is unappropriate or can not be cast
     # @return value
-    def _check_data_value(self, value, strict = False):
+    def _check_data_value(self, value, strict=False):
         value = super()._check_data_value(value)
         if (strict and not isinstance(value, int)):
             raise FieldValidationError("The value '%s' is not a python type integer" % value)
@@ -61,19 +62,20 @@ class Integer(DataField):
             raise FieldValidationError("The value '%s' is not, and will never, be an integer" % value)
         return value
 
-##@brief Data field designed to handle string
+
+## @brief Data field designed to handle string
 class Varchar(DataField):
 
     help = 'Basic string (varchar) field. Default size is 64 characters'
     base_type = 'char'
 
-    ##@brief A string field
+    ## @brief A string field
     # @brief max_length int: The maximum length of this field
     def __init__(self, max_length=64, **kwargs):
         self.max_length = int(max_length)
         super().__init__(**kwargs)
 
-    ##@brief checks if this class can override the given data handler
+    ## @brief checks if this class can override the given data handler
     # @param data_handler DataHandler
     # @return bool
     def can_override(self, data_handler):
@@ -83,25 +85,26 @@ class Varchar(DataField):
             return False
         return True
     
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, str):
             raise FieldValidationError("The value '%s' can't be a str" % value)
         if len(value) > self.max_length:
-             raise FieldValidationError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
+            raise FieldValidationError("The value '%s' is longer than the maximum length of this field (%s)" % (value, self.max_length))
         return value
 
-##@brief Data field designed to handle date & time 
+
+## @brief Data field designed to handle date & time
 class DateTime(DataField):
 
     help = 'A datetime field. Take two boolean options now_on_update and now_on_create'
     base_type = 'datetime'
 
-    ##@brief A datetime field
+    ## @brief A datetime field
     # @param now_on_update bool : If true, the date is set to NOW on update
     # @param now_on_create bool : If true, the date is set to NEW on creation
     # @param **kwargs
@@ -111,13 +114,13 @@ class DateTime(DataField):
         self.datetime_format = '%Y-%m-%d' if 'format' not in kwargs else kwargs['format']
         super().__init__(**kwargs)
 
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)
-        if isinstance(value,str):
+        if isinstance(value, str):
             try:
                 value = datetime.datetime.fromtimestamp(time.mktime(time.strptime(value, self.datetime_format)))
             except ValueError:
@@ -131,7 +134,8 @@ class DateTime(DataField):
             return datetime.datetime.now()
         return cur_value
 
-##@brief Data field designed to handle long string
+
+## @brief Data field designed to handle long string
 class Text(DataField):
     help = 'A text field (big string)'
     base_type = 'text'
@@ -139,22 +143,23 @@ class Text(DataField):
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__(ftype='text', **kwargs)
     
-    ##@brief Check and cast value in appropriate type
-    #@param value *
-    #@throw FieldValidationError if value is unappropriate or can not be cast 
-    #@return value
+    ## @brief Check and cast value in appropriate type
+    # @param value *
+    # @throw FieldValidationError if value is unappropriate or can not be cast
+    # @return value
     def _check_data_value(self, value):
         value = super()._check_data_value(value)   
         if not isinstance(value, str):
             raise FieldValidationError("The content passed to this Text field is not a convertible to a string")
         return value
 
-##@brief Data field designed to handle Files
+
+## @brief Data field designed to handle Files
 class File(DataField):
 
     base_type = 'file'
 
-    ##@brief a file field
+    ## @brief a file field
     # @param upload_path str : None by default
     # @param **kwargs
     def __init__(self, upload_path=None, **kwargs):
@@ -164,4 +169,3 @@ class File(DataField):
     # @todo Add here a check for the validity of the given value (should have a correct path syntax)
     def _check_data_value(self, value):
         return super()._check_data_value(value)   
-

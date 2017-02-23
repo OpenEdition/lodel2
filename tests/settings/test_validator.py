@@ -5,52 +5,52 @@ from unittest import mock
 from unittest.mock import patch
 
 from lodel.exceptions import *
-from lodel.settings.validator import *
+from lodel.validator.validator import *
 
-class SettingValidatorTestCase(unittest.TestCase):
+class ValidatorTestCase(unittest.TestCase):
     
     def test_init_basic(self):
         """ Testing the SettingsValidator class instanciation"""
-        valid = SettingValidator('string')
+        valid = Validator('string')
         #trying to call it
         valid('test')
 
     def test_init_badname(self):
-        """ Testing SettingValidator instanciation with non existing validator
+        """ Testing Validator instanciation with non existing validator
             name"""
         with self.assertRaises(LodelFatalError):
-            SettingValidator('qklfhsdufgsdyfugigsdfsdlcknsdp')
+            Validator('qklfhsdufgsdyfugigsdfsdlcknsdp')
 
     def test_noneswitch(self):
         """ Testing the none_is_valid switch given at validator instanciation
         """
-        none_invalid = SettingValidator('int')
-        none_valid = SettingValidator('int', none_is_valid = True)
+        none_invalid = Validator('int')
+        none_valid = Validator('int', none_is_valid = True)
 
         none_valid(None)
-        with self.assertRaises(SettingsValidationError):
+        with self.assertRaises(ValidationError):
             none_invalid(None)
 
     def test_validator_registration(self):
-        """ Testing the register_validator method of SettingValidator """
+        """ Testing the register_validator method of Validator """
         mockfun = mock.MagicMock()
         vname = 'lfkjdshfkuhsdygsuuyfsduyf'
         testval = 'foo'
-        SettingValidator.register_validator(vname, mockfun, 'test validator')
+        Validator.register_validator(vname, mockfun, 'test validator')
         #Using registered validator
-        valid = SettingValidator(vname)
+        valid = Validator(vname)
         valid(testval)
         mockfun.assert_called_once_with(testval)
 
     def test_validator_optargs_forwarding(self):
-        """ Testing the ability for SettingValidator to forward optional
+        """ Testing the ability for Validator to forward optional
             arguments """
         mockfun = mock.MagicMock()
         vname = 'lkjdsfhsdiufhisduguig'
         testval = 'azertyuiop'
-        SettingValidator.register_validator(vname, mockfun, 'test validator')
+        Validator.register_validator(vname, mockfun, 'test validator')
         #Using registered validator with more arguments
-        valid = SettingValidator(vname,
+        valid = Validator(vname,
             arga = 'a', argb = 42, argc = '1337')
         valid(testval)
         mockfun.assert_called_once_with(

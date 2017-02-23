@@ -1,6 +1,6 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator']})
+    'lodel.validator.validator': ['Validator']})
 
 __plugin_name__ = "dummy"
 __version__ = '0.0.1' #or __version__ = [0,0,1]

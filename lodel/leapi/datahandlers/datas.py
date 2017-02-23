@@ -7,9 +7,9 @@ from lodel.context import LodelContext
 
 LodelContext.expose_modules(globals(), {
     'lodel.leapi.datahandlers.datas_base': ['Boolean', 'Integer', 'Varchar',
-        'DateTime', 'Text', 'File'],
+                                            'DateTime', 'Text', 'File'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+                         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
 
 ##@brief Data field designed to handle formated strings
@@ -26,7 +26,7 @@ build its content'
     def __init__(self, format_string, field_list, **kwargs):
         self._field_list = field_list
         self._format_string = format_string
-        super().__init__(internal='automatic',**kwargs)
+        super().__init__(internal='automatic', **kwargs)
 
     def _construct_data(self, emcomponent, fname, datas, cur_value):
         ret = self._format_string % tuple(
@@ -49,7 +49,7 @@ max_length and regex'
     # @param **kwargs
     def __init__(self, regex='', max_length=10, **kwargs):
         self.regex = regex
-        self.compiled_re = re.compile(regex)#trigger an error if invalid regex
+        self.compiled_re = re.compile(regex)  # trigger an error if invalid regex
         super(self.__class__, self).__init__(max_length=max_length, **kwargs)
 
     ##@brief Check and cast value in appropriate type
@@ -106,7 +106,8 @@ be internal")
         if not inspect.isclass(emcomponent):
             cls = emcomponent.__class__
         return cls.__name__
-        
+
+
 ##@brief Data field designed to handle concatenated fields
 class Concat(FormatString):
     help = 'Automatic strings concatenation'
@@ -116,18 +117,17 @@ class Concat(FormatString):
     # @param field_list list : List of field to use
     # @param separator str
     # @param **kwargs    
-    def __init__(self, field_list, separator = ' ', **kwargs):
+    def __init__(self, field_list, separator=' ', **kwargs):
         format_string = separator.join(['%s' for _ in field_list])
-        super().__init__(
-            format_string = format_string, field_list = field_list, **kwargs)
-
+        super().__init__(format_string=format_string,
+                         field_list=field_list,
+                         **kwargs)
 
 
 class Password(Varchar):
     help = 'Handle passwords'
     base_type = 'password'
     pass
-
 
 
 class VarcharList(Varchar):
@@ -139,7 +139,6 @@ class VarcharList(Varchar):
             raise LodelException("The delimiter has to be a string, %s given" % type(delimiter))
         self.delimiter = str(delimiter)
         super().__init__(**kwargs)
-
 
     def construct_data(self, emcomponent, fname, datas, cur_value):
         result = cur_value.split(self.delimiter)

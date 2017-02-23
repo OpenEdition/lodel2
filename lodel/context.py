@@ -206,6 +206,9 @@ a context without a path......")
             self.__class__._contexts[site_id] = self
         #Designed to be use by with statement
         self.__previous_ctx = None
+
+    def __repr__(self):
+        return '<LodelContext name="%s">' % self.__id
     
     ##@brief Expose a module from the context
     #@param globs globals : globals where we have to expose the module
@@ -285,7 +288,7 @@ site_id set to None when we are in MULTISITE beahavior")
 : '%s'" % site_id)
         if site_id not in cls._contexts:
             raise ContextError("No context named '%s' found." % site_id)
-        if cls.current_id != LOAD_CTX and site_id != LOAD_CTX:
+        if cls.current_id() != LOAD_CTX and site_id != LOAD_CTX:
             raise ContextError("Not allowed to switch into a site context \
 from another site context. You have to switch back to LOAD_CTX before")
         wanted_ctx = cls._contexts[site_id]
@@ -316,7 +319,7 @@ from another site context. You have to switch back to LOAD_CTX before")
         return copy.copy(cls._current.__id)
         
 
-    ##@brief Create a new context given a context name
+    ##@brief Create a new context given a context name and switch in it
     #
     #@note It's just an alias to the LodelContext.__init__ method
     #@param site_id str : context name
@@ -398,7 +401,9 @@ initialize it anymore")
             #Add custom MetaPathFinder allowing implementing custom imports
             sys.meta_path = [LodelMetaPathFinder] + sys.meta_path
             #Create and set __loader__ context
-            cls.new(LOAD_CTX)
+            ctx = cls.new(LOAD_CTX)
+            #DIRTY enforcing
+            cls._current = ctx
             cls.set(LOAD_CTX)
         else:
             #Add a single context with no site_id
