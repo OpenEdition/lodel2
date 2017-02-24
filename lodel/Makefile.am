@@ -22,7 +22,7 @@ do_subst = sed 	-e 's,\[@\]LODEL2_VARDIR\[@\],$(localstatedir)/lodel2/,g' \
 
 
 install-data-hook:
-	-mkdir -p ${DESTDIR}$(logdir)
+	$(MKDIR_P) ${DESTDIR}$(logdir)
 
 uninstall-hook:
 	-rmdir ${DESTDIR}$(logdir)

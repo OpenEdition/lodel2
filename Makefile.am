@@ -33,7 +33,7 @@ runtest: ./runtest.sh
 
 #Adding logdir creation on install
 install-data-hook:
-	mkdir -p ${DESTDIR}$(lodel2_localstatedir); mkdir -p ${DESTDIR}$(docdir); cp README ${DESTDIR}$(docdir);
+	$(MKDIR_P) ${DESTDIR}$(lodel2_localstatedir); $(MKDIR_P) ${DESTDIR}$(docdir); cp README ${DESTDIR}$(docdir);
 
 #Making debian package
 deb: dist
