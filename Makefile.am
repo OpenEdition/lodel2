@@ -1,5 +1,5 @@
 SUBDIRS = lodel progs
-EXTRA_DIST = runtest examples tests debian
+EXTRA_DIST = runtest examples tests debian Makefile-common.am.inc
 CLEANFILES = runtest
 
 lodel2_localstate_DATA =
