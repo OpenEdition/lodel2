@@ -1,4 +1,4 @@
-AC_INIT([lodel], [0.1], [contact@openedition.org])
+AC_INIT([lodel2], [0.1], [contact@openedition.org])
 
 AM_INIT_AUTOMAKE
 
@@ -17,7 +17,7 @@ AC_CONFIG_FILES([Makefile \
 	lodel/utils/Makefile \
 	progs/Makefile \
 	progs/slim/Makefile \
-	lodel/plugins/Makefile \
+	lodel/plugins/Makefile
 ])
 
 
@@ -27,6 +27,8 @@ AC_CONFIG_FILES([Makefile \
 #pyconfigure macros are prefixed by PC_
 ###
 AC_PROG_LN_S
+AC_PROG_MKDIR_P
+
 m4_include([m4/python.m4]) # Patched version of aclocal python.m4 file
 m4_include([m4/python_pyconfigure.m4]) #Renamed because we use a patched version of aclocal python.m4 file
 m4_define(python_min_ver, 3.4.2)
@@ -55,6 +57,7 @@ PC_PYTHON_CHECK_MODULE_VERSION([pymongo], [2.7], [2.8], ,
 	AC_MSG_WARN([Module pymongo not found. The mongodb datasource will not be able to work])
 	AC_SUBST([PYMONGO], 'False')
 )
+
 
 #Documentation checks
 AC_SUBST([DOCOK], 'OK')

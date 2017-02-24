@@ -4,10 +4,9 @@ pluginsdir=$(pkgpythondir)/plugins
 lodel2confdir=$(sysconfdir)/lodel2
 
 install-data-hook:
-	mkdir ${DESTDIR}$(pluginsdir); cp -R * ${DESTDIR}$(pluginsdir) && rm ${DESTDIR}$(pluginsdir)/Makefile* ;\
-	cd ${DESTDIR}; \
-	mkdir -p ./$(lodel2confdir); \
-	ln -rs -t ${DESTDIR}$(lodel2confdir) .$(pluginsdir)
+	$(MKDIR_P) $(pluginsdir); cp -R * $(pluginsdir) && rm $(pluginsdir)/Makefile* ;\
+	$(MKDIR_P) $(lodel2confdir); \
+	$(LN_S) $(pluginsdir) $(lodel2confdir)/plugins
 
 uninstall-hook:
 	-rm -R ${DESTDIR}$(pluginsdir)
