@@ -1,4 +1,4 @@
-AC_INIT([lodel2], [0.1], [contact@openedition.org])
+AC_INIT([lodel], [0.1], [contact@openedition.org])
 
 AM_INIT_AUTOMAKE
 
