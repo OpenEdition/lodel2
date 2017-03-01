@@ -5,6 +5,7 @@ import os.path
 import importlib
 import copy
 import json
+from warnings import warn #Because the logger is not able to work at some step
 from importlib.machinery import SourceFileLoader
 
 from lodel.context import LodelContext
@@ -481,6 +482,13 @@ name differ from the one found in plugin's init file"
             logger.debug(msg)
             test_fun = lambda:True
         return test_fun()
+        ret = False
+        try:
+            ret = test_fun()
+        except Exception as e:
+            logger.error("The plugin %s failed to activate raising an \
+exception : %s" % (self.name, e))
+        return ret
         
     ##@brief Load a plugin
     #
@@ -762,14 +770,16 @@ name differ from the one found in plugin's init file"
         except PluginError as e:
             log_msg += "unable to load '%s'. Exception raised : %s"
             log_msg %= (INIT_FILENAME, e)
-            logger.debug(log_msg)
+            logger.warning(log_msg)
+            warn(log_msg)
             return False
         #Checking mandatory init module variables
         for attr_name in MANDATORY_VARNAMES:
             if not hasattr(initmod,attr_name):
                 log_msg += " mandatory variable '%s' not found in '%s'"
                 log_msg %= (attr_name, INIT_FILENAME)
-                logger.debug(log_msg)
+                logger.warning(log_msg)
+                warn(log_msg)
                 return False
         #Fetching plugin's version
         try:
