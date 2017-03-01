@@ -15,10 +15,10 @@ import argparse
 #
 #In order to solve this problem the _simlink_hack() function delete the
 #LODEL2LIB_FOLDER/install entry from sys.path
-#@note This problem will be solved once lodel lib dir will be in 
-#/usr/lib/python3/lodel
+#@todo delete me
 def _simlink_hack():
-    sys.path[0] = os.getcwd()
+    sys.path = [os.getcwd()] + sys.path
+    #sys.path[0] = os.getcwd()
 
 ## @brief Utility method to generate python code given an emfile and a
 # translator
@@ -28,7 +28,7 @@ def _simlink_hack():
 def generate_dyncode(model_file, translator):
     from lodel.editorial_model.model import EditorialModel
     from lodel.leapi import lefactory
-
+    
     model = EditorialModel.load(translator, filename  = model_file)
     dyncode = lefactory.dyncode_from_em(model)
     return dyncode
@@ -49,8 +49,16 @@ def create_dyncode(model_file, translator, output_filename):
 
 
 ## @brief Refresh dynamic leapi code from settings
+#@todo make it compatible with multisite : create a "real" progs that takes
+#conf path in args
 def refresh_dyncode():
-    import loader
+    #import loader
+    from lodel.context import LodelContext
+    LodelContext.init()
+    from lodel.settings.settings import Settings as settings_loader
+
+    CONFDIR = os.path.join(os.getcwd(), 'conf.d')
+    settings_loader(CONFDIR)
     from lodel.settings import Settings
     # EditorialModel update/refresh
     
@@ -119,7 +127,7 @@ def update_plugin_discover_cache(path_list = None):
     os.environ['LODEL2_NO_SETTINGS_LOAD'] = 'True'
     import loader
     from lodel.plugin.plugins import Plugin
-    res = Plugin.discover(path_list)
+    res = Plugin.discover()
     print("Plugin discover result in %s :\n" % res['path_list'])
     for pname, pinfos in res['plugins'].items():
         print("\t- %s %s -> %s" % (
