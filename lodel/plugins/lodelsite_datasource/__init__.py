@@ -12,7 +12,7 @@
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings.validator': ['SettingValidator'],
+    'lodel.validator.validator': ['Validator'],
     'lodel.logger': 'logger'})
 from .specs import check
 
@@ -25,16 +25,16 @@ __plugin_deps__ = []
 CONFSPEC = {
     'lodel2.datasource.lodelsite_datasource.*' : {
         'db_datasource': (  None,
-            SettingValidator('string')),
+            Validator('string')),
         'db_datasource_ro': (None,
-            SettingValidator('string', none_is_valid = True)),
+            Validator('string', none_is_valid = True)),
     }
 }
 
 
 ##@brief Hardcoded checks that try to know if the EM fits the requierements
 def _activate():
-    import leapi_dyncode
+    LodelContext.expose_dyncode(globals())
     if 'Lodelsite' not in leapi_dyncode.dynclasses_dict:
         logger.fatal('Unable to activate lodelsite_datasource. Expected a \
 Lodelsite leapi object')
