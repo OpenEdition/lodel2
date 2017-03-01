@@ -367,7 +367,7 @@ from another site context. You have to switch back to LOAD_CTX before")
     ##@brief Expose leapi_dyncode module
     @classmethod
     def expose_dyncode(cls, globs, alias = 'leapi_dyncode'):
-        cls.get().expose_module(globs, 'leapi_dyncode')
+        cls.get().expose_modules(globs, { 'leapi_dyncode': alias })
 
     ##@brief Initialize the context manager
     #
@@ -389,8 +389,8 @@ initialize it anymore")
             lodelsites_path = os.getcwd() #Same assert in the loader
             cls.__lodelsites_paths = (
                 os.path.join(lodelsites_path, buildconf.MULTISITE_DATADIR),
-                os.path.join(lodelsites_path, os.path.join(
-                    buildconf.MULTISITE_CONTEXTDIR, 'lodelsites')))
+                os.path.join(lodelsites_path,
+                    buildconf.MULTISITE_CONTEXTDIR))
             #Now we are able to import lodelsites package
             sys.path.append(os.path.dirname(cls.__lodelsites_paths[1]))
             if 'lodelsites' not in sys.modules:
