@@ -45,6 +45,8 @@
 #
 # https://docs.python.org/3.4/library/unittest.html
 #
+export PYTHONPATH="$(pwd)/$(dirname $0)/:$PYTHONPATH"
+
 if test ! -f lodel/buildconf.py
 then
 	echo "You have to build the project before running the tests"
@@ -52,7 +54,7 @@ then
 	exit 1
 fi
 
-PYTHON='env python3'
+PYTHON="env python3"
 testdir=$(mktemp -td "lodel2_unittest_instance_XXXXXXXX")
 install_model_dir="[@]INSTALLMODEL_DIR[@]"
 if [ ! -d "$install_model_dir" ]

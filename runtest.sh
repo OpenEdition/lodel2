@@ -62,7 +62,8 @@ else
     mkdir $logdir
 fi
 
-PYTHON='env python3'
+export PYTHONPATH="$PYTHONPATH:$(pwd)"
+PYTHON="env python3"
 ret_status=0
 
 $PYTHON ./nocontext_tests.py $logdir $@ || ret_status=1
