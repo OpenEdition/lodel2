@@ -10,11 +10,17 @@ EXTRA_DIST = create_instance.sh create_multisite.sh mass_deploy.sh
 lodel2conf_DATA = mass_deploy.cfg
 lodel2confdir=$(sysconfdir)/lodel2
 lodel2statedir=$(localstatedir)/lodel2
+lodel2datadir = $(datadir)/lodel2
+install_model_dir = $(lodel2datadir)/install_model
+multisite_install_model_dir = $(lodel2datadir)/multisite_install_model
 
 do_subst = sed -e 's,\[@\]PKGPYTHONDIR\[@\],$(pkgpythondir),g' \
+		-e 's,\[@\]LODEL2_DATADIR\[@\],$(lodel2datadir),g' \
 		-e 's,\[@\]LODEL2_PROGSDIR\[@\],$(lodel2_scripts_dir),g' \
 		-e 's,\[@\]LODEL2_CONFDIR\[@\],$(lodel2confdir),g' \
 		-e 's,\[@\]LODEL2_VARDIR\[@\],$(lodel2statedir),g' \
+		-e 's,\[@\]INSTALLMODEL_DIR\[@\],$(install_model_dir),g' \
+		-e 's,\[@\]MULTISITE_INSTALLMODEL_DIR\[@\],$(multisite_install_model_dir),g' \
 		-e 's,\[@\]LODELSITES_DATA_DIRNAME\[@\],$(lodel2_multisite_data_dirname),g' \
 		-e 's,\[@\]LODELSITES_CTX_DIRNAME\[@\],$(lodel2_multisite_ctx_dirname),g'
 

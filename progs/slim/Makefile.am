@@ -16,16 +16,14 @@ install_model__DATA = 	install_model/loader.py \
 
 multisite_install_model_dir = $(lodel2datadir)/multisite_install_model
 multisite_install_model__DATA = multisite_install_model/lodel_admin.py \
-			multisite_install_model/Makefile 
+				multisite_install_model/Makefile \
+				multisite_install_model/sites_em.pickle \
+				multisite_install_model/editorial_model.pickle 
 
-#Forgotten files in git commits ??
-multisite_install_model:
-	$(MKDIR_P) multisite_install_model
-multisite_install_model/lodel_admin.py: multisite_install_model install_model/lodel_admin.py
-	cp install_model/lodel_admin.py multisite_install_model/lodel_admin.py
-multisite_install_model/Makefile: multisite_install_model install_model/Makefile
-	cp install_model/Makefile multisite_install_model/Makefile
-	
+multisite_lodelsites_conf_dir = $(multisite_install_model_dir)/lodelsites.conf.d
+multisite_lodelsites_conf__DATA = multisite_install_model/lodelsites.conf.d/lodel2.ini
+multisite_server_conf_dir = $(multisite_install_model_dir)/server_conf.d
+multisite_server_conf__DATA = multisite_install_model/server_conf.d/lodel2.ini
 
 
 slim_conf_model_dir = $(install_model_dir)/conf.d/
