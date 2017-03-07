@@ -301,3 +301,53 @@ class ListHooks(lodel_script.LodelScript):
                     priority = priority))
             print("\n")
 
+
+class RefreshDyncode(lodel_script.LodelScript):
+    _action = 'dyncode'
+    _description = 'Update the dynamic code according to EM and conf'
+
+    @classmethod
+    def argparser_config(cls, parser):
+        parser.add_argument('-m', '--em',
+            help='Specify the emfile to use for dyncode generation',
+            type=str, default='')
+        return
+
+    ##@todo think of a better method to determine if we are in mono or
+    #multisite instance
+    @classmethod
+    def run(cls, args):
+        #
+        # Dirty hack for instance type detection
+        #
+        ctx_type = LodelContext.MULTISITE
+        CONFDIR = os.path.join(os.getcwd(), 'lodelsites.conf.d')
+        if os.path.isdir('./conf.d'):
+            print("MONOSITE DETECTED")
+            ctx_type = LodelContext.MONOSITE
+            CONFDIR = os.path.join(os.getcwd(), 'conf.d')
+    
+        #Bootstraping
+        from lodel.context import LodelContext
+        LodelContext.init()
+        from lodel.settings.settings import Settings as settings_loader
+        settings_loader(CONFDIR)
+        from lodel.settings import Settings
+
+        from lodel.editorial_model.model import EditorialModel
+        from lodel.leapi import lefactory
+
+        em_translator = Settings.editorial_model.emtranslator
+        model_file = args.em
+        if len(args.em.strip()) == 0:
+            #using the default em_file
+            model_file = Settings.editorial_model.emfile
+        #Model loaded
+        model = EditorialModel.load(translator, filename = model_file)
+        #Creating dyncode
+        dyncode_file = Settings.editorial_model.dyncode
+        dyncode_content = lefactory.dyncode_from(model)
+        with open(dyncode_file, 'w+') as dfp:
+            dfp.write(dyncode_content)
+        print("Dyncode written in %s from em %s" % (dyncode_file, model_file))
+

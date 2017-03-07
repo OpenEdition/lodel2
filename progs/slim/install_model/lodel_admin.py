@@ -17,8 +17,12 @@ import argparse
 #LODEL2LIB_FOLDER/install entry from sys.path
 #@todo delete me
 def _simlink_hack():
-    sys.path = [os.getcwd()] + sys.path
-    #sys.path[0] = os.getcwd()
+    sys.path[0] = os.getcwd() #In order to override default ./ path
+
+##@brief Return true if we are in a monosite instance
+#@todo find a better way to achieve this
+def _monosite_test():
+    return os.path.isdir('./conf.d')
 
 ## @brief Utility method to generate python code given an emfile and a
 # translator
@@ -135,7 +139,13 @@ def update_plugin_discover_cache(path_list = None):
 
 if __name__ == '__main__':
     _simlink_hack()
-    import loader
-    loader.start()
+    from lodel import bootstrap
+    #to deleted when we known wich action need what kind of MULTISITE API
+    if not bootstrap._monosite_test():
+        bootstrap.bootstrap('lodelsites')
+    else:
+        bootstrap.bootstrap()
+    #import loader
+    #loader.start()
     from lodel.plugin.scripts import main_run
     main_run()
