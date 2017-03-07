@@ -11,10 +11,12 @@ lodel2conf_DATA = mass_deploy.cfg
 lodel2confdir=$(sysconfdir)/lodel2
 lodel2statedir=$(localstatedir)/lodel2
 lodel2datadir = $(datadir)/lodel2
+lodel_libdir=$(pkgpythondir)/
 install_model_dir = $(lodel2datadir)/install_model
 multisite_install_model_dir = $(lodel2datadir)/multisite_install_model
 
 do_subst = sed -e 's,\[@\]PKGPYTHONDIR\[@\],$(pkgpythondir),g' \
+		-e 's,\[@\]LODEL2_LIBDIR\[@\],$(lodel_libdir),g' \
 		-e 's,\[@\]LODEL2_DATADIR\[@\],$(lodel2datadir),g' \
 		-e 's,\[@\]LODEL2_PROGSDIR\[@\],$(lodel2_scripts_dir),g' \
 		-e 's,\[@\]LODEL2_CONFDIR\[@\],$(lodel2confdir),g' \

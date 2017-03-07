@@ -27,6 +27,7 @@ install_tpl="$3"
 install_tpl=${install_tpl:=[@]MULTISITE_INSTALLMODEL_DIR[@]}
 context_dir_name="[@]LODELSITES_CTX_DIRNAME[@]"
 datas_dir_name="[@]LODELSITES_DATA_DIRNAME[@]"
+libdir="[@]LODEL2_LIBDIR[@]"
 #Inconsistency with the fact that we can give the install template in argument
 mono_model=[@]INSTALLMODEL_DIR[@]
 
@@ -61,10 +62,17 @@ do
 	done
 done
 #Using monosite files to populate the instance directory
-for fname in "Makefile" "lodel_admin.py" 
+for fname in "Makefile" "lodel_admin.py"
 do
 	ln -vs $mono_model/$fname $instance_dir/$fname
 done
+
+#Dirty ln -s of plugins libdir
+##@todo find another way to handles plugins in instances
+ln -vs $libdir/plugins $instance_dir/plugins
+
+#Dirty again :/
+ln -vs $libir/plugins/multisite/loader.py $instance_dir/
 
 mkdir -pv "$lodelsites_ctx_dir"
 mkdir -pv "$lodelsites_data_dir"
