@@ -168,6 +168,7 @@ class SettingsLoader(object):
                                     key_id=key_id, \
                                     filename =filename))
         if len(err_l) > 0:
-            raise SettingsErrors(err_l)
+            raise SettingsErrors(err_l, 'Following errors were detected \
+while loading confs from %s' % self.__conf_path)
         else:
             return

@@ -33,7 +33,8 @@ class SettingsErrors(Exception):
     
     ##@brief Instanciate an SettingsErrors
     # @param exceptions list : list of SettingsError instance
-    def __init__(self, exceptions):
+    def __init__(self, exceptions, extra_msg = 'Errors :'):
+        self._extra_msg = extra_msg
         for expt in exceptions: 
             if not isinstance(expt, SettingsError):
                 raise ValueError("The 'exceptions' argument has to be an array of <class SettingsError>, but a %s was found in the list" % type(expt))
@@ -43,7 +44,7 @@ class SettingsErrors(Exception):
     def __repr__(self): return str(self)
 
     def __str__(self):
-        res = "Errors :\n"
+        res = "%s\n" % self._extra_msg
         for expt in self.__exceptions:
             res += "\t%s\n" % str(expt)
         return res
