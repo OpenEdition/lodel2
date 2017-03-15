@@ -365,29 +365,31 @@ def emfield_val(value):
 
 
 def plugin_validator(value, ptype=None):
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin.hooks': ['LodelHook']})
-    value = copy.copy(value)
-
-    @LodelHook('lodel2_dyncode_bootstraped')
-    def plugin_type_checker(hookname, caller, payload):
+    if value:
         LodelContext.expose_modules(globals(), {
-            'lodel.plugin.plugins': ['Plugin'],
-            'lodel.plugin.exceptions': ['PluginError']})
-        if value is None:
-            return
-        try:
-            plugin = Plugin.get(value)
-        except PluginError:
-            msg = "No plugin named %s found"
-            msg %= value
-            raise ValidationError(msg)
-        if plugin._type_conf_name.lower() != ptype.lower():
-            msg = "A plugin of type '%s' was expected but found a plugin \
-named  '%s' that is a '%s' plugin"
-            msg %= (ptype, value, plugin._type_conf_name)
-            raise ValidationError(msg)
-    return value
+            'lodel.plugin.hooks': ['LodelHook']})
+        value = copy.copy(value)
+
+        @LodelHook('lodel2_dyncode_bootstraped')
+        def plugin_type_checker(hookname, caller, payload):
+            LodelContext.expose_modules(globals(), {
+                'lodel.plugin.plugins': ['Plugin'],
+                'lodel.plugin.exceptions': ['PluginError']})
+            if value is None:
+                return
+            try:
+                plugin = Plugin.get(value)
+            except PluginError:
+                msg = "No plugin named %s found"
+                msg %= value
+                raise ValidationError(msg)
+            if plugin._type_conf_name.lower() != ptype.lower():
+                msg = "A plugin of type '%s' was expected but found a plugin \
+    named  '%s' that is a '%s' plugin"
+                msg %= (ptype, value, plugin._type_conf_name)
+                raise ValidationError(msg)
+        return value
+    return None
 
 
 Validator.register_validator(

@@ -166,6 +166,10 @@ class Settings(object, metaclass=MetaSettings):
                 plugin_list += cur_list
             except TypeError:
                 plugin_list += [cur_list]
+
+        # Remove invalid plugin names
+        plugin_list = [plugin for plugin in plugin_list if len(plugin) > 0]
+
         # Checking confspecs
         for section in lodel2_specs:
             if section.lower() != section:
