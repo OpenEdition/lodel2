@@ -7,27 +7,15 @@ import warnings
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors', 
+    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors',
         'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
         'LeApiQueryErrors'],
     'lodel.plugin.hooks': ['LodelHook'],
     'lodel.logger': ['logger']})
 
-##@brief Tool to check if a target_class's object exists and is stored
-#@param target_class : class where the object is supposed to be
-#@param uid : a unique id in target_class
-#@returns true if an object with unique id uid exists in target_class, false if not
-def is_exist(target_class, uid):
-	from .leobject import LeObject
-	if not inspect.isclass(target_class) or not issubclass(target_class, LeObject):
-		raise TypeError("target class has to be a child class of LeObject but %s was given"% target_class)
-	datasource = target_class._ro_datasource
-	return datasource.is_exist(target_class,uid)
-
-
 ##@todo check datas when running query
 class LeQuery(object):
-    
+
     ##@brief Hookname prefix
     _hook_prefix = None
     ##@brief arguments for the LeObject.check_data_value()
@@ -73,7 +61,7 @@ class LeQuery(object):
     #@return query result
     def _query(self, **datas):
         raise NotImplementedError("Asbtract method")
-    
+
     ##@return a dict with query infos
     def dump_infos(self):
         return {'target_class': self._target_class}
@@ -118,7 +106,7 @@ class LeFilteredQuery(LeQuery):
         self.subqueries = None
         query_filters = [] if query_filters is None else query_filters
         self.set_query_filter(query_filters)
-    
+
     ##@brief Abstract FilteredQuery execution method
     #
     # This method takes care to execute subqueries before calling super execute
@@ -439,7 +427,7 @@ field to use for the relational filter"
     #<pre>contributeur IN (1,2,3,5)</pre> will be transformed into :
     #<pre>(
     #       (
-    #           contributeur, 
+    #           contributeur,
     #           {
     #               auteur: 'lodel_id',
     #               traducteur: 'lodel_id'
@@ -494,7 +482,7 @@ class LeInsertQuery(LeQuery):
             raise LeApiQueryError("Trying to create an insert query on an \
 abstract LeObject : %s" % target_class)
         super().__init__(target_class)
-    
+
     ## @brief Implements an insert query operation, with only one insertion
     # @param datas : datas to be inserted
     def _query(self, datas):
@@ -536,7 +524,7 @@ class LeUpdateQuery(LeFilteredQuery):
     #@todo change strategy with instance update. We have to accept datas for
     #the execute method
     def __init__(self, target, query_filters=None):
-        ##@brief This attr is set only if the target argument is an 
+        ##@brief This attr is set only if the target argument is an
         #instance of a LeObject subclass
         self.__leobject_instance_datas = None
         target_class = target
@@ -565,8 +553,8 @@ target to LeUpdateQuery constructor"
             #Instance update
             #Building query_filter
             filters = [(
-                uid_name, 
-                '=', 
+                uid_name,
+                '=',
                 str(self.__leobject_instance_datas[uid_name]))]
             res = self._rw_datasource.update(
                 self._target_class, filters, [],
@@ -712,22 +700,22 @@ class LeGetQuery(LeFilteredQuery):
         l_datas=self._ro_datasource.select(
             target = self._target_class,
             field_list = fl,
-            filters = self._query_filter[0], 
-            relational_filters = self._query_filter[1], 
-            order = self._order, 
-            group = self._group, 
-            limit = self._limit, 
+            filters = self._query_filter[0],
+            relational_filters = self._query_filter[1],
+            order = self._order,
+            group = self._group,
+            limit = self._limit,
             offset = self._offset)
         return l_datas
 
     ##@return a dict with query infos
     def dump_infos(self):
         ret = super().dump_infos()
-        ret.update({  'field_list' : self._field_list, 
-                        'order' : self._order, 
-                        'group' : self._group, 
-                        'limit' : self._limit, 
-                        'offset': self._offset, 
+        ret.update({  'field_list' : self._field_list,
+                        'order' : self._order,
+                        'group' : self._group,
+                        'limit' : self._limit,
+                        'offset': self._offset,
        })
         return ret
 
@@ -742,5 +730,3 @@ offset={offset}"
                 res %= (n, subq)
         res += ">"
         return res
-
-

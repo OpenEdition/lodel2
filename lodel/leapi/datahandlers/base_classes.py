@@ -391,14 +391,11 @@ class Reference(DataHandler):
             logger.warning('Class of the back_reference given is not an allowed class')
             return False
         value = datas[fname]
-        if not target_class.is_exist(value):
+        target_uidfield = target_class.uid_fieldname()[0]  # multi uid broken here
+        obj = target_class.get([(target_uidfield, '=', value)])
+        if len(obj) == 0:
             logger.warning('Object referenced does not exist')
             return False
-        # target_uidfield = target_class.uid_fieldname()[0] #multi uid broken here
-        # obj = target_class.get([(target_uidfield, '=', value)])
-        # if len(obj) == 0:
-        #    logger.warning('Object referenced does not exist')
-        #    return False
         return True
 
     # @brief Utility method designed to fetch referenced objects
