@@ -432,7 +432,7 @@ name differ from the one found in plugin's init file"
     ##@brief Return associated module name
     def module_name(self):
         path_array = self.path.split('/')
-        if not self.path.startswith('./plugins'):
+        if 'plugins' not in self.path:
             raise PluginError("Bad path for plugin %s : %s" % (
                 self.name, self.path))
         return '.'.join(['lodel'] + path_array[path_array.index('plugins'):])
