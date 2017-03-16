@@ -415,9 +415,9 @@ name differ from the one found in plugin's init file"
         if filename != os.path.basename(filename):
             msg = "Invalid {varname} content : '{fname}' for plugin {name}"
             msg = msg.format(
-                varname = varname,
-                fname = filename,
-                name = self.name)
+                varname=varname,
+                fname=filename,
+                name=self.name)
             raise PluginError(msg)
         #See the todo
         if len(self.module.__name__.split('.')) == 1:
@@ -431,16 +431,11 @@ name differ from the one found in plugin's init file"
    
     ##@brief Return associated module name
     def module_name(self):
+        path_array = self.path.split('/')
         if not self.path.startswith('./plugins'):
             raise PluginError("Bad path for plugin %s : %s" % (
                 self.name, self.path))
-        mod_name = ''
-        pathbuff = self.path
-        while pathbuff != '.':
-            mod_name = os.path.basename(pathbuff) + '.' + mod_name
-            pathbuff = os.path.dirname(pathbuff)
-        #removing trailing '.' and add leading lodel.
-        return 'lodel.'+mod_name[:-1]
+        return '.'.join(['lodel'] + path_array[path_array.index('plugins'):])
 
     ##@brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
