@@ -5,8 +5,7 @@ lodel2confdir=$(sysconfdir)/lodel2
 
 install-data-hook:
 	mkdir -p ${DESTDIR}$(pluginsdir); cp -R * ${DESTDIR}$(pluginsdir) && rm ${DESTDIR}$(pluginsdir)/Makefile* ;\
-	cd ${DESTDIR}; \
-	mkdir -p $(lodel2confdir); \
+	mkdir -p ${DESTDIR}$(lodel2confdir); \
 	if [ ! -d ${DESTDIR}$(lodel2confdir)/plugins ]; \
     then \
         ln -rs -t ${DESTDIR}$(lodel2confdir) $(pluginsdir); \

@@ -32,7 +32,7 @@ def collections(request):
 def issue(request):
     lodel_id = request.GET['lodel_id']
     return get_response('listing/issue.html', lodel_id=lodel_id[0], my_classes=dyncode )
-    
+
 ##@brief Controller's function to display a type (class) of the editorial model
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
@@ -65,7 +65,7 @@ def show_object(request):
             classname = None
     else:
         raise HttpException(400)
-    
+
     logger.warning('Composed uids broken here')
     uid_field = target_leo.uid_fieldname()[0]
 
@@ -82,7 +82,10 @@ def show_object(request):
     if not test_valid:
         raise HttpException(400)
     else:
-        if not target_leo.is_exist(lodel_id):
+        query_filters = list()
+        query_filters.append((uid_field,'=',lodel_id))
+        obj = target_leo.get(query_filters)
+        if len(obj) == 0:
             raise HttpException(404)
     return get_response('listing/show_object.html', lodel_id=lodel_id, classname=classname)
 
@@ -101,7 +104,7 @@ def show_object_detailled(request):
             classname = None
     else:
         raise HttpException(400)
-    
+
     logger.warning('Composed uids broken here')
     uid_field = target_leo.uid_fieldname()[0]
 
@@ -118,7 +121,10 @@ def show_object_detailled(request):
     if not test_valid:
         raise HttpException(400)
     else:
-        if not target_leo.is_exist(lodel_id):
+        query_filters = list()
+        query_filters.append((uid_field,'=',lodel_id))
+        obj = target_leo.get(query_filters)
+        if len(obj) == 0:
             raise HttpException(404)
 
     return get_response('listing/show_object_detailled.html', lodel_id=lodel_id, classname=classname)
