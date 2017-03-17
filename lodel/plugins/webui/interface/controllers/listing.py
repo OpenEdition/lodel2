@@ -20,13 +20,13 @@ def list_classes(request):
         allclasses = 1
     return get_response('listing/list_classes.html', my_classes=dyncode.dynclasses, allclasses = allclasses)
 
-##@brief Controller's function to list all types (classes) of the editorial model
+##@brief Controller's function to collections
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
 def collections(request):
-    return get_response('listing/collections.html', my_classes=dyncode)
+    return get_response('listing/collections.html', my_classes=dyncode, get_authors=get_authors)
 
-##@brief Controller's function to list all types (classes) of the editorial model
+##@brief Controller's function to display an issue
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
 def issue(request):

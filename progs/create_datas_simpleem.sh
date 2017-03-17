@@ -18,7 +18,7 @@ instance=$2
 N=$4
 HOSTDB=$3
 dbname=lodel2_$instance
-dbuser=admin 
+dbuser=admin
 dbpwd=pass
 curl_options='--silent -o /dev/null -s -w %{url_effective};%{http_code};%{time_connect};%{time_starttransfer};%{time_total}\n'
 
@@ -30,12 +30,12 @@ do
     FN=$(lenmax=20;wcount=1; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     LC=''
     curl -o /dev/null -s -d "field_input_lastname=$LN&field_input_firstname=$FN&field_input_linked_containers=$LC&classname=Person" http://$host/$instance/admin/create?classname=Person
-    
+
     # Classe User
     PWD='pwgen 10'
     LOGIN="${FN,,}$(printf "%d" $RANDOM)"
     curl -o /dev/null -s -d "field_input_lastname=$LN&field_input_firstname=$FN&field_input_password=$PWD&field_input_login=$LOGIN&classname=User" http://$host/$instance/admin/create?classname=User
-    
+
     # Classe Entry, champs à remplir : name, description, role, linked_texts
     ENLT='' #$(printf "use $dbname\nDBQuery.shellBatchSize = 30000\n db.Article.find({}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | shuf | head -n 3; )
     ENROLE=$(shuf -e 'geography' 'subject' 'keywords' | head -n 1)
@@ -62,11 +62,11 @@ do
         fi
     done
     COLLD=$tmp
-    COLT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-    COLST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+    COLT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+    COLST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-    DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-    PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+    DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+    PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     ISSN=$(</dev/urandom tr -dc 0-9 | head -c8;echo;)
     curl $curl_options -d "field_input_title=$COLT&field_input_subtitle=$COLST&field_input_language=$LG&field_input_linked_directors=$COLLD&field_input_description=$DESC&field_input_publisher_note=$PBN&field_input_issn=$ISSN&classname=Collection" http://$host/$instance/admin/create?classname=Collection
     collection=$(printf "use $dbname\n db.Collection.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d";)
@@ -77,7 +77,7 @@ do
         NB=$(shuf -e '25' '30' '35' '40' '45' '50' '55' '60' '65' | head -n 1) # Nombre de textes pour le numéro
         NBR=$(($NB/3)) # Nombre de reviews
         NBA=$(($NBR*2)) # Nombre d'articles
-        
+
         # Classe Issue, champs à remplir : title, subtitle, language, linked_directors, description, publisher_note, isbn, print_isbn, number, cover, print_pub_date, e_pub_date, abstract, collection, linked_parts, linked_texts
         NBLD=$(shuf -e '1' '2' '3' '4' | head -n 1)
         directors=$(printf "use $dbname\n DBQuery.shellBatchSize = 30000\n db.Person.find({}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,4d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" | shuf | head -n $NBLD;)
@@ -92,15 +92,15 @@ do
             fi
         done
         ISSLD=$tmp
-        ISST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-        ISSST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+        ISST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+        ISSST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
         LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-        DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-        PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+        DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+        PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
         ISBN=$(</dev/urandom tr -dc 0-9 | head -c10;echo;)
         PISBN=$(</dev/urandom tr -dc 0-9 | head -c10;echo;)
-        ISSNU=$(lenmax=30;wcount=10; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-        ISSCOV=$(lenmax=100;wcount=15; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+        ISSNU=$(lenmax=30;wcount=10; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+        ISSCOV=$(lenmax=60;wcount=15; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
         M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
         JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28'  | head -n 1)
         AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
@@ -115,7 +115,7 @@ do
         ISSLTXT=''
         curl $curl_options -d "field_input_title=$ISST&field_input_subtitle=$ISSST&field_input_language=$LG&field_input_linked_directors=$ISSLD&field_input_description=$DESC&field_input_publisher_note=$PBN&field_input_isbn=$ISBN&field_input_print_isbn=$PISBN&field_input_number=$ISSNU&field_input_cover=$ISSCOV&field_input_print_pub_date=$PPDATE&field_input_e_pub_date=$EPDATE&field_input_abstract=$ISSAB&field_input_collection=$collection&field_input_linked_parts=$ISSLPA&field_input_linked_texts=$ISSLTXT&classname=Issue" http://$host/$instance/admin/create?classname=Issue
         issue=$(printf "use $dbname\n db.Issue.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" )
-       
+
         # On entre les textes correspondants aux numéros indépendemment des parts
         NBT=$(shuf -e '2' '3' '4' '5' '6' '8' | head -n 1)
         for i in `eval echo {1..$NBT}`;
@@ -231,17 +231,17 @@ do
                 fi
             done
             PALD=$tmp
-            PAT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-            PAST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+            PAT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+            PAST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-            DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-            PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+            DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+            PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
             issue=$(printf "use $dbname\nDBQuery.shellBatchSize = 1000\n db.Issue.find({collection:$collection}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,4d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" | shuf | head -n 1;)
             PALTXT=''
             PALP=''
             curl $curl_options -d "field_input_title=$PAT&field_input_subtitle=$PAST&field_input_language=$LG&field_input_linked_directors=$PALD&field_input_description=$DESC&field_input_publisher_note=$PBN&field_input_publication=$issue&field_input_linked_parts=$PALP&field_input_linked_texts=$PALTXT&classname=Part" http://$host/$instance/admin/create?classname=Part
             part=$(printf "use $dbname\n db.Part.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" )
-       
+
             # On entre les textes correspondants aux  parts
             NBPANBT=$(shuf -e '2' '3' '4' | head -n 1)
             for i in `eval echo {1..$NBPANBT}`;
@@ -357,11 +357,11 @@ do
                         fi
                 done
                 PALD=$tmp
-                PAT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-                PAST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+                PAT=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                PAST=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 LG=$(shuf -e 'fr' 'en' 'es' 'ger' 'it'| head -n 1)
-                DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
-                PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/") 
+                DESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+                PBN=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
                 PALTXT=''
                 PALP=''
                 curl $curl_options -d "field_input_title=$PAT
@@ -371,7 +371,7 @@ do
                 &field_input_description=$DESC&field_input_publisher_note=$PBN&field_input_publication=$part
                 &field_input_linked_parts=$PALP&field_input_linked_texts=$PALTXT&classname=Part" http://$host/$instance/admin/create?classname=Part
                 part=$(printf "use $dbname\n db.Part.find({}, {lodel_id:1, _id:0}).sort({_id:-1}).limit(1)" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | sed "\$d" )
-       
+
                 # On entre les textes correspondants aux numéros indépendemment des parts
                 for i in `eval echo {1..$NBA}`;
                 do
