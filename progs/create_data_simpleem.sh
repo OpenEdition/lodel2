@@ -39,7 +39,7 @@ do
     # Classe Entry, champs à remplir : name, description, role, linked_texts
     ENLT='' #$(printf "use $dbname\nDBQuery.shellBatchSize = 30000\n db.Article.find({}, {lodel_id:1, _id:0})" | mongo  $HOSTDB/admin -u $dbuser -p $dbpwd | sed "1,3d" | sed -e "s/{ \"lodel_id\" : //g" | sed -e "s/ }//g" | shuf | head -n 3; )
     ENROLE=$(shuf -e 'geography' 'subject' 'keywords' | head -n 1)
-    ENTNM=$(lenmax=100;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+    ENTNM=$(lenmax=60;wcount=20; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     ENTDESC=$(lenmax=500;wcount=100; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
     curl $curl_options -d "field_input_linked_texts=$ENLT&field_input_name=$ENTNM&field_input_role=$ENROLE&field_input_description=$ENTDESC&classname=Entry" http://$host/$instance/admin/create?classname=Entry
 done
@@ -100,7 +100,7 @@ do
         ISBN=$(</dev/urandom tr -dc 0-9 | head -c10;echo;)
         PISBN=$(</dev/urandom tr -dc 0-9 | head -c10;echo;)
         ISSNU=$(lenmax=30;wcount=10; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
-        ISSCOV=$(lenmax=100;wcount=15; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
+        ISSCOV=$(lenmax=60;wcount=15; rlenmax=$(expr $lenmax - 1); echo $(shuf /usr/share/dict/words | head -n $wcount | tr -s "\n" " ") | sed -E "s/^(.{$rlenmax}).*$/\1/")
         M=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' | head -n 1)
         JJ=$(shuf -e '01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '28'  | head -n 1)
         AA=$(shuf -e '2012' '2005' '2010' '2015' '2016'| head -n 1)
