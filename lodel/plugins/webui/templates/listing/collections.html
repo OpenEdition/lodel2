@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Lodel 2 - Collections {% endblock %}
-{% block content %} 
+{% block content %}
 {% set collections = my_classes.Collection.get(None) %}
+{% set issues = my_classes.Issue.get(None) %}
 
 <ol class="breadcrumb">
   <li><a href="/{{ root_url }}/">Home</a></li>
@@ -11,11 +12,10 @@
     <ul>
         {% for collection in collections %}
         <h2>{{ collection.data('title') }}</h2>
-        {% set filter = ("%s = %s") % ('collection', collection.uid()) %}
-        {% set issues = my_classes.Issue.get((filter)) %}
         <ul>
         {% if issues is not none: %}
             {% for issue in issues %}
+              {% if issue.data('collection') == collection.uid(): %}
                 <li>
                     <h3><a href="/{{ root_url }}/issue?lodel_id={{ issue.uid() }}"> {{ issue.data('title') }}</a></h3>
                     <h3>{{ issue.data('subtitle') }}</h3>
@@ -23,9 +23,10 @@
                     {% set authors = my_classes.Person.get(("%s in (%s)") % ("lodel_id", author_ids|join(','))) %}
                     <p>Authors : {% for author in authors %} {{ author.data('firstname')}} {{ author.data('lastname')}} ; {% endfor %} </p>
                 </li>
+              {% endif %}
             {% endfor %}
         {% endif %}
         </ul>
         {% endfor %}
      <ul>
-{% endblock %} 
+{% endblock %}
