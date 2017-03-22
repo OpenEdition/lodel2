@@ -1,6 +1,7 @@
 import os
 import os.path
 
+
 ##@brief basename of multisite process conf folder
 #@todo find a better place to declare it
 SERVER_CONFD = 'server_conf.d' #Should be accessible elsewhere
@@ -36,7 +37,7 @@ import lodel.buildconf
 #@todo use the dyncode getter when it will be available (replaced by
 #the string SUPERDYNCODE_ACCESSOR.Lodelsite for the moment)
 def main():
-    #Set current context to reserved loader context
+    """
     LodelContext.set(None)
     LodelContext.expose_modules(globals(), {
         'lodel.logger': 'logger',
@@ -55,24 +56,32 @@ find the %s folder' % SERVER_CONFD)
     settings(CONFDIR, multisite_confspecs.LODEL2_CONFSPECS)
     #Loading settings
     del(globals()['settings']) #useless but may be safer
-    #Exposing "real" settings object in loader context
+    """
+    #Set current context to reserved loader context
+    from lodel import bootstrap
+    bootstrap.bootstrap('__loader__')
     LodelContext.expose_modules(globals(), {
         'lodel.settings': ['Settings']})
-    #Fetching lodelsites informations
-    lodelsites_name = Settings.lodelsites.name
-    #Following path construction is kind of dirty ! We should be able
-    #to assume that the lodelsites_datapath == os.getcwd()....
-    lodelsites_datapath = os.path.join(
-        lodel.buildconf.LODEL2VARDIR, lodelsites_name)
-    #loading lodelsites site
-    print("DATAPATH : ", lodelsites_datapath)
-    site_load(lodelsites_datapath, LODELSITES_CONFD)
-
-    #Fetching handled sites list 
-    #WARNING ! Here we assert that context name == basename(lodelsites_datapath)
+    lodelsites_name = Settings.sitename
+    del(globals()['Settings'])
+    
+    #bootstraping the lodelsites instance
+    LodelContext.new(lodelsites_name)
     LodelContext.set(lodelsites_name)
     #in lodelsites context
-    Lodelsite_leo = SUPERDYNCODE_ACCESSOR.Lodelsite #hardcoded leo name
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings.settings': [('Settings', 'settings_loader')],
+        'lodel.plugins.multisite.confspecs': 'multisite_confspecs',
+        'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
+
+    settings_loader(lodel.buildconf.LODELSITE_CONFDIR,
+        multisite_confspecs.LODEL2_CONFSPECS, True)
+    del(globals()['settings_loader'])
+    LodelContext.expose_modules(globals(), {
+        'lodel.settings': ['Settings']})
+
+    LodelContext.expose_dyncode(globals())
+    lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
     })
@@ -104,6 +113,8 @@ find the %s folder' % SERVER_CONFD)
 #lodelsites instance
 #@param data_path str : path to the datas directory (containing the confdir)
 #@param confdir_basename str : the basename of the site confdir
+#@param lodelsites_instance bool : if true we are loading the lodelsites
+#instance of the multisite (allow to load the good confspecs)
 #
 #@todo For now the interface plugin name for sites is hardcoded (set to
 #webui). It HAS TO be loaded from settings. But it is a bit complicated, 
@@ -114,7 +125,7 @@ find the %s folder' % SERVER_CONFD)
 #@todo there is a quick & dirty workarround with comments saying that it
 #avoid context escape via hooks. We have to understand why and how and then
 #replace the workarround by a real solution !
-def site_load(data_path, confdir_basename = 'conf.d'):
+def site_load(data_path, confdir_basename = 'conf.d', lodelsites_instance = False):
     #args check
     if confdir_basename != os.path.basename(confdir_basename):
         LodelFatalError('Bad argument given to site_load(). This really \
@@ -130,7 +141,6 @@ sux !')
     #Loading settings for current site
     LodelContext.expose_modules(globals(), {
         'lodel.settings.settings': [('Settings', 'settings_preloader')]})
-    print(settings_preloader)
     if settings_preloader.started():
         msg = 'Settings seems to be allready started for "%s". \
 This should not append !' % ctx_name
@@ -138,7 +148,10 @@ This should not append !' % ctx_name
         LodelContext.set(None)
         logger.critical(msg)
         raise LodelFatalError(msg)
-    settings_preloader(os.path.join('./', confdir_basename))
+    if lodelsites_instance:
+        settings_preloader(os.path.join('./', confdir_basename), )
+    else:
+        settings_preloader(os.path.join('./', confdir_basename))
     #
     #Loading hooks & plugins
     #

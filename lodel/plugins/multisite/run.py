@@ -1,5 +1,6 @@
 import os.path
 
+"""
 try:
     from lodel.context import LodelContext
 except ImportError:
@@ -7,9 +8,9 @@ except ImportError:
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from lodel.context import LodelContext, ContextError
 
-LodelContext.init(LodelContext.MULTISITE)
-
 import lodel.buildconf #safe even outside contexts
+"""
+
 from lodel.plugins.multisite.loader_utils import main, site_load, FAST_APP_EXPOSAL_CACHE
 
 main() #multisite bootstraping

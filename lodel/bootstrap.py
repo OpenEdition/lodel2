@@ -25,7 +25,7 @@ from lodel.context import LodelContext
 #lodelsites.conf.d
 CONFS_DIRNAMES = [
     'conf.d',
-    ('server_conf.d', 'lodelsites.conf.d')]
+    ('server_conf.d', lodel.buildconf.LODELSITE_CONFDIR)]
 
 ##@brief Test if current instance is monosite or multisite
 #@return if monosite return True else False

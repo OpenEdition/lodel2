@@ -311,23 +311,15 @@ class RefreshDyncode(LodelScript):
         parser.add_argument('-m', '--em',
             help='Specify the emfile to use for dyncode generation',
             type=str, default='')
+        parser.add_argument('-o', '--dyncode',
+            help='Specify the filename where the dyncode should be written',
+            type=str, default='')
         return
 
     ##@todo think of a better method to determine if we are in mono or
     #multisite instance
     @classmethod
     def run(cls, args):
-        """
-        #
-        # Dirty hack for instance type detection
-        #
-        ctx_type = LodelContext.MULTISITE
-        CONFDIR = os.path.join(os.getcwd(), 'lodelsites.conf.d')
-        if os.path.isdir('./conf.d'):
-            print("MONOSITE DETECTED")
-            ctx_type = LodelContext.MONOSITE
-            CONFDIR = os.path.join(os.getcwd(), 'conf.d')
-        """
         LodelContext.expose_modules(globals(), {
             'lodel.settings': ['Settings'],
             'lodel.editorial_model.model': ['EditorialModel'],
@@ -340,7 +332,10 @@ class RefreshDyncode(LodelScript):
         #Model loaded
         model = EditorialModel.load(em_translator, filename = model_file)
         #Creating dyncode
-        dyncode_file = Settings.editorialmodel.dyncode
+        dyncode_file = args.dyncode
+        if len(args.dyncode.strip()) == 0:
+            #using dyncode filename from conf
+            dyncode_file = Settings.editorialmodel.dyncode
         dyncode_content = lefactory.dyncode_from_em(model)
         with open(dyncode_file, 'w+') as dfp:
             dfp.write(dyncode_content)
