@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
-
-## @brief This module handles the file storage of an editorial model
+##@package lodel.editorial_model.translator.picklefile
+# This module handles the file storage of an editorial model
 
 import pickle
 from pickle import Pickler
