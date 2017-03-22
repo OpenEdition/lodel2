@@ -2,7 +2,7 @@
 #
 #The authentication mechanism is divided in multiple pieces :
 #- The client ( @ref lodel.auth.auth.Client ) singleton class that stores
-# clients' informations
+# and uses the clients' informations
 #- The session handler, implemented as a plugin
 #
 #@par Client class
