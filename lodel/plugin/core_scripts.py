@@ -330,7 +330,8 @@ class RefreshDyncode(LodelScript):
         """
         LodelContext.expose_modules(globals(), {
             'lodel.settings': ['Settings'],
-            'lodel.editorial_model.model': ['EditorialModel']})
+            'lodel.editorial_model.model': ['EditorialModel'],
+            'lodel.leapi.lefactory': 'lefactory'})
         em_translator = Settings.editorialmodel.emtranslator
         model_file = args.em
         if len(args.em.strip()) == 0:
@@ -339,8 +340,8 @@ class RefreshDyncode(LodelScript):
         #Model loaded
         model = EditorialModel.load(em_translator, filename = model_file)
         #Creating dyncode
-        dyncode_file = Settings.editorial_model.dyncode
-        dyncode_content = lefactory.dyncode_from(model)
+        dyncode_file = Settings.editorialmodel.dyncode
+        dyncode_content = lefactory.dyncode_from_em(model)
         with open(dyncode_file, 'w+') as dfp:
             dfp.write(dyncode_content)
         print("Dyncode written in %s from em %s" % (dyncode_file, model_file))
