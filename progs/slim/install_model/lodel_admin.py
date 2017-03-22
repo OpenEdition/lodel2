@@ -145,7 +145,9 @@ if __name__ == '__main__':
         bootstrap.bootstrap('lodelsites')
     else:
         bootstrap.bootstrap()
-    #import loader
-    #loader.start()
-    from lodel.plugin.scripts import main_run
+    from lodel.context import LodelContext
+    #from lodel.plugin.scripts import main_run
+    LodelContext.expose_modules(globals(),
+        {'lodel.plugin.scripts': ['main_run'],
+         'lodel.plugin.core_scripts': 'core_scripts'})
     main_run()

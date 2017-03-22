@@ -4,7 +4,7 @@ import tempfile
 import os, os.path
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.plugin.scripts': 'lodel_script',
+    'lodel.plugin.scripts': ['LodelScript'],
     'lodel.logger': 'logger'})
 
 ##@package lodel.plugin.core_scripts
@@ -17,7 +17,7 @@ LodelContext.expose_modules(globals(), {
 #@ingroup lodel2_plugins
 #@ingroup lodel2_script
 #
-class ListPlugins(lodel_script.LodelScript):
+class ListPlugins(LodelScript):
     _action = 'plugins-list'
     _description = "List all installed plugins"
 
@@ -72,7 +72,7 @@ class ListPlugins(lodel_script.LodelScript):
 
 
 ##@brief Handle install & uninstall of lodel plugins
-class PluginManager(lodel_script.LodelScript):
+class PluginManager(LodelScript):
     _action = 'plugins'
     _description = "Install/Uninstall plugins"
 
@@ -276,7 +276,7 @@ oprtions. Use -d --directory instead")
 ##@brief Implements lodel_admin.py **hooks-list** action
 #@ingroup lodel2_script
 #@ingroup lodel2_hooks
-class ListHooks(lodel_script.LodelScript):
+class ListHooks(LodelScript):
     _action = 'hooks-list'
     _description = 'Generate a list of registered hooks once instance started'
 
@@ -302,7 +302,7 @@ class ListHooks(lodel_script.LodelScript):
             print("\n")
 
 
-class RefreshDyncode(lodel_script.LodelScript):
+class RefreshDyncode(LodelScript):
     _action = 'dyncode'
     _description = 'Update the dynamic code according to EM and conf'
 
@@ -317,6 +317,7 @@ class RefreshDyncode(lodel_script.LodelScript):
     #multisite instance
     @classmethod
     def run(cls, args):
+        """
         #
         # Dirty hack for instance type detection
         #
@@ -326,24 +327,17 @@ class RefreshDyncode(lodel_script.LodelScript):
             print("MONOSITE DETECTED")
             ctx_type = LodelContext.MONOSITE
             CONFDIR = os.path.join(os.getcwd(), 'conf.d')
-    
-        #Bootstraping
-        from lodel.context import LodelContext
-        LodelContext.init()
-        from lodel.settings.settings import Settings as settings_loader
-        settings_loader(CONFDIR)
-        from lodel.settings import Settings
-
-        from lodel.editorial_model.model import EditorialModel
-        from lodel.leapi import lefactory
-
-        em_translator = Settings.editorial_model.emtranslator
+        """
+        LodelContext.expose_modules(globals(), {
+            'lodel.settings': ['Settings'],
+            'lodel.editorial_model.model': ['EditorialModel']})
+        em_translator = Settings.editorialmodel.emtranslator
         model_file = args.em
         if len(args.em.strip()) == 0:
             #using the default em_file
-            model_file = Settings.editorial_model.emfile
+            model_file = Settings.editorialmodel.emfile
         #Model loaded
-        model = EditorialModel.load(translator, filename = model_file)
+        model = EditorialModel.load(em_translator, filename = model_file)
         #Creating dyncode
         dyncode_file = Settings.editorial_model.dyncode
         dyncode_content = lefactory.dyncode_from(model)
