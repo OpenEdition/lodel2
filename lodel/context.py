@@ -48,7 +48,7 @@ class ContextModuleError(ContextError):
 
 def dir_for_context(site_identifier):
     _, ctx_path = LodelContext.lodelsites_paths()
-    return os.path.join(ctx_path, site_identifier)
+    return os.path.join(os.path.join(ctx_path, site_identifier))
     
 
 ##@brief Designed to permit dynamic packages creation from the lodel package
@@ -86,7 +86,15 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
             #creating a symlink to represent the lodel site package
             mod_path = dir_for_context(site_identifier)
             if not os.path.exists(mod_path):
-                os.symlink(lodel.__path__[0], mod_path, True)
+                os.mkdir(mod_path)
+                fd = open(os.path.join(mod_path, '__init__.py'), 'w+')
+                fd.close()
+                #create a symlink to plugins pkg
+                os.symlink(os.path.join(lodel.__path__[0],'plugins'),
+                    os.path.join(lodel_pkg_path, 'plugins'), True)
+            lodel_pkg_path = os.path.join(mod_path, 'lodel')
+            if not os.path.exists(lodel_pkg_path):
+                os.symlink(lodel.__path__[0], lodel_pkg_path, True)
             #Cache invalidation after we "created" the new package
             #importlib.invalidate_caches()
         return None
@@ -528,11 +536,10 @@ MONOSITE mode")
     #@param module_fullname str : a module fullname
     #@return The module name in the current context
     def _translate(self, module_fullname):
+    	#This test should be obsolete now
         if module_fullname.startswith('lodel'):
-            return self.__pkg_name + module_fullname[5:]
-        if module_fullname.startswith('leapi_dyncode'):
             if self.multisite():
-                return self.__pkg_name+'.'+module_fullname
+                return self.__pkg_name +'.'+ module_fullname
             else:
                 return module_fullname
         raise ContextModuleError("Given module is not lodel nor dyncode \
