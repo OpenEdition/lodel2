@@ -72,7 +72,7 @@ done
 ln -vs $libdir/plugins $instance_dir/plugins
 
 #Dirty again :/
-ln -vs $libir/plugins/multisite/loader.py $instance_dir/
+ln -vs $libdir/plugins/multisite/loader.py $instance_dir/
 
 mkdir -pv "$lodelsites_ctx_dir"
 mkdir -pv "$lodelsites_data_dir"
