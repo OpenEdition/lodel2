@@ -4,7 +4,6 @@ LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
 LodelContext.expose_dyncode(globals(), 'dyncode')
 
 from .base import get_response
-from .utils import *
 from ...exceptions import *
 
 ##@brief These functions are called by the rules defined in ../urls.py

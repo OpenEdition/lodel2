@@ -531,7 +531,10 @@ MONOSITE mode")
         if module_fullname.startswith('lodel'):
             return self.__pkg_name + module_fullname[5:]
         if module_fullname.startswith('leapi_dyncode'):
-            return self.__pkg_name+'.'+module_fullname
+            if self.multisite():
+                return self.__pkg_name+'.'+module_fullname
+            else:
+                return module_fullname
         raise ContextModuleError("Given module is not lodel nor dyncode \
 or any submodule : '%s'" % module_fullname)
 

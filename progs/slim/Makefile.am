@@ -16,6 +16,7 @@ install_model__DATA = 	install_model/loader.py \
 
 multisite_install_model_dir = $(lodel2datadir)/multisite_install_model
 multisite_install_model__DATA = multisite_install_model/Makefile \
+                                install_model/lodel_admin.py \
 				multisite_install_model/sites_em.pickle \
 				multisite_install_model/editorial_model.pickle 
 
