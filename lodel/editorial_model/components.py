@@ -52,6 +52,27 @@ class EmComponent(MlNamedObject):
             m.update(bytes(data, 'utf-8'))
         return int.from_bytes(m.digest(), byteorder='big')
 
+    ##@brief Type test method
+    #@return bool
+    #@note Those methodes are implemented because we use picklefile to store
+    #EM -> the classes that are stored are not the same than the one loaded
+    #by LodelContext : lodel.editorial_model.components.EmClass !=
+    #lodelsites.INSTANCE_NAME.editorial_model.components.EmClass
+    @classmethod
+    def is_emclass(cls):
+        return False
+
+    ##@brief Type test method
+    #@return bool
+    @classmethod
+    def is_emgroup(cls):
+        return False
+
+    ##@brief Type test method
+    #@return bool
+    @classmethod
+    def is_emfield(cls):
+        return False
 
 # @brief Handles editorial model objects classes
 #@ingroup lodel2_em
@@ -114,6 +135,11 @@ class EmClass(EmComponent):
                 data_handler='LeobjectSubclassIdentifier',
                 internal=True,
                 group=group)
+    
+    ##@todo delete me when support for pickle translator is dropped
+    @classmethod
+    def is_emclass(cls):
+        return True
 
     # @brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
     # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
@@ -248,6 +274,11 @@ class EmField(EmComponent):
         else:
             group.add_components([self])
 
+    ##@todo delete me when support for pickle translator is dropped
+    @classmethod
+    def is_emfield(cls):
+        return True
+
     # @brief Returns data_handler_name attribute
     def get_data_handler_name(self):
         return copy.copy(self.data_handler_name)
@@ -298,6 +329,11 @@ class EmGroup(MlNamedObject):
                 if not isinstance(grp, EmGroup):
                     raise ValueError("EmGroup expected in depends argument but %s found" % grp)
                 self.add_dependencie(grp)
+
+    ##@todo delete me when support for pickle translator is dropped
+    @classmethod
+    def is_emgroup(cls):
+        return True
 
     # @brief Returns EmGroup dependencie
     # @param recursive bool : if True return all dependencies and their dependencies
