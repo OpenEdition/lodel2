@@ -82,17 +82,25 @@ class Settings(object, metaclass=MetaSettings):
     #  @brief Stores the singleton instance
     instance = None
 
-    #  @brief Instanciate the Settings singleton
-    # @param conf_dir str : The configuration directory
+    ##@brief Instanciate the Settings singleton
+    #@param conf_dir str : The configuration directory
     #@param custom_confspecs None | dict : if given overwrite default lodel2
     # confspecs
-    def __init__(self, conf_dir, custom_confspecs=None):
+    #@param append bool : if true do not replace LODEL2CONFSPECS by
+    #custom_confspecs, append them instead
+    #
+    #@todo append param and __custom_specs_append attributes are quick
+    #workarounds in order to be able to specialise LODEL2_CONF_SPECS for a 
+    #multisite lodelsite. This should be done using the standard confspecs
+    #mechanism available using plugins
+    def __init__(self, conf_dir, custom_confspecs=None, append = False):
         self.singleton_assert()  # check that it is the only instance
         Settings.instance = self
         #  @brief Configuration specification
         #
         # Initialized by Settings.__bootstrap() method
-        self.__conf_specs = custom_confspecs
+        self.__conf_specs = custom_confspecs if not append else None
+        self.__conf_specs_append = custom_confspecs if append else None
         #  @brief Stores the configurations in namedtuple tree
         self.__confs = None
         self.__conf_dir = conf_dir
@@ -181,6 +189,8 @@ class Settings(object, metaclass=MetaSettings):
         Plugin.start(plugin_list)
         # Fetching conf specs from plugins
         specs = [lodel2_specs]
+        if self.__conf_specs_append is not None:
+            specs.append(self.__conf_specs_append)
         errors = list()
         for plugin_name in plugin_list:
             try:

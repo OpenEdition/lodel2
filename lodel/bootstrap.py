@@ -20,6 +20,9 @@ from lodel.context import LodelContext
 #First item is for monosite the second for multisite
 #First item for multisite is server conf the second the lodelsites instance
 #conf
+#
+#@note obsolete ! We are preparing a merge of server_conf.d and 
+#lodelsites.conf.d
 CONFS_DIRNAMES = [
     'conf.d',
     ('server_conf.d', 'lodelsites.conf.d')]
@@ -42,12 +45,14 @@ def _context_initialisation():
 def _get_confdir(ctx_type):
     if _monosite_test():
         return CONFS_DIRNAMES[0]
-    elif ctx_type == '__loader__':
-        return CONFS_DIRNAMES[1][0]
-    elif ctx_type == 'lodelsites':
-        return CONFS_DIRNAMES[1][1]
-    raise ValueError("ctx_type is not one of '__loader__' nor 'lodelsites' \
-authorized values")
+    return CONFS_DIRNAMES[1][1]
+
+    #elif ctx_type == '__loader__':
+    #    return CONFS_DIRNAMES[1][0]
+    #elif ctx_type == 'lodelsites':
+    #    return CONFS_DIRNAMES[1][1]
+    #raise ValueError("ctx_type is not one of '__loader__' nor 'lodelsites' \
+    #authorized values")
 
 ##@brief Return confspec associated with current context & context type
 #@param ctx_type str 
@@ -90,8 +95,11 @@ MONOSITE instance")
         'lodel.settings.settings': [('Settings', 'settings_loader')],
         'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
     
-    settings_loader(confdir, custom_confspecs)
-    del(globals()['settings'])
+    if ctx_type is not None:
+        settings_loader(confdir, custom_confspecs, True) #Append specs
+    else:
+        settings_loader(confdir, custom_confspecs)
+    del(globals()['settings_loader'])
 
     LodelContext.expose_modules(globals(), {
         'lodel.settings': ['Settings']})

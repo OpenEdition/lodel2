@@ -405,7 +405,7 @@ Validator.register_validator(
 #   Lodel 2 configuration specification
 #
 
-# @brief Append a piece of confspec
+##@brief Append a piece of confspec
 #@note orig is modified during the process
 #@param orig dict : the confspec to update
 #@param section str : section name
@@ -413,8 +413,6 @@ Validator.register_validator(
 #@param validator Validator : the validator to use to check this configuration key's value
 #@param default
 #@return new confspec
-
-
 def confspec_append(orig, section, key, validator, default):
     if section not in orig:
         orig[section] = dict()

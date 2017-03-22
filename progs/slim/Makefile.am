@@ -22,8 +22,6 @@ multisite_install_model__DATA = multisite_install_model/Makefile \
 
 multisite_lodelsites_conf_dir = $(multisite_install_model_dir)/lodelsites.conf.d
 multisite_lodelsites_conf__DATA = multisite_install_model/lodelsites.conf.d/lodel2.ini
-multisite_server_conf_dir = $(multisite_install_model_dir)/server_conf.d
-multisite_server_conf__DATA = multisite_install_model/server_conf.d/lodel2.ini
 
 
 slim_conf_model_dir = $(install_model_dir)/conf.d/
