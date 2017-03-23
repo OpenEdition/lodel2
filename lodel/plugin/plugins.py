@@ -64,7 +64,14 @@ PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ##@brief Name of the optionnal activate method
 ACTIVATE_METHOD_NAME = '_activate'
 ##@brief Default & failover value for plugins path list
-PLUGINS_PATH = os.path.join(LodelContext.context_dir(),'plugins')
+if LodelContext.multisite():
+    #When in multisite mode we fetch plugins list from context dir in the
+    #lodel pkg symlink
+    PLUGINS_PATH = os.path.join(LodelContext.context_dir(),'lodel/plugins')
+else:
+    #When in monosite mode, for the moment, the plugins list is fetched from
+    #a symlink in the instance dir
+    PLUGINS_PATH = os.path.join(LodelContext.context_dir(),'plugins')
 
 ##@brief List storing the mandatory variables expected in a plugin __init__.py
 #file

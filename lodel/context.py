@@ -89,9 +89,6 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
                 os.mkdir(mod_path)
                 fd = open(os.path.join(mod_path, '__init__.py'), 'w+')
                 fd.close()
-                #create a symlink to plugins pkg
-                os.symlink(os.path.join(lodel.__path__[0],'plugins'),
-                    os.path.join(lodel_pkg_path, 'plugins'), True)
             lodel_pkg_path = os.path.join(mod_path, 'lodel')
             if not os.path.exists(lodel_pkg_path):
                 os.symlink(lodel.__path__[0], lodel_pkg_path, True)
@@ -537,7 +534,8 @@ MONOSITE mode")
     #@return The module name in the current context
     def _translate(self, module_fullname):
     	#This test should be obsolete now
-        if module_fullname.startswith('lodel'):
+        if module_fullname.startswith('lodel') or \
+                module_fullname.startswith('leapi_dyncode'):
             if self.multisite():
                 return self.__pkg_name +'.'+ module_fullname
             else:
