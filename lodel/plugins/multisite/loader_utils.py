@@ -37,26 +37,6 @@ import lodel.buildconf
 #@todo use the dyncode getter when it will be available (replaced by
 #the string SUPERDYNCODE_ACCESSOR.Lodelsite for the moment)
 def main():
-    """
-    LodelContext.set(None)
-    LodelContext.expose_modules(globals(), {
-        'lodel.logger': 'logger',
-        'lodel.exceptions': ['LodelFatalError'],
-    })
-    
-    CONFDIR = os.path.join(os.getcwd(), SERVER_CONFD)
-    if not os.path.isdir(CONFDIR):
-        logger.critical('Multisite process bootstraping fails : unable to \
-find the %s folder' % SERVER_CONFD)
-    
-    #Settings bootstraping for mutlisite process
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings.settings': [('Settings', 'settings')],
-        'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
-    settings(CONFDIR, multisite_confspecs.LODEL2_CONFSPECS)
-    #Loading settings
-    del(globals()['settings']) #useless but may be safer
-    """
     #Set current context to reserved loader context
     from lodel import bootstrap
     bootstrap.bootstrap('__loader__')
@@ -81,6 +61,15 @@ find the %s folder' % SERVER_CONFD)
         'lodel.settings': ['Settings']})
 
     LodelContext.expose_dyncode(globals())
+
+    LodelContext.expose_modules(globals(), {
+        'lodel.logger': 'logger',
+        'lodel.plugin.hooks': ['LodelHook'],
+        'lodel.plugin': ['Plugin']})
+    Plugin.load_all()
+    LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+
+
     lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
@@ -88,16 +77,21 @@ find the %s folder' % SERVER_CONFD)
     #the line bellow you will find another harcoded thing : the shortname
     #fieldname for a lodelsite
     handled_sites = LeGetQuery(lodelsite_leo, query_filters = [],
-        field_list = ['shortname'])
+        field_list = ['shortname']).execute()
     #Now that we have the handled sitenames list we can go back to
     #loader context and clean it
+    if handled_sites is not None:
+        LodelContext.set(None)
+        for mname in ['LeGetQuery', 'Settings', 'LodelHook', 'Plugin', 'logger']:
+            del(globals()[mname])
+        #Loading handled sites
+        for handled_sitename in [s['shortname'] for s in handled_sites]:
+            datapath = os.path.join(lodelsites_datapath, handled_sitename)
+            site_load(datapath) #using default conf.d configuration dirname
+    else:
+        logger.warning("No handled sites !")
     LodelContext.set(None)
-    for mname in ['LeGetQuery', 'Settings']:
-        del(globals()[mname])
-    #Loading handled sites
-    for handled_sitename in [s['shortname'] for s in handled_sites]:
-        datapath = os.path.join(lodelsites_datapath, handled_sitename)
-        site_load(datapath) #using default conf.d configuration dirname
+        
     
 
 ##@brief Load a site

@@ -275,7 +275,7 @@ class LeObject(object):
         if cls._ro_datasource is None:
             log_msg = "No read only datasource set for LeObject %s"
             log_msg %= cls.__name__
-            logger.debug(log_msg)
+            logger.error(log_msg)
         else:
             log_msg = "Read only datasource '%s' initialized for LeObject %s"
             log_msg %= (ro_ds, cls.__name__)
@@ -285,7 +285,7 @@ class LeObject(object):
         if cls._ro_datasource is None:
             log_msg = "No read/write datasource set for LeObject %s"
             log_msg %= cls.__name__
-            logger.debug(log_msg)
+            logger.error(log_msg)
         else:
             log_msg = "Read/write datasource '%s' initialized for LeObject %s"
             log_msg %= (ro_ds, cls.__name__)
