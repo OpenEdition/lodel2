@@ -4,10 +4,13 @@
 # This module contains the specific exceptions related to the EditorialModel Management.
 
 
+## @brief Raises an Editorial Model specific exception.
 class EditorialModelError(Exception):
     pass
 
 
+## @brief Tries to import the settings module.
+# @raise EditorialModelError
 def assert_edit():
     try:
         from lodel import Settings
