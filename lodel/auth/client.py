@@ -11,243 +11,251 @@ LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.plugin': [('SessionHandlerPlugin', 'SessionHandler')],
     'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
-        'ClientPermissionDenied', 'ClientAuthenticationError'],
-    'lodel.leapi.query': ['LeGetQuery'],})
+                              'ClientPermissionDenied', 'ClientAuthenticationError'],
+    'lodel.leapi.query': ['LeGetQuery'], })
 
-##@brief Client metaclass designed to implements container accessor on 
-#Client Class
+# @brief Client metaclass designed to implements container accessor on
+# Client Class
 #
 #@todo Maybe we can delete this metaclass....
+
+
 class ClientMetaclass(type):
-    
+
     def __init__(self, name, bases, attrs):
         return super(ClientMetaclass, self).__init__(name, bases, attrs)
 
     def __getitem__(self, key):
-        return self.datas()[key]
+        return self.data()[key]
 
     def __delitem__(self, key):
-        del(self.datas()[key])
+        del(self.data()[key])
 
     def __setitem__(self, key, value):
         if self.get_session_token() is None:
             self.set_session_token(SessionHandler.start())
-        datas = self.datas()
-        datas[key] = value
+        data = self.data()
+        data[key] = value
 
     def __str__(self):
         return str(self._instance)
 
-##@brief Abstract singleton class designed to handle client informations
+# @brief Abstract singleton class designed to handle client informations
 #
 # This class is designed to handle client authentication and sessions
-class Client(object, metaclass = ClientMetaclass):
-    
-    ##@brief Singleton instance
+
+
+class Client(object, metaclass=ClientMetaclass):
+
+    # @brief Singleton instance
     _instance = None
-    ##@brief List of dict that stores field ref for login and password
+    # @brief List of dict that stores field ref for login and password
     #
-    # Storage specs : 
+    # Storage specs :
     #
     # A list of dict, with keys 'login' and 'password', items are tuple.
-    #- login tuple contains (LeObjectChild, FieldName, link_field) with:
+    # - login tuple contains (LeObjectChild, FieldName, link_field) with:
     # - LeObjectChild the dynclass containing the login
     # - Fieldname the fieldname of LeObjectChild containing the login
     # - link_field None if both login and password are in the same
     # LeObjectChild. Else contains the field that make the link between
     # login LeObject and password LeObject
-    #- password typle contains (LeObjectChild, FieldName)
+    # - password typle contains (LeObjectChild, FieldName)
     _infos_fields = None
-    
-    ##@brief Constant that stores the session key that stores authentication
-    #informations
-    _AUTH_DATANAME = '__auth_user_infos'
-    
 
-    ##@brief Constructor
+    # @brief Constant that stores the session key that stores authentication
+    # informations
+    _AUTH_DATANAME = '__auth_user_infos'
+
+    # @brief Constructor
     #@param session_token mixed : Session token provided by client to interface
-    def __init__(self,session_token = None):
+    def __init__(self, session_token=None):
         logger.debug(session_token)
         if self.__class__ == Client:
             raise NotImplementedError("Abstract class")
         logger.debug("New instance of Client child class %s" %
-            self.__class__.__name__)
+                     self.__class__.__name__)
         if Client._instance is not None:
             old = Client._instance
             Client._instance = None
             del(old)
             logger.debug("Replacing old Client instance by a new one")
         else:
-            #first instanciation, fetching settings
+            # first instanciation, fetching settings
             self.fetch_settings()
-        ##@brief Stores infos for authenticated users (None == anonymous)
+        # @brief Stores infos for authenticated users (None == anonymous)
         self.__user = None
-        ##@brief Stores the session handler
+        # @brief Stores the session handler
         Client._instance = self
-        ##@brief Stores LodelSession instance
-        
-        self.__datas = dict()
+        # @brief Stores LodelSession instance
+        self.__data = dict()
         if session_token is not None:
-            self.__datas = SessionHandler.restore(session_token)
+            self.__data = SessionHandler.restore(session_token)
         self.__session_token = session_token
-        
+
         logger.debug("New client : %s" % self)
-    
+
     def __del__(self):
         del(self.__session_token)
-        del(self.__datas)
+        del(self.__data)
+    # @brief Returns session
+    #@ returns the dict which stores session
 
     @classmethod
-    def datas(cls):
-        return cls._instance.__datas
-    
+    def data(cls):
+        return cls._instance.__data
+
+    # @brief Returns the user's information contained in the session's data
     @classmethod
     def user(cls):
-        if '__auth_user_infos' in cls._instance.__datas:
-            return cls._instance.__datas['__auth_user_infos']
+        if '__auth_user_infos' in cls._instance.__data:
+            return cls._instance.__data['__auth_user_infos']
         else:
             return None
+
+    # @brief Returns the session's token
     @classmethod
     def get_session_token(cls):
         return cls._instance.__session_token
-    
+
+    # @brief Set the session's token
+    #@param the value of the token
     @classmethod
     def set_session_token(cls, value):
         cls._instance.__session_token = value
-    
-    ##@brief Try to authenticate a user with a login and a password
+
+    # @brief Try to authenticate a user with a login and a password
     #@param login str : provided login
     #@param password str : provided password (hash)
     #@warning brokes composed UID
-    #@note implemets multiple login/password sources (useless ?)
+    #@note implements multiple login/password sources (useless ?)
     #@todo composed UID broken method
     #@todo allow to provide an authentication source
     @classmethod
-    def authenticate(self, login = None, password = None):
-        #Authenticate
+    def authenticate(self, login=None, password=None):
+        # Authenticate
         for infos in self._infos_fields:
             logger.debug(self._infos_fields)
             login_cls = infos['login'][0]
             pass_cls = infos['password'][0]
             qfilter = "{passfname} = {passhash}"
-            uid_fname = login_cls.uid_fieldname()[0] #COMPOSED UID BROKEN
+            uid_fname = login_cls.uid_fieldname()[0]  # COMPOSED UID BROKEN
             if login_cls == pass_cls:
-                #Same EmClass for login & pass
+                # Same EmClass for login & pass
                 qfilter = qfilter.format(
-                    passfname = infos['password'][1],
-                    passhash = password)
+                    passfname=infos['password'][1],
+                    passhash=password)
             else:
-                #Different EmClass, building a relational filter
+                # Different EmClass, building a relational filter
                 passfname = "%s.%s" % (infos['login'][2], infos['password'][1])
                 qfilter = qfilter.format(
-                    passfname = passfname,
-                    passhash = password)
+                    passfname=passfname,
+                    passhash=password)
             getq = LeGetQuery(infos['login'][0], qfilter,
-                field_list = [uid_fname], limit = 1)
+                              field_list=[uid_fname], limit=1)
             req = getq.execute()
             if len(req) == 1:
-                self.__set_authenticated(infos['login'][0],req[0][uid_fname])
+                self.__set_authenticated(infos['login'][0], req[0][uid_fname])
                 break
         if self.is_anonymous():
-            self.authentication_failure() #Security logging
-    
-    ##@brief Attempt to restore a session given a session token
+            self.authentication_failure()  # Security logging
+
+    # @brief Attempt to restore a session given a session token
     #@param token mixed : a session token
-    #@return Session datas (a dict)
+    #@return Session data (a dict)
     #@throw ClientAuthenticationFailure if token is not valid or not
-    #existing
+    # existing
     @classmethod
     def restore_session(cls, token):
         cls._assert_instance()
         if cls._instance.__session_token is not None:
             raise ClientAuthenticationError("Trying to restore a session, but \
-a session is allready started !!!")
+a session is already started !!!")
         try:
-            cls._instance.__datas = SessionHandler.restore(token)
+            cls._instance.__data = SessionHandler.restore(token)
             cls._instance.__session_token = token
         except ClientAuthenticationFailure:
-            logger.warning("Session restoring fails")
-        return copy.copy(cls._instance.datas)
-    
-    ##@brief Return the current session token or None
+            logger.warning("Session restoring failed")
+        return copy.copy(cls._instance.data)
+
+    # @brief Returns the current session token or None
     #@return A session token or None
     @classmethod
     def session_token(cls):
         cls._assert_instance()
         return cls._instance.__session_token
 
-   
-    ##@brief Delete current session
+    # @brief Deletes current session
     @classmethod
     def destroy(cls):
         cls._assert_instance()
         SessionHandler.destroy(cls._instance.__session_token)
         cls._instance.__session_token = None
-        cls._instance.__datas = dict()
-    
-    ##@brief Delete current client and save its session
+        cls._instance.__data = dict()
+
+    # @brief Deletes current client and saves its session
     @classmethod
     def clean(cls):
         if cls._instance.__session_token is not None:
-            SessionHandler.save(cls._instance.__session_token, cls._instance.__datas)
+            SessionHandler.save(cls._instance.__session_token, cls._instance.__data)
         if Client._instance is not None:
             del(Client._instance)
         Client._instance = None
-    
-    ##@brief Test wether a client is anonymous or logged in
+
+    # @brief Tests if a client is anonymous or logged in
     #@return True if client is anonymous
     @classmethod
     def is_anonymous(cls):
         return Client._instance.user() is None
-        
-    ##@brief Method to call on authentication failure
+
+    # @brief Method to be called on authentication failure
     #@throw ClientAuthenticationFailure
-    #@throw LodelFatalError if no Client child instance found
+    #@throw LodelFatalError if no Client child instance is found
     @classmethod
     def authentication_failure(cls):
         cls._generic_error(ClientAuthenticationFailure)
-    
-    ##@brief Method to call on authentication error
+
+    # @brief Method to be called on authentication error
     #@throw ClientAuthenticationError
-    #@throw LodelFatalError if no Client child instance found
+    #@throw LodelFatalError if no Client child instance is found
     @classmethod
-    def authentication_error(cls, msg = "Unknow error"):
+    def authentication_error(cls, msg="Unknow error"):
         cls._generic_error(ClientAuthenticationError, msg)
 
-    ##@brief Method to call on permission denied error
+    # @brief Method to be called on permission denied error
     #@throw ClientPermissionDenied
-    #@throw LodelFatalError if no Client child instance found
+    #@throw LodelFatalError if no Client child instance is found
     @classmethod
-    def permission_denied_error(cls, msg = ""):
+    def permission_denied_error(cls, msg=""):
         cls._generic_error(ClientPermissionDenied, msg)
-    
-    ##@brief Generic error method
+
+    # @brief Generic error method
     #@see Client::authentication_failure() Client::authentication_error()
-    #Client::permission_denied_error()
-    #@throw LodelFatalError if no Client child instance found
+    # Client::permission_denied_error()
+    #@throw LodelFatalError if no Client child instance is found
     @classmethod
-    def _generic_error(cls, expt, msg = ""):
+    def _generic_error(cls, expt, msg=""):
         cls._assert_instance()
         raise expt(Client._instance, msg)
-    
-    ##@brief Assert that an instance of Client child class exists
-    #@throw LodelFataError if no instance of Client child class found
+
+    # @brief Asserts that an instance of Client child class exists
+    #@throw LodelFataError if no instance of Client child class is found
     @classmethod
     def _assert_instance(cls):
         if Client._instance is None:
             raise LodelFatalError("No client instance found. Abording.")
 
-    ##@brief Class method that fetches conf
+    # @brief Class method that fetches conf
     #
-    #This method populates Client._infos_fields . This attribute stores
-    #informations on login and password location (LeApi object & field)
+    # This method populates Client._infos_fields . This attribute stores
+    # informations on login and password location (LeApi object & field)
     @classmethod
     def fetch_settings(cls):
         LodelContext.expose_dyncode(globals(), 'dyncode')
         if cls._infos_fields is None:
             cls._infos_fields = list()
         else:
-            #Allready fetched
+            # Already fetched
             return
         infos = (
             Settings.auth.login_classfield,
@@ -266,21 +274,21 @@ a session is allready started !!!")
                 if fdh.is_reference() and res_infos[1][0] in fdh.linked_classes():
                     link_field = fname
             if link_field is None:
-                #Unable to find link between login & password EmClasses
+                # Unable to find link between login & password EmClass
                 raise AuthenticationError("Unable to find a link between \
 login EmClass '%s' and password EmClass '%s'. Abording..." % (
                     res_infos[0][0], res_infos[1][0]))
         res_infos[0] = (res_infos[0][0], res_infos[0][1], link_field)
         cls._infos_fields.append(
-            {'login':res_infos[0], 'password':res_infos[1]})
+            {'login': res_infos[0], 'password': res_infos[1]})
 
-    ##@brief Set a user as authenticated and start a new session
+    # @brief Sets a user as authenticated and starts a new session
     #@param leo LeObject child class : the LeObject the user is stored in
     #@param uid str : uniq id (in leo)
     #@return None
     @classmethod
     def __set_authenticated(cls, leo, uid):
         cls._instance.__user = {'classname': leo.__name__, 'uid': uid, 'leoclass': leo}
-        #Store auth infos in session
-        cls._instance.__datas[cls._instance.__class__._AUTH_DATANAME] = copy.copy(cls._instance.__user)
-
+        # Store auth infos in session
+        cls._instance.__data[cls._instance.__class__._AUTH_DATANAME] = copy.copy(
+            cls._instance.__user)

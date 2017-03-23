@@ -1,3 +1,5 @@
+## @brief Exception classes for datahandlers
+
 class LodelDataHandlerException(Exception):
     pass
 

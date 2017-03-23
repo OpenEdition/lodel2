@@ -105,7 +105,7 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
             [(('alias', {cls: 'firstname'}), '=', 'foo')])
         self.check_nocall(read = False, exclude = ['delete'])
         self.check_nocall(read = True)
-    
+
     @unittest.skip("Waiting references checks stack implementation")
     def test_insert(self):
         """ Testing LeInsertQuery mocking datasource """
@@ -145,8 +145,8 @@ class LeQueryDatasourceTestCase(unittest.TestCase):
         query = LeUpdateQuery(inst)
 
         with self.assertRaises(LeApiQueryError):
-            # Bad call, giving datas while an instance was given to __init__
-            query.execute(datas = {'firstname': 'ooba'})
+            # Bad call, giving data while an instance was given to __init__
+            query.execute(data = {'firstname': 'ooba'})
 
         query.execute()
         self.mockwrite.update.assert_called_once_with(

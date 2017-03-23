@@ -9,12 +9,13 @@ LodelContext.expose_modules(globals(), {
                          'LodelFatalError', 'DataNoneValid',
                          'FieldValidationError']})
 
-
+## @brief Child class of SingleRef. The object referenced must exist
 class Link(SingleRef):
     pass
 
 
 ## @brief Child class of MultipleRef where references are represented in the form of a python list
+# All the objects referenced must exist
 class List(MultipleRef):
 
     ## @brief instanciates a list reference
@@ -97,13 +98,16 @@ class Map(MultipleRef):
 
 ## @brief This Reference class is designed to handler hierarchy with some constraint
 class Hierarch(MultipleRef):
-    
+
     directly_editable = False
 
     ## @brief Instanciate a data handler handling hierarchical relation with constraints
     # @param back_reference tuple : Here it is mandatory to have a back ref (like a parent field)
     # @param max_depth int | None :  limit of depth
     # @param max_childs int | Nine : maximum number of childs by nodes
+    # @param kwargs : 
+    #   - allowed_classes list | None : list of allowed em classes if None no restriction
+    #   - internal bool : if False, the field is not internal
     def __init__(self, back_reference, max_depth=None, max_childs=None, **kwargs):
         super().__init__(back_reference=back_reference,
                          max_depth=max_depth,

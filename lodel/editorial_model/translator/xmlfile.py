@@ -460,7 +460,7 @@ def load_group_xml(model, elem):
         group = model.all_groups_ref(uid.text)
         group.display_name = name
         group.help_text = help_text
-        group.add_dependencie(requires)
+        group.add_dependency(requires)
     else:
         group = EmGroup(uid.text, requires, name, help_text)
 
