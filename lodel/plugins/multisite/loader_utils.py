@@ -36,6 +36,7 @@ import lodel.buildconf
 #@todo get rid of hardcoded stuff (like shortname fieldname)
 #@todo use the dyncode getter when it will be available (replaced by
 #the string SUPERDYNCODE_ACCESSOR.Lodelsite for the moment)
+#@return lodelsites instance name
 def main():
     #Set current context to reserved loader context
     from lodel import bootstrap
@@ -69,7 +70,6 @@ def main():
     Plugin.load_all()
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
 
-
     lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
@@ -91,7 +91,7 @@ def main():
     else:
         logger.warning("No handled sites !")
     LodelContext.set(None)
-        
+    return lodelsites_name
     
 
 ##@brief Load a site
@@ -130,7 +130,6 @@ sux !')
     #Immediately switching to the context
     LodelContext.new(ctx_name)
     LodelContext.set(ctx_name)
-    print(LodelContext.get())
     os.chdir(data_path) #Now the confdir is ./$condir_basename
     #Loading settings for current site
     LodelContext.expose_modules(globals(), {

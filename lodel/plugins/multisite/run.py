@@ -12,8 +12,18 @@ import lodel.buildconf #safe even outside contexts
 """
 
 from lodel.plugins.multisite.loader_utils import main, site_load, FAST_APP_EXPOSAL_CACHE
+from lodel.context import LodelContext
 
-main() #multisite bootstraping
+lodelsites_name = main() #multisite bootstraping
+
+#Switching back to lodelsites context in order to trigger hooks
+LodelContext.set(lodelsites_name)
+LodelContext.expose_modules(globals(), {
+    'lodel.plugin.hooks': ['LodelHook']})
+LodelHook.call_hook('lodel2_loader_main', '__main__', None)
+LodelContext.set(None)
+#If a hook is registered in lodelsites context for lodel2_loader_main
+#this function never returns
 
 import code
 print("""
