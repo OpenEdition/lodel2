@@ -36,7 +36,6 @@ CLASS_ID_FIELDNAME = "classname"
 # @note Wrapped methods are : LeObject.data() & LeObject.set_data()
 class LeObjectValues(object):
 
-    ## @brief Constructs a new LeObjectValues
     # @param fieldnames_callback method
     # @param set_callback method : The LeObject.set_datas() method of corresponding LeObject class
     # @param get_callback method : The LeObject.get_datas() method of corresponding LeObject class
@@ -95,7 +94,6 @@ class LeObject(object):
         self.__set_initialized()
         return self
 
-    ## @brief Constructs an object representing an Editorial component
     # @note Can be considered as EmClass instance
     # @param **kwargs
     # @throw NotImplementedError when the class being instanciated is noted as abstract and then should not be instanciated.
