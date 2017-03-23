@@ -130,7 +130,7 @@ def admin_create(request):
             raise HttpException(400)
         classname = classname[0]
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             classname = None
 
