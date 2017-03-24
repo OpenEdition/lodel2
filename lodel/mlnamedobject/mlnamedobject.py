@@ -4,7 +4,7 @@ from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.utils.mlstring': ['MlString']})
 
-## @package lodel.mlnamedobject Lodel2 description of objects module
+## @package lodel.mlnamedobject.mlnamedobject Lodel2 description of objects module
 #
 # Display name and Description of a lodel2 object
 
