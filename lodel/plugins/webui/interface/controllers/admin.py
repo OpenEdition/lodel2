@@ -7,7 +7,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.leapi.exceptions': [],
     'lodel.logger': 'logger',
     'lodel.leapi.datahandlers.base_classes': ['MultipleRef'],
-    'lodel.leapi.exceptions': ['LeApiDataCheckErrors'],
+    'lodel.leapi.exceptions': ['LeApiDataCheckErrors', 'LeApiError'],
     'lodel.exceptions': ['LodelExceptions']})
 LodelContext.expose_dyncode(globals(), 'dyncode')
 
@@ -43,7 +43,7 @@ def admin_update(request):
     if not(datas is False):
         if 'lodel_id' not in datas:
             raise HttpException(400)
-        target_leo = dyncode.Object.name2class(datas['classname'])
+        target_leo = dyncode.dynclasses[0].name2class(datas['classname'])
         leo = target_leo.get_from_uid(datas['lodel_id'])
         if leo is None:
             raise HttpException(404,
@@ -66,7 +66,7 @@ def admin_update(request):
             raise HttpException(400)
         classname = classname[0]
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             # classname = None
             raise HttpException(400)
@@ -109,7 +109,7 @@ def admin_create(request):
 
     datas = process_form(request)
     if not(datas is False):
-        target_leo = dyncode.Object.name2class(datas['classname'])
+        target_leo = dyncode.dynclasses[0].name2class(datas['classname'])
         if 'lodel_id' in datas:
             raise HttpException(400)
         try:
@@ -158,7 +158,7 @@ def admin_delete(request):
             raise HttpException(400)
         classname = classname[0]
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             # classname = None
             raise HttpException(400)
@@ -227,7 +227,7 @@ def admin_class(request):
             raise HttpException(400)
         classname = classname[0]
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             classname = None
     if classname is None or target_leo.is_abstract():
@@ -246,7 +246,7 @@ def delete_in_class(request):
             raise HttpException(400)
         classname = classname[0]
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             classname = None
     if classname is None or target_leo.is_abstract():
@@ -266,7 +266,7 @@ def search_object(request):
         classname = request.POST['classname']
         searchstring = request.POST['searchstring']
         try:
-            target_leo = dyncode.Object.name2class(classname)
+            target_leo = dyncode.dynclasses[0].name2class(classname)
         except LeApiError:
             raise HttpException(400)
         # TODO The get method must be implemented here
@@ -286,7 +286,7 @@ def process_form(request):
         raise HttpException(400)
     res['classname'] = classname = request.form['classname']
     try:
-        target_leo = dyncode.Object.name2class(classname)
+        target_leo = dyncode.dynclasses[0].name2class(classname)
     except LeApiError:
         logger.error(
             "Received a form with an invalid leo name : '%s'" % classname)

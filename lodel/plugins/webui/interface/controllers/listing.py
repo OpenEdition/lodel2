@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+LodelContext.expose_modules(globals(), {'lodel.logger': 'logger',
+    'lodel.leapi.exceptions': ['LeApiError']})
 LodelContext.expose_dyncode(globals(), 'dyncode')
 
 from .base import get_response
