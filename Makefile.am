@@ -75,6 +75,6 @@ distclean-local:
 	-rm -vR debian_package/${PACKAGE}-${VERSION}.tar.gz
 
 gitclean: distclean cleandoc
-	-rm -vR autom4te.cache/ aclocal.m4 install-sh missing py-compile configure; find ./ -name Makefile.in |xargs rm -v
+	-rm -vR debian_package autom4te.cache/ aclocal.m4 install-sh missing py-compile configure; find ./ -name Makefile.in |xargs rm -v
 
 .PHONY: cleandoc tests doc
