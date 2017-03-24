@@ -6,11 +6,15 @@ LodelContext.expose_modules(globals(), {
     'lodel.settings': ['Settings'],
     'lodel.logger': 'logger'})
 
-##@package lodel.plugin.core_hooks
-#@brief Lodel2 internal hooks declaration
-#@ingroup lodel2_plugins
+## @package lodel.plugin.core_hooks
+# @brief Lodel2 internal hooks declaration
+# @ingroup lodel2_plugins
 
-##@brief Bootstrap hook to check datasources configuration
+## @brief Bootstrap hook that checks datasources configuration
+# @param hook_name str
+# @param caller * : the hook's caller
+# @param payload * : data to be given to the hook
+# @throw NameError when : a set datasource family name can not be found or a datasource identifier does not match with a configured datasource.
 @LodelHook('lodel2_bootstraped')
 def datasources_bootstrap_hook(hook_name, caller, payload):
     for ds_name in Settings.datasources._fields:
@@ -32,12 +36,14 @@ def datasources_bootstrap_hook(hook_name, caller, payload):
             msg %= identifier
             raise NameError(msg)
 
-
         log_msg = "Found a datasource named '%s' identified by '%s'"
         log_msg %= (ds_name, identifier)
         logger.debug(log_msg)
 
-##@brief Bootstrap hook that print debug infos about registered hooks
+## @brief Bootstrap hook that prints debug infos about registered hooks
+# @param name str
+# @param caller * : the hook's caller
+# @param payload * : data to be given to the hook
 @LodelHook('lodel2_bootstraped')
 def list_hook_debug_hook(name, caller, payload):
     LodelContext.expose_modules(globals(), {
@@ -55,7 +61,9 @@ def list_hook_debug_hook(name, caller, payload):
         
 
 
-##@brief Hooks that trigger custom methods injection in dynmic classes
+## @brief Hook that triggers custom methods injection in dynamic classes
+# @param caller * : the hook's caller
+# @param dynclasses list : a list of classes in which the injection will occur
 @LodelHook("lodel2_dyncode_loaded")
 def lodel2_plugins_custom_methods(self, caller, dynclasses):
     LodelContext.expose_modules(globals(), {
