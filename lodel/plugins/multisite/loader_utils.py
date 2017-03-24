@@ -2,13 +2,6 @@ import os
 import os.path
 
 
-##@brief basename of multisite process conf folder
-#@todo find a better place to declare it
-SERVER_CONFD = 'server_conf.d' #Should be accessible elsewhere
-##@brief basename of lodelsites site conf folder
-#@todo find a better place to declare it
-LODELSITES_CONFD = 'lodelsites.conf.d' #Should be accessible elsewhere
-
 ##@brief A cache allowing a fast application exposure
 #
 #This dict contains reference on interface module of each handled site in
@@ -22,8 +15,9 @@ except ImportError:
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from lodel.context import LodelContext, ContextError
 
-
 import lodel.buildconf
+##@brief basename of lodelsites site conf folder
+LODELSITES_CONFD = lodel.buildconf.LODELSITE_CONFDIR
 
 ##@brief Stores the main function of a multisite loader
 
@@ -44,6 +38,9 @@ def main():
     LodelContext.expose_modules(globals(), {
         'lodel.settings': ['Settings']})
     lodelsites_name = Settings.sitename
+    lodelsites_datapath = os.path.join(
+    	os.path.join(lodel.buildconf.LODEL2VARDIR, lodelsites_name),
+	lodel.buildconf.MULTISITE_DATADIR)
     del(globals()['Settings'])
     
     #bootstraping the lodelsites instance
@@ -127,6 +124,10 @@ sux !')
     #Determining uniq sitename from data_path
     data_path = data_path.rstrip('/') #else basename returns ''
     ctx_name = os.path.basename(data_path)
+    if not os.path.exists(data_path) or not os.path.isdir(data_path):
+        LodelContext.expose_modules(globals(), {
+            'lodel.exceptions': ['LodelFatalError']})
+        raise LodelFatalError("A site named '%s' was found in the DB but not on the FS (expected to found it in '%s'!!!" % (os.path.basename(data_path), data_path))
     #Immediately switching to the context
     LodelContext.new(ctx_name)
     LodelContext.set(ctx_name)
