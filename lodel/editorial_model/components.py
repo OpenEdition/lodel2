@@ -36,11 +36,13 @@ class EmComponent(MlNamedObject):
         self.group = group
         super().__init__(display_name, help_text)
 
+    # @brief Returns the display_name of the component if it is not None, its uid else
     def __str__(self):
         if self.display_name is None:
             return str(self.uid)
         return str(self.display_name)
 
+    # @brief Returns a hash code for the component
     def d_hash(self):
         m = hashlib.md5()
         for data in (
@@ -78,7 +80,7 @@ class EmComponent(MlNamedObject):
 #@ingroup lodel2_em
 class EmClass(EmComponent):
 
-    # @brief Instanciate a new EmClass
+    # @brief Instanciates a new EmClass
     #@param uid str : uniq identifier
     #@param display_name MlString|str|dict : component display_name
     #@param abstract bool : set the class as asbtract if True
@@ -99,7 +101,7 @@ class EmClass(EmComponent):
         self.pure_abstract = bool(pure_abstract)
         self.__datasource = datasources
         if not isinstance(datasources, str) and len(datasources) != 2:
-            raise ValueError("datasources arguement can be a single datasource\
+            raise ValueError("datasources argument can be a single datasource\
  name or two names in a tuple or a list")
         if self.pure_abstract:
             self.abtract = True
@@ -141,8 +143,9 @@ class EmClass(EmComponent):
     def is_emclass(cls):
         return True
 
-    # @brief Property that represent a dict of all fields (the EmField defined in this class and all its parents)
-    # @todo use Settings.editorialmodel.groups to determine wich fields should be returned
+    # @brief Property that represents a dict of all fields 
+    # (the EmField objects defined in this class and all their parents)
+    # @todo use Settings.editorialmodel.groups to determine which fields should be returned
     @property
     def __all_fields(self):
         res = dict()
@@ -156,9 +159,9 @@ class EmClass(EmComponent):
     def datasource(self):
         return self.__datasource
 
-    # @brief Return the list of all dependencies
+    # @brief Returns the list of all dependencies
     #
-    # Reccursive parents listing
+    # Recursive parents listing
     @property
     def parents_recc(self):
         if len(self.parents) == 0:
@@ -181,7 +184,7 @@ class EmClass(EmComponent):
         except KeyError:
             raise EditorialModelError("No such EmField '%s'" % uid)
 
-    # @brief Keep in __fields only fields contained in active groups
+    # @brief Keeps in __fields only fields contained in active groups
     def _set_active_fields(self, active_groups):
         if not Settings.editorialmodel.editormode:
             active_fields = []
@@ -191,10 +194,10 @@ class EmClass(EmComponent):
             self.__fields = {fname: fdh for fname, fdh in self.__fields.items()
                              if fdh in active_fields}
 
-    # @brief Add a field to the EmClass
+    # @brief Adds a field to the EmClass
     # @param emfield EmField : an EmField instance
-    # @warning do not add an EmField allready in another class !
-    # @throw EditorialModelException if an EmField with same uid allready in this EmClass (overwritting allowed from parents)
+    # @warning do not add an EmField already in another class !
+    # @throw EditorialModelException if an EmField with same uid already in this EmClass (overwriting allowed from parents)
     # @todo End the override checks (needs methods in data_handlers)
     def add_field(self, emfield):
         assert_edit()
@@ -206,11 +209,11 @@ class EmClass(EmComponent):
             parent_field = self.__all_fields[emfield.uid]
             if not emfield.data_handler_instance.can_override(parent_field.data_handler_instance):
                 raise AttributeError(
-                    "'%s' field override a parent field, but data_handles are not compatible" % emfield.uid)
+                    "'%s' field overrides a parent field, but data_handlers are not compatible" % emfield.uid)
         self.__fields[emfield.uid] = emfield
         return emfield
 
-    # @brief Create a new EmField and add it to the EmClass
+    # @brief Creates a new EmField and adds it to the EmClass
     # @param data_handler str : A DataHandler name
     # @param uid str : the EmField uniq id
     # @param **field_kwargs :  EmField constructor parameters ( see @ref EmField.__init__() )
@@ -247,7 +250,7 @@ class EmClass(EmComponent):
 #@ingroup lodel2_em
 class EmField(EmComponent):
 
-    # @brief Instanciate a new EmField
+    # @brief Instanciates a new EmField
     # @param uid str : uniq identifier
     # @param display_name MlString|str|dict : field display_name
     # @param data_handler str : A DataHandler name
@@ -287,7 +290,7 @@ class EmField(EmComponent):
     def get_data_handler_cls(self):
         return copy.copy(self.data_handler_cls)
 
-    ##@brief Returne the uid of the emclass which contains this field
+    ##@brief Returns the uid of the emclass which contains this field
     def get_emclass_uid(self):
         return self._emclass.uid
 
@@ -308,7 +311,7 @@ class EmField(EmComponent):
 
 class EmGroup(MlNamedObject):
 
-    # @brief Create a new EmGroup
+    # @brief Creates a new EmGroup
     # @note you should NEVER call the constructor yourself. Use Model.add_group instead
     # @param uid str : Uniq identifier
     # @param depends list : A list of EmGroup dependencies
@@ -328,15 +331,15 @@ class EmGroup(MlNamedObject):
             for grp in depends:
                 if not isinstance(grp, EmGroup):
                     raise ValueError("EmGroup expected in depends argument but %s found" % grp)
-                self.add_dependencie(grp)
+                self.add_dependency(grp)
 
     ##@todo delete me when support for pickle translator is dropped
     @classmethod
     def is_emgroup(cls):
         return True
 
-    # @brief Returns EmGroup dependencie
-    # @param recursive bool : if True return all dependencies and their dependencies
+    # @brief Returns EmGroup dependencies
+    # @param recursive bool : if True returns all dependencies and their own dependencies
     # @return a dict of EmGroup identified by uid
     def dependencies(self, recursive=False):
         res = copy.copy(self.require)
@@ -352,7 +355,7 @@ class EmGroup(MlNamedObject):
         return res
 
     # @brief Returns EmGroup applicants
-    # @param recursive bool : if True return all dependencies and their dependencies
+    # @param recursive bool : if True returns all dependencies and their dependencies
     # @returns a dict of EmGroup identified by uid
     def applicants(self, recursive=False):
         res = copy.copy(self.required_by)
@@ -373,7 +376,7 @@ class EmGroup(MlNamedObject):
         return (self.__components).copy()
 
     # @brief Returns EmGroup display_name
-    #  @param lang str | None : If None return default lang translation
+    #  @param lang str | None : If None returns default lang translation
     #  @returns None if display_name is None, a str for display_name else
     def get_display_name(self, lang=None):
         name = self.display_name
@@ -382,7 +385,7 @@ class EmGroup(MlNamedObject):
         return name.get(lang)
 
     # @brief Returns EmGroup help_text
-    #  @param lang str | None : If None return default lang translation
+    #  @param lang str | None : If None returns default lang translation
     #  @returns None if display_name is None, a str for display_name else
     def get_help_text(self, lang=None):
         help = self.help_text
@@ -390,7 +393,7 @@ class EmGroup(MlNamedObject):
             return None
         return help.get(lang)
 
-    # @brief Add components in a group
+    # @brief Adds components in a group
     # @param components list : EmComponent instances list
     def add_components(self, components):
         assert_edit()
@@ -405,20 +408,20 @@ class EmGroup(MlNamedObject):
                     "Expecting components to be a list of EmComponent, but %s found in the list" % type(component))
         self.__components |= set(components)
 
-    # @brief Add a dependencie
-    # @param em_group EmGroup|iterable : an EmGroup instance or list of instance
-    def add_dependencie(self, grp):
+    # @brief Add a dependency
+    # @param em_group EmGroup|iterable : an EmGroup instance or list of instances
+    def add_dependency(self, grp):
         assert_edit()
         try:
             for group in grp:
-                self.add_dependencie(group)
+                self.add_dependency(group)
             return
         except TypeError:
             pass
 
         if grp.uid in self.require:
             return
-        if self.__circular_dependencie(grp):
+        if self.__circular_dependency(grp):
             raise EditorialModelError("Circular dependencie detected, cannot add dependencie")
         self.require[grp.uid] = grp
         grp.required_by[self.uid] = self
@@ -442,9 +445,9 @@ class EmGroup(MlNamedObject):
         self.required_by[grp.uid] = grp
         grp.require[self.uid] = self
 
-    # @brief Search for circular dependencie
+    # @brief Search for circular dependency
     # @return True if circular dep found else False
-    def __circular_dependencie(self, new_dep):
+    def __circular_dependency(self, new_dep):
         return self.uid in new_dep.dependencies(True)
 
     # @brief Search for circular applicant
@@ -460,6 +463,8 @@ class EmGroup(MlNamedObject):
         else:
             return self.display_name.get()
 
+    # @brief Computes a d-hash code for the EmGroup
+    # @return a string
     def d_hash(self):
 
         payload = "%s%s%s" % (

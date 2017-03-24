@@ -8,23 +8,25 @@
 		<input id="field_input_{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="checkbox" checked="{% if value %}checked{% endif %}" >
 	{% elif field.base_type == 'password' %}
             <input id="{{fieldname}}" name="field_input_{{fieldname}}" class="form-control" type="password"  value="{{sval}}" >
-    {% elif field.base_type == 'char' or field.base_type == 'int' or field.base_type == 'varchar' %}
-		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{value}}" >
-    {% elif field.base_type == 'text' %}
-		<textarea id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}"></textarea>
-    {% elif field.base_type == 'ref' %}
-        {% if value is iterable %}
-            {% set sval=value|join(',') %}
-        {% else %}
-            {% set sval = value %}
-        {% endif %}
-        {% if field.directly_editable %}
-            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
-            {% set l_classe = field.allowed_classes %}
-            <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
-        {% else %}
-            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}">
-        {% endif %}
+        {% elif field.base_type == 'char' or field.base_type == 'int' or field.base_type == 'varchar' %}
+            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{value}}" >
+        {% elif field.base_type == 'text' %}
+            <textarea class="form-control" name="field_input_{{fieldname}}">{{value}}</textarea>
+        {% elif field.base_type == 'datetime' %}
+            <input class="form-control" type="date" value="{{value}}" name="field_input_{{fieldname}}">
+        {% elif field.base_type == 'ref' %}
+            {% if value is iterable %}
+                {% set sval=value|join(',') %}
+            {% else %}
+                {% set sval = value %}
+            {% endif %}
+            {% if field.directly_editable %}
+                <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
+                {% set l_classe = field.allowed_classes %}
+                <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
+            {% else %}
+                <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}">
+            {% endif %}
 	{% else %}
 		Unsupported base type "{{field.base_type}}" <br>
 	{% endif %}

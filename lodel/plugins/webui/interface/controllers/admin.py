@@ -19,17 +19,17 @@ LIST_SEPARATOR = ','
 ##@brief These functions are called by the rules defined in ../urls.py
 ## To administrate the instance of the editorial model
 
-##@brief Controller's function to redirect on the home page of the admin 
+##@brief Controller's function to redirect on the home page of the admin
 # @param request : the request (get or post)
 # @note the response is given in a html page called in get_response_function
 def index_admin(request):
     # We have to be identified to admin the instance
-    # temporary, the acl will be more restrictive 
+    # temporary, the acl will be more restrictive
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
     return get_response('admin/admin.html')
 
-##@brief Controller's function to update an object of the editorial model 
+##@brief Controller's function to update an object of the editorial model
 # @param request : the request (get or post)
 # @note the response is given in a html page (in templates/admin) called in get_response_function
 def admin_update(request):
@@ -38,7 +38,7 @@ def admin_update(request):
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
     msg=''
-    
+
     datas = process_form(request)
     if not(datas is False):
         if 'lodel_id' not in datas:
@@ -55,8 +55,8 @@ def admin_update(request):
         except LeApiDataCheckErrors as e:
             raise HttpErrors(
                 title='Form validation errors', errors = e._exceptions)
-            
-            
+
+
 
     # Display of the form with the object's values to be updated
     if 'classname' in request.GET:
@@ -72,7 +72,7 @@ def admin_update(request):
             raise HttpException(400)
         logger.warning('Composed uids broken here')
         uid_field = target_leo.uid_fieldname()[0]
-    
+
     # We need the uid of the object
     test_valid = 'lodel_id' in request.GET \
         and len(request.GET['lodel_id']) == 1
@@ -91,11 +91,14 @@ def admin_update(request):
     else:
         # Check if the object actually exists
         # We get it from the database
-        if not target_leo.is_exist(lodel_id):
+        query_filters = list()
+        query_filters.append((uid_field,'=',lodel_id))
+        obj = target_leo.get(query_filters)
+        if len(obj) == 0:
             raise HttpException(404)
     return get_response('admin/admin_edit.html', target=target_leo, lodel_id =lodel_id)
 
-##@brief Controller's function to create an object of the editorial model 
+##@brief Controller's function to create an object of the editorial model
 # @param request : the request (get or post)
 # @note the response is given in a html page (in templates/admin) called in get_response_function
 def admin_create(request):
@@ -138,7 +141,7 @@ def admin_create(request):
         raise HttpException(400)
     return get_response('admin/admin_create.html', target=target_leo)
 
-##@brief Controller's function to delete an object of the editorial model 
+##@brief Controller's function to delete an object of the editorial model
 # @param request : the request (get)
 # @note the response is given in a html page (in templates/admin) called in get_response_function
 def admin_delete(request):
@@ -161,7 +164,7 @@ def admin_delete(request):
             raise HttpException(400)
         logger.warning('Composed uids broken here')
         uid_field = target_leo.uid_fieldname()[0]
-        
+
     # We also need the uid of the object to delete
     test_valid = 'lodel_id' in request.GET \
         and len(request.GET['lodel_id']) == 1
@@ -186,11 +189,11 @@ def admin_delete(request):
             msg = 'Object successfully deleted';
     else:
             msg = 'Oops something wrong happened...object still here'
-            
+
     return get_response('admin/admin_delete.html', target=target_leo, lodel_id =lodel_id, msg = msg)
 
-        
-        
+
+
 def admin_classes(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
@@ -211,7 +214,7 @@ def delete_object(request):
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
     return get_response('admin/list_classes_delete.html', my_classes = dyncode.dynclasses)
-    
+
 def admin_class(request):
     # We have to be identified to admin the instance
     # temporary, the acl will be more restrictive
@@ -313,7 +316,7 @@ def process_form(request):
                 if hasattr(dh, 'default'):
                     value = dh.default
                 else:
-                    #if not explicit default value, enforcing default as 
+                    #if not explicit default value, enforcing default as
                     #an empty list
                     value = []
             else:
@@ -328,4 +331,3 @@ def process_form(request):
         del(res)
         raise HttpErrors(errors, title="Form validation error")
     return res
-

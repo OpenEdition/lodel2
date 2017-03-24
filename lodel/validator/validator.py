@@ -390,7 +390,6 @@ named  '%s' that is a '%s' plugin"
             raise ValidationError(msg)
     return value
 
-
 Validator.register_validator(
     'plugin',
     plugin_validator,

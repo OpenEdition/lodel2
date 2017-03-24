@@ -26,7 +26,7 @@ class PickleFileTestCase(unittest.TestCase):
         grp2 = model.new_group('testgroup2')
         grp2.add_components((cls2, c1f2, c2f1, c2f2))
 
-        grp2.add_dependencie(grp1)
+        grp2.add_dependency(grp1)
         
         tmpfd, temp_file = tempfile.mkstemp()
         os.close(tmpfd)

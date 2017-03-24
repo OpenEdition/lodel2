@@ -46,7 +46,7 @@ then
 	if [ -f '/usr/share/dict/words' ]
 	then
 		echo "/usr/share/dict/words found. Using this file as source for random names"
-		random_name=$(sed -nE 's/^([A-Za-z0-9]+)$/\1/p' /usr/share/dict/words |shuf|head -n1)
+		random_name=$(sed -nE 's/^([A-Za-z0-9]+)$/\1/p' /usr/share/dict/words | iconv -f utf8 -t ascii//TRANSLIT |shuf|head -n1)
 	else
 		echo -e "\n\n\tWarning... /usr/share/dict/words not found using \$RANDOM for random names generation"
 		random_name=$RANDOM
@@ -152,4 +152,3 @@ EOF
 	slim -n $iname -s --datasource_connectors mongodb --host $MONGODB_HOST --user $dbuser --password $dbpass --db_name $dbname || slim_fails "configuring the instance's datasource"
 
 done
-
