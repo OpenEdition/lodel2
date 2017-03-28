@@ -42,7 +42,8 @@ class EditorialModel(MlNamedObject):
         super().__init__(display_name, help_text)
 
     # @brief EmClass uids accessor
-    #@return a dict of emclasses
+    #@return a copy of the dict containing all emclasses of the model if uid is None
+    # else a copy the class with uid uid
     def all_classes(self, uid=None):
         if uid is None:
             return copy.copy(self.__classes)
@@ -52,6 +53,9 @@ class EditorialModel(MlNamedObject):
             except KeyError:
                 raise EditorialModelException("EmClass not found : '%s'" % uid)
 
+    # @brief EmClass uids accessor
+    #@return the dict containing all emclasses of the model if uid is None
+    # else the class with uid uid
     def all_classes_ref(self, uid=None):
         if uid is None:
             return self.__classes
@@ -62,12 +66,13 @@ class EditorialModel(MlNamedObject):
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
     # @brief active EmClass uids accessor
-    #@return a list of class uids
+    #@return a list of active class uids
     def active_classes_uids(self):
         return list(self.__active_classes.keys())
 
     # @brief EmGroups accessor
-    #@return a dict of groups
+    #@return a copy of the dict of the model's group if uid is None
+    # else a copy of the group with uniq id uid
     def all_groups(self, uid=None):
         if uid is None:
             return copy.copy(self.__groups)
@@ -78,7 +83,8 @@ class EditorialModel(MlNamedObject):
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
     # @brief EmGroups accessor
-    #@return a dict of groups
+    #@return the dict of the model's group if uid is None
+    # else the group with uniq id uid
     def all_groups_ref(self, uid=None):
         if uid is None:
             return self.__groups
@@ -89,7 +95,7 @@ class EditorialModel(MlNamedObject):
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
     # @brief active EmClass uids accessor
-    #@return a list of class uids
+    #@return a list of active group uids
     def active_groups_uids(self):
         return list(self.__active_groups.keys())
 
@@ -97,7 +103,7 @@ class EditorialModel(MlNamedObject):
     #@param uid None | str : give this argument to get a specific EmClass
     #@return if uid is given returns an EmClass else returns an EmClass
     # iterator
-    #@todo use Settings.editorialmodel.groups to determine wich classes should
+    #@todo use Settings.editorialmodel.groups to determine which classes should
     # be returned
     def classes(self, uid=None):
         try:

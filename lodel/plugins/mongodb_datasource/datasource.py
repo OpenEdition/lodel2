@@ -84,9 +84,9 @@ class MongoDbDatasource(AbstractDatasource):
         target = emcomp.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
         results = self.select(
-            target, field_list = [tuid], filters = [], 
+            target, field_list = [tuid], filters = [],
             order=[(tuid, 'DESC')], limit = 1)
-        if len(results) == 0: 
+        if len(results) == 0:
             return 1
         return results[0][tuid]+1
 
@@ -95,23 +95,23 @@ class MongoDbDatasource(AbstractDatasource):
     #@param field_list list
     #@param filters list : List of filters
     #@param relational_filters list : List of relational filters
-    #@param order list : List of column to order. ex: order = 
+    #@param order list : List of column to order. ex: order =
     #[('title', 'ASC'),]
-    #@param group list : List of tupple representing the column used as 
+    #@param group list : List of tupple representing the column used as
     #"group by" fields. ex: group = [('title', 'ASC'),]
     #@param limit int : Number of records to be returned
     #@param offset int: used with limit to choose the start record
     #@return list
     #@todo Implement group for abstract LeObject childs
-    def select(self, target, field_list, filters = None, 
-            relational_filters=None, order=None, group=None, limit=None, 
+    def select(self, target, field_list, filters = None,
+            relational_filters=None, order=None, group=None, limit=None,
             offset=0):
         if target.is_abstract():
             #Reccursiv calls for abstract LeObject child
             results =  self.__act_on_abstract(target, filters,
                 relational_filters, self.select, field_list = field_list,
                 order = order, group = group, limit = limit)
-            
+
             #Here we may implement the group
             #If sorted query we have to sort again
             if order is not None:
@@ -138,11 +138,11 @@ class MongoDbDatasource(AbstractDatasource):
 
         query_filters = self.__process_filters(
             target, filters, relational_filters)
-        
+
         query_result_ordering = None
         if order is not None:
             query_result_ordering = utils.parse_query_order(order)
-        
+
         if group is None:
             if field_list is None:
                 field_list = dict()
@@ -189,7 +189,7 @@ class MongoDbDatasource(AbstractDatasource):
         results = list()
         for document in cursor:
             results.append(document)
-        
+
         return results
 
     ##@brief Deletes records according to given filters
@@ -236,7 +236,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         self.__update_backref_filtered(target, filters, relational_filters,
             upd_datas, old_datas_l)
         return res
-    
+
     ##@brief Designed to be called by backref update in order to avoid
     #infinite updates between back references
     #@see update()
@@ -269,7 +269,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             raise MongoDataSourceError("Missing UID data will inserting a new \
 %s" % target.__class__)
         res = self.__collection(target).insert(new_datas)
-        self.__update_backref(target, new_datas[uidname], None, new_datas) 
+        self.__update_backref(target, new_datas[uidname], None, new_datas)
         return str(res)
 
     ## @brief Inserts a list of records in a given collection
@@ -281,10 +281,10 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             self._data_cast(datas)
         res = self.__collection(target).insert_many(datas_list)
         for new_datas in datas_list:
-            self.__update_backref(target, None, new_datas) 
+            self.__update_backref(target, None, new_datas)
             target.make_consistency(datas=new_datas)
         return list(res.inserted_ids)
-    
+
     ##@brief Update backref giving an action
     #@param target leObject child class
     #@param filters
@@ -303,7 +303,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             old_datas_l = self.__collection(target).find(
                 mongo_filters)
             old_datas_l = list(old_datas_l)
-        
+
         uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
         for old_datas in old_datas_l:
             self.__update_backref(
@@ -312,7 +312,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     ##@brief Update back references of an object
     #@ingroup plugin_mongodb_bref_op
     #
-    #old_datas and new_datas arguments are set to None to indicate 
+    #old_datas and new_datas arguments are set to None to indicate
     #insertion or deletion. Calls examples :
     #@par LeObject insert __update backref call
     #<pre>
@@ -441,8 +441,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 self.__update_no_backref(
                     leo.__class__, [(leo.uid_fieldname()[0], '=', uidval)],
                     [], datas)
-    
-    ##@brief Utility function designed to handle the upd_dict of 
+
+    ##@brief Utility function designed to handle the upd_dict of
     #__update_backref()
     #
     #Basically checks if a key exists at some level, if not create it with
@@ -453,7 +453,7 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
     #@param uid_val mixed : the UID of the referenced object
     #@return the updated version of upd_dict
     @staticmethod
-    def __update_backref_upd_dict_prepare(upd_dict,bref_infos, bref_fname, 
+    def __update_backref_upd_dict_prepare(upd_dict,bref_infos, bref_fname,
             uid_val):
         bref_cls, bref_leo, bref_dh, bref_value = bref_infos
         if bref_cls not in upd_dict:
@@ -463,8 +463,8 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         if bref_fname not in upd_dict[bref_cls][uid_val]:
             upd_dict[bref_cls][uid_val][1][bref_fname] = bref_value
         return upd_dict
-        
-        
+
+
     ##@brief Prepare a one value back reference update
     #@param fname str : the source Reference field name
     #@param fdh DataHandler : the source Reference DataHandler
@@ -520,7 +520,7 @@ have expected value. Expected was %s but found %s in %s" % (
                 return bref_val
             elif oldd and not newdd:
                 #deletion
-                if not hasattr(bref_dh, "default"): 
+                if not hasattr(bref_dh, "default"):
                     raise MongoDbConsistencyError("Unable to delete a \
 value for a back reference update. The concerned field don't have a default \
 value : in %s field %s" % (bref_leo,fname))
@@ -528,7 +528,7 @@ value : in %s field %s" % (bref_leo,fname))
             elif not oldd and newdd:
                 bref_val = tuid
         return bref_val
-    
+
     ##@brief Fetch back reference informations
     #@warning thank's to __update_backref_act() this method is useless
     #@param bref_cls LeObject child class : __back_reference[0]
@@ -608,7 +608,7 @@ on non abstract childs" % act.__name__)
             port = self.__db_infos['port'],
             db_name = db_name,
             ro = ro)
-        
+
         self.__conn_hash = conn_h = hash(conn_string)
         if conn_h in self._connections:
             self._connections[conn_h]['conn_count'] += 1
@@ -619,7 +619,7 @@ on non abstract childs" % act.__name__)
                 'conn_count': 1,
                 'db': utils.connect(conn_string)}
             return self._connections[conn_h]['db'][self.__db_infos['db_name']]
-                    
+
 
     ##@brief Return a pymongo collection given a LeObject child class
     #@param leobject LeObject child class (no instance)
@@ -760,7 +760,7 @@ on non abstract childs" % act.__name__)
                     rfilters[fname][repr_leo][rfield] = list()
                 rfilters[fname][repr_leo][rfield].append((op, value))
         return rfilters
-    
+
     ##@brief Convert lodel2 filters to pymongo conditions
     #@param filters list : list of lodel filters
     #@return dict representing pymongo conditions
@@ -859,7 +859,7 @@ field/operator couple in a query. We will keep only the first one")
             1 if (a[fname]>b[fname] if cmpdir == 'ASC' else a[fname]<b[fname])\
             else -1)
 
-    
+
     ##@brief Correct some datas before giving them to pymongo
     #
     #For example sets has to be casted to lise
@@ -874,13 +874,3 @@ field/operator couple in a query. We will keep only the first one")
                 #with sets
                 datas[dname] = list(datas[dname])
         return datas
-
-    ##@brief Tool to check if a record with unique id uid is set in the target_class representation
-    #@param target_class : class to check in 
-    #@param uid : a unique id in target_class
-    #@returns true if a record with unique id uid exists in the target_class representation, false if not
-    def is_exist(self, target_class, uid):
-    # retrouver la table qui correspond à target_class
-    # vérifier qu'il existe, ou pas, un enregistrement contenant uid
-        result = self.select(self, target_class, [target_class.uid_fieldname], filters = [(target_class.uid_fieldname, '=', uid)])
-        return len(result) == 1

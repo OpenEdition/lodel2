@@ -1,3 +1,6 @@
+## @package lodel.plugin.exceptions Plugin management specific exceptions
+
+
 class PluginError(Exception):
     pass
 

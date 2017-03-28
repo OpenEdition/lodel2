@@ -23,7 +23,7 @@ class EditorialModelTestCase(unittest.TestCase):
         grp1.add_components((cls1, c1f1))
         grp2 = model.new_group('testgroup2')
         grp2.add_components((cls2, c1f2, c2f1, c2f2))
-        grp2.add_dependencie(grp1)
+        grp2.add_dependency(grp1)
         e_hash = 0x250eab75e782e51bbf212f47c6159571
         self.assertEqual(model.d_hash(), e_hash)
 
@@ -181,10 +181,10 @@ class EmGroupTestCase(unittest.TestCase):
         grp3 = EmGroup('grp3')
         grp4 = EmGroup('grp4')
 
-        grp2.add_dependencie(grp1)
-        grp3.add_dependencie(grp2)
-        grp4.add_dependencie(grp2)
-        grp4.add_dependencie(grp1)
+        grp2.add_dependency(grp1)
+        grp3.add_dependency(grp2)
+        grp4.add_dependency(grp2)
+        grp4.add_dependency(grp1)
 
         self.assertEqual(set(grp1.dependencies().values()), set())
         self.assertEqual(set(grp2.dependencies().values()), set([grp1]))
@@ -261,10 +261,10 @@ class EmGroupTestCase(unittest.TestCase):
     def test_deps_complex(self):
         """ More complex dependencies handling test """
         grps = [ EmGroup('group%d' % i) for i in range(6) ]
-        grps[5].add_dependencie( (grps[1], grps[2], grps[4]) )
-        grps[4].add_dependencie( (grps[1], grps[3]) )
-        grps[3].add_dependencie( (grps[0],) )
-        grps[1].add_dependencie( (grps[2], grps[0]) )
+        grps[5].add_dependency( (grps[1], grps[2], grps[4]) )
+        grps[4].add_dependency( (grps[1], grps[3]) )
+        grps[3].add_dependency( (grps[0],) )
+        grps[1].add_dependency( (grps[2], grps[0]) )
         self.assertEqual(
                             set(grps[5].dependencies(True).values()),
                             set( grps[i] for i in range(5))
@@ -273,7 +273,7 @@ class EmGroupTestCase(unittest.TestCase):
                             set(grps[4].dependencies(True).values()),
                             set( grps[i] for i in range(4))
         )
-        grps[2].add_dependencie(grps[0])
+        grps[2].add_dependency(grps[0])
         self.assertEqual(
                             set(grps[5].dependencies(True).values()),
                             set( grps[i] for i in range(5))
@@ -284,18 +284,18 @@ class EmGroupTestCase(unittest.TestCase):
         )
         # Inserting circular deps
         with self.assertRaises(EditorialModelError):
-            grps[0].add_dependencie(grps[5])
+            grps[0].add_dependency(grps[5])
 
     def test_circular_dep(self):
         """ Test circular dependencies detection """
         grps = [ EmGroup('group%d' % i) for i in range(10) ]
         for i in range(1,10):
-            grps[i].add_dependencie(grps[i-1])
+            grps[i].add_dependency(grps[i-1])
 
         for i in range(1,10):
             for j in range(i+1,10):
                 with self.assertRaises(EditorialModelError):
-                    grps[i].add_dependencie(grps[j])
+                    grps[i].add_dependency(grps[j])
 
     def test_d_hash(self):
         """ Test the deterministic hash method """

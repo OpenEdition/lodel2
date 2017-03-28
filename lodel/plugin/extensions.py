@@ -1,3 +1,6 @@
+## @package lodel.plugin.extensions A package to manage the Extension plugins
+
+
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin'],
@@ -7,9 +10,12 @@ LodelContext.expose_modules(globals(), {
 
 _glob_typename = 'extension'
 
-
+## @brief A class representing a basic Extension plugin
+# 
+# This class will be extended for each plugin of this type.
 class Extension(Plugin):
     
+    ## @brief Specifies the settings linked to this plugin
     _plist_confspecs = {
         'section': 'lodel2',
         'key': 'extensions',
@@ -20,6 +26,8 @@ class Extension(Plugin):
                 'ptype': _glob_typename,
                 'none_is_valid': False})
         }
-
+    
+    ## @brief A property defining the type's name of this plugin.
+    # By default, it's the global type name ("extension" here).
     _type_conf_name = _glob_typename
 
