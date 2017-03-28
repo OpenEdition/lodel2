@@ -12,7 +12,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
     'lodel.logger': 'logger'})
 
-# @brief Generates python module code from a given model
+## @brief Generates python module code from a given model
 # @param model lodel.editorial_model.model.EditorialModel
 
 
@@ -52,7 +52,7 @@ dynclasses_dict = {class_dict}
     )
     return res_code
 
-# @brief Returns the content of lodel.leapi.lefactory_common
+## @brief Returns the content of lodel.leapi.lefactory_common
 #
 # @return a string
 
@@ -68,7 +68,7 @@ def common_code():
     return res
 
 
-# @brief return A list of EmClass sorted by dependencies
+## @brief return A list of EmClass sorted by dependencies
 #
 # The first elts in the list depend on nothing, etc.
 # @param a list of Emclass instances to be sorted
@@ -79,7 +79,7 @@ def emclass_sorted_by_deps(emclass_list):
     ret = sorted(emclass_list, key=functools.cmp_to_key(emclass_deps_cmp))
     return ret
 
-# @brief Returns a list of EmClass instances that will be represented as LeObject child classes
+## @brief Returns a list of EmClass instances that will be represented as LeObject child classes
 # @param model : an EditorialModel instance
 # @return a list of EmClass instances
 
@@ -87,7 +87,7 @@ def emclass_sorted_by_deps(emclass_list):
 def get_classes(model):
     return [cls for cls in emclass_sorted_by_deps(model.classes()) if not cls.pure_abstract]
 
-# @brief Given an EmField returns the data_handler constructor suitable for dynamic code
+## @brief Given an EmField returns the data_handler constructor suitable for dynamic code
 # @param a EmField instance
 # @return a string
 
@@ -109,7 +109,7 @@ def data_handler_constructor(emfield):
         handler_instr=get_handler_class_instr,
         options=', '.join(options))
 
-# @brief Return a python repr of option values
+## @brief Return a python repr of option values
 # @param A value of any type which represents option
 # @return a string
 
@@ -131,7 +131,7 @@ def forge_optval(optval):
 
     return repr(optval)
 
-# @brief Generate dyncode from an EmClass
+## @brief Generate dyncode from an EmClass
 # @param model EditorialModel :
 # @return a tuple with emclass python code, a set containing modules name to import, and a list of python instruction to bootstrap dynamic code, in this order
 

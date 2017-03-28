@@ -16,19 +16,19 @@ LodelContext.expose_modules(globals(), {
     'lodel.editorial_model.components': ['EmClass', 'EmField', 'EmGroup']})
 
 
-# @brief Describe an editorial model
+## @brief Describe an editorial model
 #@ingroup lodel2_em
 class EditorialModel(MlNamedObject):
 
-    # @brief Create a new editorial model
+    ## @brief Create a new editorial model
     # @param name MlString|str|dict : the editorial model name
     # @param description MlString|str|dict : the editorial model description
     def __init__(self, name, description=None, display_name=None, help_text=None):
         self.name = MlString(name)
         self.description = MlString(description)
-        # @brief Stores all groups indexed by id
+        ## @brief Stores all groups indexed by id
         self.__groups = dict()
-        # @brief Stores all classes indexed by id
+        ## @brief Stores all classes indexed by id
         self.__classes = dict()
         #  @brief Stores all activated groups indexed by id
         self.__active_groups = dict()
@@ -41,7 +41,7 @@ class EditorialModel(MlNamedObject):
             help_text = description
         super().__init__(display_name, help_text)
 
-    # @brief EmClass uids accessor
+    ## @brief EmClass uids accessor
     #@return a copy of the dict containing all emclasses of the model if uid is None
     # else a copy the class with uid uid
     def all_classes(self, uid=None):
@@ -53,7 +53,7 @@ class EditorialModel(MlNamedObject):
             except KeyError:
                 raise EditorialModelException("EmClass not found : '%s'" % uid)
 
-    # @brief EmClass uids accessor
+    ## @brief EmClass uids accessor
     #@return the dict containing all emclasses of the model if uid is None
     # else the class with uid uid
     def all_classes_ref(self, uid=None):
@@ -65,12 +65,12 @@ class EditorialModel(MlNamedObject):
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
-    # @brief active EmClass uids accessor
+    ## @brief active EmClass uids accessor
     #@return a list of active class uids
     def active_classes_uids(self):
         return list(self.__active_classes.keys())
 
-    # @brief EmGroups accessor
+    ## @brief EmGroups accessor
     #@return a copy of the dict of the model's group if uid is None
     # else a copy of the group with uniq id uid
     def all_groups(self, uid=None):
@@ -82,7 +82,7 @@ class EditorialModel(MlNamedObject):
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
-    # @brief EmGroups accessor
+    ## @brief EmGroups accessor
     #@return the dict of the model's group if uid is None
     # else the group with uniq id uid
     def all_groups_ref(self, uid=None):
@@ -94,12 +94,12 @@ class EditorialModel(MlNamedObject):
             except KeyError:
                 raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
-    # @brief active EmClass uids accessor
+    ## @brief active EmClass uids accessor
     #@return a list of active group uids
     def active_groups_uids(self):
         return list(self.__active_groups.keys())
 
-    # @brief EmClass accessor
+    ## @brief EmClass accessor
     #@param uid None | str : give this argument to get a specific EmClass
     #@return if uid is given returns an EmClass else returns an EmClass
     # iterator
@@ -112,7 +112,7 @@ class EditorialModel(MlNamedObject):
         except KeyError:
             raise EditorialModelException("EmClass not found : '%s'" % uid)
 
-    # @brief EmClass child list accessor
+    ## @brief EmClass child list accessor
     #@param uid str : the EmClass uid
     #@return a set of EmClass
     def get_class_childs(self, uid):
@@ -123,7 +123,7 @@ class EditorialModel(MlNamedObject):
                 res.append(cls)
         return set(res)
 
-    # @brief EmGroup getter
+    ## @brief EmGroup getter
     # @param uid None | str : give this argument to get a specific EmGroup
     # @return if uid is given returns an EmGroup else returns an EmGroup iterator
     def groups(self, uid=None):
@@ -133,12 +133,12 @@ class EditorialModel(MlNamedObject):
         except KeyError:
             raise EditorialModelException("EmGroup not found : '%s'" % uid)
 
-    # @brief Private getter for __groups or __classes
+    ## @brief Private getter for __groups or __classes
     # @see classes() groups()
     def __elt_getter(self, elts, uid):
         return list(elts.values()) if uid is None else elts[uid]
 
-    # @brief Update the EditorialModel.__active_groups and
+    ## @brief Update the EditorialModel.__active_groups and
     # EditorialModel.__active_classes attibutes
     def __set_actives(self):
         if Settings.editorialmodel.editormode:
@@ -165,7 +165,7 @@ class EditorialModel(MlNamedObject):
             for clsname, acls in self.__active_classes.items():
                 acls._set_active_fields(self.__active_groups)
 
-    # @brief EmField getter
+    ## @brief EmField getter
     # @param uid str : An EmField uid represented by "CLASSUID.FIELDUID"
     # @return Fals or an EmField instance
     #
@@ -186,7 +186,7 @@ class EditorialModel(MlNamedObject):
             pass
         return False
 
-    # @brief Add a class to the editorial model
+    ## @brief Add a class to the editorial model
     # @param emclass EmClass : the EmClass instance to add
     # @return emclass
     def add_class(self, emclass):
@@ -198,7 +198,7 @@ class EditorialModel(MlNamedObject):
         self.__classes[emclass.uid] = emclass
         return emclass
 
-    # @brief Add a group to the editorial model
+    ## @brief Add a group to the editorial model
     # @param emgroup EmGroup : the EmGroup instance to add
     # @return emgroup
     def add_group(self, emgroup):
@@ -210,7 +210,7 @@ class EditorialModel(MlNamedObject):
         self.__groups[emgroup.uid] = emgroup
         return emgroup
 
-    # @brief Add a new EmClass to the editorial model
+    ## @brief Add a new EmClass to the editorial model
     #@param uid str : EmClass uid
     #@param **kwargs : EmClass constructor options (
     # see @ref lodel.editorial_model.component.EmClass.__init__() )
@@ -218,7 +218,7 @@ class EditorialModel(MlNamedObject):
         assert_edit()
         return self.add_class(EmClass(uid, **kwargs))
 
-    # @brief Add a new EmGroup to the editorial model
+    ## @brief Add a new EmGroup to the editorial model
     #@param uid str : EmGroup uid
     #@param *kwargs : EmGroup constructor keywords arguments (
     # see @ref lodel.editorial_model.component.EmGroup.__init__() )
@@ -226,7 +226,7 @@ class EditorialModel(MlNamedObject):
         assert_edit()
         return self.add_group(EmGroup(uid, **kwargs))
 
-    # @brief Save a model
+    ## @brief Save a model
     # @param translator module : The translator module to use
     # @param **translator_args
     def save(self, translator, **translator_kwargs):
@@ -235,14 +235,14 @@ class EditorialModel(MlNamedObject):
             translator = self.translator_from_name(translator)
         return translator.save(self, **translator_kwargs)
 
-    # @brief Raise an error if lodel is not in EM edition mode
+    ## @brief Raise an error if lodel is not in EM edition mode
     @staticmethod
     def raise_if_ro():
         if not Settings.editorialmodel.editormode:
             raise EditorialModelError(
                 "Lodel in not in EM editor mode. The EM is in read only state")
 
-    # @brief Load a model
+    ## @brief Load a model
     # @param translator module : The translator module to use
     # @param **translator_args
     @classmethod
@@ -253,7 +253,7 @@ class EditorialModel(MlNamedObject):
         res.__set_actives()
         return res
 
-    # @brief Return a translator module given a translator name
+    ## @brief Return a translator module given a translator name
     # @param translator_name str : The translator name
     # @return the translator python module
     # @throw NameError if the translator does not exists
@@ -266,7 +266,7 @@ class EditorialModel(MlNamedObject):
             raise NameError("No translator named %s")
         return mod
 
-    # @brief Lodel hash
+    ## @brief Lodel hash
     def d_hash(self):
         payload = "%s%s" % (
             self.name,
@@ -283,7 +283,7 @@ class EditorialModel(MlNamedObject):
             byteorder='big'
         )
 
-    # @brief Returns a list of all datahandlers
+    ## @brief Returns a list of all datahandlers
     # @return a list of all datahandlers
     @staticmethod
     def list_datahandlers():
