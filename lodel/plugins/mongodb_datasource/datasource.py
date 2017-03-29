@@ -1,4 +1,9 @@
-object# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+
+## @package plugins.mongodb_datasource.datasource Main datasource module
+# 
+# In this class, there is the MongoDbDatasource class, that handles the basic 
+# operations that can be done (CRUD ones).
 
 import re
 import warnings
@@ -23,51 +28,54 @@ from .utils import object_collection_name, collection_name, \
     MONGODB_SORT_OPERATORS_MAP, connection_string, mongo_fieldname
 
 
-##@brief Datasource class
-#@ingroup plugin_mongodb_datasource
+## @brief Datasource class
+# @ingroup plugin_mongodb_datasource
 class MongoDbDatasource(AbstractDatasource):
 
-    ##@brief Stores existing connections
+    ## @brief Stores existing connections
     #
-    #The key of this dict is a hash of the connection string + ro parameter.
-    #The value is a dict with 2 keys :
+    # The key of this dict is a hash built upon the connection string and the 
+    # ro (read-only) parameter.
+    # 
+    # The value is a dict with 2 keys :
     # - conn_count : the number of instanciated datasource that use this
-    #connection
+    # connection
     # - db : the pymongo database object instance
     _connections = dict()
 
-    ##@brief Mapping from lodel2 operators to mongodb operator
+    ## @brief Mapping from lodel2 operators to mongodb operators
     lodel2mongo_op_map = {
         '=':'$eq', '<=':'$lte', '>=':'$gte', '!=':'$ne', '<':'$lt',
         '>':'$gt', 'in':'$in', 'not in':'$nin' }
-    ##@brief List of mongodb operators that expect re as value
+    
+    ## @brief List of mongodb operators that expect re as value
     mongo_op_re = ['$in', '$nin']
     wildcard_re = re.compile('[^\\\\]\*')
 
-    ##@brief instanciates a database object given a connection name
-    #@param host str : hostname or IP
-    #@param port int : mongodb listening port
-    #@param db_name str
-    #@param username str
-    #@param password str
-    #@param read_only bool : If True the Datasource is for read only, else the
-    #Datasource is write only !
+    ## @brief instanciates a database object given a connection name
+    # @param host str : hostname or IP
+    # @param port int : mongodb listening port
+    # @param db_name str
+    # @param username str
+    # @param password str
+    # @param read_only bool : If True the Datasource is for read only, else the
+    # Datasource is write only !
     def __init__(self, host, port, db_name, username, password, read_only = False):
-        ##@brief Connections infos that can be kept securly
+        ## @brief Connections infos that can be kept securly
         self.__db_infos = {'host': host, 'port': port, 'db_name': db_name}
-        ##@brief Is the instance read only ? (if not it's write only)
+        ## @brief Is the instance read only ? (if not it's write only)
         self.__read_only = bool(read_only)
-        ##@brief Uniq ID for mongodb connection
+        ## @brief Uniq ID for mongodb connection
         self.__conn_hash= None
-        ##@brief Stores the database cursor
+        ## @brief Stores the database cursor
         self.database = self.__connect(
             username, password, db_name, self.__read_only)
 
-    ##@brief Destructor that attempt to close connection to DB
+    ## @brief Destructor that attempt to close connection to DB
     #
-    #Decrease the conn_count of associated MongoDbDatasource::_connections
-    #item. If it reach 0 close the connection to the db
-    #@see MongoDbDatasource::__connect()
+    # Decrease the conn_count of associated MongoDbDatasource::_connections
+    # item. If it reach 0 close the connection to the db
+    # @see MongoDbDatasource::__connect()
     def __del__(self):
         self._connections[self.__conn_hash]['conn_count'] -= 1
         if self._connections[self.__conn_hash]['conn_count'] <= 0:
@@ -75,11 +83,11 @@ class MongoDbDatasource(AbstractDatasource):
             del(self._connections[self.__conn_hash])
             logger.info("Closing connection to database")
 
-    ##@brief Provide a new uniq numeric ID
-    #@param emcomp LeObject subclass (not instance) : To know on wich things we
-    #have to be uniq
-    #@warning multiple UID broken by this method
-    #@return an integer
+    ## @brief Provides a new uniq numeric ID
+    # @param emcomp LeObject subclass (not instance) : To know on wich things we
+    # have to be uniq
+    # @warning multiple UID broken by this method
+    # @return an integer
     def new_numeric_id(self, emcomp):
         target = emcomp.uid_source()
         tuid = target._uid[0] # Multiple UID broken here
@@ -90,35 +98,34 @@ class MongoDbDatasource(AbstractDatasource):
             return 1
         return results[0][tuid]+1
 
-    ##@brief returns a selection of documents from the datasource
-    #@param target Emclass
-    #@param field_list list
-    #@param filters list : List of filters
-    #@param relational_filters list : List of relational filters
-    #@param order list : List of column to order. ex: order =
-    #[('title', 'ASC'),]
-    #@param group list : List of tupple representing the column used as
-    #"group by" fields. ex: group = [('title', 'ASC'),]
-    #@param limit int : Number of records to be returned
-    #@param offset int: used with limit to choose the start record
-    #@return list
-    #@todo Implement group for abstract LeObject childs
+    ## @brief returns a selection of documents from the datasource
+    # @param target Emclass
+    # @param field_list list
+    # @param filters list : List of filters
+    # @param relational_filters list : List of relational filters
+    # @param order list : List of column to order. ex: order = [('title', 'ASC'),]
+    # @param group list : List of tupple representing the column used as
+    # "group by" fields. ex: group = [('title', 'ASC'),]
+    # @param limit int : Number of records to be returned
+    # @param offset int: used with limit to choose the start record
+    # @return list
+    # @todo Implement group for abstract LeObject childs
     def select(self, target, field_list, filters = None,
             relational_filters=None, order=None, group=None, limit=None,
             offset=0):
         if target.is_abstract():
-            #Reccursiv calls for abstract LeObject child
+            # Reccursive calls for abstract LeObject child
             results =  self.__act_on_abstract(target, filters,
                 relational_filters, self.select, field_list = field_list,
                 order = order, group = group, limit = limit)
 
-            #Here we may implement the group
-            #If sorted query we have to sort again
+            # Here we may implement the group
+            # If sorted query we have to sort again
             if order is not None:
                 key_fun = functools.cmp_to_key(
                     self.__generate_lambda_cmp_order(order))
                 results = sorted(results, key=key_fun)
-            #If limit given apply limit again
+            # If limit given apply limit again
             if offset > len(results):
                 results = list()
             else:
@@ -192,35 +199,35 @@ class MongoDbDatasource(AbstractDatasource):
 
         return results
 
-    ##@brief Deletes records according to given filters
-    #@param target Emclass : class of the record to delete
-    #@param filters list : List of filters
-    #@param relational_filters list : List of relational filters
-    #@return int : number of deleted records
+    ## @brief Deletes records according to given filters
+    # @param target Emclass : class of the record to delete
+    # @param filters list : List of filters
+    # @param relational_filters list : List of relational filters
+    # @return int : number of deleted records
     def delete(self, target, filters, relational_filters):
         if target.is_abstract():
             logger.debug("Delete called on %s filtered by (%s,%s). Target is \
 abstract, preparing reccursiv calls" % (target, filters, relational_filters))
-            #Deletion with abstract LeObject as target (reccursiv calls)
+            # Deletion with abstract LeObject as target (reccursiv calls)
             return self.__act_on_abstract(target, filters,
                 relational_filters, self.delete)
         logger.debug("Delete called on %s filtered by (%s,%s)." % (
             target, filters, relational_filters))
-        #Non abstract beahavior
+        # Non abstract beahavior
         mongo_filters = self.__process_filters(
             target, filters, relational_filters)
-        #Updating backref before deletion
+        # Updating backref before deletion
         self.__update_backref_filtered(target, filters, relational_filters,
             None)
         res = self.__collection(target).remove(mongo_filters)
         return res['n']
 
-    ##@brief updates records according to given filters
-    #@param target Emclass : class of the object to insert
-    #@param filters list : List of filters
-    #@param relational_filters list : List of relational filters
-    #@param upd_datas dict : datas to update (new values)
-    #@return int : Number of updated records
+    ## @brief updates records according to given filters
+    # @param target Emclass : class of the object to insert
+    # @param filters list : List of filters
+    # @param relational_filters list : List of relational filters
+    # @param upd_datas dict : datas to update (new values)
+    # @return int : Number of updated records
     def update(self, target, filters, relational_filters, upd_datas):
         self._data_cast(upd_datas)
         #fetching current datas state
@@ -237,9 +244,9 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             upd_datas, old_datas_l)
         return res
 
-    ##@brief Designed to be called by backref update in order to avoid
-    #infinite updates between back references
-    #@see update()
+    ## @brief Designed to be called by backref update in order to avoid
+    # infinite updates between back references
+    # @see update()
     def __update_no_backref(self, target, filters, relational_filters,
             upd_datas):
         logger.debug("Update called on %s filtered by (%s,%s) with datas \
@@ -285,18 +292,18 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
             target.make_consistency(datas=new_datas)
         return list(res.inserted_ids)
 
-    ##@brief Update backref giving an action
-    #@param target leObject child class
-    #@param filters
-    #@param relational_filters,
-    #@param new_datas None | dict : optional new datas if None mean we are deleting
-    #@param old_datas_l None | list : if None fetch old datas from db (usefull
-    #when modifications are made on instance before updating backrefs)
-    #@return nothing (for the moment
+    ## @brief Update backref giving an action
+    # @param target leObject child class
+    # @param filters
+    # @param relational_filters,
+    # @param new_datas None | dict : optional new datas if None mean we are deleting
+    # @param old_datas_l None | list : if None fetch old datas from db (usefull
+    # when modifications are made on instance before updating backrefs)
+    # @return nothing (for the moment
     def __update_backref_filtered(self, target,
             filters, relational_filters, new_datas = None, old_datas_l = None):
-        #Getting all the UID of the object that will be deleted in order
-        #to update back_references
+        # Getting all the UID of the object that will be deleted in order
+        # to update back_references
         if old_datas_l is None:
             mongo_filters = self.__process_filters(
                 target, filters, relational_filters)
@@ -304,46 +311,45 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 mongo_filters)
             old_datas_l = list(old_datas_l)
 
-        uidname = target.uid_fieldname()[0] #MULTIPLE UID BROKEN HERE
+        uidname = target.uid_fieldname()[0]  # MULTIPLE UID BROKEN HERE
         for old_datas in old_datas_l:
             self.__update_backref(
                 target, old_datas[uidname], old_datas, new_datas)
 
-    ##@brief Update back references of an object
-    #@ingroup plugin_mongodb_bref_op
+    ## @brief Update back references of an object
+    # @ingroup plugin_mongodb_bref_op
     #
-    #old_datas and new_datas arguments are set to None to indicate
-    #insertion or deletion. Calls examples :
-    #@par LeObject insert __update backref call
-    #<pre>
-    #Insert(datas):
-    #  self.make_insert(datas)
-    #  self.__update_backref(self.__class__, None, datas)
-    #</pre>
-    #@par LeObject delete __update backref call
-    #Delete()
-    #  old_datas = self.datas()
-    #  self.make_delete()
-    #  self.__update_backref(self.__class__, old_datas, None)
-    #@par LeObject update __update_backref call
-    #<pre>
-    #Update(new_datas):
-    #  old_datas = self.datas()
-    #  self.make_udpdate(new_datas)
-    #  self.__update_backref(self.__class__, old_datas, new_datas)
-    #</pre>
+    # old_datas and new_datas arguments are set to None to indicate
+    # insertion or deletion. Calls examples :
+    # @par LeObject insert __update backref call
+    # <pre>
+    # Insert(datas):
+    #   self.make_insert(datas)
+    #   self.__update_backref(self.__class__, None, datas)
+    # </pre>
+    # @par LeObject delete __update backref call
+    # Delete()
+    #   old_datas = self.datas()
+    #   self.make_delete()
+    #   self.__update_backref(self.__class__, old_datas, None)
+    # @par LeObject update __update_backref call
+    # <pre>
+    # Update(new_datas):
+    #   old_datas = self.datas()
+    #   self.make_udpdate(new_datas)
+    #   self.__update_backref(self.__class__, old_datas, new_datas)
+    # </pre>
     #
-    #@param target LeObject child classa
-    #@param tuid mixed : The target UID (the value that will be inserted in
-    #back references)
-    #@param old_datas dict : datas state before update
-    #@param new_datas dict : datas state after the update process
-    #retun None
+    # @param target LeObject child classa
+    # @param tuid mixed : The target UID (the value that will be inserted in
+    # back references)
+    # @param old_datas dict : datas state before update
+    # @param new_datas dict : datas state after the update process
     def __update_backref(self, target, tuid, old_datas, new_datas):
         #upd_dict is the dict that will allow to run updates in an optimized
         #way (or try to help doing it)
         #
-        #It's struct looks like :
+        #Its structure looks like :
         # { LeoCLASS : {
         #       UID1: (
         #           LeoINSTANCE,
@@ -362,17 +368,17 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 and not new_datas[fname] is None
             if (oldd and newd and old_datas[fname] == new_datas[fname])\
                     or not(oldd or newd):
-                #No changes or not concerned
+                # No changes or not concerned
                 continue
             bref_cls = fdh.back_reference[0]
             bref_fname = fdh.back_reference[1]
             if not fdh.is_singlereference():
-                #fdh is a multiple ref. So the update preparation will be
-                #divided into two loops :
-                #- one loop for deleting old datas
-                #- one loop for inserting updated datas
+                # fdh is a multiple reference. So the update preparation will be
+                # divided into two loops :
+                # - one loop for deleting old datas
+                # - one loop for inserting updated datas
                 #
-                #Preparing the list of values to delete or to add
+                # Preparing the list of values to delete or to add
                 if newd and oldd:
                     old_values = old_datas[fname]
                     new_values = new_datas[fname]
@@ -388,29 +394,29 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                 elif not oldd and newd:
                     to_del = []
                     to_add = new_datas[fname]
-                #Calling __back_ref_upd_one_value() with good arguments
+                # Calling __back_ref_upd_one_value() with good arguments
                 for vtype, vlist in [('old',to_del), ('new', to_add)]:
                     for value in vlist:
-                        #fetching backref infos
+                        # fetching backref infos
                         bref_infos = self.__bref_get_check(
                             bref_cls, value, bref_fname)
-                        #preparing the upd_dict
+                        # preparing the upd_dict
                         upd_dict = self.__update_backref_upd_dict_prepare(
                             upd_dict, bref_infos, bref_fname, value)
-                        #preparing updated bref_infos
+                        # preparing updated bref_infos
                         bref_cls, bref_leo, bref_dh, bref_value = bref_infos
                         bref_infos = (bref_cls, bref_leo, bref_dh,
                             upd_dict[bref_cls][value][1][bref_fname])
                         vdict = {vtype: value}
-                        #fetch and store updated value
+                        # fetch and store updated value
                         new_bref_val = self.__back_ref_upd_one_value(
                             fname, fdh, tuid, bref_infos, **vdict)
                         upd_dict[bref_cls][value][1][bref_fname] = new_bref_val
             else:
-                #fdh is a single ref so the process is simpler, we do not have
-                #to loop and we may do an update in only one
-                #__back_ref_upd_one_value() call by giving both old and new
-                #value
+                # fdh is a single ref so the process is simpler, we do not have
+                # to loop and we may do an update in only one
+                # __back_ref_upd_one_value() call by giving both old and new
+                # value
                 vdict = {}
                 if oldd:
                     vdict['old'] = old_datas[fname]
@@ -419,39 +425,38 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
                     vdict['new'] = new_datas[fname]
                     if not oldd:
                         uid_val = vdict['new']
-                #Fetching back ref infos
+                # Fetching back ref infos
                 bref_infos = self.__bref_get_check(
                     bref_cls, uid_val, bref_fname)
-                #prepare the upd_dict
+                # prepare the upd_dict
                 upd_dict = self.__update_backref_upd_dict_prepare(
                     upd_dict, bref_infos, bref_fname, uid_val)
-                #forging update bref_infos
+                # forging update bref_infos
                 bref_cls, bref_leo, bref_dh, bref_value = bref_infos
                 bref_infos = (bref_cls, bref_leo, bref_dh,
                         upd_dict[bref_cls][uid_val][1][bref_fname])
-                #fetche and store updated value
+                # fetch and store updated value
                 new_bref_val = self.__back_ref_upd_one_value(
                     fname, fdh, tuid, bref_infos, **vdict)
                 upd_dict[bref_cls][uid_val][1][bref_fname] = new_bref_val
-        #Now we've got our upd_dict ready.
-        #running the updates
+        # Now we've got our upd_dict ready.
+        # running the updates
         for bref_cls, uid_dict in upd_dict.items():
             for uidval, (leo, datas) in uid_dict.items():
-                #MULTIPLE UID BROKEN 2 LINES BELOW
+                # MULTIPLE UID BROKEN 2 LINES BELOW
                 self.__update_no_backref(
                     leo.__class__, [(leo.uid_fieldname()[0], '=', uidval)],
                     [], datas)
 
-    ##@brief Utility function designed to handle the upd_dict of
-    #__update_backref()
+    ## @brief Utility function designed to handle the upd_dict of __update_backref()
     #
-    #Basically checks if a key exists at some level, if not create it with
-    #the good default value (in most case dict())
-    #@param upd_dict dict : in & out args modified by reference
-    #@param bref_infos tuple : as returned by __bref_get_check()
-    #@param bref_fname str : name of the field in referenced class
-    #@param uid_val mixed : the UID of the referenced object
-    #@return the updated version of upd_dict
+    # Basically checks if a key exists at some level, if not create it with
+    # the good default value (in most case dict())
+    # @param upd_dict dict : in & out args modified by reference
+    # @param bref_infos tuple : as returned by __bref_get_check()
+    # @param bref_fname str : name of the field in referenced class
+    # @param uid_val mixed : the UID of the referenced object
+    # @return the updated version of upd_dict
     @staticmethod
     def __update_backref_upd_dict_prepare(upd_dict,bref_infos, bref_fname,
             uid_val):
@@ -465,14 +470,14 @@ abstract, preparing reccursiv calls" % (target, filters, relational_filters))
         return upd_dict
 
 
-    ##@brief Prepare a one value back reference update
-    #@param fname str : the source Reference field name
-    #@param fdh DataHandler : the source Reference DataHandler
-    #@param tuid mixed : the uid of the Leo that make reference to the backref
-    #@param bref_infos tuple : as returned by __bref_get_check() method
-    #@param old mixed : (optional **values) the old value
-    #@param new mixed : (optional **values) the new value
-    #@return the new back reference field value
+    ## @brief Prepare a one value back reference update
+    # @param fname str : the source Reference field name
+    # @param fdh DataHandler : the source Reference DataHandler
+    # @param tuid mixed : the uid of the Leo that make reference to the backref
+    # @param bref_infos tuple : as returned by __bref_get_check() method
+    # @param old mixed : (optional **values) the old value
+    # @param new mixed : (optional **values) the new value
+    # @return the new back reference field value
     def __back_ref_upd_one_value(self, fname, fdh, tuid, bref_infos, **values):
         bref_cls, bref_leo, bref_dh, bref_val = bref_infos
         oldd = 'old' in values
@@ -487,7 +492,7 @@ delete in this back reference update was not found in the back referenced \
 object : %s. Value was : '%s'" % (bref_leo, tuid))
                 return bref_val
             elif oldd and not newdd:
-                #deletion
+                # deletion
                 old_value = values['old']
                 if tuid not in bref_val:
                     raise MongoDbConsistencyError("The value we want to \
@@ -511,7 +516,7 @@ object : %s. Value was : '%s'" % (bref_leo, tuid))
                 else:
                     bref_val.append(tuid)
         else:
-            #Single value backref
+            # Single value backref
             if oldd and newdd:
                 if bref_val != tuid:
                     raise MongoDbConsistencyError("The backreference doesn't \
@@ -519,7 +524,7 @@ have expected value. Expected was %s but found %s in %s" % (
                         tuid, bref_val, bref_leo))
                 return bref_val
             elif oldd and not newdd:
-                #deletion
+                # deletion
                 if not hasattr(bref_dh, "default"):
                     raise MongoDbConsistencyError("Unable to delete a \
 value for a back reference update. The concerned field don't have a default \
@@ -529,17 +534,14 @@ value : in %s field %s" % (bref_leo,fname))
                 bref_val = tuid
         return bref_val
 
-    ##@brief Fetch back reference informations
-    #@warning thank's to __update_backref_act() this method is useless
-    #@param bref_cls LeObject child class : __back_reference[0]
-    #@param uidv mixed : UID value (the content of the reference field)
-    #@param bref_fname str : the name of the back_reference field
-    #@return tuple(bref_class, bref_LeObect_instance, bref_datahandler,
-    #bref_value)
-    #@throw MongoDbConsistencyError when LeObject instance not found given
-    #uidv
-    #@throw LodelFatalError if the back reference field is not a Reference
-    #subclass (major failure)
+    ## @brief Fetch back reference informations
+    # @warning thank's to __update_backref_act() this method is useless
+    # @param bref_cls LeObject child class : __back_reference[0]
+    # @param uidv mixed : UID value (the content of the reference field)
+    # @param bref_fname str : the name of the back_reference field
+    # @return tuple(bref_class, bref_LeObect_instance, bref_datahandler, bref_value)
+    # @throw MongoDbConsistencyError when LeObject instance not found given uidv
+    # @throw LodelFatalError if the back reference field is not a Reference subclass (major failure)
     def __bref_get_check(self, bref_cls, uidv, bref_fname):
         bref_leo = bref_cls.get_from_uid(uidv)
         if bref_leo is None:
@@ -552,17 +554,17 @@ is not a reference : '%s' field '%s'" % (bref_leo, bref_fname))
         bref_val = bref_leo.data(bref_fname)
         return (bref_leo.__class__, bref_leo, bref_dh, bref_val)
 
-    ##@brief Act on abstract LeObject child
+    ## @brief Act on abstract LeObject child
     #
-    #This method is designed to be called by insert, select and delete method
-    #when they encounter an abtract class
-    #@param target LeObject child class
-    #@param filters
-    #@param relational_filters
-    #@param act function : the caller method
-    #@param **kwargs other arguments
-    #@return sum of results (if it's an array it will result in a concat)
-    #@todo optimization implementing a cache for __bref_get_check()
+    # This method is designed to be called by insert, select and delete method
+    # when they encounter an abtract class
+    # @param target LeObject child class
+    # @param filters
+    # @param relational_filters
+    # @param act function : the caller method
+    # @param **kwargs other arguments
+    # @return sum of results (if it's an array it will result in a concat)
+    # @todo optimization implementing a cache for __bref_get_check()
     def __act_on_abstract(self,
         target, filters, relational_filters, act, **kwargs):
 
@@ -577,7 +579,7 @@ on non abstract childs" % act.__name__)
         for target_child in target_childs:
             logger.debug(
                 "Abstract %s on %s" % (act.__name__, target_child.__name__))
-            #Add target_child to filter
+            # Add target_child to filter
             new_filters = copy.copy(filters)
             for i in range(len(filters)):
                 fname, op, val = filters[i]
@@ -595,12 +597,11 @@ on non abstract childs" % act.__name__)
                 **kwargs)
         return result
 
-    ##@brief Connect to database
-    #@note this method avoid opening two times the same connection using
-    #MongoDbDatasource::_connections static attribute
-    #@param username str
-    #@param password str
-    #@param ro bool : If True the Datasource is for read only, else the
+    ## @brief Connect to database
+    # @note this method avoid opening two times the same connection using MongoDbDatasource::_connections static attribute
+    # @param username str
+    # @param password str
+    # @param ro bool : If True the Datasource is for read only, else it will be write only
     def __connect(self, username, password, db_name, ro):
         conn_string = connection_string(
             username = username, password = password,
@@ -621,31 +622,26 @@ on non abstract childs" % act.__name__)
             return self._connections[conn_h]['db'][self.__db_infos['db_name']]
 
 
-    ##@brief Return a pymongo collection given a LeObject child class
-    #@param leobject LeObject child class (no instance)
-    #return a pymongo.collection instance
+    ## @brief Return a pymongo collection given a LeObject child class
+    # @param leobject LeObject child class (no instance)
+    # @return a pymongo.collection instance
     def __collection(self, leobject):
         return self.database[object_collection_name(leobject)]
 
-    ##@brief Perform subqueries implies by relational filters and append the
+    ## @brief Perform subqueries implies by relational filters and append the
     # result to existing filters
     #
-    #The processing is divided in multiple steps :
-    # - determine (for each relational field of the target)  every collection
-    #that are involved
-    # - generate subqueries for relational_filters that concerns a different
-    #collection than target collection
-    #filters
-    # - execute subqueries
-    # - transform subqueries results in filters
-    # - merge subqueries generated filters with existing filters
+    # The processing is divided in multiple steps :
+    #  - determine (for each relational field of the target)  every collection that are involved
+    #  - generate subqueries for relational_filters that concerns a different collection than target collection filters
+    #  - execute subqueries
+    #  - transform subqueries results in filters
+    #  - merge subqueries generated filters with existing filters
     #
-    #@param target LeObject subclass (no instance) : Target class
-    #@param filters list : List of tuple(FIELDNAME, OP, VALUE)
-    #@param relational_filters : same composition thant filters except that
-    # FIELD is represented by a tuple(FIELDNAME, {CLASS1:RFIELD1,
-    # CLASS2:RFIELD2})
-    #@return a list of pymongo filters ( dict {FIELD:{OPERATOR:VALUE}} )
+    # @param target LeObject subclass (no instance) : Target class
+    # @param filters list : List of tuple(FIELDNAME, OP, VALUE)
+    # @param relational_filters : same composition thant filters except that FIELD is represented by a tuple(FIELDNAME, {CLASS1:RFIELD1, CLASS2:RFIELD2})
+    # @return a list of pymongo filters ( dict {FIELD:{OPERATOR:VALUE}} )
     def __process_filters(self,target, filters, relational_filters):
         # Simple filters lodel2 -> pymongo converting
         res = self.__filters2mongo(filters, target)
@@ -688,21 +684,19 @@ on non abstract childs" % act.__name__)
             logger.debug("End of subquery execution")
         return res
 
-    ##@brief Generate subqueries from rfilters tree
+    ## @brief Generate subqueries from rfilters tree
     #
-    #Returned struct organization :
-    # - 1st level keys : relational field name of target
-    # - 2nd level keys : referenced leobject
-    # - 3th level values : pymongo filters (dict)
+    # Returned struct organization :
+    #  - 1st level keys : relational field name of target
+    #  - 2nd level keys : referenced leobject
+    #  - 3th level values : pymongo filters (dict)
     #
-    #@note The only caller of this method is __process_filters
-    #@warning No return value, the rfilters arguement is modified by
-    #reference
+    # @note The only caller of this method is __process_filters
+    # @warning No return value, the rfilters arguement is modified by reference
     #
-    #@param target LeObject subclass (no instance) : Target class
-    #@param rfilters dict : A struct as returned by
-    #MongoDbDatasource.__prepare_relational_filters()
-    #@return None, the rfilters argument is modified by reference
+    # @param target LeObject subclass (no instance) : Target class
+    # @param rfilters dict : A struct as returned by MongoDbDatasource.__prepare_relational_filters()
+    # @return None, the rfilters argument is modified by reference
     @classmethod
     def __subqueries_from_relational_filters(cls, target, rfilters):
         for fname in rfilters:
@@ -715,21 +709,20 @@ on non abstract childs" % act.__name__)
                         rfilters[fname][leobject][rfield], target.field(fname))
                     rfilters[fname][leobject][rfield] = mongofilters
 
-    ##@brief Generate a tree from relational_filters
+    ## @brief Generate a tree from relational_filters
     #
-    #The generated struct is a dict with :
-    # - 1st level keys : relational field name of target
-    # - 2nd level keys : referenced leobject
-    # - 3th level keys : referenced field in referenced class
-    # - 4th level values : list of tuple(op, value)
+    # The generated struct is a dict with :
+    #  - 1st level keys : relational field name of target
+    #  - 2nd level keys : referenced leobject
+    #  - 3th level keys : referenced field in referenced class
+    #  - 4th level values : list of tuple(op, value)
     #
-    #@note The only caller of this method is __process_filters
-    #@warning An assertion is done : if two leobject are stored in the same
-    #collection they share the same uid
+    # @note The only caller of this method is __process_filters
+    # @warning An assertion is done : if two leobject are stored in the same collection they share the same uid
     #
-    #@param target LeObject subclass (no instance) : Target class
-    #@param relational_filters : same composition thant filters except that
-    #@return a struct as described above
+    # @param target LeObject subclass (no instance) : Target class
+    # @param relational_filters : same composition thant filters except that
+    # @return a struct as described above
     @classmethod
     def __prepare_relational_filters(cls, target, relational_filters):
         # We are going to regroup relationnal filters by reference field
@@ -761,9 +754,9 @@ on non abstract childs" % act.__name__)
                 rfilters[fname][repr_leo][rfield].append((op, value))
         return rfilters
 
-    ##@brief Convert lodel2 filters to pymongo conditions
-    #@param filters list : list of lodel filters
-    #@return dict representing pymongo conditions
+    ## @brief Convert lodel2 filters to pymongo conditions
+    # @param filters list : list of lodel filters
+    # @return dict representing pymongo conditions
     @classmethod
     def __filters2mongo(cls, filters, target):
         res = dict()
@@ -797,12 +790,13 @@ by an equality filter")
         return res
 
 
-    ##@brief Convert lodel2 operator and value to pymongo struct
+    ## @brief Convert lodel2 operator and value to pymongo struct
     #
-    #Convertion is done using MongoDbDatasource::lodel2mongo_op_map
-    #@param op str : take value in LeFilteredQuery::_query_operators
-    #@param value mixed : the value
-    #@return a tuple(mongo_op, mongo_value)
+    # Convertion is done using MongoDbDatasource::lodel2mongo_op_map
+    # @param op str : take value in LeFilteredQuery::_query_operators
+    # @param value mixed : the value
+    # @param dhdl
+    # @return a tuple(mongo_op, mongo_value)
     @classmethod
     def __op_value_conv(cls, op, value, dhdl):
         if op not in cls.lodel2mongo_op_map:
@@ -810,8 +804,8 @@ by an equality filter")
             raise MongoDbDataSourceError(msg)
         mongop = cls.lodel2mongo_op_map[op]
         mongoval = value
-        #Converting lodel2 wildcarded string into a case insensitive
-        #mongodb re
+        # Converting lodel2 wildcarded string into a case insensitive
+        # mongodb re
         if mongop in cls.mongo_op_re:
             if value.startswith('(') and value.endswith(')'):
                 if (dhdl.cast_type is not None):
@@ -831,8 +825,10 @@ by an equality filter")
             mongoval = {'$regex': mongoval, '$options': 'i'}
         return (op, mongoval)
 
-    ##@brief Convert a list of tuple(OP, VALUE) into a pymongo filter dict
-    #@return a dict with mongo op as key and value as value...
+    ## @brief Convert a list of tuple(OP, VALUE) into a pymongo filter dict
+    # @param op_value_list list
+    # @param dhdl
+    # @return a dict with mongo op as key and value as value...
     @classmethod
     def __op_value_listconv(cls, op_value_list, dhdl):
         result = dict()
