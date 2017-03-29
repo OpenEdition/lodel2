@@ -7,29 +7,31 @@ LodelContext.expose_modules(globals(), {
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
-##@defgroup lodel2_script Administration scripts
-#@ingroup lodel2_plugins
+## @defgroup lodel2_script Administration scripts
+# @ingroup lodel2_plugins
 
-##@package lodel.plugin.script
-#@brief Lodel2 utility for writting administration scripts
-#@ingroup lodel2_plugins
-#@ingroup lodel2_script
+## @package lodel.plugin.scripts Lodel2 utility for writting administration scripts
+# @ingroup lodel2_plugins
+# @ingroup lodel2_script
 
-##@brief Stores registered scripts
-#@todo store it in MetaLodelScript
+## @brief Stores registered scripts
+# @todo store it in MetaLodelScript
 __registered_scripts = dict()
 
 
-##@brief LodelScript metaclass that allows to "catch" child class
-#declaration
-#@ingroup lodel2_script
-#@ingroup lodel2_plugins
+## @brief LodelScript metaclass that allows to "catch" child class declaration
+# @ingroup lodel2_script
+# @ingroup lodel2_plugins
 #
-#Automatic action registration on child class declaration
+# Automatic action registration on child class declaration
 class MetaLodelScript(type):
     
+    ## 
+    # @param name str : action's name
+    # @param bases list 
+    # @param attrs list
     def __init__(self, name, bases, attrs):
-        #Here we can store all child classes of LodelScript
+        # Here we can store all child classes of LodelScript
         super().__init__(name, bases, attrs)
         if len(bases) == 1 and bases[0] == object:
             return
@@ -49,9 +51,9 @@ action identifier" % name)
         self.argparser_config(self._parser)
             
     
-    ##@brief Handles script registration
-    #@note Script list is maitained in 
-    #lodel.plugin.admin_script.__registered_scripts
+    ## @brief Handles script registration
+    # @note Script list is maitained in lodel.plugin.admin_script.__registered_scripts
+    # @param name str
     def __register_script(self, name):
         if self._action is None:
             logger.warning("%s._action is None. Trying to use class name as \
@@ -64,57 +66,67 @@ action identifier" % name)
         return '%s : %s' % (self._action, self._description)
 
 
-##@brief Class designed to facilitate custom script writting
-#@ingroup lodel2_plugins
-#@ingroup lodel2_script
+## @brief Class designed to facilitate custom script writting
+# @ingroup lodel2_plugins
+# @ingroup lodel2_script
 class LodelScript(object, metaclass=MetaLodelScript):
     
-    ##@brief A string to identify the action
+    ## @brief A string to identify the action
     _action = None
-    ##@brief Script descripiton (argparse argument)
+    ## @brief Script descripiton (argparse argument)
     _description = None
-    ##@brief argparse.ArgumentParser instance
+    ## @brief argparse.ArgumentParser instance
     _parser = None
     
-    ##@brief No instanciation
+    ## @brief No instanciation
     def __init__(self):
         raise NotImplementedError("Static class")
     
-    ##@brief Virtual method. Designed to initialize arguement parser.
-    #@param parser ArgumentParser : Child class argument parser instance
-    #@return MUST return the argument parser (NOT SURE ABOUT THAT !! Maybe it \
-    #works by reference)
+    ## @brief Virtual method. Designed to initialize arguement parser.
+    # @param parser ArgumentParser : Child class argument parser instance
+    # @return MUST return the argument parser (NOT SURE ABOUT THAT !! Maybe it works by reference)
+    # @throw LodelScriptError in case it is not implemented in the child class
     @classmethod
     def argparser_config(cls, parser):
         raise LodelScriptError("LodelScript.argparser_config() is a pure \
 virtual method! MUST be implemented by ALL child classes")
     
-    ##@brief Virtual method. Run the script
-    #@return None or an integer that will be the script return code
+    ## @brief Virtual method. Runs the script
+    # @param args list
+    # @return None or an integer that will be the script return code
+    # @throw LodelScriptError in case it is not implemented in the child class
     @classmethod
     def run(cls, args):
         raise LodelScriptError("LodelScript.run() is a pure virtual method. \
 MUST be implemented by ALL child classes")
     
-    ##@brief Called by main_run() to execute a script.
+    ## @brief Executes a script
+    # 
+    # Called by main_run()
     #
-    #Handles argument parsing and then call LodelScript.run()
+    # Handles argument parsing and then call LodelScript.run()
     @classmethod
     def _run(cls):
         args = cls._parser.parse_args()
         return cls.run(args)
 
-    ##@brief Append action name to the prog name
-    #@note See argparse.ArgumentParser() prog argument
+    ## @brief Append action name to the prog name
+    # @note See argparse.ArgumentParser() prog argument
+    # @return str
     @classmethod
     def _prog_name(cls):
         return '%s %s' % (sys.argv[0], cls._action)
     
-    ##@brief Return the default description for an action
+    ## @brief Return the default description for an action
+    # @return str
     @classmethod
     def _default_description(cls):
         return "Lodel2 script : %s" % cls._action
     
+    ## @brief handles the help message of an action
+    # @param msg str
+    # @param return_code int : the default return code is 1
+    # @param exit_after bool : default value is True, so that there is an exit after the message printing
     @classmethod
     def help_exit(cls,msg = None, return_code = 1, exit_after = True):
         if not (msg is None):
@@ -123,15 +135,23 @@ MUST be implemented by ALL child classes")
         if exit_after:
             exit(1)
 
+
+## @brief Registers the script class for an action
+# @param action_name str
+# @param cls LodelScript
 def script_registration(action_name, cls):
     __registered_scripts[action_name] = cls
     logger.info("New script registered : %s" % action_name)
 
-##@brief Return a list containing all available actions
+
+## @brief Returns a list containing all available actions
+# @return list
 def _available_actions():
     return [ act for act in __registered_scripts ]
 
-##@brief Returns default runner argument parser
+
+## @brief Returns default runner's argument parser
+# @param ArgumentParser
 def _default_parser():
 
     action_list = _available_actions()
@@ -150,12 +170,12 @@ def _default_parser():
 action" % sys.argv[0])
     return parser
 
-##@brief Main function of lodel_admin.py script
+## @brief Main function of lodel_admin.py script
 #
-#This function take care to run the good plugins and clean sys.argv from
-#action name before running script
+# This function take care to run the good plugins and clean sys.argv from
+# action name before running script
 #
-#@return DO NOT RETURN BUT exit() ONCE SCRIPT EXECUTED !!
+# @return DO NOT RETURN BUT exit() ONCE SCRIPT EXECUTED !!
 def main_run():
     default_parser = _default_parser()
     if len(sys.argv) == 1:
@@ -182,43 +202,44 @@ def main_run():
     ret = 0 if ret is None else ret
     exit(ret)
 
-##@page lodel2_script_doc Lodel2 scripting
-#@ingroup lodel2_script
+## @page lodel2_script_doc Lodel2 scripting
+# @ingroup lodel2_script
 #
-#@section lodel2_script_adm Lodel2 instance administration scripts
+# @section lodel2_script_adm Lodel2 instance administration scripts
 #
-#Lodel2 provides instance administration operation using Makefiles or 
-#lodel_admin.py script ( see @ref lodel2_instance_admin ).
+# In Lodel2, it is possible to administrate instances using either Makefiles
+# or lodel_admin.py script ( see @ref lodel2_instance_admin ).
 #
-#The lodel_admin.py script take as first option an action. Each action
-#correspond to a sub-script with it's own options etc. To get a list
-#of all available action run <code>python3 lodel_admin.py -L</code>.
+# The lodel_admin.py script takes an action as first argument. Each action
+# corresponds to a sub-script with its own options etc. To get a list
+# of all available action run <code>python3 lodel_admin.py -L</code>.
 #
-#@section lodel2_script_action lodel_admin.py actions
+# @section lodel2_script_action lodel_admin.py actions
 #
-#Action implementation is done by class inheritance. To create a new action
-#write a @ref lodel.plugin.scripts.LodelScript "LodelScript" derived class (
-#see @ref lodel.plugin.core_scripts "core_scripts.py" file as example )
+# Action implementation is done by class inheritance. To create a new action,
+# one has to write a @ref lodel.plugin.scripts.LodelScript "LodelScript" 
+# derived class ( see @ref lodel.plugin.core_scripts "core_scripts.py" file 
+# as example )
 #
-#@subsection lodel2_script_inheritance LodelScript inheritance
+# @subsection lodel2_script_inheritance LodelScript inheritance
 #
-#In order to implement properly a new action you have to write a new 
-#@ref lodel.plugin.scripts.LodelScript "LodelScript" derivated class.
-#Some methods and attributes are mandatory to write a fully functionnal
-#derivated class. Here is a list :
+# In order to implement properly a new action you have to write a new 
+# @ref lodel.plugin.scripts.LodelScript "LodelScript" derivated class.
+# Some methods and attributes are mandatory to write a fully functionnal
+# derivated class. Here is a list :
 #
-#- mandatory methods
-# - @ref plugin.scripts.LodelScript.argparser_config() "argparser_config()" :
+# - mandatory methods
+#  - @ref plugin.scripts.LodelScript.argparser_config() "argparser_config()" :
 #(classmethod) initialize argparse.Parser
-# - @ref plugin.scripts.LodelScript.run() "run()" : (classmethod) contains the
+#  - @ref plugin.scripts.LodelScript.run() "run()" : (classmethod) contains the
 #code that runs to perform the action
-#- mandatory attributes
-# - @ref plugin.scripts.LodelScript::_action "_action" : (class attribute)
+# - mandatory attributes
+#  - @ref plugin.scripts.LodelScript::_action "_action" : (class attribute)
 #stores action name
-# - @ref plugin.scripts.LodelScript::_description "_description" : (class 
+#  - @ref plugin.scripts.LodelScript::_description "_description" : (class 
 #attribute) sotres a short action description
 #
-#@note On script's action registration : once child class is written you only
-#need to import it to trigger script's action registration (see
-#@ref plugin.scripts.MetaLodelScript )
+# @note On script's action registration : once child class is written you only
+# need to import it to trigger script's action registration (see
+# @ref plugin.scripts.MetaLodelScript )
 #
