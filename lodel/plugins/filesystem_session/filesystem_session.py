@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+## @package lodel.plugins.filesystem_session.filesystem_session Session objects management module
 
 ## @brief An extended dictionary representing a session in the file system
 class FileSystemSession(dict):
 
-    ## @brief Constructor
+    ##
     # @param token str
     def __init__(self, token):
         self.__token = token

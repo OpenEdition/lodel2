@@ -1,3 +1,5 @@
+## @package plugins.filesystem_session This package is a plugin for filesystem based session management
+
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.validator.validator': ['Validator']})

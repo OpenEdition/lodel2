@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+## @package lodel.plugins.filesystem_session.main Main entry point of the plugin
+
 import binascii
 import datetime
 import os
@@ -30,18 +33,24 @@ def generate_token():
 
 ## @brief checks the validity of a given session token
 # @param token str
-# @raise ClientAuthenticationFailure for invalid or not found session token
+# @throw ClientAuthenticationFailure for invalid or not found session token
 def check_token(token):
     if len(token) != SESSION_TOKENSIZE:
         raise ClientAuthenticationFailure("Invalid token string")
     if token not in __sessions.keys():
         raise ClientAuthenticationFailure("No session found for this token")
 
+
 ## @brief returns a session file path for a specific token
+# @param token str
+# @return str
 def generate_file_path(token):
     return os.path.abspath(os.path.join(Settings.sessions.directory, Settings.sessions.file_template) % token)
 
 
+##
+# @param filepath str
+# @return str|None : returns the token or None if no token was found
 def get_token_from_filepath(filepath):
     token_regex = re.compile(os.path.abspath(os.path.join(Settings.sessions.directory, Settings.sessions.file_template % '(?P<token>.*)')))
     token_search_result = token_regex.match(filepath)
@@ -53,7 +62,7 @@ def get_token_from_filepath(filepath):
 ## @brief returns the session's last modification timestamp
 # @param token str
 # @return float
-# @raise ValueError if the given token doesn't match with an existing session
+# @throw ValueError if the given token doesn't match with an existing session
 def get_session_last_modified(token):
     if token in __sessions[token]:
         return os.stat(__sessions[token]).st_mtime
@@ -138,17 +147,25 @@ def gc():
                 logger.debug("Expired session %s has been destroyed" % token)
 
 
+##
+# @param token str
+# @param key str
+# @param value
 def set_session_value(token, key, value):
     session = restore_session(token)
     session[key] = value
     save_session(token, session)
 
-
+##
+# @param token str
+# @param key str
 def get_session_value(token, key):
     session = restore_session(token)
     return session[key]
 
-
+##
+# @param token str
+# @param key str
 def del_session_value(token, key):
     session = restore_session(token)
     if key in session:
