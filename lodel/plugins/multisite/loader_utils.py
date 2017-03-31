@@ -86,7 +86,8 @@ def main():
             datapath = os.path.join(lodelsites_datapath, handled_sitename)
             try:
                 site_load(datapath) #using default conf.d configuration dirname
-            except LodelFatalError as e:
+            except Exception as e:
+                LodelContext.set(None)
                 LodelContext.set(lodelsites_name)
                 LodelContext.expose_modules(globals(), {
                     'lodel.settings': ['Settings'],

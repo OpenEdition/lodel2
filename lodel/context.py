@@ -91,7 +91,8 @@ class LodelMetaPathFinder(importlib.abc.MetaPathFinder):
                 fd.close()
             lodel_pkg_path = os.path.join(mod_path, 'lodel')
             if not os.path.exists(lodel_pkg_path):
-                os.symlink(lodel.__path__[0], lodel_pkg_path, True)
+                os.symlink(src = lodel.__path__[0], dst = lodel_pkg_path,
+		    target_is_directory = True)
             #Cache invalidation after we "created" the new package
             #importlib.invalidate_caches()
         return None
