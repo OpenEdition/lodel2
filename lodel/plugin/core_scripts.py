@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import os, os.path
 from lodel.context import LodelContext
+from lodel import buildconf
 LodelContext.expose_modules(globals(), {
     'lodel.plugin.scripts': ['LodelScript'],
     'lodel.logger': 'logger'})
@@ -302,6 +303,8 @@ class ListHooks(LodelScript):
             print("\n")
 
 
+##@brief Implements lodel_admin **dyncode** action
+#@ingroup lodel2_script
 class RefreshDyncode(LodelScript):
     _action = 'dyncode'
     _description = 'Update the dynamic code according to EM and conf'
@@ -314,10 +317,16 @@ class RefreshDyncode(LodelScript):
         parser.add_argument('-o', '--dyncode',
             help='Specify the filename where the dyncode should be written',
             type=str, default='')
+        if LodelContext.multisite():
+            parser.add_argument('-a', '--all', action='store_true',
+                help="ONLY VALID FOR MULtisites ! Refresh lodelsites dyncode \
++ all handled sites dyncode")
         return
 
     ##@todo think of a better method to determine if we are in mono or
     #multisite instance
+    #@todo code factorisation to fetch handled sites list
+    #@todo fetch & use correct em_translator for handled sites
     @classmethod
     def run(cls, args):
         LodelContext.expose_modules(globals(), {
@@ -329,15 +338,61 @@ class RefreshDyncode(LodelScript):
         if len(args.em.strip()) == 0:
             #using the default em_file
             model_file = Settings.editorialmodel.emfile
-        #Model loaded
-        model = EditorialModel.load(em_translator, filename = model_file)
+        elif LodelContext.multisite() and args.all:
+            raise 
         #Creating dyncode
         dyncode_file = args.dyncode
         if len(args.dyncode.strip()) == 0:
             #using dyncode filename from conf
             dyncode_file = Settings.editorialmodel.dyncode
+        elif LodelContext.multisite() and args.all:
+            raise 
+        if LodelContext.multisite() and args.all:
+            #NOTE the code bellow can be factorised with 
+            #plugins/multisite/loader_utils.py
+
+            #Get the lodelsites instance name and the emfile path
+            LodelContext.set(None)
+            LodelContext.expose_modules(globals(), {
+                'lodel.settings':['Settings']})
+            lodelsites_name = Settings.sitename
+            emfile_path = Settings.lodelsites.sites_emfile
+            del(globals()['Settings']) #should be useless
+            #Get the list of handled sites name
+            LodelContext.set(lodelsites_name)
+            LodelContext.expose_modules(globals(), {
+                'lodel.leapi.query': ['LeGetQuery'],
+            })
+            handled_sites = LeGetQuery(lodelsite_leo, query_filters = [],
+                field_list = ['shortname']).execute()
+            del(globals()['LeGetQuery']) #should be useless
+            lodlesites_path = os.path.join(buildconf.LODEL2VARDIR,
+                MULTISITE_CONTEXTDIR)
+            if handled_sites is not None:
+                for sitename in handled_sites:
+                    LodelContext.set(None)
+                    #construct dyncode filename
+                    dyncode_path = os.path.join(
+                        os.path.join(lodlesites_path, sitename),
+                        'leapi_dyncode') #BOO hardcoded dyncode file name
+                    cls.refresh_dyncode(emfile_path, dyncode_path,
+                        em_translator)
+        #Refresh only one dyncode
+        #if multisite it's the lodelsites dyncode
+        LodelContext.set(None)
+        cls.refresh_dyncode(model_file, dyncode_file, em_translator)
+
+    
+    ##@brief Refresh dyncode
+    #@param model_file str : EM filename
+    #@param dyncode_file str : dyncode output filename
+    #@param em_translator str : translator name
+    @classmethod
+    def refresh_dyncode(cls, model_file, dyncode_file, em_translator):
+        #Model loaded
+        model = EditorialModel.load(em_translator, filename = model_file)
         dyncode_content = lefactory.dyncode_from_em(model)
         with open(dyncode_file, 'w+') as dfp:
             dfp.write(dyncode_content)
         print("Dyncode written in %s from em %s" % (dyncode_file, model_file))
-
+        

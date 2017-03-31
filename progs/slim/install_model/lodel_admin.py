@@ -139,15 +139,36 @@ def update_plugin_discover_cache(path_list = None):
 
 if __name__ == '__main__':
     _simlink_hack()
+    import lodel.buildconf
     from lodel import bootstrap
+    from lodel.context import LodelContext
     #to deleted when we known wich action need what kind of MULTISITE API
     if not bootstrap._monosite_test():
         bootstrap.bootstrap('lodelsites')
+        LodelContext.set(None)
+        #lodelsites instance preloading
+        #THIS CODE SHOULD BE IN AN UTIL FUNCTION
+        LodelContext.expose_modules(globals(), {
+            'lodel.bootstrap': ['get_handled_sites_name', 'site_preload'],
+            'lodel.settings': ['Settings']})
+        lodelsites_name = Settings.sitename
+        lodelsites_datapath = os.path.join(
+            os.path.join(lodel.buildconf.LODEL2VARDIR, lodelsites_name),
+            lodel.buildconf.MULTISITE_DATADIR)
+        del(globals()['Settings'])
+        site_preload(lodelsites_datapath, 'lodelsites.conf.d', True)
+
+        #preloading all handled sites
+        for sitename in get_handled_sites_name():
+            datapath = os.path.join(
+                os.path.join(lodel.buildconf.LODEL2VARDIR, sitename),
+                lodel.buildconf.MULTISITE_DATADIR)
+            site_preload(datapath)
     else:
         bootstrap.bootstrap()
-    from lodel.context import LodelContext
     #from lodel.plugin.scripts import main_run
     LodelContext.expose_modules(globals(),
         {'lodel.plugin.scripts': ['main_run'],
          'lodel.plugin.core_scripts': 'core_scripts'})
     main_run()
+    exit()
