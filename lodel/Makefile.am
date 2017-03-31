@@ -17,6 +17,7 @@ logdir = $(localstatedir)/log/lodel2/
 
 do_subst = sed 	-e 's,\[@\]LODEL2_VARDIR\[@\],$(localstatedir)/lodel2/,g' \
 		-e 's,\[@\]LODEL2_LOGDIR\[@\],$(logdir),g' \
+		-e 's,\[@\]LODEL2_LODEL_PKG\[@\],$(lodeldir),g' \
 		-e 's,\[@\]MULTISITE_DATA_DIRNAME\[@\],$(lodel2_multisite_data_dirname),g' \
 		-e 's,\[@\]MULTISITE_CTX_DIRNAME\[@\],$(lodel2_multisite_ctx_dirname),g'
 

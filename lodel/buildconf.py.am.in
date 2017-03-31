@@ -7,11 +7,11 @@ WEBUI=@WEBUI@
 #Populated by make
 LODEL2VARDIR="[@]LODEL2_VARDIR[@]"
 LODEL2LOGDIR="[@]LODEL2_LOGDIR[@]"
+LODEL_PKG_PATH = "[@]LODEL2_LODEL_PKG[@]"
 
 
 MULTISITE_DATADIR = "[@]MULTISITE_DATA_DIRNAME[@]"
 MULTISITE_CONTEXTDIR = "[@]MULTISITE_CTX_DIRNAME[@]"
 MULTISITE_DYNCODE_MODULENAME = 'leapi_dyncode'
 ##@todo to be generated via autotools
-LODEL_PKG_PATH = '/usr/lib/python3/dist-package/lodel'
 LODELSITE_CONFDIR = 'lodelsites.conf.d'
