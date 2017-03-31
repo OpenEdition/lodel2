@@ -20,7 +20,7 @@ def update_dyncode(site_name, em_groups):
     _, ctx_path = LodelContext.lodelsites_paths()
     dyncode_path = os.path.join(os.path.join(ctx_path, site_name),
             buildconf.MULTISITE_DYNCODE_MODULENAME+'.py')
-    LodelContext.expose_module(globals(), {
+    LodelContext.expose_modules(globals(), {
             'lodel.logger': 'logger',
             'lodel.settings': ['Settings'],
             'lodel.editorial_model.model': ['EditorialModel'],

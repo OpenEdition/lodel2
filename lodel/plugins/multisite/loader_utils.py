@@ -84,7 +84,18 @@ def main():
         #Loading handled sites
         for handled_sitename in [s['shortname'] for s in handled_sites]:
             datapath = os.path.join(lodelsites_datapath, handled_sitename)
-            site_load(datapath) #using default conf.d configuration dirname
+            try:
+                site_load(datapath) #using default conf.d configuration dirname
+            except LodelFatalError as e:
+                LodelContext.set(lodelsites_name)
+                LodelContext.expose_modules(globals(), {
+                    'lodel.settings': ['Settings'],
+                    'lodel.logger': 'logger'})
+                if Settings.debug:
+                    logger.critical("Unable to load site %s : %s" % (
+                        e, handled_sitename))
+                else:
+                    raise e
     else:
         logger.warning("No handled sites !")
     LodelContext.set(None)

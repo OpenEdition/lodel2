@@ -43,7 +43,7 @@ def name2path(name):
 #@return a bool
 #@throws LodelSiteDatasourceInconsistency if inconsistency detected on FS
 def site_exists(name):
-    paths = name2paths(name)
+    paths = name2path(name)
     
     if name == Settings.sitename:
         msg = 'Site shortname "%s" is conflicting with the Lodelsites instance name' % name
@@ -79,7 +79,7 @@ def site_directories_creation(name):
         raise LodelSiteDatasourceError('This site identified by "%s" \
 already exists' % name)
 
-    data_path, ctx_path = name2paths(name)
+    data_path, ctx_path = name2path(name)
     #Starting by creating both directories
     #Datadir
     try:
@@ -118,8 +118,8 @@ lodelsite "%s" : %s' % (d,name, e))
     
     
 def site_lodelpkg_link_creation(name):
-    dst_path = os.path.join(name2path(name)[1], lodel)
-    src_path = LODEL_PKG_PATH
+    dst_path = os.path.join(name2path(name)[1], 'lodel')
+    src_path = buildconf.LODEL_PKG_PATH
     
     try:
         os.symlink(src_path, dst_path)
@@ -135,7 +135,7 @@ lodelsite "%s" : %s' % (name, e))
 def site_context_init_creation(name):
     directory = name2path(name)[1]
     try:
-        open('x', os.path.join(directory, '__init__.py')).close()
+        open(os.path.join(directory, '__init__.py'), 'w+').close()
     except FileExistsError:
         logger.critical('This should never happen ! We just checked that this \
 directory does not exist. BAILOUT !')
@@ -210,7 +210,7 @@ def make_confs(sitename, groups, extensions):
 ##@brief Deletes all files related to a site
 #@warning can lead to dirty bugs if the site is running...
 def purge(sitename):
-    for todel in name2paths(sitename):
+    for todel in name2path(sitename):
         try:
             shutil.rmtree(todel)
         except Exception as e:
