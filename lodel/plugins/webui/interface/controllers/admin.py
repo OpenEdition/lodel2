@@ -39,19 +39,19 @@ def admin_update(request):
     #    return get_response('users/signin.html')
     msg=''
 
-    datas = process_form(request)
-    if not(datas is False):
-        if 'lodel_id' not in datas:
+    data = process_form(request)
+    if not(data is False):
+        if 'lodel_id' not in data:
             raise HttpException(400)
-        target_leo = dyncode.Object.name2class(datas['classname'])
-        leo = target_leo.get_from_uid(datas['lodel_id'])
+        target_leo = dyncode.Object.name2class(data['classname'])
+        leo = target_leo.get_from_uid(data['lodel_id'])
         if leo is None:
             raise HttpException(404,
                 custom = 'No %s with id %s' % (
-                    target_leo.__name__, datas['lodel_id']))
+                    target_leo.__name__, data['lodel_id']))
         try:
             leo.update(
-                { f:datas[f] for f in datas if f not in ('classname', 'lodel_id')})
+                { f:data[f] for f in data if f not in ('classname', 'lodel_id')})
         except LeApiDataCheckErrors as e:
             raise HttpErrors(
                 title='Form validation errors', errors = e._exceptions)
@@ -107,14 +107,14 @@ def admin_create(request):
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
 
-    datas = process_form(request)
-    if not(datas is False):
-        target_leo = dyncode.Object.name2class(datas['classname'])
-        if 'lodel_id' in datas:
+    data = process_form(request)
+    if not(data is False):
+        target_leo = dyncode.Object.name2class(data['classname'])
+        if 'lodel_id' in data:
             raise HttpException(400)
         try:
             new_uid = target_leo.insert(
-                { f:datas[f] for f in datas if f != 'classname'})
+                { f:data[f] for f in data if f != 'classname'})
         except LeApiDataCheckErrors as e:
             raise HttpErrors(
                 title='Form validation errors', errors = e._exceptions)
@@ -272,9 +272,9 @@ def search_object(request):
         # TODO The get method must be implemented here
     return get_response('admin/admin_search.html', my_classes = dyncode.dynclasses)
 
-##@brief Process a form POST and return the posted datas
+##@brief Process a form POST and return the posted data
 #@param request : the request object
-#@return a dict with datas as value and fieldname as key
+#@return a dict with data as value and fieldname as key
 def process_form(request):
     if request.method != 'POST':
         return False

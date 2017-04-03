@@ -2,7 +2,7 @@
 
 ## @package lodel.settings.utils Lodel 2 settings utility
 #
-# For the moment defines exception classes
+# For now defines exception classes
 
 ##@brief Error class for settings errors
 class SettingsError(Exception):
@@ -28,11 +28,11 @@ class SettingsError(Exception):
         res += ": %s" % (self.__msg)
         return res
 
-##@brief Designed to handles mutliple SettingsError
+##@brief Designed to handles multiple SettingsError
 class SettingsErrors(Exception):
     
-    ##@brief Instanciate an SettingsErrors
-    # @param exceptions list : list of SettingsError instance
+    ##@brief Instanciate a SettingsErrors
+    # @param exception list : list of SettingsError instance
     def __init__(self, exceptions):
         for expt in exceptions: 
             if not isinstance(expt, SettingsError):
@@ -42,6 +42,8 @@ class SettingsErrors(Exception):
 
     def __repr__(self): return str(self)
 
+    ## @brief Return a string representation of a list of SettingError
+    # This representation is the concatenation of all SettingError string representations
     def __str__(self):
         res = "Errors :\n"
         for expt in self.__exceptions:

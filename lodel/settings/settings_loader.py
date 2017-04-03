@@ -6,6 +6,12 @@ import copy
 
 from lodel.context import LodelContext
 
+#  @package lodel.settings.settings_loader Lodel2 loader of configuration options
+#
+# From a filesystem directory, all ini files are loaded in a dict (key/value) for each option
+# The options are called one by one by lodel bootstrap, if one or more options remains 
+# then an exception is raised
+
 LodelContext.expose_modules(globals(), {
     'lodel.logger': 'logger',
     'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
@@ -148,9 +154,9 @@ class SettingsLoader(object):
 
         return sections
 
-    ##@brief Returns invalid settings
+    ##@brief Return invalid settings
     #
-    # This method returns all the settings that was not fecthed by
+    # This method returns all the settings that was not fetched by
     # getsection() method. For the Settings object it allows to know
     # the list of invalids settings keys
     # @return a dict with SECTION_NAME+":"+KEY_NAME as key and the filename
@@ -158,7 +164,7 @@ class SettingsLoader(object):
     def getremains(self):
         return self.__conf_sv
 
-    ##@brief Raise a SettingsErrors exception if some confs remains
+    ##@brief Raise a SettingsErrors exception if some confs remain
     #@note typically used at the end of Settings bootstrap
     def raise_errors(self):
         remains = self.getremains()

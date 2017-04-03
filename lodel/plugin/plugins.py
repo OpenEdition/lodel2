@@ -17,7 +17,7 @@ LodelContext.expose_modules(globals(), {
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
                          'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
 
-#  @package lodel.plugins Lodel2 plugins management
+##  @package lodel.plugins Lodel2 plugins management
 #@ingroup lodel2_plugins
 #
 # Lodel2 plugins are stored in directories
@@ -32,42 +32,42 @@ LodelContext.expose_modules(globals(), {
 #@ingroup lodel2_plugins
 #@{
 
-# @brief The package in which we will load plugins modules
+## @brief The package in which we will load plugins modules
 VIRTUAL_PACKAGE_NAME = 'lodel.plugins'
-# @brief The temporary package to import python sources
+## @brief The temporary package to import python sources
 VIRTUAL_TEMP_PACKAGE_NAME = 'lodel.plugin_tmp'
-# @brief Plugin init filename
+## @brief Plugin init filename
 INIT_FILENAME = '__init__.py'  # Loaded with settings
-# @brief Name of the variable containing the plugin name
+## @brief Name of the variable containing the plugin name
 PLUGIN_NAME_VARNAME = '__plugin_name__'
-# @brief Name of the variable containing the plugin type
+## @brief Name of the variable containing the plugin type
 PLUGIN_TYPE_VARNAME = '__plugin_type__'
-# @brief Name of the variable containing the plugin version
+## @brief Name of the variable containing the plugin version
 PLUGIN_VERSION_VARNAME = '__version__'
-# @brief Name of the variable containing the confpsec filename
+## @brief Name of the variable containing the confpsec filename
 CONFSPEC_FILENAME_VARNAME = '__confspec__'
-# @brief Name of the variable containing the confspecs
+## @brief Name of the variable containing the confspecs
 CONFSPEC_VARNAME = 'CONFSPEC'
-# @brief Name of the variable containing the loader filename
+## @brief Name of the variable containing the loader filename
 LOADER_FILENAME_VARNAME = '__loader__'
-# @brief Name of the variable containing the plugin dependencies
+## @brief Name of the variable containing the plugin dependencies
 PLUGIN_DEPS_VARNAME = '__plugin_deps__'
-# @brief Name of the optionnal activate method
+## @brief Name of the optional activate method
 ACTIVATE_METHOD_NAME = '_activate'
-# @brief Default & failover value for plugins path list
+## @brief Default & failover value for plugins path list
 PLUGINS_PATH = os.path.join(LodelContext.context_dir(), 'plugins')
 
-# @brief List storing the mandatory variables expected in a plugin __init__.py
+## @brief List storing the mandatory variables expected in a plugin __init__.py
 # file
 MANDATORY_VARNAMES = [PLUGIN_NAME_VARNAME, LOADER_FILENAME_VARNAME,
                       PLUGIN_VERSION_VARNAME]
 
-# @brief Default plugin type
+## @brief Default plugin type
 DEFAULT_PLUGIN_TYPE = 'extension'  # Value found in lodel/plugin/extensions.py::Extensions._type_conf_name
 
 # @}
 
-# @brief Describe and handle version numbers
+## @brief Describe and handle version numbers
 #@ingroup lodel2_plugins
 #
 # A version number can be represented by a string like MAJOR.MINOR.PATCH
@@ -80,7 +80,7 @@ class PluginVersion(object):
 
     PROPERTY_LIST = ['major', 'minor', 'revision']
 
-    # @brief Version constructor
+    ## @brief Version constructor
     #@param *args : You can either give a str that will be splitted on . or you
     # can give a iterable containing 3 integers or 3 arguments representing
     # major, minor and revision version
@@ -124,22 +124,22 @@ but %d arguments found" % len(args))
             if v < 0:
                 raise PluginVersionError("No negative version number allowed !")
 
-    # @brief Property to access major version number
+    ## @brief Property to access major version number
     @property
     def major(self):
         return self.__version[0]
 
-    # @brief Property to access minor version number
+    ## @brief Property to access minor version number
     @property
     def minor(self):
         return self.__version[1]
 
-    # @brief Property to access patch version number
+    ## @brief Property to access patch version number
     @property
     def revision(self):
         return self.__version[2]
 
-    # @brief Check and prepare comparison argument
+    ## @brief Check and prepare comparison argument
     #@return A PluginVersion instance
     #@throw PluginError if invalid argument provided
     def __cmp_check(self, other):
@@ -152,7 +152,7 @@ but %d arguments found" % len(args))
 a PluginVersion instance" % other)
         return other
 
-    # @brief Allow accessing to version parts using integer index
+    ## @brief Allow accessing to version parts using integer index
     #@param key int : index
     #@return major for key == 0, minor for key == 1, revision for key == 2
     def __getitem__(self, key):
@@ -202,7 +202,7 @@ a PluginVersion instance" % other)
         return "{'major': %d, 'minor': %d, 'revision': %d}" % tuple(
             self.__version)
 
-# @brief Plugin metaclass that allows to "catch" child class declaration
+## @brief Plugin metaclass that allows to "catch" child class declaration
 #@ingroup lodel2_plugins
 #
 # Automatic script registration on child class declaration
@@ -210,12 +210,12 @@ a PluginVersion instance" % other)
 
 class MetaPlugType(type):
 
-    # @brief Dict storing all plugin types
+    ## @brief Dict storing all plugin types
     #
     # key is the _type_conf_name and value is the class
     _all_ptypes = dict()
 
-    # @brief type constructor reimplementation
+    ## @brief type constructor reimplementation
     def __init__(self, name, bases, attrs):
         # Here we can store all child classes of Plugin
         super().__init__(name, bases, attrs)
@@ -224,20 +224,20 @@ class MetaPlugType(type):
         # Regitering a new plugin type
         MetaPlugType._all_ptypes[self._type_conf_name] = self
 
-    # @brief Accessor to the list of plugin types
+    ## @brief Accessor to the list of plugin types
     #@return A copy of _all_ptypes attribute (a dict with typename as key
     # and the class as value)
     @classmethod
     def all_types(cls):
         return copy.copy(cls._all_ptypes)
 
-    # @brief Accessor to the list of plugin names
+    ## @brief Accessor to the list of plugin names
     #@return a list of all plugin names
     @classmethod
     def all_ptype_names(cls):
         return list(cls._all_ptypes.keys())
 
-    # @brief Given a plugin type name returns a Plugin child class
+    ## @brief Given a plugin type name returns a Plugin child class
     #@param ptype_name str : a plugin type name
     #@return A Plugin child class
     #@throw PluginError if ptype_name is not an exsiting plugin type name
@@ -247,14 +247,14 @@ class MetaPlugType(type):
             raise PluginError("Unknown plugin type '%s'" % ptype_name)
         return cls._all_ptypes[ptype_name]
 
-    # @brief Call the clear classmethod on each child classes
+    ## @brief Call the clear classmethod on each child classes
     @classmethod
     def clear_cls(cls):
         for pcls in cls._all_ptypes.values():
             pcls.clear_cls()
 
 
-# @brief Handle plugins
+## @brief Handle plugins
 #@ingroup lodel2_plugins
 #
 # An instance represent a loaded plugin. Class methods allow to load/preload
@@ -266,32 +266,32 @@ class MetaPlugType(type):
 # 3. the loader call load_all to register hooks etc
 class Plugin(object, metaclass=MetaPlugType):
 
-    # @brief Stores Plugin instances indexed by name
+    ## @brief Stores Plugin instances indexed by name
     _plugin_instances = dict()
 
-    # @brief Attribute used by load_all and load methods to detect circular
+    ## @brief Attribute used by load_all and load methods to detect circular
     # dependencies
     _load_called = []
 
-    # @brief Attribute that stores plugins list from discover cache file
+    ## @brief Attribute that stores plugins list from discover cache file
     _plugin_list = None
 
     #@brief Designed to store, in child classes, the confspec indicating \
     # where plugin list is stored
     _plist_confspecs = None
 
-    # @brief The name of the plugin type in the confguration
+    ## @brief The name of the plugin type in the confguration
     #
     # None in abstract classes and implemented by child classes
     _type_conf_name = None
 
-    # @brief Stores virtual modules uniq key
+    ## @brief Stores virtual modules uniq key
     #@note When testing if a dir contains a plugin, if we reimport the __init__
     # in a module with the same name, all non existing value (plugin_type for
     # example) are replaced by previous plugin values
     _mod_cnt = 0
 
-    # @brief Plugin class constructor
+    ## @brief Plugin class constructor
     #
     # Called by setting in early stage of lodel2 boot sequence using classmethod
     # register
@@ -300,18 +300,18 @@ class Plugin(object, metaclass=MetaPlugType):
     # @throw PluginError
     def __init__(self, plugin_name):
 
-        # @brief The plugin name
+        ## @brief The plugin name
         self.name = plugin_name
-        # @brief The plugin package path
+        ## @brief The plugin package path
         self.path = self.plugin_path(plugin_name)
 
-        # @brief Stores the plugin module
+        ## @brief Stores the plugin module
         self.module = None
-        # @brief Stores the plugin loader module
+        ## @brief Stores the plugin loader module
         self.__loader_module = None
-        # @brief The plugin confspecs
+        ## @brief The plugin confspecs
         self.__confspecs = dict()
-        # @brief Boolean flag telling if the plugin is loaded or not
+        ## @brief Boolean flag telling if the plugin is loaded or not
         self.loaded = False
 
         # Importing __init__.py infos in it
@@ -386,7 +386,7 @@ init file. Malformed plugin"
 name differ from the one found in plugin's init file"
             raise PluginError(msg)
 
-    # @brief Try to import a file from a variable in __init__.py
+    ## @brief Try to import a file from a variable in __init__.py
     #@param varname str : The variable name
     #@return loaded module
     #@throw AttributeError if varname not found
@@ -425,7 +425,7 @@ name differ from the one found in plugin's init file"
         module_name = self_modname + "." + base_mod
         return importlib.import_module(module_name)
 
-    # @brief Return associated module name
+    ## @brief Return associated module name
     def module_name(self):
         path_array = self.path.split('/')
         if 'plugins' not in self.path:
@@ -433,7 +433,7 @@ name differ from the one found in plugin's init file"
                 self.name, self.path))
         return '.'.join(['lodel'] + path_array[path_array.index('plugins'):])
 
-    # @brief Check dependencies of plugin
+    ## @brief Check dependencies of plugin
     #@return A list of plugin name to be loaded before
     def check_deps(self):
         try:
@@ -452,7 +452,7 @@ name differ from the one found in plugin's init file"
                               ', '.join(errors))
         return result
 
-    # @brief Check if the plugin should be activated
+    ## @brief Check if the plugin should be activated
     #
     # Try to fetch a function called @ref ACTIVATE_METHOD_NAME in __init__.py
     # of a plugin. If none found assert that the plugin can be loaded, else
@@ -470,7 +470,7 @@ name differ from the one found in plugin's init file"
             test_fun = lambda: True
         return test_fun()
 
-    # @brief Load a plugin
+    ## @brief Load a plugin
     #
     # Loading a plugin means importing a file. The filename is defined in the
     # plugin's __init__.py file in a LOADER_FILENAME_VARNAME variable.
@@ -521,7 +521,7 @@ name differ from the one found in plugin's init file"
         logger.debug("Plugin '%s' loaded" % self.name)
         self.loaded = True
 
-    # @brief Returns the loader module
+    ## @brief Returns the loader module
     #
     # Accessor for the __loader__ python module
     def loader_module(self):
@@ -532,7 +532,7 @@ name differ from the one found in plugin's init file"
     def __str__(self):
         return "<LodelPlugin '%s' version %s>" % (self.name, self.__version)
 
-    # @brief Call load method on every pre-loaded plugins
+    ## @brief Call load method on every pre-loaded plugins
     #
     # Called by loader to trigger hooks registration.
     # This method have to avoid circular dependencies infinite loops. For this
@@ -561,7 +561,7 @@ name differ from the one found in plugin's init file"
     def confspecs(self):
         return copy.copy(self.__confspecs)
 
-    # @brief Accessor to confspec indicating where we can find the plugin list
+    ## @brief Accessor to confspec indicating where we can find the plugin list
     #@note Abtract method implemented only for Plugin child classes
     # This attribute indicate where we fetch the plugin list.
     @classmethod
@@ -571,7 +571,7 @@ name differ from the one found in plugin's init file"
 %s' % cls.__name__)
         return copy.copy(cls._plist_confspecs)
 
-    # @brief Retrieves plugin list confspecs
+    ## @brief Retrieves plugin list confspecs
     #
     # This method ask for each Plugin child class the confspecs specifying where
     # the wanted plugin list is stored. (For example DatasourcePlugin expect
@@ -587,7 +587,7 @@ name differ from the one found in plugin's init file"
             confspec_append(res, plcs)
         return res
 
-    # @brief Register a new plugin
+    ## @brief Register a new plugin
     #
     #@param plugin_name str : The plugin name
     #@return a Plugin instance
@@ -609,7 +609,7 @@ name differ from the one found in plugin's init file"
         logger.debug("Plugin %s available." % plugin)
         return plugin
 
-    # @brief Plugins instances accessor
+    ## @brief Plugins instances accessor
     #
     #@param plugin_name str: The plugin name
     #@return a Plugin instance
@@ -623,7 +623,7 @@ name differ from the one found in plugin's init file"
             msg %= plugin_name
             raise PluginError(msg)
 
-    # @brief Given a plugin name returns the plugin path
+    ## @brief Given a plugin name returns the plugin path
     # @param plugin_name str : The plugin name
     # @return the plugin directory path
     @classmethod
@@ -639,7 +639,7 @@ name differ from the one found in plugin's init file"
 
         return plist[plugin_name]['path']
 
-    # @brief Return the plugin module name
+    ## @brief Return the plugin module name
     #
     # This module name is the "virtual" module where we imported the plugin.
     #
@@ -653,7 +653,7 @@ name differ from the one found in plugin's init file"
     def plugin_module_name(cls, plugin_name):
         return "%s.%s" % (VIRTUAL_PACKAGE_NAME, plugin_name)
 
-    # @brief Start the Plugin class
+    ## @brief Start the Plugin class
     #
     # Called by Settings.__bootstrap()
     #
@@ -663,7 +663,7 @@ name differ from the one found in plugin's init file"
         for plugin_name in plugins:
             cls.register(plugin_name)
 
-    # @brief Attempt to "restart" the Plugin class
+    ## @brief Attempt to "restart" the Plugin class
     @classmethod
     def clear(cls):
         if cls._plugin_instances != dict():
@@ -672,12 +672,12 @@ name differ from the one found in plugin's init file"
             cls._load_called = []
         MetaPlugType.clear_cls()
 
-    # @brief Designed to be implemented by child classes
+    ## @brief Designed to be implemented by child classes
     @classmethod
     def clear_cls(cls):
         pass
 
-    # @brief Reccursively walk throught paths to find plugin, then stores
+    ## @brief Reccursively walk throught paths to find plugin, then stores
     # found plugin in a static var
     #
     # Found plugins are stored in cls._plugin_list
@@ -704,7 +704,7 @@ name differ from the one found in plugin's init file"
         cls._plugin_list = result
         return result
 
-    # @brief Return discover result
+    ## @brief Return discover result
     #@param refresh bool : if true invalidate all plugin list cache
     #@note If discover cache file not found run discover first
     #@note if refresh is set to True discover MUST have been run at least
@@ -714,12 +714,12 @@ name differ from the one found in plugin's init file"
     def plugin_list(cls, refresh=False):
         return cls._plugin_list
 
-    # @brief Return a list of child Class Plugin
+    ## @brief Return a list of child Class Plugin
     @classmethod
     def plugin_types(cls):
         return MetaPlugType.all_types()
 
-    # @brief Check if a directory is a plugin module
+    ## @brief Check if a directory is a plugin module
     #@param path str : path to check
     #@param assert_in_package bool : if False didn't check that path is
     # a subdir of PLUGINS_PATH
@@ -776,7 +776,7 @@ name differ from the one found in plugin's init file"
                 'path': path,
                 'type': ptype}
 
-    # @brief Import init file from a plugin path
+    ## @brief Import init file from a plugin path
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
     #@todo replace by LodelContext usage !!! (not mandatory, this fun
@@ -806,7 +806,7 @@ name differ from the one found in plugin's init file"
                 globals()[k] = v
         print(logger)
 
-    # @brief Reccursiv plugin discover given a path
+    ## @brief Reccursiv plugin discover given a path
     #@param path str : the path to walk through
     #@return A dict with plugin_name as key and {'path':..., 'version':...} as value
     @classmethod
@@ -835,14 +835,14 @@ name differ from the one found in plugin's init file"
 def debug_wrapper_mod():
     print("MOD : ", logger)
 
-# @brief Decorator class designed to allow plugins to add custom methods
+## @brief Decorator class designed to allow plugins to add custom methods
 # to LeObject childs (dyncode objects)
 #@ingroup lodel2_plugins
 #
 
 
 class CustomMethod(object):
-    # @brief Stores registered custom methods
+    ## @brief Stores registered custom methods
     #
     # Key = LeObject child class name
     # Value = CustomMethod instance
@@ -852,7 +852,7 @@ class CustomMethod(object):
     CLASS_METHOD = 1
     STATIC_METHOD = 2
 
-    # @brief Decorator constructor
+    ## @brief Decorator constructor
     #@param component_name str : the name of the component to enhance
     #@param method_name str : the name of the method to inject (if None given
     #@param method_type int : take value in one of
@@ -860,13 +860,13 @@ class CustomMethod(object):
     # CustomMethod::STATIC_METHOD
     # use the function name
     def __init__(self, component_name, method_name=None, method_type=0):
-        # @brief The targeted LeObject child class
+        ## @brief The targeted LeObject child class
         self._comp_name = component_name
-        # @brief The method name
+        ## @brief The method name
         self._method_name = method_name
-        # @brief The function (that will be the injected method)
+        ## @brief The function (that will be the injected method)
         self._fun = None
-        # @brief Stores the type of method (instance, class or static)
+        ## @brief Stores the type of method (instance, class or static)
         self._type = int(method_type)
         if self._type not in (self.INSTANCE_METHOD, self.CLASS_METHOD,
                               self.STATIC_METHOD):
@@ -874,7 +874,7 @@ class CustomMethod(object):
 CustomMethod::INSTANCE_METHOD CustomMethod::CLASS_METHOD or \
 CustomMethod::STATIC_METHOD, but got %s" % self._type)
 
-    # @brief called just after __init__
+    ## @brief called just after __init__
     #@param fun function : the decorated function
     def __call__(self, fun):
         if self._method_name is None:
@@ -890,7 +890,7 @@ another plugin : %s" % (
         self._fun = fun
         self._custom_methods[self._comp_name].append(self)
 
-    # @brief Textual representation
+    ## @brief Textual representation
     #@return textual representation of the CustomMethod instance
     def __repr__(self):
         res = "<CustomMethod name={method_name} target={classname} \
@@ -901,7 +901,7 @@ source={module_name}.{fun_name}>"
             module_name=self._fun.__module__,
             fun_name=self._fun.__name__)
 
-    # @brief Return a well formed method
+    ## @brief Return a well formed method
     #
     #@note the type of method depends on the _type attribute
     #@return a method directly injectable in the target class
@@ -920,7 +920,7 @@ source={module_name}.{fun_name}>"
 CustomMethod::INSTANCE_METHOD CustomMethod::CLASS_METHOD \
 CustomMethod::STATIC_METHOD")
 
-    # @brief Handle custom method dynamic injection in LeAPI dyncode
+    ## @brief Handle custom method dynamic injection in LeAPI dyncode
     #
     # Called by lodel2_dyncode_loaded hook defined at
     # lodel.plugin.core_hooks.lodel2_plugin_custom_methods()

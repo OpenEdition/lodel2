@@ -18,11 +18,11 @@ LodelContext.expose_modules(globals(), {
     'lodel.settings.settings_loader': ['SettingsLoader']})
 
 
-#  @package lodel.settings.settings Lodel2 settings module
+##  @package lodel.settings.settings Lodel2 settings module
 #
 # Contains the class that handles the namedtuple tree of settings
 
-# @brief A default python system lib path
+## @brief A default python system lib path
 PYTHON_SYS_LIB_PATH = '/usr/local/lib/python{major}.{minor}/'.format(
 
     major=sys.version_info.major,
@@ -36,7 +36,7 @@ class MetaSettings(type):
         self.singleton_assert(True)
         return self.instance.settings
 
-# @brief Handles configuration load etc.
+## @brief Handles configuration load etc.
 #
 # To see howto bootstrap Settings and use it in lodel instance see
 # @ref lodel.settings
@@ -79,10 +79,10 @@ class MetaSettings(type):
 
 class Settings(object, metaclass=MetaSettings):
 
-    #  @brief Stores the singleton instance
+    ## @brief Stores the singleton instance
     instance = None
 
-    #  @brief Instanciate the Settings singleton
+    ## @brief Instanciate the Settings singleton
     # @param conf_dir str : The configuration directory
     #@param custom_confspecs None | dict : if given overwrite default lodel2
     # confspecs
@@ -99,12 +99,12 @@ class Settings(object, metaclass=MetaSettings):
         self.__started = False
         self.__bootstrap()
 
-    #  @brief Get the named tuple representing configuration
+    ## @brief Get the named tuple representing configuration
     @property
     def settings(self):
         return self.__confs.lodel2
 
-    #  @brief Delete the singleton instance
+    ## @brief Delete the singleton instance
     @classmethod
     def stop(cls):
         del(cls.instance)
@@ -114,7 +114,7 @@ class Settings(object, metaclass=MetaSettings):
     def started(cls):
         return cls.instance is not None and cls.instance.__started
 
-    # @brief An utility method that raises if the singleton is not in a good
+    ## @brief An utility method that raises if the singleton is not in a good
     # state
     #@param expect_instanciated bool : if True we expect that the class is
     # allready instanciated, else not
@@ -128,7 +128,7 @@ class Settings(object, metaclass=MetaSettings):
             if cls.started():
                 raise RuntimeError("The Settings class is already started")
 
-    # @brief Saves a new configuration for section confname
+    ## @brief Saves a new configuration for section confname
     #@param confname is the name of the modified section
     #@param confvalue is a dict with variables to save
     #@param validator is a dict with adapted validator
@@ -197,7 +197,7 @@ class Settings(object, metaclass=MetaSettings):
         self.__populate_from_specs(self.__conf_specs, loader)
         self.__started = True
 
-    # @brief Produce a configuration specification dict by merging all specifications
+    ## @brief Produce a configuration specification dict by merging all specifications
     #
     # Merges global lodel2 conf spec from @ref lodel.settings.validator.LODEL2_CONF_SPECS
     # and configuration specifications from loaded plugins
@@ -222,7 +222,7 @@ class Settings(object, metaclass=MetaSettings):
                     res[section.lower()][kname] = copy.copy(spec[section][kname])
         return res
 
-    # @brief Populate the Settings instance with options values fetched with the loader from merged specs
+    ## @brief Populate the Settings instance with options values fetched with the loader from merged specs
     #
     # Populate the __confs attribute
     # @param specs dict : Settings specification dictionnary as returned by __merge_specs
@@ -253,7 +253,7 @@ class Settings(object, metaclass=MetaSettings):
         self.__confs_to_namedtuple()
         pass
 
-    # @brief Transform the __confs attribute into imbricated namedtuple
+    ## @brief Transform the __confs attribute into imbricated namedtuple
     #
     # For example an option named "foo" in a section named "hello.world" will
     # be acessible with self.__confs.hello.world.foo
@@ -309,7 +309,7 @@ class Settings(object, metaclass=MetaSettings):
                 path.append((curname, cur))
                 nodename += '.' + curname.title()
 
-    # @brief Forge a named tuple given a conftree node
+    ## @brief Forge a named tuple given a conftree node
     # @param conftree dict : A conftree node
     # @param name str
     # @return a named tuple with fieldnames corresponding to conftree keys
@@ -324,6 +324,6 @@ class MetaSettingsRO(type):
         return getattr(Settings.s, name)
 
 
-#  @brief A class that provide . notation read only access to configurations
+## @brief A class that provide . notation read only access to configurations
 class SettingsRO(object, metaclass=MetaSettingsRO):
     pass

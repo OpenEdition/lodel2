@@ -4,8 +4,10 @@ import copy
 import hashlib
 import json
 
+## @package lodel.utils.mlstring Lodel2 description of multilanguage string
+#
+# Display content of a string in different languages
 
-# @brief Stores multilangage string
 class MlString(object):
 
     __default_lang = 'eng'
@@ -18,7 +20,7 @@ class MlString(object):
     ]
 
     # @brief Create a new MlString instance
-    # @param arg str | dict : Can be a json string, a string or a dict. It could be also a MlString object
+    # @param arg str | dict : Can be a json string, a string or a dict. It could also be a MlString object
     def __init__(self, arg):
         self.values = dict()
         if isinstance(arg, str):
