@@ -13,8 +13,47 @@
 		{% elif field.base_type == 'text' %}
 			<textarea class="form-control" name="field_input_{{fieldname}}">{{value}}</textarea>
 		{% elif field.base_type == 'datetime' %}
-			<input class="form-control" type="date" value="{{value}}" name="field_input_{{fieldname}}">
+			<!-- Handle date fields - Date format for datepicker is YY/MM/DD - TODO set this format with field.datetime_format (default is '%Y-%m-%d') -->
+		 	<input class="form-control" type="text" id="field_input_{{fieldname}}" name="field_input_{{fieldname}}" />
+		 	 <script type="text/javascript">
+		        $(document).ready(function() {
+				    $('#field_input_{{fieldname}}')
+				        .datepicker({
+				            autoclose: true,
+				            format: 'yyyy/mm/dd'
+				        });
+		        });
+        	</script>
     {% elif field.base_type == 'ref' %}
+        {% set l_classes = field.allowed_classes %}
+    	{% set ref_objects = dict() %}
+    	{% for l_class in l_classes %}
+    		{% set _dummy = ref_objects.update(l_class.get(None)) %} 
+    		{% if 'fullname' in l_class.fieldnames() %}
+    			{% set displayfield = 'fullname' %}
+    		{% elif 'name' in l_class.fieldnames() %} 
+    			{% set displayfield = 'name' %}
+    		{% elif 'title' in l_class.fieldnames() %}
+    			{% set displayfield = 'title' %}
+    		{% else %}
+    			{% set displayfield = l_class.uid_fieldname() %}
+    		{% endif %}
+    		{% set uidfield = l_class.uid_fieldname() %}
+    	{% endfor %}
+    	<meta id="ref_objects" data-name="{{ ref_objects }}" >
+    	{% if (field.__class__ == List) %}
+    		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}[]" type="text" value="{{sval}}" >
+    		<script type="text/javascript">
+    		$(function() {
+		    $('#{{fieldname}}').magicSuggest({
+		        data: $('#ref_objects').data(),
+		        valueField: {{ uidfield }},
+		        displayField: {{ displayfield }}
+		    });
+		    </script>
+		
+		});
+    	{% endif %}
         {% if value is iterable %}
             {% set sval=value|join(',') %}
         {% else %}
