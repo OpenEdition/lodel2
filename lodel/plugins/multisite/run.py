@@ -11,7 +11,8 @@ except ImportError:
 import lodel.buildconf #safe even outside contexts
 """
 
-from lodel.plugins.multisite.loader_utils import main, site_load, FAST_APP_EXPOSAL_CACHE
+from lodel.plugins.multisite.loader_utils import main, FAST_APP_EXPOSAL_CACHE
+from lodel.bootstrap import site_load
 from lodel.context import LodelContext
 
 lodelsites_name = main() #multisite bootstraping
