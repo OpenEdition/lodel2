@@ -25,32 +25,6 @@
 		        });
         	</script>
     {% elif field.base_type == 'ref' %}
-    	{% set l_classes = field.allowed_classes %}
-    	{% set ref_objects = dict() %}
-    	{% for l_class in l_classes %}
-    		{% ref_objects.append(l_class.get()) %}
-    		{% if 'fullname' is in l_class.fieldnames() %}
-    			{% set displayfield = 'fullname' %}
-    		{% elif 'name' is in l_class.fieldnames() %} 
-    			{% set displayfield = 'name' %}
-    		{% elif 'title' is in l_class.fieldnames() %}
-    			{% set displayfield = 'title' %}
-    		{% elif %}
-    			{% set displayfield = l_class.uid_fieldname()
-    		{% endif %}
-    		uidfield = l_class.uid_fieldname()
-    	{% endfor %}
-    	{% if issubclass(field.__class__, MultipleRef) %}
-    		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}[]" type="text" value="{{sval}}" >
-    		$(function() {
-		    $('#{{fieldname}}').magicSuggest({
-		        data: ref_objects,
-		        valueField: {{ uidfield }},
-		        displayField: {{ displayfield }}
-		    });
-		
-		});
-    	{% endif %}
         {% if value is iterable %}
             {% set sval=value|join(',') %}
         {% else %}
