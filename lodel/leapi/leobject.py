@@ -311,8 +311,8 @@ class LeObject(object):
                 "The field %s is not initialized yet (and have no value)" % field_name)
         return self.__datas[field_name]
 
-    # @brief Read only access to all datas
-    #@return a dict representing datas of current instance
+    # @brief Read only access to all data
+    #@return a dict representing data of current instance
     def datas(self, internal=False):
         return {fname: self.data(fname) for fname in self.fieldnames(internal)}
 

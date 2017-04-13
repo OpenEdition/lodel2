@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ...exceptions import *
 from .base import get_response
+from .utils import *
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
@@ -37,7 +38,6 @@ def admin_update(request):
     # temporary, the acl will be more restrictive
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
-    msg=''
 
     datas = process_form(request)
     if not(datas is False):
@@ -113,6 +113,10 @@ def admin_create(request):
         if 'lodel_id' in datas:
             raise HttpException(400)
         try:
+            for fld in datas:
+                if fld.endswith('[]'):
+                    datas[fld[:-2]] = ','.join(datas[fld])
+                    del datas[fld]
             new_uid = target_leo.insert(
                 { f:datas[f] for f in datas if f != 'classname'})
         except LeApiDataCheckErrors as e:
@@ -139,7 +143,7 @@ def admin_create(request):
 
     if classname is None or target_leo.is_abstract():
         raise HttpException(400)
-    return get_response('admin/admin_create.html', target=target_leo)
+    return get_response('admin/admin_create.html', target=target_leo, get_dataobjects=get_dataobjects)
 
 ##@brief Controller's function to delete an object of the editorial model
 # @param request : the request (get)

@@ -16,7 +16,7 @@
      <input type="hidden" name="classname" id="classname" value="{{target.__name__}}" />
 	{% for fieldname, field in target.fields().items() %}
      <div class="form-group">
-     <div class="form-group" style="padding-bottom:15px;"> {{edit.input(fieldname, field) }}</div>
+     <div class="form-group" style="padding-bottom:15px;"> {{ edit.input(fieldname, field, ' ', get_dataobjects) }}</div>
      </div>
 	{% endfor %}
      <p>&nbsp;</p>

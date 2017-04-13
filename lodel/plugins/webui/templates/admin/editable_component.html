@@ -1,4 +1,4 @@
-{% macro input(fieldname, field, value='') -%}
+{% macro input(fieldname, field, value='', function='') -%}
 	<label for="field_input_{{fieldname}}" class="col-sm-2 control-label">{{fieldname}}</label>
     <div class="col-xs-6">
 	{% if value == None %}
@@ -26,7 +26,8 @@
         	</script>
     {% elif field.base_type == 'ref' %}
         {% set l_classes = field.allowed_classes %}
-    	{% set ref_objects = dict() %}
+        {% set ref_objects = l_class.get(None) %}
+		{% set l_objs = function(ref_objects) %}
     	{% for l_class in l_classes %}
     		{% set _dummy = ref_objects.update(l_class.get(None)) %} 
     		{% if 'fullname' in l_class.fieldnames() %}
@@ -40,13 +41,12 @@
     		{% endif %}
     		{% set uidfield = l_class.uid_fieldname() %}
     	{% endfor %}
-    	<meta id="ref_objects" data-name="{{ ref_objects }}" >
     	{% if (field.__class__ == List) %}
     		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}[]" type="text" value="{{sval}}" >
     		<script type="text/javascript">
     		$(function() {
 		    $('#{{fieldname}}').magicSuggest({
-		        data: $('#ref_objects').data(),
+		    	data: {{ l_objs }},
 		        valueField: {{ uidfield }},
 		        displayField: {{ displayfield }}
 		    });
