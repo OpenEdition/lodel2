@@ -139,7 +139,7 @@ def site_preload(data_path, confdir_basename = 'conf.d', lodelsites_instance = F
         LodelFatalError('Bad argument given to site_load(). This really \
 sux !')
     #Determining uniq sitename from data_path
-    data_path = data_path.rstrip('/') #else basename returns ''
+    data_path = os.path.dirname(data_path).rstrip('/') #else basename returns ''
     ctx_name = os.path.basename(data_path)
     if not os.path.exists(data_path) or not os.path.isdir(data_path):
         LodelContext.expose_modules(globals(), {
