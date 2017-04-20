@@ -206,6 +206,8 @@ def site_load(data_path):
     LodelContext.set(None)
 
 ##@brief Fetch handled sites name
+#@note Have to be called in __loader__ context. After function call the
+#loaded context will remain __loader__
 #@warning assert that a full __loader__ context is ready and that the
 #multisite context is preloaded too
 #@warning hardcoded Lodelsite leo name and shortname fieldname
@@ -213,16 +215,22 @@ def site_load(data_path):
 #@todo attempt to delete hardcoded fieldname
 def get_handled_sites_name():
     LodelContext.expose_modules(globals(), {
-        'lodel.settings': ['Settings']})
+        'lodel.settings': ['Settings'],
+        'lodel.exceptions': ['LodelException']})
     lodelsites_name = Settings.sitename
     LodelContext.set(lodelsites_name)
-    lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
+    try:
+        lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
+    except NameError:
+        raise LodelException("dyncode not yet imported ! Probably not \
+generated yet")
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
     })
     handled_sites = LeGetQuery(lodelsite_leo, query_filters = [],
         field_list = ['shortname']).execute()
     if handled_sites is None:
+        LodelContext.set(None)
         return []
     res = [ s['shortname'] for s in handled_sites]
     del(globals()['LeGetQuery'])

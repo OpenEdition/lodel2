@@ -156,10 +156,22 @@ if __name__ == '__main__':
             os.path.join(lodel.buildconf.LODEL2VARDIR, lodelsites_name),
             lodel.buildconf.MULTISITE_DATADIR)
         del(globals()['Settings'])
+        #preloading lodelsites instance
         site_preload(lodelsites_datapath, 'lodelsites.conf.d', True)
 
+        LodelContext.expose_modules(globals(), {
+            'lodel.logger': 'logger',
+            'lodel.exceptions': ['LodelException']})
         #preloading all handled sites
-        for sitename in get_handled_sites_name():
+        try:
+            handled_sites = get_handled_sites_name()
+        except LodelException:
+            handled_sites = []
+            logger.warning("Unable to fetch handled site names without a \
+leapi_dyncode. Abording handled sites preloading")
+        del(globals()['logger'])
+        del(globals()['LodelException'])
+        for sitename in handled_sites:
             datapath = os.path.join(
                 os.path.join(lodel.buildconf.LODEL2VARDIR, sitename),
                 lodel.buildconf.MULTISITE_DATADIR)
