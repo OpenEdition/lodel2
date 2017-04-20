@@ -171,6 +171,16 @@ This should not append !' % ctx_name
     LodelContext.set(None)
     return
 
+##@brief Load all plugins in a context
+def site_load_plugins():
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin': ['LodelHook'],
+        'lodel.plugin': ['Plugin']})
+    Plugin.load_all()
+    LodelHook.call_hook('lodel2_bootstraped', 'bootstrap', None)
+    del(globals()['LodelHook'])
+    del(globals()['Plugin'])
+
 ##@brief End a site loading process (load plugins & hooks)
 #@param data_path str : site data path (used to extract the sitename !!)
 #@todo change data_path argument to sitename
@@ -188,9 +198,9 @@ def site_load(data_path):
     })
     Plugin.load_all() #Then all plugins & hooks are loaded
     #triggering dyncode datasource instanciations
-    LodelHook.call_hook('lodel2_plugins_loaded', '__main__', None)
+    LodelHook.call_hook('lodel2_plugins_loaded', 'bootstrap', None)
     #triggering boostrapped hook
-    LodelHook.call_hook('lodel2_bootstraped', '__main__', None)
+    LodelHook.call_hook('lodel2_bootstraped', 'bootstrap', None)
     #Populating FAST_APP_EXPOSAL_CACHE
     #
     #WARNING !!!! Hardcoded interface name ! Here we have to find the 
@@ -208,6 +218,7 @@ def site_load(data_path):
 ##@brief Fetch handled sites name
 #@note Have to be called in __loader__ context. After function call the
 #loaded context will remain __loader__
+#@note bootstrap the dyncode and load all plugins
 #@warning assert that a full __loader__ context is ready and that the
 #multisite context is preloaded too
 #@warning hardcoded Lodelsite leo name and shortname fieldname
@@ -219,11 +230,20 @@ def get_handled_sites_name():
         'lodel.exceptions': ['LodelException']})
     lodelsites_name = Settings.sitename
     LodelContext.set(lodelsites_name)
+    #Loading plugins
     try:
-        LodelContext.expose_dyncode(globals(), 'leapi_dyncode')
+        #This is a bit special but the loading process begin to be a bit 
+        #messy... Some plugins can ask for the dyncode (in order to make
+        #checks for example ?). In that case the site_load_plugins() will
+        #call first the LodelContext.expose_dyncode() method and will
+        #raise first (it appends when dummy_plugin is activated)
+        site_load_plugins()
+        dyncode_bootstraping()
     except ImportError:
         raise LodelException("dyncode not yet imported ! Probably not \
 generated yet")
+
+    LodelContext.expose_dyncode(globals(), 'leapi_dyncode')
     lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
@@ -238,4 +258,20 @@ generated yet")
     del(globals()['Settings'])
     LodelContext.set(None)
     return res
-    
+
+##@brief This function handles dyncode first exposure and bootstraping
+#
+#Call LodelContext.expose_dyncode() and then call the
+#lodel2_dyncode_bootstraped hook in the current context
+#@note Tries to avoid side effects by deleting all exposed modules
+#@todo maybe some checks are usefull (is it allowed to expose dyncode in a
+#__loader__ context ?)
+def dyncode_bootstraping():
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugin.hooks': ['LodelHook'],
+    })
+    LodelContext.expose_dyncode(globals(), 'leapi_dyncode')
+    LodelHook.call_hook('lodel2_dyncode_bootstraped', 'boostrap', None)
+    del(globals()['leapi_dyncode'])
+    del(globals()['LodelHook'])
+
