@@ -220,10 +220,11 @@ def get_handled_sites_name():
     lodelsites_name = Settings.sitename
     LodelContext.set(lodelsites_name)
     try:
-        lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
-    except NameError:
+        LodelContext.expose_dyncode(globals(), 'leapi_dyncode')
+    except ImportError:
         raise LodelException("dyncode not yet imported ! Probably not \
 generated yet")
+    lodelsite_leo = leapi_dyncode.Lodelsite #hardcoded leo name
     LodelContext.expose_modules(globals(), {
         'lodel.leapi.query': ['LeGetQuery'],
     })

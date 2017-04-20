@@ -359,13 +359,12 @@ class RefreshDyncode(LodelScript):
             emfile_path = Settings.lodelsites.sites_emfile
             del(globals()['Settings']) #should be useless
             #Get the list of handled sites name
-            LodelContext.set(lodelsites_name)
+            LodelContext.set(None)
             LodelContext.expose_modules(globals(), {
-                'lodel.leapi.query': ['LeGetQuery'],
+                'lodel.bootstrap': ['get_handled_sites_name'],
             })
-            handled_sites = LeGetQuery(lodelsite_leo, query_filters = [],
-                field_list = ['shortname']).execute()
-            del(globals()['LeGetQuery']) #should be useless
+            handled_sites = get_handled_sites_name()
+            del(globals()['get_handled_sites_name'])
             lodlesites_path = os.path.join(buildconf.LODEL2VARDIR,
                 MULTISITE_CONTEXTDIR)
             if handled_sites is not None:
