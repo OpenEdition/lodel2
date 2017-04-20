@@ -56,6 +56,8 @@ def _get_confdir(ctx_type):
 
 ##@brief Return confspec associated with current context & context type
 #@param ctx_type str 
+#@todo delete the argument
+#@todo delete this function
 #@return None (for default confspecs) or a confspecs dict
 def _get_confspec(ctx_type):
     if not _monosite_test():
@@ -160,7 +162,10 @@ This should not append !' % ctx_name
         logger.critical(msg)
         raise LodelFatalError(msg)
     if lodelsites_instance:
-        settings_preloader(os.path.join('./', confdir_basename), )
+        #fetching custom confspec
+        custom_confspec = _get_confspec("dummy_argument_is_obsolete")
+        settings_preloader(os.path.join('./', confdir_basename),
+            custom_confspec, True)
     else:
         settings_preloader(os.path.join('./', confdir_basename))
     LodelContext.set(None)
