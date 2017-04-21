@@ -376,8 +376,10 @@ class RefreshDyncode(LodelScript):
                     dyncode_path = os.path.join(
                         os.path.join(lodlesites_path, sitename),
                         'leapi_dyncode.py') #BOO hardcoded dyncode file name
+                    LodelContext.set(sitename)
                     cls.refresh_dyncode(emfile_path, dyncode_path,
                         em_translator)
+                    LodelContext.set(None)
         #Refresh only one dyncode
         #if multisite it's the lodelsites dyncode
         LodelContext.set(None)
@@ -385,6 +387,8 @@ class RefreshDyncode(LodelScript):
 
     
     ##@brief Refresh dyncode
+    #@warning you HAVE TO be in handled site context (in order to fetch groups
+    #from conf)
     #@param model_file str : EM filename
     #@param dyncode_file str : dyncode output filename
     #@param em_translator str : translator name

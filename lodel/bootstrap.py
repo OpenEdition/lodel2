@@ -208,6 +208,11 @@ def site_load(data_path):
     #WARNING !!!! Hardcoded interface name ! Here we have to find the 
     #interface plugin name in order to populate the cache properly
     app = LodelContext.module('lodel.plugins.webui.run')
+    #a dirty & quick attempt to fix context unwanted exite via
+    #hooks
+    for name in ( 'Plugin', 'LodelHook', 'logger', 'core_hooks',
+           'core_scripts'):
+        del(globals()[name])
     #HAS TO be populated in __loader__ context
     LodelContext.set(None)
     LodelContext.expose_modules(globals(), {
@@ -217,11 +222,6 @@ def site_load(data_path):
     #dyncode
     LodelContext.set(ctx_name)
     dyncode_bootstraping()
-    #a dirty & quick attempt to fix context unwanted exite via
-    #hooks
-    for name in ( 'Plugin', 'LodelHook', 'logger', 'core_hooks',
-           'core_scripts'):
-        del(globals()[name])
     #site fully loaded, switching back to loader context
     LodelContext.set(None)
 
