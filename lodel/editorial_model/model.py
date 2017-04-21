@@ -172,7 +172,7 @@ context this is a REALLY BAD idea !")
             # determine groups first
             self.__active_groups = dict()
             self.__active_classes = dict()
-            for agrp in self._groups:
+            for agrp in self.__groups:
                 if agrp not in self.__groups:
                     raise SettingsError('Invalid group found in settings : %s' % agrp)
                 logger.debug("Set group '%s' as active" % agrp)
