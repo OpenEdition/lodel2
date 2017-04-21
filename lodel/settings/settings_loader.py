@@ -25,6 +25,9 @@ class SettingsLoader(object):
     # @param conf_path str : conf.d path
     def __init__(self, conf_path):
         self.__conf_path = conf_path
+        if not os.path.isdir(conf_path):
+            logger.warning("Configuration directory %s do not exists. Using \
+default configuration values (cwd : %s)" % (conf_path, os.getcwd()))
         self.__conf_sv = dict()
         self.__conf = self.__merge()
         # Stores errors

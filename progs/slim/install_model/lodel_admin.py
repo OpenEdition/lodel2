@@ -172,9 +172,7 @@ leapi_dyncode. Abording handled sites preloading")
         del(globals()['logger'])
         del(globals()['LodelException'])
         for sitename in handled_sites:
-            datapath = os.path.join(
-                os.path.join(lodel.buildconf.LODEL2VARDIR, sitename),
-                lodel.buildconf.MULTISITE_DATADIR)
+            datapath = os.path.join(lodelsites_datapath, sitename)
             site_preload(datapath)
     else:
         bootstrap.bootstrap()

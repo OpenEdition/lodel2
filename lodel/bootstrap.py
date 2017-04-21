@@ -141,7 +141,9 @@ def site_preload(data_path, confdir_basename = 'conf.d', lodelsites_instance = F
         LodelFatalError('Bad argument given to site_load(). This really \
 sux !')
     #Determining uniq sitename from data_path
-    data_path = os.path.dirname(data_path).rstrip('/') #else basename returns ''
+    data_path = data_path.rstrip('/')
+    if lodelsites_instance:
+        data_path = os.path.dirname(data_path).rstrip('/')
     ctx_name = os.path.basename(data_path)
     if not os.path.exists(data_path) or not os.path.isdir(data_path):
         LodelContext.expose_modules(globals(), {
@@ -150,7 +152,7 @@ sux !')
     #Immediately switching to the context
     LodelContext.new(ctx_name)
     LodelContext.set(ctx_name)
-    os.chdir(data_path) #Now the confdir is ./$condir_basename
+    confdir = os.path.join(data_path, confdir_basename)
     #Loading settings for current site
     LodelContext.expose_modules(globals(), {
         'lodel.settings.settings': [('Settings', 'settings_preloader')]})
@@ -164,10 +166,10 @@ This should not append !' % ctx_name
     if lodelsites_instance:
         #fetching custom confspec
         custom_confspec = _get_confspec("dummy_argument_is_obsolete")
-        settings_preloader(os.path.join('./', confdir_basename),
+        settings_preloader(os.path.join('./', confdir),
             custom_confspec, True)
     else:
-        settings_preloader(os.path.join('./', confdir_basename))
+        settings_preloader(os.path.join('./', confdir))
     LodelContext.set(None)
     return
 

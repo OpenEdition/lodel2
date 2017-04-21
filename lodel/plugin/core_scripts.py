@@ -365,15 +365,17 @@ class RefreshDyncode(LodelScript):
             })
             handled_sites = get_handled_sites_name()
             del(globals()['get_handled_sites_name'])
-            lodlesites_path = os.path.join(buildconf.LODEL2VARDIR,
+            lodlesites_path = os.path.join(
+                os.path.join(buildconf.LODEL2VARDIR, lodelsites_name),
                 buildconf.MULTISITE_CONTEXTDIR)
             if handled_sites is not None:
                 for sitename in handled_sites:
                     LodelContext.set(None)
                     #construct dyncode filename
+                    ##@todo fetch dyncode filename from handled site conf
                     dyncode_path = os.path.join(
                         os.path.join(lodlesites_path, sitename),
-                        'leapi_dyncode') #BOO hardcoded dyncode file name
+                        'leapi_dyncode.py') #BOO hardcoded dyncode file name
                     cls.refresh_dyncode(emfile_path, dyncode_path,
                         em_translator)
         #Refresh only one dyncode
