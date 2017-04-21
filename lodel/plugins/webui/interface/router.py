@@ -2,12 +2,13 @@
 import re
 
 from .controllers import *
-from .urls import urls
-from ..main import root_url
 
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
-    'lodel.settings': ['Settings']})
+    'lodel.settings': ['Settings'],
+    'lodel.plugins.webui.main': ['root_url'],
+    'lodel.plugins.webui.interface.urls': ['urls'],
+})
 
 def format_url_rule(url_rule):
     if url_rule.startswith('^'):
