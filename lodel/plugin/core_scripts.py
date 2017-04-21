@@ -395,9 +395,11 @@ class RefreshDyncode(LodelScript):
     @classmethod
     def refresh_dyncode(cls, model_file, dyncode_file, em_translator):
         #Model loaded
+        LodelContext.expose_modules(globals(), {
+            'lodel.settings':['Settings']})
         model = EditorialModel.load(em_translator, filename = model_file)
         dyncode_content = lefactory.dyncode_from_em(model)
         with open(dyncode_file, 'w+') as dfp:
             dfp.write(dyncode_content)
         print("Dyncode written in %s from em %s" % (dyncode_file, model_file))
-        
+        del(globals()['Settings'])
