@@ -519,8 +519,6 @@ MONOSITE mode")
         if reimport or fullname not in cls.__imports_cache[ctx_id]:
             cls.__imports_cache[ctx_id][fullname] = importlib.import_module(
                 fullname)
-        elif not reimport:
-            print("NOT REIMPORTING %s" % fullname)
         return cls.__imports_cache[ctx_id][fullname]
     
     ##@brief Utility mehod to expose objects like in a from x import y,z
