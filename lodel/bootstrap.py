@@ -203,16 +203,20 @@ def site_load(data_path):
     LodelHook.call_hook('lodel2_plugins_loaded', 'bootstrap', None)
     #triggering boostrapped hook
     LodelHook.call_hook('lodel2_bootstraped', 'bootstrap', None)
-    #Populating FAST_APP_EXPOSAL_CACHE
+    #Populating FAST_APP_EXPOSAL_CACHE with wsgi application function
     #
     #WARNING !!!! Hardcoded interface name ! Here we have to find the 
     #interface plugin name in order to populate the cache properly
-    FAST_APP_EXPOSAL_CACHE[ctx_name] = LodelContext.module(
-        'lodel.plugins.webui.run')
+    app = LodelContext.module('lodel.plugins.webui.run')
+    #HAS TO be populated in __loader__ context
+    LodelContext.set(None)
+    LodelContext.expose_modules(globals(), {
+        'lodel.plugins.multisite.loader_utils': ['FAST_APP_EXPOSAL_CACHE']})
+    FAST_APP_EXPOSAL_CACHE[ctx_name] = app
     #a dirty & quick attempt to fix context unwanted exite via
     #hooks
-    for name in ( 'LodelHook', 'core_hooks', 'core_scripts',
-            'Settings', 'settings', 'logger', 'Plugin'):
+    for name in ( 'Plugin', 'LodelHook', 'logger', 'core_hooks',
+           'core_scripts'):
         del(globals()[name])
     #site fully loaded, switching back to loader context
     LodelContext.set(None)

@@ -40,9 +40,13 @@ except ImportError:
 import lodel.buildconf #safe even outside contexts
 import lodel.plugins.multisite.loader_utils as loader_utils
 lodelsites_name = loader_utils.main()
+#FAST_APP_EXPOSAL_CACHE has to be loaded and used from __loader__ context
+LodelContext.set(None)
+LodelContext.expose_modules(globals(), {
+    'lodel.plugins.multisite.loader_utils': ['FAST_APP_EXPOSAL_CACHE']
+})
 LodelContext.set(lodelsites_name)
 LodelContext.expose_modules(globals(), {
-    'lodel.plugins.multisite.loader_utils': ['FAST_APP_EXPOSAL_CACHE'],
     'lodel.bootstrap': ['site_load'],
 })
 FAST_APP_EXPOSAL_CACHE[lodelsites_name] = LodelContext.module(
