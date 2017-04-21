@@ -17,7 +17,7 @@ LodelContext.expose_modules(globals(), {
                                'LeApiQueryErrors'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
                                 'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.exceptions': ['LodelFatalError'],
+    'lodel.exceptions': ['LodelFatalError', 'LodelFatalErrors'],
     'lodel.plugin.hooks': ['LodelHook'],
     'lodel.plugin': ['Plugin', 'DatasourcePlugin'],
     'lodel.leapi.datahandlers.base_classes': ['DatasConstructor', 'Reference']})
@@ -270,26 +270,31 @@ class LeObject(object):
             rw_ds = ro_ds = cls._datasource_name
         else:
             ro_ds, rw_ds = cls._datasource_name
+        errors = []
         # Read only datasource initialisation
-        cls._ro_datasource = DatasourcePlugin.init_datasource(ro_ds, True)
-        if cls._ro_datasource is None:
-            log_msg = "No read only datasource set for LeObject %s"
-            log_msg %= cls.__name__
-            logger.error(log_msg)
-        else:
-            log_msg = "Read only datasource '%s' initialized for LeObject %s"
-            log_msg %= (ro_ds, cls.__name__)
-            logger.debug(log_msg)
+        try:
+            cls._ro_datasource = DatasourcePlugin.init_datasource(ro_ds, True)
+            if cls._ro_datasource is not None:
+                log_msg = "Read only datasource '%s' initialized for LeObject %s"
+                log_msg %= (ro_ds, cls.__name__)
+                logger.debug(log_msg)
+        except LodelFatalError as e:
+            errors.append(e)
+            
         # Read write datasource initialisation
-        cls._rw_datasource = DatasourcePlugin.init_datasource(rw_ds, False)
-        if cls._ro_datasource is None:
-            log_msg = "No read/write datasource set for LeObject %s"
-            log_msg %= cls.__name__
-            logger.error(log_msg)
-        else:
-            log_msg = "Read/write datasource '%s' initialized for LeObject %s"
-            log_msg %= (ro_ds, cls.__name__)
-            logger.debug(log_msg)
+        try:
+            cls._rw_datasource = DatasourcePlugin.init_datasource(rw_ds, False)
+            if cls._ro_datasource is not None:
+                log_msg = "Read/write datasource '%s' initialized for LeObject %s"
+                log_msg %= (ro_ds, cls.__name__)
+                logger.debug(log_msg)
+        except LodelFatalError as e:
+            errors.append(e)
+        
+        if len(errors) > 0:
+            raise LodelFatalErrors(msg = 'Unable to instanciate datasources \
+for LeObject %s' % cls.__name__, exceptions = errors)
+            
 
     # @brief Return the uid of the current LeObject instance
     #@return the uid value

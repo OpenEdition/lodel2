@@ -348,7 +348,7 @@ def emfield_val(value):
 
     @LodelHook('lodel2_dyncode_bootstraped')
     def emfield_conf_check(hookname, caller, payload):
-        import leapi_dyncode as dyncode  # <-- dirty & quick
+        LodelContext.expose_dyncode(globals(), 'dyncode')
         classnames = {cls.__name__.lower(): cls for cls in dyncode.dynclasses}
         if value[0].lower() not in classnames:
             msg = "Following dynamic class do not exists in current EM : %s"

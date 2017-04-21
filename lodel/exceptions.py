@@ -31,6 +31,9 @@ class LodelExceptions(LodelException):
 class LodelFatalError(Exception):
     pass
 
+class LodelFatalErrors(LodelFatalError, LodelExceptions):
+    pass
+
 ##@brief Designed to be a catched exception.
 #
 #@note Designed to be raised in DataHandler

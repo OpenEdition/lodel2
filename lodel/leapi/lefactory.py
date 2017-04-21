@@ -90,8 +90,6 @@ def get_classes(model):
 # @brief Given an EmField returns the data_handler constructor suitable for dynamic code
 # @param a EmField instance
 # @return a string
-
-
 def data_handler_constructor(emfield):
     #dh_module_name = DataHandler.module_name(emfield.data_handler_name)+'.DataHandler'
     get_handler_class_instr = 'DataField.from_name(%s)' % repr(emfield.data_handler_name)
@@ -112,21 +110,25 @@ def data_handler_constructor(emfield):
 # @brief Return a python repr of option values
 # @param A value of any type which represents option
 # @return a string
-
-
 def forge_optval(optval):
     if isinstance(optval, dict):
         return '{' + (', '.join(['%s: %s' % (repr(name), forge_optval(val)) for name, val in optval.items()])) + '}'
 
     if isinstance(optval, (set, list, tuple)):
         return '[' + (', '.join([forge_optval(val) for val in optval])) + ']'
+    
+    ##@todo better class test & name retrieval possible using inspect or type
+    if hasattr(optval, '__class__'):
+        cls_name = optval.__class__.__name__
+    else:
+        cls_name = optval.__name__
 
-    if isinstance(optval, EmField):
+    if cls_name == 'EmField':
         return "{leobject}.data_handler({fieldname})".format(
             leobject=LeObject.name2objname(optval._emclass.uid),
             fieldname=repr(optval.uid)
         )
-    if isinstance(optval, EmClass):
+    elif cls_name == 'EmClass':
         return LeObject.name2objname(optval.uid)
 
     return repr(optval)

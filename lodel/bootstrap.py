@@ -213,6 +213,10 @@ def site_load(data_path):
     LodelContext.expose_modules(globals(), {
         'lodel.plugins.multisite.loader_utils': ['FAST_APP_EXPOSAL_CACHE']})
     FAST_APP_EXPOSAL_CACHE[ctx_name] = app
+    #Switching back in handled site context in order to bootsrap it's 
+    #dyncode
+    LodelContext.set(ctx_name)
+    dyncode_bootstraping()
     #a dirty & quick attempt to fix context unwanted exite via
     #hooks
     for name in ( 'Plugin', 'LodelHook', 'logger', 'core_hooks',

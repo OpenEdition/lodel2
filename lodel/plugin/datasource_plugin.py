@@ -1,11 +1,13 @@
 from lodel.context import LodelContext
 LodelContext.expose_modules(globals(), {
     'lodel.plugin.plugins': ['Plugin'],
+    'lodel.plugin.hooks': ['LodelHook'],
     'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
+    'LodelScriptError', 'DatasourcePluginError'],
     'lodel.validator.validator': ['Validator'],
     'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+    'LodelFatalError', 'DataNoneValid', 'FieldValidationError'],
+})
 
 _glob_typename = 'datasource'
 
@@ -138,7 +140,11 @@ lodel.plugin.datasource_plugin.AbstractDatasource" % (self.name))
         plugin_name, ds_identifier = cls.plugin_name(ds_name, ro)
         ds_conf = cls._get_ds_connection_conf(ds_identifier, plugin_name)
         ds_cls = cls.get_datasource(plugin_name)
-        return ds_cls(**ds_conf)
+        res = ds_cls(**ds_conf)
+        if res is None:
+            raise LodelFatalError("Unable to instanciate a datasource from \
+name : '%s'" % ds_name)
+        return res
     
     ##@brief Return an initialized MigrationHandler instance
     #@param ds_name str : The datasource name
