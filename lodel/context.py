@@ -159,6 +159,12 @@ class LodelContext(object):
     #- lodelsites datadir (ex: /var/lodel2/MULTISITE_NAME/datadir/)
     #- lodelsites contextdir (ex: /varL/lodel2/MULTISITE_NAME/.ctx/lodelsites)
     __lodelsites_paths = None
+    
+    ##@brief Stores allready imported modules indexed on context name
+    #
+    #The dict contains context name as key and dict as values.
+    #Value dict has module fullname as key and module object as value
+    __imports_cache = dict()
 
     ##@brief Create a new context
     #@see LodelContext.new()
@@ -233,7 +239,7 @@ length == 2 but got : %s" % spec)
     ##@brief Return a module from current context
     def get_module(self, fullname):
         fullname = self._translate(fullname)
-        module = importlib.import_module(fullname)
+        module = self._import_module(fullname)
         return module
         
     
@@ -467,7 +473,7 @@ key '%s' with a different value : %s != %s" % (LodelContext.get_name(), alias, g
                 print("Context '%s' : A module exposure leads in a useless replacement for \
 key '%s'" % (LodelContext.get_name(),alias))
         globs[alias] = obj
-        
+
     ##@brief Create a context from a path and returns the context name
     #@param path str : the path from which we extract a sitename
     #@return the site identifier
@@ -498,8 +504,24 @@ MONOSITE mode")
     #@param alias str : alias name
     @classmethod
     def _expose_module(cls, globs, fullname, alias):
-        module = importlib.import_module(fullname)
+        module = cls._import_module(fullname)
         cls.safe_exposure(globs, module, alias)
+    
+    ##@brief Utility method to import a module
+    #@param fullname str : module fullname
+    #@param reimport bool : if true import the module even if it was allready
+    #imported in this context
+    @classmethod
+    def _import_module(cls, fullname, reimport = False):
+        ctx_id = cls.current_id()
+        if ctx_id not in cls.__imports_cache:
+            cls.__imports_cache[ctx_id] = dict()
+        if reimport or fullname not in cls.__imports_cache[ctx_id]:
+            cls.__imports_cache[ctx_id][fullname] = importlib.import_module(
+                fullname)
+        elif not reimport:
+            print("NOT REIMPORTING %s" % fullname)
+        return cls.__imports_cache[ctx_id][fullname]
     
     ##@brief Utility mehod to expose objects like in a from x import y,z
     #form
@@ -509,7 +531,7 @@ MONOSITE mode")
     @classmethod
     def _expose_objects(cls, globs, fullname, objects):
         errors = []
-        module = importlib.import_module(fullname)
+        module = cls._import_module(fullname)
         for o_name in objects:
             if isinstance(o_name, str):
                 alias = o_name
