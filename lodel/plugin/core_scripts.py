@@ -366,7 +366,7 @@ class RefreshDyncode(LodelScript):
             handled_sites = get_handled_sites_name()
             del(globals()['get_handled_sites_name'])
             lodlesites_path = os.path.join(buildconf.LODEL2VARDIR,
-                MULTISITE_CONTEXTDIR)
+                buildconf.MULTISITE_CONTEXTDIR)
             if handled_sites is not None:
                 for sitename in handled_sites:
                     LodelContext.set(None)

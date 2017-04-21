@@ -174,8 +174,8 @@ This should not append !' % ctx_name
 ##@brief Load all plugins in a context
 def site_load_plugins():
     LodelContext.expose_modules(globals(), {
-        'lodel.plugin': ['LodelHook'],
-        'lodel.plugin': ['Plugin']})
+        'lodel.plugin.hooks': ['LodelHook'],
+        'lodel.plugin.plugins': ['Plugin']})
     Plugin.load_all()
     LodelHook.call_hook('lodel2_bootstraped', 'bootstrap', None)
     del(globals()['LodelHook'])
