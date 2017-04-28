@@ -20,7 +20,7 @@
 				    $('#field_input_{{fieldname}}')
 				        .datepicker({
 				            autoclose: true,
-				            format: 'yyyy/mm/dd'
+				            format: 'yyyy-mm-dd'
 				        });
 		        });
         	</script>
@@ -30,8 +30,8 @@
 		{% set l_objs = function(ref_objects) %}
     	{% for l_class in l_classes %}
     		{% set _dummy = ref_objects.update(l_class.get(None)) %} 
-    		{% if 'fullname' in l_class.fieldnames() %}
-    			{% set displayfield = 'fullname' %}
+    		{% if 'lastname' in l_class.fieldnames() %}
+    			{% set displayfield = 'lastname' %}
     		{% elif 'name' in l_class.fieldnames() %} 
     			{% set displayfield = 'name' %}
     		{% elif 'title' in l_class.fieldnames() %}
@@ -41,31 +41,22 @@
     		{% endif %}
     		{% set uidfield = l_class.uid_fieldname() %}
     	{% endfor %}
-    	{% if (field.__class__ == List) %}
+    	<!--{% if (field.__class__ == List) %} -->
     		<input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}[]" type="text" value="{{sval}}" >
     		<script type="text/javascript">
     		$(function() {
 		    $('#{{fieldname}}').magicSuggest({
 		    	data: {{ l_objs }},
-		        valueField: {{ uidfield }},
-		        displayField: {{ displayfield }}
+		        valueField: '{{ uidfield[0] }}',
+		        displayField: '{{ displayfield }}'
 		    });
 		    </script>
 		
 		});
-    	{% endif %}
-        {% if value is iterable %}
-            {% set sval=value|join(',') %}
-        {% else %}
-            {% set sval = value %}
-        {% endif %}
-        {% if field.directly_editable %}
-            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}" >
-            {% set l_classe = field.allowed_classes %}
-            <p> Please enter uids to instances of {{ l_classe.__name__ }} separated by commas </p>
-        {% else %}
-            <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}">
-        {% endif %}
+    	<!--{% endif %} -->
+
+        <!-- <input id="{{fieldname}}" class="form-control" name="field_input_{{fieldname}}" type="text" value="{{sval}}"> --> 
+
 	{% else %}
 		Unsupported base type "{{field.base_type}}" <br>
 	{% endif %}

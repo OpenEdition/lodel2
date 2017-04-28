@@ -107,18 +107,14 @@ def admin_create(request):
     #if WebUiClient.is_anonymous():
     #    return get_response('users/signin.html')
 
-    datas = process_form(request)
-    if not(datas is False):
-        target_leo = dyncode.Object.name2class(datas['classname'])
+    data = process_form(request)
+    if not(data is False):
+        target_leo = dyncode.Object.name2class(data['classname'])
         if 'lodel_id' in datas:
             raise HttpException(400)
         try:
-            for fld in datas:
-                if fld.endswith('[]'):
-                    datas[fld[:-2]] = ','.join(datas[fld])
-                    del datas[fld]
             new_uid = target_leo.insert(
-                { f:datas[f] for f in datas if f != 'classname'})
+                { f:data[f] for f in data if f != 'classname'})
         except LeApiDataCheckErrors as e:
             raise HttpErrors(
                 title='Form validation errors', errors = e._exceptions)
@@ -301,12 +297,16 @@ def process_form(request):
         raise HttpException(400, '%s is abstract' % classname)
     #Process input fields
     for fieldname, value in request.form.items():
+        if fieldname.endswith('[]'):
+            value = ', '.join(request.form.getlist(fieldname))
+            fieldname = fieldname[:-2]
         if fieldname == 'classname':
             continue
         elif fieldname == 'uid':
             fieldname = 'lodel_id' #wow
         elif fieldname.startswith('field_input_'):
             fieldname = fieldname[12:]
+
         try:
             dh = target_leo.data_handler(fieldname)
         except NameError as e:
