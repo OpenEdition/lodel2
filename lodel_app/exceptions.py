@@ -1,0 +1,2 @@
+class LodelFatalError(Exception):
+    pass
