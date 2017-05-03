@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-
+## @package lodel.leapi.lequery
 import re
 import copy
 import inspect

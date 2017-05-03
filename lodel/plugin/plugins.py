@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+# @package lodel.plugin.plugins
 
 import sys
 import os.path

@@ -1,5 +1,4 @@
 #-*- coding: utf-8 -*-
-
 ## @package lodel.leapi.leobject
 # This module is centered around the basic LeObject class, which is the main class for all the objects managed by lodel.
 
