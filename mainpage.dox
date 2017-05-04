@@ -34,7 +34,9 @@ The Editorial Model, in fact, is the configuration of a lodel site, the cms.
 
 The produced CMS are instances of Lodel2.
 
-To manipulate the content (which is composed by EmClass classes) we have the [LeObject](@ref lodel.leapi.leobject) API. This class allows CRUD operations on content objects. To perform these operations it uses [LeQuery](@ref lodel.leapi.lequery) API, the bridge with the datasource.
+An API, [LeAPI](@ref lodel.leapi), allows to manipulate the content (which is composed by EmClass classes).
+
+For this, we have the [LeObject](@ref lodel.leapi.leobject) API. This class allows CRUD operations on content objects. To perform these operations it uses [LeQuery](@ref lodel.leapi.lequery) API, the bridge with the datasource.
 
 Datasources are [plugins](@ref lodel.plugin.plugins), like interfaces (IHM, cli, ...), extensions, scripts, session handlers.
 
@@ -54,5 +56,8 @@ This is done with [LeFactory] (@ref lodel.leapi.lefactory) module.
 Each change in the editorial model implies changes in dynamic code and datasources.
 These changes will be performed by the migration handler (not yet implemented).
 
+Deployment, administration
+==========================
+See [Boot mechanism](@ref lodel2_start), [Administration](@ref lodel2_instance_admin) and [Diffusion and deployment](@ref lodel2_autotools)
 
 */
