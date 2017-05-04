@@ -3,29 +3,29 @@
 
 Lodel2 has two modes of operations : a standalone one, in that case Lodel2 is a customized CMS or and one, multisite case, in which it can be seen as a manager of CMS.
 
-Lodel2 has to perform 2 distinct tasks : to produce sites (cms), and to be a site.
+Lodel2 has to perform 2 distinct tasks : produce sites (cms), and be a site.
 Plus, in the case of multisite install, it has to manage the produced sites.
 2 parts :
-- Editorial Model, whom the goal is to describe the structure of the content managed by the instance. This Editorial Model has to be built, and has to produce the python code which will represent the content.
-- LeAPI, which is a python API to manipulate the objetcs created by the first part.
+- Editorial Model, whom the goal is to describe the structure of the content managed by the instance (the site). This Editorial Model has to be built, and has to produce the python code which will represent the content.
+- LeAPI, which is a python API to manipulate the objects created by the first part.
 
-In case of multisite install the manager of the sites is a lodel site itself, like the others, with a adapted Editorial Model.
+In case of multisite install the manager of the sites is a lodel site itself, like the others, with an adapted Editorial Model.
 
 Editorial Model part
 ====================
 
 To represent the content we have :
 
-- Classes, the [EmClass](@ref lodel.editorial_model.components) module, it is a fields container which is named.
-- Fields, the [emField](@ref lodel.editorial_model.components) module
+- Classes, the [EmClass](@ref lodel.editorial_model.components) module, it is a field container which is named,
+- Fields, the [emField](@ref lodel.editorial_model.components) module.
 
 These two modules are the components (see [EmComponent](@ref lodel.editorial_model.components)) of the content.
 
-In order to organize the different Editorial Models (for the different sites) from a single one, we have set up a system of groups, 
-the [EmGroup](@ref lodel.editorial_model.components). This system allows each site to activate or not certain groups. 
+In order to organize the different Editorial Models (for the different sites) from a single one, we have set up a system of groups,
+the [EmGroup](@ref lodel.editorial_model.components). This system allows each site to activate or not certain groups.
 A EmGroup can be seen as a EmClass end EmField named container.
- Some groups can depend of other groups. 
- This means that if EmGroup A is selected and it depends of EmGroup B, it must also be activated.
+Some groups can depend of other groups.
+This means that if EmGroup A is selected and it depends of EmGroup B, it must also be activated.
 
 CMS part
 ========
@@ -34,7 +34,7 @@ The Editorial Model, in fact, is the configuration of a lodel site, the cms.
 
 The produced CMS are instances of Lodel2.
 
-To manipulate the content (which is EmClass ) we have the [LeObject](@ref lodel.leapi.leobject) API. This class allows CRUD operations on content objects. To perform these operations it uses [LeQuery](@ref lodel.leapi.lequery) API, the bridge with the datasource.
+To manipulate the content (which is composed by EmClass classes) we have the [LeObject](@ref lodel.leapi.leobject) API. This class allows CRUD operations on content objects. To perform these operations it uses [LeQuery](@ref lodel.leapi.lequery) API, the bridge with the datasource.
 
 Datasources are [plugins](@ref lodel.plugin.plugins), like interfaces (IHM, cli, ...), extensions, scripts, session handlers.
 
@@ -48,7 +48,11 @@ Several types of plugins are mandatory : datasource, interface for now.
 LeFactory - Migration Handler
 =============================
 
+The Editorial Model described must be translated in python classes to be imported by the instances of Lodel2.
+This is done with [LeFactory] (@ref lodel.leapi.lefactory) module.
 
+Each change in the editorial model implies changes in dynamic code and datasources.
+These changes will be performed by the migration handler (not yet implemented).
 
 
 */
