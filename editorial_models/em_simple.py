@@ -4,8 +4,6 @@ import sys
 import os, os.path
 
 sys.path.append(os.path.dirname(os.getcwd()+'/..'))
-from lodel.context import LodelContext
-LodelContext.init()
 
 from lodel.settings.settings import Settings as settings
 settings('globconf.d')

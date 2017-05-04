@@ -3,8 +3,8 @@ from .base import get_response
 from ...exceptions import *
 from ...client import WebUiClient as WebUiClient
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+from lodel.logger import logger
+
 LodelContext.expose_dyncode(globals(), 'dyncode')
 
 ##@brief These functions are called by the rules defined in ../urls.py

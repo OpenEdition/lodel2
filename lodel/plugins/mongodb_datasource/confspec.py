@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.validator.validator': ['Validator']})
+from lodel.validator.validator import Validator
 
 ## @brief Mongodb datasource plugin confspec
 # @ingroup plugin_mongodb_datasource

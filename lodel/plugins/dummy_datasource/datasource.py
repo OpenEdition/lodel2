@@ -2,9 +2,7 @@
 
 ## @package lodel.plugins.dummy_datasource.datasource This module contains the main class of the datasource, implementing the basic operations one can perform.
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin.datasource_plugin': ['AbstractDatasource']})
+from lodel.plugin.datasource_plugin import AbstractDatasource
 
 ## @brief Datasource class, inherited from @ref lodel.plugin.datasource.AbstractDatasource
 class DummyDatasource(AbstractDatasource):

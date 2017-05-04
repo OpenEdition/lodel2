@@ -9,29 +9,21 @@ import warnings
 #
 #This file (once bootstraped) start a new process for uWSGI. uWSGI then
 #run lodel.plugins.multisite.run.application function
-try:
-    from lodel.context import LodelContext
-except ImportError:
-    LODEL_BASE_DIR = os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from lodel.context import LodelContext
 
 from lodel import buildconf
 
-LodelContext.init(LodelContext.MULTISITE)
-LodelContext.set(None) #Loading context creation
 #Multisite instance settings loading
 CONFDIR = os.path.join(os.getcwd(), 'conf.d')
 if not os.path.isdir(CONFDIR):
     warnings.warn('%s do not exists, default settings used' % CONFDIR)
-LodelContext.expose_modules(globals(), {
-    'lodel.settings.settings': [('Settings', 'settings')],
-    'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
+    
+from lodel.settings.settings import Settings,settings
+from lodel.plugins.multisite.confspecs import multisite_confspecs
+
 if not settings.started():
     settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
-LodelContext.expose_modules(globals(), {
-    'lodel.settings': ['Settings']})
+from lodel.settings import Settings
 
 ##@brief Starts uwsgi in background using settings
 def uwsgi_fork():

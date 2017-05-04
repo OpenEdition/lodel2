@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.editorial_model.components': ['EmClass', 'EmField'],
-    'lodel.editorial_model.model': ['EditorialModel'],
-    'lodel.leapi.datahandlers.base_classes': ['DataHandler'],
-    'lodel.plugin': ['LodelHook'],
-    'lodel.logger': 'logger'})
+from lodel.editorial_model.components import EmClass, EmField
+from lodel.editorial_model.model import EditorialModel
+from lodel.leapi.datahandlers.base_classes import DataHandler
+from lodel.plugin import LodelHook
+from lodel.logger import logger
 
 from leapi_dyncode import * #<-- TODO : handle this !!!
 

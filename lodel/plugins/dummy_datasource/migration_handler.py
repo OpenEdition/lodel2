@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-
 ## @package lodel.plugins.dummy_datasource.migration_handler Migration handler of the datasource plugin. 
 #
 # The migration handler is here to report the changes made in the editorial model to the data source. 

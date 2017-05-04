@@ -1,11 +1,9 @@
 import argparse
 import sys
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+from lodel.logger import logger
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
+
 
 ## @defgroup lodel2_script Administration scripts
 # @ingroup lodel2_plugins

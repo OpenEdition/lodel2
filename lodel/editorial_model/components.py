@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-
 # @package lodel.editorial_model.components
 #@brief Defines all @ref lodel2_em "EM" components
 #@ingroup lodel2_em
@@ -9,13 +7,11 @@ import warnings
 import copy
 import hashlib
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.utils.mlstring': ['MlString'],
-    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
-    'lodel.settings': ['Settings'],
-    'lodel.editorial_model.exceptions': ['EditorialModelError', 'assert_edit'],
-    'lodel.leapi.leobject': ['CLASS_ID_FIELDNAME']})
+from lodel.utils.mlstring import MlString
+from lodel.mlnamedobject.mlnamedobject import MlNamedObject
+from lodel.settings import import Settings
+from lodel.editorial_model.exceptions import EditorialModelError, assert_edit
+from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
 ## @brief Abstract class to represent editorial model components
 # @see EmClass EmField

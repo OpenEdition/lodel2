@@ -1,7 +1,4 @@
-#-*- coding: utf-8 -*-
-
 from werkzeug.wrappers import Response
-from lodel.context import LodelContext
 
 class HttpException(Exception):
 
@@ -27,7 +24,7 @@ class HttpException(Exception):
     
     ##@brief Log exception with lodel logger
     def log(self):
-        LodelContext.expose_modules(globals(), {'lodel.logger': 'logger'})
+        from lodel.logger import logger
         msg = "Webui HTTP exception : %s" % self
         if self.status_code / 100 == 4:
             logger.security(msg)

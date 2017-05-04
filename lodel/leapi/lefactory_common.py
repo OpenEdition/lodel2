@@ -31,5 +31,5 @@ def lowername2class(name):
 def lodel2_dyncode_datasources_init(self, caller, payload):
     for cls in dynclasses:
         cls._init_datasources()
-    LodelContext.expose_modules(globals(), {'lodel.plugin.hooks': ['LodelHook']})
+    from lodel.plugin.hooks import LodelHook
     LodelHook.call_hook("lodel2_dyncode_loaded", __name__, dynclasses)

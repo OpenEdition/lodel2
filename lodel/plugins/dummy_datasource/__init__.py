@@ -1,9 +1,7 @@
 ## @package lodel.plugins.dummy_datasource Example of a datasource type plugin
 
 # Here we use the Lodel Context Manager to expose the modules which are specific to the application
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.validator.validator': ['Validator']})
+from lodel.validator.validator import Validator
 from .datasource import DummyDatasource as Datasource
 
 ## @brief plugin's category

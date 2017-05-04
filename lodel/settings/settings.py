@@ -8,14 +8,10 @@ import warnings
 import types  # for dynamic bindings
 from collections import namedtuple
 
-from lodel.context import LodelContext
-
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.validator.validator': ['Validator', 'LODEL2_CONF_SPECS',
-                                  'confspec_append'],
-    'lodel.settings.settings_loader': ['SettingsLoader']})
+from lodel.logger import logger
+from lodel.settings.utils import SettingsError, SettingsErrors
+from lodel.settings.settings_loader import SettingsLoader
+from lodel.validator.validator import Validator, LODEL2_CONF_SPECS, confspec_append
 
 
 ##  @package lodel.settings.settings Lodel2 settings module
@@ -140,8 +136,7 @@ class Settings(object, metaclass=MetaSettings):
 
     # @brief This method handles Settings instance bootstraping
     def __bootstrap(self):
-        LodelContext.expose_modules(globals(), {
-            'lodel.plugin.plugins': ['Plugin', 'PluginError']})
+        from lodel.plugin.plugins import Plugin, PluginError
         logger.debug("Settings bootstraping")
         if self.__conf_specs is None:
             lodel2_specs = LODEL2_CONF_SPECS

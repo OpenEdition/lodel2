@@ -20,14 +20,8 @@ logger = logging.getLogger(LodelContext.get_name())
 ##@brief Module initialisation from settings
 #@return True if inited else False
 def __init_from_settings():
-    from lodel.context import LodelContext
-    try:
-        LodelContext.expose_modules(globals(), {
-            'lodel.settings': ['Settings']})
-    except Exception:
-        return False
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings.settings': [('Settings', 'Lodel2Settings')]})
+    from lodel.settings import Settings
+    from lodel.settings.settings import Settings, Lodel2Settings
     if not Lodel2Settings.started():
         return False
     # capture warning disabled, because the custom format raises error (unable

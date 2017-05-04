@@ -1,6 +1,4 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.validator.validator': ['Validator']})
+from lodel.validator.validator import Validator
 
 CONFSPEC = {
     'lodel2.webui': {

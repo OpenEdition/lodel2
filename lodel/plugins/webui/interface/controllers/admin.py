@@ -2,13 +2,12 @@
 from ...exceptions import *
 from .base import get_response
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.leapi.exceptions': [],
-    'lodel.logger': 'logger',
-    'lodel.leapi.datahandlers.base_classes': ['MultipleRef'],
-    'lodel.leapi.exceptions': ['LeApiDataCheckErrors'],
-    'lodel.exceptions': ['LodelExceptions']})
+import lodel.leapi.exceptions
+from lodel.logger import logger
+from lodel.leapi.datahandlers.base_classes import MultipleRef
+from lodel.leapi.exceptions import LeApiDataCheckErrors
+from lodel.exceptions import LodelExceptions
+
 LodelContext.expose_dyncode(globals(), 'dyncode')
 
 from ...client import WebUiClient

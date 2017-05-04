@@ -5,13 +5,9 @@ import copy
 import inspect
 import warnings
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors',
-                               'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
-                               'LeApiQueryErrors'],
-    'lodel.plugin.hooks': ['LodelHook'],
-    'lodel.logger': ['logger']})
+from lodel.leapi.exceptions import LeApiError, LeApiErrors, LeApiDataCheckError, LeApiDataCheckErrors, LeApiQueryError, LeApiQueryErrors
+from lodel.plugin.hooks import LodelHook
+from lodel.logger import logger
 
 # @todo check data when running query
 

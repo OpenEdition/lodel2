@@ -1,10 +1,8 @@
 #-*- coding: utf-8 -*-
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin': ['LodelHook'],
-    'lodel.settings': ['Settings'],
-    'lodel.logger': 'logger'})
+from lodel.plugin import LodelHook
+from lodel.settings import Setting
+from lodel.logger import logger
 
 ## @package lodel.plugin.core_hooks
 # @brief Lodel2 internal hooks declaration
@@ -46,8 +44,7 @@ def datasources_bootstrap_hook(hook_name, caller, payload):
 # @param payload * : data to be given to the hook
 @LodelHook('lodel2_bootstraped')
 def list_hook_debug_hook(name, caller, payload):
-    LodelContext.expose_modules(globals(), {
-        'lodel.logger': 'logger'})
+    from lodel.logger import logger
     hlist = LodelHook.hook_list()
     for name, reg_hooks in hlist.items():
         for hook, priority in reg_hooks:
@@ -66,6 +63,5 @@ def list_hook_debug_hook(name, caller, payload):
 # @param dynclasses list : a list of classes in which the injection will occur
 @LodelHook("lodel2_dyncode_loaded")
 def lodel2_plugins_custom_methods(self, caller, dynclasses):
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin.plugins': ['CustomMethod']})
+    from lodel.plugin.plugins import CustomMethod
     CustomMethod.set_registered(dynclasses)

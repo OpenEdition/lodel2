@@ -8,23 +8,17 @@ import importlib
 import warnings
 import copy
 
-from lodel.context import LodelContext
+from lodel.logger import logger
+from lodel.settings import Settings
+from lodel.settings.utils import SettingsError
+from lodel.leapi.query import LeInsertQuery, LeUpdateQuery, LeDeleteQuery, LeGetQuery
+from lodel.leapi.exceptions import LeApiError, LeApiErrors, LeApiDataCheckError, LeApiDataCheckErrors, LeApiQueryError, LeApiQueryErrors
+from lodel.plugin.exceptions import PluginError, PluginTypeError, LodelScriptError, DatasourcePluginError
+from lodel.exceptions import LodelFatalError
+from lodel.plugin.hooks import LodelHook
+from lodel.plugin import Plugin, DatasourcePlugin
+from lodel.leapi.datahandlers.base_classes import DatasConstructor, Reference
 
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.settings': 'Settings',
-    'lodel.settings.utils': 'SettingsError',
-    'lodel.leapi.query': ['LeInsertQuery', 'LeUpdateQuery', 'LeDeleteQuery',
-                          'LeGetQuery'],
-    'lodel.leapi.exceptions': ['LeApiError', 'LeApiErrors',
-                               'LeApiDataCheckError', 'LeApiDataCheckErrors', 'LeApiQueryError',
-                               'LeApiQueryErrors'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-                                'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.exceptions': ['LodelFatalError'],
-    'lodel.plugin.hooks': ['LodelHook'],
-    'lodel.plugin': ['Plugin', 'DatasourcePlugin'],
-    'lodel.leapi.datahandlers.base_classes': ['DatasConstructor', 'Reference']})
 
 ## @brief Stores the name of the field present in each LeObject that indicates the name of LeObject subclass represented by this object
 CLASS_ID_FIELDNAME = "classname"

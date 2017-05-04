@@ -1,11 +1,9 @@
 ## @package lodel.plugin.interface Handles the Interface type plugins
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin.plugins': ['Plugin'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.validator.validator': ['Validator']})
+from lodel.plugin.plugins import Plugin
+from lodel.plugin.exceptions import PluginError, PluginTypeError, LodelScriptError, DatasourcePluginError
+from lodel.validator.validator import Validator
+
 
 ## @brief Global type name used in the settings of Lodel for this type of plugins
 _glob_typename = 'ui'

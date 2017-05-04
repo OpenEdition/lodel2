@@ -3,10 +3,8 @@
 import pymongo
 from pymongo import MongoClient
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.settings.settings': [('Settings', 'settings')],
-    'lodel.logger': 'logger'})
+from lodel.settings.settings import Settings, settings
+from lodel.logger logger
 
 common_collections = {
     'object': 'objects',

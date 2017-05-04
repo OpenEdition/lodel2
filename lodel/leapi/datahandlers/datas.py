@@ -8,13 +8,8 @@ import warnings
 import inspect
 import re
 
-from lodel.context import LodelContext
-
-LodelContext.expose_modules(globals(), {
-    'lodel.leapi.datahandlers.datas_base': ['Boolean', 'Integer', 'Varchar',
-                                            'DateTime', 'Text', 'File'],
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-                         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+from lodel.leapi.datahandlers.datas_base import Boolean, Integer, Varchar, DateTime, Text, File
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 
 ## @brief Data field designed to handle formated strings

@@ -10,26 +10,12 @@ import importlib
 import inspect
 import warnings
 
-from lodel.context import LodelContext
-
-LodelContext.expose_modules(globals(), {
-    'lodel.exceptions': [
-        'LodelException',
-        'LodelExceptions',
-        'LodelFatalError',
-        'DataNoneValid',
-        'FieldValidationError'
-    ],
-    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
-    'lodel.leapi.datahandlers.exceptions': [
-        'LodelDataHandlerConsistencyException',
-        'LodelDataHandlerException'
-    ],
-    'lodel.validator.validator': [
-        'ValidationError'
-    ],
-    'lodel.logger': 'logger',
-    'lodel.utils.mlstring': ['MlString']})
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
+from lodel.mlnamedobject.mlnamedobject import MlNamedObject
+from lodel.leapi.datahandlers.exceptions import LodelDataHandlerConsistencyException, LodelDataHandlerException
+from lodel.validator.validator import ValidationError
+from lodel.logger import logger
+from lodel.utils.mlstring import MlString
 
 ##
 # @brief Base class for all DataHandlers

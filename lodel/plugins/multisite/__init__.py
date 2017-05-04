@@ -1,8 +1,5 @@
-from lodel.context import LodelContext, ContextError
+from lodel.validator.validator import Validator
 try:
-    LodelContext.expose_modules(globals(), {
-        'lodel.validator.validator': ['Validator']})
-
     __plugin_name__ = "multisite"
     __version__ = '0.0.1' #or __version__ = [0,0,1]
     __loader__ = "main.py"

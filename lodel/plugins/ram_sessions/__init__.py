@@ -1,6 +1,4 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.validator.validator': ['Validator']})
+from lodel.validator.validator Validator
 
 __plugin_name__ = 'ram_sessions'
 __version__ = [0,0,1]

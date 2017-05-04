@@ -27,32 +27,24 @@ except ImportError as e:
     print(e)
     exit(1)
 
-#Set context to MONOSITE
-from lodel.context import LodelContext
-LodelContext.init()
-
 if 'LODEL2_NO_SETTINGS_LOAD' not in os.environ:
     #
     # Loading settings
     #
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings.settings': [('Settings', 'settings')]})
+    from lodel.settings.settings import Settings, settings
     if not settings.started():
         settings('conf.d')
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings': ['Settings']})
+    from lodel.settings import Settings
     
     #Starts hooks
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin': ['LodelHook'],
-	'lodel.plugin.core_hooks': 'core_hooks',
-	'lodel.plugin.core_scripts': 'core_scripts'})
+    from lodel.plugin import LodelHook
+	from lodel.plugin.core_hooks import core_hooks
+	from lodel.plugin.core_scripts import core_scripts
 
 def start():
     #Load plugins
-    LodelContext.expose_modules(globals(), {
-        'lodel.logger': 'logger',
-        'lodel.plugin': ['Plugin']})
+    from lodel.logger import logger
+    from lodel.plugin import Plugin
     logger.debug("Loader.start() called")
     Plugin.load_all()
     LodelHook.call_hook('lodel2_bootstraped', '__main__', None)

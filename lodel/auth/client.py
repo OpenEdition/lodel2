@@ -5,14 +5,11 @@ import sys
 import warnings
 import inspect
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.settings': ['Settings'],
-    'lodel.logger': 'logger',
-    'lodel.plugin': [('SessionHandlerPlugin', 'SessionHandler')],
-    'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
-                              'ClientPermissionDenied', 'ClientAuthenticationError'],
-    'lodel.leapi.query': ['LeGetQuery'], })
+from lodel.settings import Settings
+from lodel.logger import logger,
+from lodel.plugin import SessionHandlerPlugin, SessionHandler
+from lodel.auth.exceptions import ClientError, ClientAuthenticationFailure, ClientPermissionDenied, ClientAuthenticationError
+from lodel.leapi.query import LeGetQuery
 
 ## @brief Client metaclass designed to implements container accessor on
 # Client Class

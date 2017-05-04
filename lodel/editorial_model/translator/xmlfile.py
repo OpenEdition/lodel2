@@ -4,12 +4,9 @@ import lxml
 import os
 from lxml import etree
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.editorial_model.model': ['EditorialModel'],
-    'lodel.editorial_model.components': ['EmComponent', 'EmClass', 'EmField',
-        'EmGroup'],
-    'lodel.utils.mlstring': ['MlString']})
+from lodel.editorial_model.model import EditorialModel
+from lodel.editorial_model.components import EmComponent, EmClass, EmField, EmGroup
+from lodel.utils.mlstring import MlString
 
 ## @package lodel.editorial_model.translator.xmlfile
 # This module is a translator toolkit between and editorial model and an XML file.

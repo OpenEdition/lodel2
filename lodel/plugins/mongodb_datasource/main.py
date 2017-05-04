@@ -1,6 +1,4 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin': ['LodelHook']})
+from lodel.plugin import LodelHook
 
 from .datasource import MongoDbDatasource as Datasource
 

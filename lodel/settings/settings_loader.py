@@ -4,18 +4,16 @@ import os
 import glob
 import copy
 
-from lodel.context import LodelContext
-
 #  @package lodel.settings.settings_loader Lodel2 loader of configuration options
 #
 # From a filesystem directory, all ini files are loaded in a dict (key/value) for each option
 # The options are called one by one by lodel bootstrap, if one or more options remains 
 # then an exception is raised
 
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.settings.utils': ['SettingsError', 'SettingsErrors'],
-    'lodel.validator.validator': ['ValidationError']})
+from lodel.logger import logger
+from lodel.settings.utils import SettingsError, SettingsErrors
+from lodel.validator.validator import ValidationError
+
 
 ##@brief Merges and loads configuration files
 class SettingsLoader(object):

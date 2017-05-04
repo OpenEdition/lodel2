@@ -27,9 +27,9 @@ LodelContext.set(None) #Loading context creation
 CONFDIR = os.path.join(os.getcwd(), 'conf.d')
 if not os.path.isdir(CONFDIR):
     warnings.warn('%s do not exists, default settings used' % CONFDIR)
-LodelContext.expose_modules(globals(), {
-    'lodel.settings.settings': [('Settings', 'settings')],
-    'lodel.plugins.multisite.confspecs': 'multisite_confspecs'})
+from lodel.settings.settings import Settings, settings
+from lodel.plugins.multisite.confspecs import multisite_confspecs
+
 if not settings.started():
     settings('./conf.d', multisite_confspecs.LODEL2_CONFSPECS)
 
@@ -45,23 +45,20 @@ for lodelsite_path in lodelsites_list:
     LodelContext.set(ctx_name)
     os.chdir(lodelsite_path)
     # Loading settings
-    LodelContext.expose_modules(globals(), {
-        'lodel.settings.settings': [('Settings', 'settings')]})
+    from lodel.settings.settings import Settings, settings
     if not settings.started():
         settings('./conf.d')
-    LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
+    from lodel.settings import Settings
 
     # Loading hooks & plugins
-    LodelContext.expose_modules(globals(), {
-        'lodel.plugin': ['LodelHook'],
-        'lodel.plugin.core_hooks': 'core_hooks',
-        'lodel.plugin.core_scripts': 'core_scripts'
+    from lodel.plugin import LodelHook
+    from lodel.plugin.core_hooks import core_hooks
+    from lodel.plugin.core_scripts import core_scripts
     })
 
     #Load plugins
-    LodelContext.expose_modules(globals(), {
-        'lodel.logger': 'logger',
-        'lodel.plugin': ['Plugin']})
+    from lodel.logger import logger
+    from lodel.plugin import Plugin
     logger.debug("Loader.start() called")
     Plugin.load_all()
     #Import & expose dyncode
@@ -127,7 +124,5 @@ def application(env, start_response):
             "No site named '%s'" % site_id)
     #Calling webui
     return FAST_APP_EXPOSAL_CACHE[site_id].application(env, start_response)
-    #LodelContext.expose_modules(globals(), {
-    #    'lodel.plugins.webui.run': ['application']})
-    #return application(env, start_response)
+
 

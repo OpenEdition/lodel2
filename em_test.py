@@ -1,9 +1,4 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
-
-from lodel.context import LodelContext
-LodelContext.init()
-
 from lodel.settings.settings import Settings as settings
 settings('globconf.d')
 from lodel.settings import Settings

@@ -2,10 +2,8 @@
 
 ## @package lodel.plugins.dummy.main Plugin's loader module
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin': ['LodelHook', 'CustomMethod'],
-    'lodel.settings' : 'settings'})
+from lodel.plugin import LodelHook, CustomMethod,
+from lodel.settings import settings
 
 
 ## @brief callback method using lodel's hook system

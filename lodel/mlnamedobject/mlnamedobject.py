@@ -1,8 +1,7 @@
 #-*- coding:utf-8 -*-
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.utils.mlstring': ['MlString']})
+from lodel.utils.mlstring import MlString
+
 
 ## @package lodel.mlnamedobject.mlnamedobject Lodel2 description of objects module
 #

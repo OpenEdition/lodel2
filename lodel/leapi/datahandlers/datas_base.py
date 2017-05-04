@@ -3,14 +3,9 @@ import warnings
 import datetime
 import time
 import os
-from lodel.context import LodelContext
 
-
-LodelContext.expose_modules(globals(), {
-    'lodel.leapi.datahandlers.base_classes': ['DataField'],
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-                         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
-
+from lodel.leapi.datahandlers.base_classes import DataField
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 ##
 ## @brief Data field designed to handle boolean values

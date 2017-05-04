@@ -4,10 +4,9 @@ import tempfile
 import os
 import os.path
 import argparse
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin.scripts': 'lodel_script',
-    'lodel.logger': 'logger'})
+
+from lodel.plugin.scripts import lodel_script
+from lodel.logger import logger
 
 # @package lodel.plugin.core_scripts
 #@brief Lodel2 internal scripts declaration

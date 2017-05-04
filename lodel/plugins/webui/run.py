@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-from lodel.context import LodelContext
-
-if not LodelContext.is_initialized():
-    import loader # Lodel2 loader
+import loader # Lodel2 loader
 
 import os
 import hashlib
@@ -11,11 +7,9 @@ import sys
 
 from werkzeug.wrappers import Response
 
-LodelContext.expose_modules(globals(), {
-    'lodel.settings': ['Settings'],
-    'lodel.logger': 'logger',
-    'lodel.auth.exceptions': ['ClientError', 'ClientAuthenticationFailure',
-        'ClientPermissionDenied', 'ClientAuthenticationError']})
+from lodel.settings import Settings
+from lodel.logger import logger
+from lodel.auth.exceptions import ClientError, ClientAuthenticationFailure, ClientPermissionDenied, ClientAuthenticationError
 
 from .interface.router import get_controller
 from .interface.lodelrequest import LodelRequest

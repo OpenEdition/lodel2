@@ -8,11 +8,8 @@ import inspect
 import copy
 from lodel.context import LodelContext
 
-
-LodelContext.expose_modules(globals(), {
-    'lodel.mlnamedobject.mlnamedobject': ['MlNamedObject'],
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-                         'LodelFatalError', 'FieldValidationError']})
+from lodel.mlnamedobject.mlnamedobject import MlNamedObject
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, FieldValidationError
 
 
 ##
@@ -354,8 +351,7 @@ Validator.create_re_validator(
 #
 # @todo modify the hardcoded dyncode import (it's a warning)
 def emfield_val(value):
-    LodelContext.expose_modules(globals(),
-                                {'lodel.plugin.hooks': ['LodelHook']})
+    from lodel.plugin.hooks import LodelHook
     spl = value.split('.')
     if len(spl) != 2:
         msg = "Expected a value in the form CLASSNAME.FIELDNAME but got : %s"
@@ -383,15 +379,13 @@ def emfield_val(value):
 # Able to check that the value is a plugin and if it is of a specific type
 def plugin_validator(value, ptype=None):
     if value:
-        LodelContext.expose_modules(globals(), {
-            'lodel.plugin.hooks': ['LodelHook']})
+        from lodel.plugin.hooks import LodelHook
         value = copy.copy(value)
 
         @LodelHook('lodel2_dyncode_bootstraped')
         def plugin_type_checker(hookname, caller, payload):
-            LodelContext.expose_modules(globals(), {
-                'lodel.plugin.plugins': ['Plugin'],
-                'lodel.plugin.exceptions': ['PluginError']})
+            from lodel.plugin.plugins import Plugin
+            from lodel.plugin.exceptions import PluginError
             if value is None:
                 return
             try:

@@ -7,15 +7,12 @@ import copy
 import json
 from importlib.machinery import SourceFileLoader
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.settings.utils': ['SettingsError'],
-    'lodel.plugin.hooks': ['LodelHook'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginVersionError',
-                                'PluginTypeError', 'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-                         'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+from lodel.logger import logger
+from lodel.settings.utils import SettingsError
+from lodel.plugin.hooks import LodelHook
+from lodel.plugin.exceptions import PluginError, PluginVersionError, PluginTypeError, LodelScriptError, DatasourcePluginError
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
+
 
 ##  @package lodel.plugins Lodel2 plugins management
 #@ingroup lodel2_plugins
@@ -54,8 +51,6 @@ LOADER_FILENAME_VARNAME = '__loader__'
 PLUGIN_DEPS_VARNAME = '__plugin_deps__'
 ## @brief Name of the optional activate method
 ACTIVATE_METHOD_NAME = '_activate'
-## @brief Default & failover value for plugins path list
-PLUGINS_PATH = os.path.join(LodelContext.context_dir(), 'plugins')
 
 ## @brief List storing the mandatory variables expected in a plugin __init__.py
 # file
@@ -316,7 +311,7 @@ class Plugin(object, metaclass=MetaPlugType):
 
         # Importing __init__.py infos in it
         plugin_module = self.module_name()
-        self.module = LodelContext.module(plugin_module)
+        self.module = LodelContext.module(plugin_module) # To be modified without LodelContext, i let it to raise an error and remember
 
         # loading confspecs
         try:
@@ -579,8 +574,7 @@ name differ from the one found in plugin's init file"
     # etc...
     @classmethod
     def plugin_list_confspec(cls):
-        LodelContext.expose_modules(globals(), {
-            'lodel.settings.validator': ['confspec_append']})
+        from lodel.settings.validator import confspec_append
         res = dict()
         for pcls in cls.plugin_types():
             plcs = pcls.plist_confspec()
@@ -779,8 +773,6 @@ name differ from the one found in plugin's init file"
     ## @brief Import init file from a plugin path
     #@param path str : Directory path
     #@return a tuple (init_module, module_name)
-    #@todo replace by LodelContext usage !!! (not mandatory, this fun
-    # is only used in plugin discover method)
     @classmethod
     def import_init(cls, path):
         cls._mod_cnt += 1  # in order to ensure module name unicity
@@ -812,8 +804,7 @@ name differ from the one found in plugin's init file"
     @classmethod
     def _discover(cls, path):
         # Ensure plugins symlink creation
-        LodelContext.expose_modules(globals(), {
-            'lodel.plugins': 'plugins'})
+        from lodel.plugins import plugins
         res = []
         to_explore = [path]
         while len(to_explore) > 0:

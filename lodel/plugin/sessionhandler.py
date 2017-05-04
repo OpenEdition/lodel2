@@ -1,9 +1,6 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin.plugins': ['Plugin', 'MetaPlugType'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.validator.validator': ['Validator']})
+from lodel.plugin.plugins import Plugin, MetaPlugType
+from lodel.plugin.exceptions import PluginError, PluginTypeError, LodelScriptError, DatasourcePluginError
+from lodel.validator.validator import Validator
 
 
 ##@brief SessionHandlerPlugin metaclass designed to implements a wrapper

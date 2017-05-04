@@ -1,5 +1,4 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {'lodel.auth.client': ['Client']})
+from lodel.auth.client import Client
 
 class WebUiClient(Client):
     

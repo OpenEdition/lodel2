@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
-
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.leapi.datahandlers.base_classes': ['Reference', 'MultipleRef',
-                                              'SingleRef'],
-    'lodel.logger': 'logger',
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-                         'LodelFatalError', 'DataNoneValid',
-                         'FieldValidationError']})
+from lodel.leapi.datahandlers.base_classes import Reference, MultipleRef, SingleRef
+from lodel.logger import logger
+from lodel.exceptions import  LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 ## @brief Child class of SingleRef. The object referenced must exist
 class Link(SingleRef):

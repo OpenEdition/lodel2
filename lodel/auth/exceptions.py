@@ -1,11 +1,8 @@
 # @package lodel.auth.exceptions
 # @brief Defines the specific exceptions used in the authentication process
 
-from lodel.context import LodelContext
-
-LodelContext.expose_modules(globals(), {
-    'lodel.logger': 'logger',
-    'lodel.plugin.hooks': ['LodelHook']})
+from lodel.logger import logger
+from lodel.plugin.hooks import LodelHook
 
 
 ## @brief Handles common errors with a Client

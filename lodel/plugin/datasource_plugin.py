@@ -3,14 +3,11 @@
 # It contains the base classes for all the datasource plugins that could be added to Lodel
 
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.plugin.plugins': ['Plugin'],
-    'lodel.plugin.exceptions': ['PluginError', 'PluginTypeError',
-        'LodelScriptError', 'DatasourcePluginError'],
-    'lodel.validator.validator': ['Validator'],
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+
+from lodel.plugin.plugins import Plugin
+from lodel.plugin.exceptions import PluginError, PluginTypeError, LodelScriptError, DatasourcePluginError 
+from lodel.validator.validator import Validator
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 ## @brief The plugin type that is used in the global settings of Lodel
 _glob_typename = 'datasource'
@@ -172,8 +169,7 @@ migration handler !!!")
     # @throw SettingsError if there are misconfigured datasource settings.
     @staticmethod
     def plugin_name(ds_name, ro):
-        LodelContext.expose_modules(globals(), {
-            'lodel.settings': ['Settings']})
+        from lodel.settings import Settings
         # fetching connection identifier given datasource name
         try:
             ds_identifier = getattr(Settings.datasources, ds_name)
@@ -209,8 +205,7 @@ DS_PLUGIN_NAME.DS_INSTANCE_NAME. But got %s" % ds_identifier)
     # @throw DatasourcePluginError if a datasource plugin or instance cannot be found
     @staticmethod
     def _get_ds_connection_conf(ds_identifier,ds_plugin_name):
-        LodelContext.expose_modules(globals(), {
-            'lodel.settings': ['Settings']})
+        from lodel.settings import Settings
         if ds_plugin_name not in Settings.datasource._fields:
             msg = "Unknown or unconfigured datasource plugin %s"
             msg %= ds_plugin_name

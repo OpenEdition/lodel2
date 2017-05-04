@@ -1,7 +1,4 @@
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {
-    'lodel.exceptions': ['LodelException', 'LodelExceptions',
-        'LodelFatalError', 'DataNoneValid', 'FieldValidationError']})
+from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 #@ingroup plugin_mongodb_datasource
 class MongoDbDataSourceError(Exception):

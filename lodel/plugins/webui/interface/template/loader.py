@@ -2,8 +2,7 @@
 import jinja2
 import os
 
-from lodel.context import LodelContext
-LodelContext.expose_modules(globals(), {'lodel.settings': ['Settings']})
+from lodel.settings import Settings
 LodelContext.expose_dyncode(globals())
 
 from ...client import WebUiClient as WebUiClient
