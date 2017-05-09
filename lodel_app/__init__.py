@@ -13,5 +13,7 @@ lodel_app.config.update(ini_to_dict(os.path.join(os.path.dirname(os.path.abspath
 # Lodelsites
 register_lodelsites(lodel_app)
 
+print(lodel_app.config)
+
 # Main views
 from .views import *
