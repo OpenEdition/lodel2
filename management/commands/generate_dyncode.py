@@ -1,8 +1,6 @@
 from flask_script import Command, Option
 
-from lodel.editorial_model.model import EditorialModel
-from lodel.leapi import lefactory
-from lodel.management.utils import generate_dyncode
+from management.utils import generate_dyncode
 
 class LodelCommand(Command):
 
