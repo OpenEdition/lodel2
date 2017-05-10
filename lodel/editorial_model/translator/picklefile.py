@@ -3,7 +3,6 @@
 # This module handles the file storage of an editorial model
 
 import pickle
-from pickle import Pickler
 
 ##@brief Saves a model in a file
 # @param model EditorialModel : the model to save

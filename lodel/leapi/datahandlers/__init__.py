@@ -1,5 +1,5 @@
 from lodel.leapi.datahandlers.base_classes import DataHandler
-DataHandler.load_base_handlers()
+# DataHandler.load_base_handlers()
 
 ## @defgroup lodel2_datahandlers Datahandlers
 # @ingroup lodel2_leapi

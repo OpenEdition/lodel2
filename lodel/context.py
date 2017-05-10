@@ -8,6 +8,8 @@ import os.path
 import re
 import copy
 
+import lodel.logger as logger
+
 import warnings #For the moment no way to use the logger in this file (I guess)
 
 #A try to avoid circular dependencies problems

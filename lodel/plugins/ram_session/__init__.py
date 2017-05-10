@@ -1,6 +1,6 @@
 from lodel.validator.validator Validator
 
-__plugin_name__ = 'ram_sessions'
+__plugin_name__ = 'ram_session'
 __version__ = [0,0,1]
 __plugin_type__ = 'session_handler'
 __loader__ = 'main.py'

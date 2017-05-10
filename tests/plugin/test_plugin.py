@@ -89,7 +89,7 @@ class PluginStartedTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         Plugin.clear()
-        Plugin.start(['dummy', 'dummy_datasource', 'webui', 'ram_sessions'])
+        Plugin.start(['dummy', 'dummy_datasource', 'webui', 'ram_session'])
 
     @classmethod
     def tearDownClass(cls):
