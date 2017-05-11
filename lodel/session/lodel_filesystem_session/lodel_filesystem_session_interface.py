@@ -5,6 +5,7 @@ from lodel.session.lodel_filesystem_session.lodel_filesystem_session import Lode
 from contextlib import suppress
 import binascii
 
+
 class LodelFileSystemSessionInterface(SessionInterface):
     
     __sessions = dict()
@@ -16,9 +17,10 @@ class LodelFileSystemSessionInterface(SessionInterface):
     def open_session(self, app, request):
         self.filename_template = app.config['lodel.filesystem_sessions']['filename_template']
         self.session_tokensize = int(app.config['lodel.sessions']['tokensize'])
+        self.clean_sessions()
         sid = request.cookies.get(app.session_cookie_name) or self.generate_token() #or '{}-{}'.format(uuid1(), os.getpid())
-        if LodelFileSystemSessionInterface.__sessions.get(sid, None) is None:
-            LodelFileSystemSessionInterface.__sessions[sid] = self.generate_file_path(sid, self.filename_template)
+        if self.__class__.__sessions.get(sid, None) is None:
+            self.__class__.__sessions[sid] = self.generate_file_path(sid, self.filename_template)
         return LodelFileSystemSession(self.directory, sid)
     
     def save_session(self, app, session, response):
@@ -27,7 +29,7 @@ class LodelFileSystemSessionInterface(SessionInterface):
         if not session:
             with suppress(FileNotFoundError):
                 os.unlink(session.path)
-                del(LodelFileSystemSessionInterface.__sessions[session.sid])
+                del(self.__class__.__sessions[session.sid])
             response.delete_cookie(app.session_cookie_name, domain=domain)
             return
         
@@ -71,6 +73,17 @@ class LodelFileSystemSessionInterface(SessionInterface):
     #            bit length, not chars length.
     def generate_token(self):
         token = binascii.hexlify(os.urandom(self.session_tokensize))
-        if LodelFileSystemSessionInterface.__sessions.get(token, None) is not None:
+        if self.__class__.__sessions.get(token, None) is not None:
             token = self.generate_token()
         return token.decode('utf-8')
+    
+    ## @brief Cleans the sessions' store by deleting the expired sessions' files
+    # @todo add logging to the cleaning action
+    def clean_sessions(self):
+        # Unregistered files in the sessions directory
+        session_files_directory = os.path.abspath(self.directory)
+        for session_file in [file_path for file_path in os.listdir(session_files_directory) if os.path.isfile(os.path.join(session_files_directory, file_path))]:
+            session_file_path = os.path.join(session_files_directory, session_file)
+            token = self.get_token_from_filepath(session_file_path)
+            if token is None or self.__class__.__sessions.get(token, None) is None:
+                os.unlink(session_file_path)
