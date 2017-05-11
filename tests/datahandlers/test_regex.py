@@ -1,6 +1,6 @@
 import unittest
 from lodel.exceptions import *
-from lodel.leapi.datahandlers.datas import Regex, Varchar, Integer, UniqID
+from lodel.leapi.datahandlers.data import Regex, Varchar, Integer, UniqID
 from lodel.leapi.datahandlers.base_classes import DataHandler
 from unittest.mock import Mock
 import re

@@ -1,7 +1,7 @@
 import unittest
 from lodel.exceptions import *
 
-from lodel.leapi.datahandlers.datas import Boolean, Varchar, Integer
+from lodel.leapi.datahandlers.data import Boolean, Varchar, Integer
 
 
 test_boolean = Boolean()

@@ -1,7 +1,7 @@
 import unittest
 
 from lodel.leapi.datahandlers.base_classes import DataHandler
-from lodel.leapi.datahandlers.datas import Varchar
+from lodel.leapi.datahandlers.data import Varchar
 
 
 class DataHandlerTestCase(unittest.TestCase):

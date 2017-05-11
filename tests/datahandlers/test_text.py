@@ -1,6 +1,6 @@
 import unittest
 
-from lodel.leapi.datahandlers.datas import Text
+from lodel.leapi.datahandlers.data import Text
 from lodel.exceptions import FieldValidationError
 
 

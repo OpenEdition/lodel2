@@ -1,5 +1,5 @@
 import unittest
-from lodel.leapi.datahandlers.datas import Password as Testee
+from lodel.leapi.datahandlers.data import Password as Testee
 
 
 class PasswordTestCase(unittest.TestCase):

@@ -1,8 +1,7 @@
 import unittest
 import inspect
 
-from unittest import mock
-from lodel.leapi.datahandlers.datas import LeobjectSubclassIdentifier as Testee
+from lodel.leapi.datahandlers.data import LeobjectSubclassIdentifier as Testee
 
 
 class LeresultectSubclassIdentifierTestCase(unittest.TestCase):        

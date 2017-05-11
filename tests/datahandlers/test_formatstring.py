@@ -1,6 +1,6 @@
 import unittest
 
-from lodel.leapi.datahandlers.datas import FormatString
+from lodel.leapi.datahandlers.data import FormatString
 from lodel.editorial_model.components import EmClass
 
 class FormatStringTestCase(unittest.TestCase):

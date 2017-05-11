@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from lodel.leapi.datahandlers.datas import DateTime
+from lodel.leapi.datahandlers.data import DateTime
 from lodel.exceptions import *
 
 

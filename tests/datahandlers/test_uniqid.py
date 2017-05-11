@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import leapi_dyncode as dyncode
 
-from lodel.leapi.datahandlers.datas import UniqID as Testee
+from lodel.leapi.datahandlers.data import UniqID as Testee
 from lodel.plugins.dummy_datasource.datasource import DummyDatasource
 
 

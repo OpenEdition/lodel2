@@ -1,5 +1,5 @@
 import unittest
-from lodel.leapi.datahandlers.datas import Varchar, Integer
+from lodel.leapi.datahandlers.data import Varchar, Integer
 from lodel.leapi.datahandlers.base_classes import FieldValidationError
 from lodel.exceptions import *
 

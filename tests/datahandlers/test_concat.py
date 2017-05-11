@@ -1,6 +1,6 @@
 import unittest
 
-from lodel.leapi.datahandlers.datas import Concat as Testee
+from lodel.leapi.datahandlers.data import Concat as Testee
 
 
 class ConcatTestCase(unittest.TestCase):

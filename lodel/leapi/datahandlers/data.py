@@ -1,14 +1,14 @@
 #-*- coding: utf-8 -*-
 
 ## @package lodel.leapi.datahandlers.datas
-# This module contains specific datahandlers extending the basic ones from the lodel.leapi.datahandlers.datas_base module.
+# This module contains specific datahandlers extending the basic ones from the lodel.leapi.datahandlers.data_base module.
 
 
 import warnings
 import inspect
 import re
 
-from lodel.leapi.datahandlers.datas_base import Boolean, Integer, Varchar, DateTime, Text, File
+from lodel.leapi.datahandlers.data_base import Boolean, Integer, Varchar, DateTime, Text, File
 from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 

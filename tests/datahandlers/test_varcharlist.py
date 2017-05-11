@@ -1,6 +1,6 @@
 import unittest
 
-from lodel.leapi.datahandlers.datas import VarcharList as Testee
+from lodel.leapi.datahandlers.data import VarcharList as Testee
 from lodel.leapi.datahandlers.exceptions import LodelDataHandlerException
 from lodel.exceptions import LodelException
 

@@ -1,5 +1,5 @@
 import unittest
-from lodel.leapi.datahandlers.datas import Integer, Boolean
+from lodel.leapi.datahandlers.data import Integer, Boolean
 from lodel.exceptions import *
 
 test_int = Integer()

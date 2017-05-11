@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 
-from lodel.leapi.datahandlers.datas import File, Varchar
+from lodel.leapi.datahandlers.data import File, Varchar
 
 
 class FileTestCase(unittest.TestCase):
