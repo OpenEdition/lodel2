@@ -1,17 +1,13 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
 import sys
-import os, os.path
 
-sys.path.append(os.path.dirname(os.getcwd()+'/..'))
+# A voir si utile dans un lodel installé
 
-from lodel.settings.settings import Settings as settings
-settings('globconf.d')
-from lodel.settings import Settings
+sys.path.insert(0,'lodel/editorial_model')
+from model import EditorialModel
 
-from lodel.editorial_model.components import *
-from lodel.editorial_model.exceptions import *
-from lodel.editorial_model.model import EditorialModel
+xml_file = '../examples/em_simple.xml'
+pickle_file = '../examples/em_simple.pickle'
 
 em = EditorialModel('simpleem', 'Simple editorial model')
 
@@ -689,7 +685,7 @@ user.new_field(
     group = user_group, data_handler = 'password', internal = False)
 
 
-em.save('xmlfile', filename = 'editorial_models/em_simple.xml')
-pickle_file = 'examples/em_simple.pickle'
+em.save('xmlfile', filename = xml_file)
 em.save('picklefile', filename = pickle_file)
-print("Output written in %s" % pickle_file)
+
+print("Output written in %s and %s" % (pickle_file, xml_file))

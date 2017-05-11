@@ -1,7 +1,7 @@
 from flask_script import Command, Option
-from lodel.management.utils import generate_dyncode
+from management.utils import generate_dyncode
 
-class LodelCommand(Command):
+class RefreshDyncode(Command):
 
     option_list = (
         Option('--model', '-m', dest='model_file'),
@@ -16,7 +16,7 @@ class LodelCommand(Command):
     def run(self, model_file, translator, output_filename):
         dyncode = generate_dyncode(model_file, translator)
         with open(output_filename, 'w+') as out_fd:
-        out_fd.write(dyncode)
+            out_fd.write(dyncode)
         out_fd.close()
         print("The dynamic code %s has been updated to %s" % (model_file, output_filename)) 
 

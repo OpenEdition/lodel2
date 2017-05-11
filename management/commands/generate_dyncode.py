@@ -2,7 +2,7 @@ from flask_script import Command, Option
 
 from management.utils import generate_dyncode
 
-class LodelCommand(Command):
+class GenerateDyncode(Command):
 
     option_list = (
         Option('--model', '-m', dest='model_file'),

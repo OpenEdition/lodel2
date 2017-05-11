@@ -4,7 +4,7 @@ from flask.templating import render_template_string
 from flask_script import Command, Option
 
 
-class LodelCommand(Command):
+class CreateSite(Command):
     
     option_list = (
         Option('--name', '-n', dest='name'),
