@@ -11,6 +11,8 @@ lodel_app.config['DEBUG'] = True
 lodel_app.config['sites'] = {}
 lodel_app.config.update(ini_to_dict(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini')))
 
+lodel_app.template_folder = "templates"
+
 lodel_app.session_cookie_name = lodel_app.config['lodel.sessions']['session_cookie_name']
 lodel_app.permanent_session_lifetime = int(lodel_app.config['lodel.sessions']['session_lifetime'])
 lodel_app.session_interface = LodelFileSystemSessionInterface(lodel_app.config['lodel.filesystem_sessions']['path'])

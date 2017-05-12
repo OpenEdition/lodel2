@@ -1,0 +1,16 @@
+{% extends "base_backend.html" %}
+
+{% block title %}- Suppression in {{target.__name__}}{% endblock %}
+{% block body %}
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/admin">Home</a></li>
+  <li><a href="/{{ root_url }}/admin/object_create">Suppression</a></li>
+  <li class="active">{{target.__name__}}</li>
+</ol>
+{% if msg is not none %}
+{% block msg %} <p style="color:red; font-size:20pt; font-weight:bold">{{ msg }}</p> {% endblock %}
+{% endif %}
+<h1  class="h1_lodel">Remove a {{target.__name__}} object</h1>
+<div style="text-align:center"> <a class="btn btn-default" href="object_delete">Return</a></div>
+{% endblock %}
+

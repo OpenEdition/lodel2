@@ -1,0 +1,38 @@
+<!-- Produce a <li></li> with objects informations -->
+{% macro object_ul(leo, max_depth = 0, exclude = []) -%}
+    <ul>
+        {% if max_depth <= 0 %}
+            <!-- No need to go deeper -->
+            {% for fname, fvalue in leo.datas(True).items() %}
+                <li><em>{{ fname }}</em> : {{fvalue}}</li>
+            {%endfor%}
+        {% else %}
+            {% for fname in leo.fieldnames(True) %}
+                {% set fvalue = leo.data(fname) %}
+                {% set fdh = leo.data_handler(fname) %}
+                {% if fvalue is not none and fdh.is_reference() %}
+                    {% if fdh.is_singlereference() %}
+                        {% set referenced = fdh.get_referenced(fvalue) %}
+                        {% if (referenced.__class__.__name__, referenced.uid) in exclude %}
+                            <li><em>{{fname}}</em> : {{fvalue}}</li>
+                        {% else %}
+                            <li><em>{{fname}}</em> : {{object_ul(referenced, max_depth - 1, exclude + [(leo.__class__.__name__, leo.uid())] )}}</li>
+                        {% endif %}
+                    {% else %}
+                        <li><em>{{fname}}</em> : <ul>
+                        {% for referenced in fdh.get_referenced(fvalue) %}
+                            {% if (referenced.__class__.__name__, referenced.uid) in exclude %}
+                                <li><em>{{fname}}</em> : {{fvalue}}</li>
+                            {% else %}
+                                <li><em>{{fname}}</em> : {{object_ul(referenced, max_depth - 1, exclude + [(leo.__class__.__name__, leo.uid())] )}}</li>
+                            {% endif %}
+                        {% endfor %}
+                        </ul></li>
+                    {% endif %}
+                {% else %}
+                    <li><em>{{fname}}</em> : {{fvalue}}</li>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </ul>
+{%- endmacro %}

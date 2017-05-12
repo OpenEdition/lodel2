@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Lodel 2 - List of Classes{% endblock %}
+{% block content %} 
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/">Home</a></li>
+  <li class="active">Types</li>
+</ol>
+<h1 class="h1_lodel">All types</h1>
+<ul>
+{% for classe in my_classes %}
+    {% if classe.is_abstract() and allclasses == 1 %}
+        {% set abst = ' - Abstract type ' %}
+        <li> <a href="show_class?classname={{ classe.__name__ }}" >{{ classe.__name__ }} </a>{{ abst }}</li>
+    {% elif not classe.is_abstract() %}
+        {% set abst = ' - ' ~ classe.get(None)|length %}
+    <li> <a href="show_class?classname={{ classe.__name__ }}" >{{ classe.__name__ }} </a>{{ abst }}</li>
+    {% endif %}
+{% endfor %}
+</ul>
+{% endblock %}

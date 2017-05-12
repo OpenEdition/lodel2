@@ -1,0 +1,28 @@
+{% extends "base_backend.html" %}
+{% import "admin/editable_component.html" as edit %}
+
+{% block title %}- Creating a new {{target.__name__}}{% endblock %}
+{% block body %}
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/admin">Home</a></li>
+  <li><a href="/{{ root_url }}/admin/object_create">Creation</a></li>
+  <li class="active">{{target.__name__}}</li>
+</ol>
+{% if msg is not none %}
+{% block msg %} <p style="color:red; font-size:20pt; font-weight:bold">{{ msg }}</p> {% endblock %}
+{% endif %}
+<h1  class="h1_lodel">Creating a new {{target.__name__}}</h1>
+ <form class="form-horizontal" action="" method ="post">
+     <input type="hidden" name="classname" id="classname" value="{{target.__name__}}" />
+    {% for fieldname, field in target.fields().items() %}
+     <div class="form-group">
+     <div class="form-group" style="padding-bottom:15px;"> {{edit.input(fieldname, field) }}</div>
+     </div>
+    {% endfor %}
+     <p>&nbsp;</p>
+     <button type="submit" class="btn btn-primary">Save</button>
+     <a class="btn btn-default" href="object_create">Return</a>
+ </form>
+<div>
+</div>
+{% endblock %}

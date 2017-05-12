@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{status_code}} {{status_str}}</title>
+    </head>
+    <body>
+        {% if title is not none %}
+        <h1>{{title}}</h1>
+        {% else %}
+        <h1>{{status_code}} {{status_str}}</h1>
+        {% endif %}
+        <ul>
+            {% for k, v in errors.items() %}
+            <li><strong>{{k}}</strong> : {{v}}</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>

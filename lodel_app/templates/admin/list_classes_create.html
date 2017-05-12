@@ -1,0 +1,21 @@
+{% extends "base_backend.html" %}
+{% block title %}Lodel 2 - Admin - List of Classes{% endblock %}
+{% block body %}
+<ol class="breadcrumb">
+  <li><a href="/{{ root_url }}/admin">Home</a></li>
+  <li class="active">Creation</li>
+</ol>
+<h1 class="h1_lodel">Creation</h1>
+<h2>Choose a type to create an instance</h1>
+<ul>
+{% for classe in my_classes %}
+    {% set abst = '' %}
+    {% if not classe.is_abstract() %}
+    <li> <a href="create?classname={{ classe.__name__ }}" >{{ classe.__name__ }} </a></li>
+    {% endif %}
+    {% endfor %}
+</ul>
+<div>
+    <a href="{{ root_url }}/admin/">Return</a>
+</div>
+{% endblock %}
