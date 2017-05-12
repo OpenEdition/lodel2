@@ -9,7 +9,7 @@ import hashlib
 
 from lodel.utils.mlstring import MlString
 from lodel.mlnamedobject.mlnamedobject import MlNamedObject
-from lodel.settings import import Settings
+from lodel.settings import Settings
 from lodel.editorial_model.exceptions import EditorialModelError, assert_edit
 from lodel.leapi.leobject import CLASS_ID_FIELDNAME
 
