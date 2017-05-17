@@ -2,7 +2,6 @@ import argparse
 import sys
 
 from lodel.logger import logger
-from lodel.exceptions import LodelException, LodelExceptions, LodelFatalError, DataNoneValid, FieldValidationError
 
 
 ## @defgroup lodel2_script Administration scripts

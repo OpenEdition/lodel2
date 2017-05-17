@@ -5,7 +5,7 @@ import os
 import os.path
 import argparse
 
-from lodel.plugin.scripts import lodel_script
+from lodel.plugin.scripts import LodelScript
 from lodel.logger import logger
 
 # @package lodel.plugin.core_scripts
@@ -18,7 +18,7 @@ from lodel.logger import logger
 #@ingroup lodel2_plugins
 #@ingroup lodel2_script
 #
-class ListPlugins(lodel_script.LodelScript):
+class ListPlugins(LodelScript):
     _action = 'plugins-list'
     _description = "List all installed plugins"
 
@@ -78,7 +78,7 @@ class ListPlugins(lodel_script.LodelScript):
 
 
 ## @brief Handle install & uninstall of lodel plugins
-class PluginManager(lodel_script.LodelScript):
+class PluginManager(LodelScript):
     _action = 'plugins'
     _description = "Install/Uninstall plugins"
 
@@ -305,7 +305,7 @@ options. Use -d --directory instead")
 ## @brief Implements lodel_admin.py **hooks-list** action
 #@ingroup lodel2_script
 #@ingroup lodel2_hooks
-class ListHooks(lodel_script.LodelScript):
+class ListHooks(LodelScript):
     _action = 'hooks-list'
     _description = 'Generate a list of registered hooks once instance started'
 

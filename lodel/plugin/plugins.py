@@ -86,7 +86,6 @@ class PluginVersion(object):
             if isinstance(arg, str):
                 # Casting from string to version numbers
                 spl = arg.split('.')
-                invalid = False
                 if len(spl) > 3:
                     raise PluginVersionError("The string '%s' is not a valid plugin \
 version number" % arg)
